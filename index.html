@@ -1679,7 +1679,6 @@
           <button class="sub" data-page="student-accounts">학생 계정 관리</button>
           <button class="sub" data-page="student-link">학생 연결 승인</button>
           <button class="sub" data-page="coach-accounts">코치 계정 관리</button>
-          <button class="sub" data-page="coach-approval">코치 승인/권한</button>
         </div>
         <div class="nav-group">
           <div class="nav-label">수업 운영</div>
@@ -2221,6 +2220,7 @@
         <div class="page-head">
           <div><h1>코치 계정 관리</h1></div>
           <div class="toolbar">
+            <button class="btn" id="coach-pending-filter" data-filtered="false">미승인 계정</button>
             <button class="btn primary">코치 초대</button>
           </div>
         </div>
@@ -2244,53 +2244,16 @@
             <table class="account-table coach-table">
               <thead><tr><th class="check-cell"><input type="checkbox" class="account-check-all" data-target="coach" /></th><th>가입일</th><th>가입 방식</th><th>가입 계정</th><th>연락처</th><th>담당 클래스</th><th>권한</th><th>상태</th></tr></thead>
               <tbody>
-                <tr class="selected" data-coach="coach-kim"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.20</td><td><span class="badge orange">카카오</span></td><td>김도윤<br><span class="muted">coach_kim · 휴대폰 인증</span></td><td>010-4420-1901</td><td>초등 배드민턴 A</td><td><span class="badge green">리포트 입력</span></td><td><span class="badge green">활성</span></td></tr>
-                <tr data-coach="coach-park"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.22</td><td><span class="badge green">네이버</span></td><td>박서준<br><span class="muted">coach_park · 휴대폰 인증</span></td><td>010-7721-3380</td><td>성장 체력 B</td><td><span class="badge blue">출석/수업</span></td><td><span class="badge green">활성</span></td></tr>
-                <tr data-coach="coach-lee"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>05.01</td><td><span class="badge gray">일반</span></td><td>이하린<br><span class="muted">coach_lee · 휴대폰 인증</span></td><td>010-9230-1180</td><td>선수반 C</td><td><span class="badge orange">권한 승인 대기</span></td><td><span class="badge orange">승인 대기</span></td></tr>
+                <tr class="selected" data-coach="coach-kim" data-status="active"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.20</td><td><span class="badge orange">카카오</span></td><td>김도윤<br><span class="muted">coach_kim · 휴대폰 인증</span></td><td>010-4420-1901</td><td>초등 배드민턴 A</td><td><span class="badge green">리포트 입력</span></td><td><span class="badge green">활성</span></td></tr>
+                <tr data-coach="coach-park" data-status="active"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.22</td><td><span class="badge green">네이버</span></td><td>박서준<br><span class="muted">coach_park · 휴대폰 인증</span></td><td>010-7721-3380</td><td>성장 체력 B</td><td><span class="badge blue">출석/수업</span></td><td><span class="badge green">활성</span></td></tr>
+                <tr data-coach="coach-lee" data-status="pending"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>05.01</td><td><span class="badge gray">일반</span></td><td>이하린<br><span class="muted">coach_lee · 휴대폰 인증</span></td><td>010-9230-1180</td><td>선수반 C</td><td><span class="badge orange">권한 승인 대기</span></td><td><span class="badge orange">승인 대기</span></td></tr>
+                <tr data-coach="coach-choi" data-status="pending"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.30</td><td><span class="badge orange">카카오</span></td><td>최민석<br><span class="muted">coach_choi · 휴대폰 인증</span></td><td>010-3350-7790</td><td>입문반 D</td><td><span class="badge orange">권한 승인 대기</span></td><td><span class="badge orange">승인 대기</span></td></tr>
               </tbody>
             </table>
           </div>
           <div class="panel">
             <div class="panel-head"><p class="panel-title">코치 상세</p><span class="badge green" id="coach-detail-status">활성</span></div>
             <div class="panel-body" id="coach-detail"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="content hidden" id="page-coach-approval">
-        <div class="page-head">
-          <div><h1>코치 승인/권한</h1></div>
-          <div class="toolbar">
-            <button class="btn approval-history-open" data-history-type="coach">처리 이력</button>
-          </div>
-        </div>
-        <div class="approval-layout">
-          <div class="panel elevated">
-            <div class="panel-head"><p class="panel-title">승인 요청 목록</p></div>
-            <div class="approval-actions">
-              <div class="filters">
-                <select class="approval-filter" data-target="coach"><option value="all">전체 상태</option><option value="pending">승인 대기</option><option value="approved">승인 완료</option><option value="rejected">반려</option></select>
-                <select><option>전체 권한</option><option>담당 코치</option><option>보조 코치</option><option>리포트 입력</option></select>
-                <input placeholder="코치명, 연락처, 희망 반 검색" />
-              </div>
-              <div class="toolbar">
-                <button class="btn">필터 적용</button>
-                <button class="btn table-export" data-table="#page-coach-approval .approval-table" data-filename="코치_승인요청_목록.csv">엑셀</button>
-                <button class="btn bulk-approve" data-target="coach">선택 승인</button>
-                <button class="btn warn bulk-reject" data-target="coach">선택 반려</button>
-              </div>
-            </div>
-            <table class="approval-table">
-              <thead><tr><th class="check-cell"><input type="checkbox" class="approval-check-all" data-target="coach" /></th><th>요청일</th><th>코치</th><th>요청 권한</th><th>희망 담당 클래스</th><th>상태</th></tr></thead>
-              <tbody>
-                <tr class="selected" data-coach="coach-lee" data-status="pending"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>05.01</td><td>이하린<br><span class="muted">010-9230-1180</span></td><td>담당 코치 / 리포트 입력</td><td>선수반 C</td><td><span class="badge orange">승인 대기</span></td></tr>
-                <tr data-coach="coach-choi" data-status="pending"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>04.30</td><td>최민석<br><span class="muted">010-3350-7790</span></td><td>보조 코치 / 출석 체크</td><td>입문반 D</td><td><span class="badge orange">승인 대기</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="panel">
-            <div class="panel-head"><p class="panel-title">승인 처리</p><span class="badge orange">권한 설정</span></div>
-            <div class="panel-body" id="coach-approval-detail"></div>
           </div>
         </div>
       </section>
@@ -3879,9 +3842,6 @@
           document.querySelector("#coach-detail").innerHTML = emptyDetail("코치 계정 목록에서 코치를 선택해 주세요.");
           setBadge("#coach-detail-status");
         },
-        "coach-approval": () => {
-          document.querySelector("#coach-approval-detail").innerHTML = emptyDetail("승인 대기 목록에서 코치를 선택해 주세요.");
-        },
         "parent-link": () => {
           document.querySelector("#parent-approval-detail").innerHTML = emptyDetail("자녀 연결 요청 목록에서 요청을 선택해 주세요.");
         },
@@ -4687,13 +4647,15 @@
         initial: "이", name: "이하린", meta: "코치 포털 · 승인 대기 · 010-9230-1180", status: "승인 대기", statusColor: "orange",
         rows: [["가입 방식", "일반"], ["희망 담당 클래스", "선수반 C"], ["계정 ID", "coach_lee"], ["최근 로그인", "05.01 11:20"]],
         permissions: [["수업 목표/드릴 입력", "요청"], ["출석 체크", "요청"], ["리포트 데이터 입력", "요청"], ["PDF 발행 승인", "불가"]],
-        classes: ["선수반 C"]
+        classes: ["선수반 C"],
+        request: [["요청일", "2026.05.01"], ["요청 권한", "담당 코치 / 리포트 입력"], ["희망 담당 클래스", "선수반 C"], ["검토 상태", "승인 대기"]]
       },
       "coach-choi": {
         initial: "최", name: "최민석", meta: "코치 포털 · 승인 대기 · 010-3350-7790", status: "승인 대기", statusColor: "orange",
         rows: [["가입 방식", "카카오"], ["희망 담당 클래스", "입문반 D"], ["계정 ID", "coach_choi"], ["최근 로그인", "04.30 17:08"]],
         permissions: [["수업 목표/드릴 입력", "제한"], ["출석 체크", "요청"], ["리포트 데이터 입력", "불가"], ["PDF 발행 승인", "불가"]],
-        classes: ["입문반 D 보조"]
+        classes: ["입문반 D 보조"],
+        request: [["요청일", "2026.04.30"], ["요청 권한", "보조 코치 / 출석 체크"], ["희망 담당 클래스", "입문반 D"], ["검토 상태", "승인 대기"]]
       }
     };
 
@@ -4714,13 +4676,24 @@
             <div style="margin-top:9px;"><span class="badge ${item.statusColor}">${item.status}</span></div>
           </div>
         </div>
-        <div class="detail-block"><p class="detail-title">계정 정보</p><div class="info-list">${renderInfoRows(item.rows)}</div></div>
-        <div class="detail-block"><p class="detail-title">권한 설정</p><div class="info-list">${renderInfoRows(item.permissions)}</div></div>
-        <div class="detail-block">
-          <p class="detail-title">담당 클래스</p>
-          <div class="task-list">${item.classes.map((name) => `<div class="task"><span class="task-mark"></span><div><strong>${name}</strong><div class="muted">코치 포털 수업 목록에 노출</div></div><span class="badge blue">Class</span></div>`).join("")}</div>
-        </div>
-        ${target === "#coach-approval-detail" ? `
+        ${item.status === "승인 대기" && target === "#coach-detail" ? `
+          <div class="detail-block"><p class="detail-title">요청 상세</p><div class="info-list">${renderInfoRows(item.request || item.rows)}</div></div>
+          <div class="detail-block">
+            <p class="detail-title">클래스 부여</p>
+            <div class="form-grid">
+              <div class="field"><label>담당 클래스</label><select class="coach-assign-class"><option selected>${item.classes[0]}</option><option>초등 배드민턴 A</option><option>성장 체력 B</option><option>선수반 C</option><option>입문반 D</option></select></div>
+              <div class="field"><label>담당 역할</label><select class="coach-assign-role"><option>담당 코치</option><option selected>보조 코치</option><option>출석 전담</option><option>리포트 입력</option></select></div>
+            </div>
+          </div>
+          <div class="detail-block">
+            <p class="detail-title">권한 부여</p>
+            <div class="form-grid">
+              <label class="time-check"><input type="checkbox" checked /> 수업 목표/드릴 입력</label>
+              <label class="time-check"><input type="checkbox" checked /> 출석 체크</label>
+              <label class="time-check"><input type="checkbox" ${item.name === "이하린" ? "checked" : ""} /> 리포트 데이터 입력</label>
+              <label class="time-check"><input type="checkbox" /> PDF 발행 승인</label>
+            </div>
+          </div>
           <div class="detail-block">
             <p class="detail-title">승인 처리</p>
             <div class="toolbar" style="justify-content:flex-start;">
@@ -4728,6 +4701,12 @@
               <button class="btn warn coach-action" data-action="반려">반려</button>
             </div>
           </div>` : `
+          <div class="detail-block"><p class="detail-title">계정 정보</p><div class="info-list">${renderInfoRows(item.rows)}</div></div>
+          <div class="detail-block"><p class="detail-title">권한 설정</p><div class="info-list">${renderInfoRows(item.permissions)}</div></div>
+          <div class="detail-block">
+            <p class="detail-title">담당 클래스</p>
+            <div class="task-list">${item.classes.map((name) => `<div class="task"><span class="task-mark"></span><div><strong>${name}</strong><div class="muted">코치 포털 수업 목록에 노출</div></div><span class="badge blue">Class</span></div>`).join("")}</div>
+          </div>
           <div class="detail-block">
             <p class="detail-title">계정 작업</p>
             <div class="field"><label>관리자 메모</label><textarea placeholder="권한 변경 또는 계정 관리 메모"></textarea></div>
@@ -5172,13 +5151,17 @@
       });
     });
 
-    document.querySelectorAll("#page-coach-approval tbody tr[data-coach]").forEach((row) => {
-      row.addEventListener("click", (event) => {
-        if (event.target.matches("input")) return;
-        document.querySelectorAll("#page-coach-approval tbody tr").forEach((item) => item.classList.remove("selected"));
-        row.classList.add("selected");
-        renderCoachDetail(row.dataset.coach, "#coach-approval-detail");
+    document.querySelector("#coach-pending-filter")?.addEventListener("click", (event) => {
+      const button = event.currentTarget;
+      const filtered = button.dataset.filtered !== "true";
+      button.dataset.filtered = String(filtered);
+      button.classList.toggle("primary", filtered);
+      button.textContent = filtered ? "전체 계정" : "미승인 계정";
+      document.querySelectorAll("#page-coach-accounts tbody tr[data-coach]").forEach((row) => {
+        row.classList.toggle("hidden", filtered && row.dataset.status !== "pending");
+        row.classList.remove("selected");
       });
+      clearDetailState("coach-accounts");
     });
 
     document.querySelectorAll(".class-table tbody tr[data-class]").forEach((row) => {
@@ -5585,7 +5568,7 @@
     function approvalPageSelector(target) {
       if (target === "parent") return "#page-parent-link";
       if (target === "student") return "#page-student-link";
-      return "#page-coach-approval";
+      return "#page-coach-accounts";
     }
 
     document.querySelectorAll(".approval-check-all").forEach((checkbox) => {
@@ -7246,7 +7229,7 @@
     renderRenewalTable();
     renderBillingTable();
 
-    ["members", "parent-accounts", "student-accounts", "coach-accounts", "coach-approval", "parent-link", "student-link", "class-manage", "schedule", "holiday-manage", "makeup-manage", "product-manage", "payment-status", "renewal-confirm", "billing-manage", "overdue-manage"].forEach(clearDetailState);
+    ["members", "parent-accounts", "student-accounts", "coach-accounts", "parent-link", "student-link", "class-manage", "schedule", "holiday-manage", "makeup-manage", "product-manage", "payment-status", "renewal-confirm", "billing-manage", "overdue-manage"].forEach(clearDetailState);
 
     document.querySelector("#member-edit-button").addEventListener("click", () => {
       openStudentForm("edit", currentMemberKey);
