@@ -2248,8 +2248,9 @@
               <tbody>
                 <tr class="selected" data-coach="coach-kim" data-status="active"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.20</td><td><span class="badge orange">카카오</span></td><td>김도윤<br><span class="muted">coach_kim · 휴대폰 인증</span></td><td>010-4420-1901</td><td>초등 배드민턴 A</td><td><span class="badge green">리포트 입력</span></td><td><span class="badge green">활성</span></td></tr>
                 <tr data-coach="coach-park" data-status="active"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.22</td><td><span class="badge green">네이버</span></td><td>박서준<br><span class="muted">coach_park · 휴대폰 인증</span></td><td>010-7721-3380</td><td>성장 체력 B</td><td><span class="badge blue">출석/수업</span></td><td><span class="badge green">활성</span></td></tr>
-                <tr data-coach="coach-lee" data-status="pending"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>05.01</td><td><span class="badge gray">일반</span></td><td>이하린<br><span class="muted">coach_lee · 휴대폰 인증</span></td><td>010-9230-1180</td><td>선수반 C</td><td><span class="badge orange">권한 승인 대기</span></td><td><span class="badge orange">승인 대기</span></td></tr>
-                <tr data-coach="coach-choi" data-status="pending"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.30</td><td><span class="badge orange">카카오</span></td><td>최민석<br><span class="muted">coach_choi · 휴대폰 인증</span></td><td>010-3350-7790</td><td>입문반 D</td><td><span class="badge orange">권한 승인 대기</span></td><td><span class="badge orange">승인 대기</span></td></tr>
+                <tr data-coach="coach-lee" data-status="pending"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>05.01</td><td><span class="badge gray">일반</span></td><td>이하린<br><span class="muted">coach_lee · 휴대폰 인증</span></td><td>010-9230-1180</td><td>-</td><td><span class="badge orange">승인 대기</span></td><td><span class="badge orange">승인 대기</span></td></tr>
+                <tr data-coach="coach-choi" data-status="pending"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.30</td><td><span class="badge orange">카카오</span></td><td>최민석<br><span class="muted">coach_choi · 휴대폰 인증</span></td><td>010-3350-7790</td><td>-</td><td><span class="badge orange">승인 대기</span></td><td><span class="badge orange">승인 대기</span></td></tr>
+                <tr data-coach="coach-yoon" data-status="active"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.29</td><td><span class="badge blue">구글</span></td><td>윤태오<br><span class="muted">coach_yoon · 휴대폰 인증</span></td><td>010-5521-8801</td><td>-</td><td><span class="badge gray">미배정</span></td><td><span class="badge green">활성</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -4694,21 +4695,25 @@
       },
       "coach-lee": {
         initial: "이", name: "이하린", meta: "코치 포털 · 승인 대기 · 010-9230-1180", status: "승인 대기", statusColor: "orange",
-        rows: [["가입 방식", "일반"], ["희망 담당 클래스", "선수반 C"], ["계정 ID", "coach_lee"], ["최근 로그인", "05.01 11:20"]],
-        classes: ["선수반 C"],
-        request: [["요청일", "2026.05.01"], ["요청 권한", "담당 코치 / 리포트 입력"], ["희망 담당 클래스", "선수반 C"], ["검토 상태", "승인 대기"]]
+        rows: [["가입일", "2026.05.01"], ["가입 방식", "일반"], ["연락처", "010-9230-1180"], ["계정 ID", "coach_lee"]],
+        classes: []
       },
       "coach-choi": {
         initial: "최", name: "최민석", meta: "코치 포털 · 승인 대기 · 010-3350-7790", status: "승인 대기", statusColor: "orange",
-        rows: [["가입 방식", "카카오"], ["희망 담당 클래스", "입문반 D"], ["계정 ID", "coach_choi"], ["최근 로그인", "04.30 17:08"]],
-        classes: ["입문반 D 보조"],
-        request: [["요청일", "2026.04.30"], ["요청 권한", "보조 코치 / 출석 체크"], ["희망 담당 클래스", "입문반 D"], ["검토 상태", "승인 대기"]]
+        rows: [["가입일", "2026.04.30"], ["가입 방식", "카카오"], ["연락처", "010-3350-7790"], ["계정 ID", "coach_choi"]],
+        classes: []
+      },
+      "coach-yoon": {
+        initial: "윤", name: "윤태오", meta: "코치 포털 · 활성 · 010-5521-8801", status: "활성", statusColor: "green",
+        rows: [["가입 방식", "구글"], ["담당 클래스", "미배정"], ["계정 ID", "coach_yoon"], ["최근 로그인", "04.29 10:10"]],
+        classes: []
       }
     };
 
     function renderCoachDetail(key, target = "#coach-detail") {
       const item = coachDetails[key];
       if (!item) return;
+      const hasAssignedClasses = item.classes && item.classes.length > 0;
       const status = document.querySelector("#coach-detail-status");
       if (status && target === "#coach-detail") {
         status.textContent = item.status;
@@ -4724,10 +4729,10 @@
           </div>
         </div>
         ${item.status === "승인 대기" && target === "#coach-detail" ? `
-          <div class="detail-block"><p class="detail-title">요청 상세</p><div class="info-list">${renderInfoRows(item.request || item.rows)}</div></div>
+          <div class="detail-block"><p class="detail-title">상세 정보</p><div class="info-list">${renderInfoRows(item.rows)}</div></div>
           <div class="detail-block">
             <p class="detail-title">배정 수업 조회</p>
-            <div class="task-list">${item.classes.map((name) => `<div class="task"><span class="task-mark orange"></span><div><strong>${name}</strong><div class="muted">클래스 관리에서 배정/수정됩니다.</div></div><span class="badge orange">대기</span></div>`).join("")}</div>
+            <div class="empty-state"><strong>아직 배정된 수업이 없습니다.</strong><p>승인 후 클래스 관리에서 담당 코치로 배정해 주세요.</p></div>
           </div>
           <div class="detail-block">
             <p class="detail-title">승인 처리</p>
@@ -4736,11 +4741,23 @@
               <button class="btn warn coach-action" data-action="반려">반려</button>
             </div>
           </div>` : `
-          <div class="detail-block"><p class="detail-title">계정 정보</p><div class="info-list">${renderInfoRows(item.rows)}</div></div>
+          <div class="detail-block"><p class="detail-title">상세 정보</p><div class="info-list">${renderInfoRows(item.rows)}</div></div>
           <div class="detail-block">
             <p class="detail-title">배정 수업 조회</p>
-            <div class="task-list">${item.classes.map((name) => `<div class="task"><span class="task-mark"></span><div><strong>${name}</strong><div class="muted">클래스 관리에서 배정된 수업입니다.</div></div><span class="badge blue">Class</span></div>`).join("")}</div>
-          </div>`}`;
+            ${hasAssignedClasses ? `<div class="task-list">${item.classes.map((name) => `<div class="task"><span class="task-mark"></span><div><strong>${name}</strong><div class="muted">클래스 관리에서 배정된 수업입니다.</div></div><span class="badge blue">Class</span></div>`).join("")}</div>` : `<div class="empty-state"><strong>배정된 수업이 없습니다.</strong><p>클래스 관리에서 담당 코치를 배정하면 이곳에 표시됩니다.</p></div>`}
+          </div>
+          ${hasAssignedClasses ? `<div class="detail-block">
+            <p class="detail-title">코치 업무 권한</p>
+            <div class="form-grid">
+              <label class="time-check"><input type="checkbox" checked /> 출석 체크</label>
+              <label class="time-check"><input type="checkbox" checked /> 수업 메모 작성</label>
+              <label class="time-check"><input type="checkbox" checked /> 학생별 코멘트 작성</label>
+              <label class="time-check"><input type="checkbox" checked /> 측정 데이터 입력</label>
+              <label class="time-check"><input type="checkbox" /> 성장 리포트 초안 작성</label>
+              <label class="time-check"><input type="checkbox" /> 영상 피드백 작성</label>
+            </div>
+            <div class="toolbar" style="justify-content:flex-start;margin-top:12px;"><button class="btn primary coach-action" data-action="업무 권한 저장">저장</button></div>
+          </div>` : ""}`}`;
       document.querySelector(target).querySelectorAll(".coach-action").forEach((button) => {
         button.addEventListener("click", () => {
           showConfirm({
