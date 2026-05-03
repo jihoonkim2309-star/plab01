@@ -2135,6 +2135,7 @@
           </div>
           <div class="toolbar">
             <button class="btn account-filter" data-action="parent-unlinked" data-filtered="false">미연결 계정</button>
+            <button class="btn primary invite-open" data-invite-type="parent">학부모 초대</button>
           </div>
         </div>
         <div class="member-summary">
@@ -2179,6 +2180,7 @@
           </div>
           <div class="toolbar">
             <button class="btn">미연결 계정</button>
+            <button class="btn primary invite-open" data-invite-type="student">학생 초대</button>
           </div>
         </div>
         <div class="member-summary">
@@ -2221,14 +2223,14 @@
           <div><h1>코치 계정 관리</h1></div>
           <div class="toolbar">
             <button class="btn" id="coach-pending-filter" data-filtered="false">미승인 계정</button>
-            <button class="btn primary">코치 초대</button>
+            <button class="btn primary invite-open" data-invite-type="coach">코치 초대</button>
           </div>
         </div>
         <div class="member-summary">
           <div class="summary-card"><span>전체 코치</span><strong>12</strong></div>
           <div class="summary-card"><span>활성</span><strong>9</strong></div>
           <div class="summary-card"><span>승인 대기</span><strong>2</strong></div>
-          <div class="summary-card"><span>권한 확인</span><strong>1</strong></div>
+          <div class="summary-card"><span>초대 발송</span><strong>4</strong></div>
         </div>
         <div class="account-layout">
           <div class="panel">
@@ -2239,10 +2241,10 @@
                 <select><option>전체 권한</option><option>담당 코치</option><option>보조 코치</option><option>리포트 입력</option></select>
                 <input placeholder="코치명, 연락처, 담당 클래스 검색" />
               </div>
-              <div class="toolbar"><button class="btn">필터 적용</button><button class="btn primary">권한 일괄 변경</button><button class="btn account-export" data-target="coach">엑셀</button></div>
+              <div class="toolbar"><button class="btn">필터 적용</button><button class="btn" id="coach-selected-approve">선택 승인</button><button class="btn account-export" data-target="coach">엑셀</button></div>
             </div>
             <table class="account-table coach-table">
-              <thead><tr><th class="check-cell"><input type="checkbox" class="account-check-all" data-target="coach" /></th><th>가입일</th><th>가입 방식</th><th>가입 계정</th><th>연락처</th><th>담당 클래스</th><th>권한</th><th>상태</th></tr></thead>
+              <thead><tr><th class="check-cell"><input type="checkbox" class="account-check-all" data-target="coach" /></th><th>가입일</th><th>가입 방식</th><th>가입 계정</th><th>연락처</th><th>배정 수업</th><th>요청/역할</th><th>상태</th></tr></thead>
               <tbody>
                 <tr class="selected" data-coach="coach-kim" data-status="active"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.20</td><td><span class="badge orange">카카오</span></td><td>김도윤<br><span class="muted">coach_kim · 휴대폰 인증</span></td><td>010-4420-1901</td><td>초등 배드민턴 A</td><td><span class="badge green">리포트 입력</span></td><td><span class="badge green">활성</span></td></tr>
                 <tr data-coach="coach-park" data-status="active"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.22</td><td><span class="badge green">네이버</span></td><td>박서준<br><span class="muted">coach_park · 휴대폰 인증</span></td><td>010-7721-3380</td><td>성장 체력 B</td><td><span class="badge blue">출석/수업</span></td><td><span class="badge green">활성</span></td></tr>
@@ -3679,6 +3681,25 @@
     </div>
   </div>
 
+  <div class="modal-backdrop hidden" id="invite-modal">
+    <div class="modal" style="width:min(720px,100%);">
+      <div class="modal-head" id="invite-modal-title">초대 발송</div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field"><label>성함</label><input id="invite-name-input" placeholder="초대 대상 이름" /></div>
+          <div class="field"><label>전화번호</label><input id="invite-phone-input" placeholder="010-0000-0000" /></div>
+          <div class="field"><label>발송 채널</label><select id="invite-channel-select"><option>카카오 알림톡</option><option>문자 SMS</option></select></div>
+          <div class="field"><label>대상 포털</label><input id="invite-portal-input" readonly /></div>
+          <div class="field span-2"><label>발송 문구</label><textarea id="invite-message-input"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="invite-modal-close-button">닫기</button>
+        <button class="btn primary" id="invite-send-button">발송</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop hidden" id="place-modal">
     <div class="modal" style="width:min(680px,100%);">
       <div class="modal-head">수업 장소 관리</div>
@@ -3807,6 +3828,36 @@
         close();
         onOk();
       };
+    }
+
+    const inviteCopy = {
+      parent: {
+        title: "학부모 초대",
+        portal: "학부모 포털",
+        message: "안녕하세요. PlanB Grow 학부모 포털 가입 안내입니다. 아래 링크에서 앱을 설치하고 자녀 연결을 요청해 주세요."
+      },
+      student: {
+        title: "학생 초대",
+        portal: "학생 포털",
+        message: "안녕하세요. PlanB Grow 학생 포털 가입 안내입니다. 아래 링크에서 앱을 설치하고 학생 계정 연결을 요청해 주세요."
+      },
+      coach: {
+        title: "코치 초대",
+        portal: "코치 포털",
+        message: "안녕하세요. PlanB Grow 코치 포털 가입 안내입니다. 아래 링크에서 앱을 설치하고 코치 계정 가입을 진행해 주세요."
+      }
+    };
+    let currentInviteType = "parent";
+
+    function openInviteModal(type) {
+      currentInviteType = type;
+      const copy = inviteCopy[type] || inviteCopy.parent;
+      document.querySelector("#invite-modal-title").textContent = copy.title;
+      document.querySelector("#invite-name-input").value = "";
+      document.querySelector("#invite-phone-input").value = "";
+      document.querySelector("#invite-portal-input").value = copy.portal;
+      document.querySelector("#invite-message-input").value = copy.message;
+      document.querySelector("#invite-modal").classList.remove("hidden");
     }
 
     function emptyDetail(message = "목록에서 항목을 선택하면 상세 정보가 표시됩니다.") {
@@ -4634,26 +4685,22 @@
       "coach-kim": {
         initial: "김", name: "김도윤", meta: "코치 포털 · 담당 코치 · 010-4420-1901", status: "활성", statusColor: "green",
         rows: [["가입 방식", "카카오"], ["담당 클래스", "초등 배드민턴 A"], ["계정 ID", "coach_kim"], ["최근 로그인", "오늘 08:40"]],
-        permissions: [["수업 목표/드릴 입력", "허용"], ["출석 체크", "허용"], ["리포트 데이터 입력", "허용"], ["PDF 발행 승인", "불가"]],
         classes: ["초등 배드민턴 A", "선수반 C 보조"]
       },
       "coach-park": {
         initial: "박", name: "박서준", meta: "코치 포털 · 담당 코치 · 010-7721-3380", status: "활성", statusColor: "green",
         rows: [["가입 방식", "네이버"], ["담당 클래스", "성장 체력 B"], ["계정 ID", "coach_park"], ["최근 로그인", "어제 19:12"]],
-        permissions: [["수업 목표/드릴 입력", "허용"], ["출석 체크", "허용"], ["리포트 데이터 입력", "제한"], ["PDF 발행 승인", "불가"]],
         classes: ["성장 체력 B"]
       },
       "coach-lee": {
         initial: "이", name: "이하린", meta: "코치 포털 · 승인 대기 · 010-9230-1180", status: "승인 대기", statusColor: "orange",
         rows: [["가입 방식", "일반"], ["희망 담당 클래스", "선수반 C"], ["계정 ID", "coach_lee"], ["최근 로그인", "05.01 11:20"]],
-        permissions: [["수업 목표/드릴 입력", "요청"], ["출석 체크", "요청"], ["리포트 데이터 입력", "요청"], ["PDF 발행 승인", "불가"]],
         classes: ["선수반 C"],
         request: [["요청일", "2026.05.01"], ["요청 권한", "담당 코치 / 리포트 입력"], ["희망 담당 클래스", "선수반 C"], ["검토 상태", "승인 대기"]]
       },
       "coach-choi": {
         initial: "최", name: "최민석", meta: "코치 포털 · 승인 대기 · 010-3350-7790", status: "승인 대기", statusColor: "orange",
         rows: [["가입 방식", "카카오"], ["희망 담당 클래스", "입문반 D"], ["계정 ID", "coach_choi"], ["최근 로그인", "04.30 17:08"]],
-        permissions: [["수업 목표/드릴 입력", "제한"], ["출석 체크", "요청"], ["리포트 데이터 입력", "불가"], ["PDF 발행 승인", "불가"]],
         classes: ["입문반 D 보조"],
         request: [["요청일", "2026.04.30"], ["요청 권한", "보조 코치 / 출석 체크"], ["희망 담당 클래스", "입문반 D"], ["검토 상태", "승인 대기"]]
       }
@@ -4679,20 +4726,8 @@
         ${item.status === "승인 대기" && target === "#coach-detail" ? `
           <div class="detail-block"><p class="detail-title">요청 상세</p><div class="info-list">${renderInfoRows(item.request || item.rows)}</div></div>
           <div class="detail-block">
-            <p class="detail-title">클래스 부여</p>
-            <div class="form-grid">
-              <div class="field"><label>담당 클래스</label><select class="coach-assign-class"><option selected>${item.classes[0]}</option><option>초등 배드민턴 A</option><option>성장 체력 B</option><option>선수반 C</option><option>입문반 D</option></select></div>
-              <div class="field"><label>담당 역할</label><select class="coach-assign-role"><option>담당 코치</option><option selected>보조 코치</option><option>출석 전담</option><option>리포트 입력</option></select></div>
-            </div>
-          </div>
-          <div class="detail-block">
-            <p class="detail-title">권한 부여</p>
-            <div class="form-grid">
-              <label class="time-check"><input type="checkbox" checked /> 수업 목표/드릴 입력</label>
-              <label class="time-check"><input type="checkbox" checked /> 출석 체크</label>
-              <label class="time-check"><input type="checkbox" ${item.name === "이하린" ? "checked" : ""} /> 리포트 데이터 입력</label>
-              <label class="time-check"><input type="checkbox" /> PDF 발행 승인</label>
-            </div>
+            <p class="detail-title">배정 수업 조회</p>
+            <div class="task-list">${item.classes.map((name) => `<div class="task"><span class="task-mark orange"></span><div><strong>${name}</strong><div class="muted">클래스 관리에서 배정/수정됩니다.</div></div><span class="badge orange">대기</span></div>`).join("")}</div>
           </div>
           <div class="detail-block">
             <p class="detail-title">승인 처리</p>
@@ -4702,18 +4737,9 @@
             </div>
           </div>` : `
           <div class="detail-block"><p class="detail-title">계정 정보</p><div class="info-list">${renderInfoRows(item.rows)}</div></div>
-          <div class="detail-block"><p class="detail-title">권한 설정</p><div class="info-list">${renderInfoRows(item.permissions)}</div></div>
           <div class="detail-block">
-            <p class="detail-title">담당 클래스</p>
-            <div class="task-list">${item.classes.map((name) => `<div class="task"><span class="task-mark"></span><div><strong>${name}</strong><div class="muted">코치 포털 수업 목록에 노출</div></div><span class="badge blue">Class</span></div>`).join("")}</div>
-          </div>
-          <div class="detail-block">
-            <p class="detail-title">계정 작업</p>
-            <div class="field"><label>관리자 메모</label><textarea placeholder="권한 변경 또는 계정 관리 메모"></textarea></div>
-            <div class="toolbar" style="justify-content:flex-start;margin-top:12px;">
-              <button class="btn coach-action" data-action="권한 저장">권한 저장</button>
-              <button class="btn warn coach-action" data-action="계정 비활성">계정 비활성</button>
-            </div>
+            <p class="detail-title">배정 수업 조회</p>
+            <div class="task-list">${item.classes.map((name) => `<div class="task"><span class="task-mark"></span><div><strong>${name}</strong><div class="muted">클래스 관리에서 배정된 수업입니다.</div></div><span class="badge blue">Class</span></div>`).join("")}</div>
           </div>`}`;
       document.querySelector(target).querySelectorAll(".coach-action").forEach((button) => {
         button.addEventListener("click", () => {
@@ -5162,6 +5188,47 @@
         row.classList.remove("selected");
       });
       clearDetailState("coach-accounts");
+    });
+
+    document.querySelector("#coach-selected-approve")?.addEventListener("click", () => {
+      const selected = Array.from(document.querySelectorAll("#page-coach-accounts tbody tr[data-status='pending'] .account-check:checked"));
+      if (!selected.length) {
+        showConfirm({ title: "선택 필요", message: "승인할 미승인 코치 계정을 먼저 선택해 주세요.", okText: "확인", onOk: () => {} });
+        return;
+      }
+      showConfirm({
+        title: "선택 승인",
+        message: `${selected.length}명의 코치 계정을 승인 처리하시겠습니까? 클래스 배정은 클래스 관리에서 별도로 처리됩니다.`,
+        okText: "선택 승인",
+        onOk: () => {}
+      });
+    });
+
+    document.querySelectorAll(".invite-open").forEach((button) => {
+      button.addEventListener("click", () => openInviteModal(button.dataset.inviteType));
+    });
+
+    document.querySelector("#invite-modal-close-button")?.addEventListener("click", () => {
+      document.querySelector("#invite-modal").classList.add("hidden");
+    });
+
+    document.querySelector("#invite-send-button")?.addEventListener("click", () => {
+      const name = document.querySelector("#invite-name-input").value.trim();
+      const phone = document.querySelector("#invite-phone-input").value.trim();
+      const channel = document.querySelector("#invite-channel-select").value;
+      const portal = document.querySelector("#invite-portal-input").value;
+      if (!name || !phone) {
+        showConfirm({ title: "입력 필요", message: "초대 대상 성함과 전화번호를 입력해 주세요.", okText: "확인", onOk: () => {} });
+        return;
+      }
+      showConfirm({
+        title: "초대 발송",
+        message: `${name}님(${phone})에게 ${channel}으로 ${portal} 가입 안내를 발송하시겠습니까?`,
+        okText: "발송",
+        onOk: () => {
+          document.querySelector("#invite-modal").classList.add("hidden");
+        }
+      });
     });
 
     document.querySelectorAll(".class-table tbody tr[data-class]").forEach((row) => {
@@ -5714,8 +5781,8 @@
         { date: "2026.05.01 13:30", requester: "kim_mj15", target: "김민재", schoolGrade: "해송초등학교 5학년", status: "승인", manager: "센터 관리자", memo: "기존 등록 정보 일치" }
       ],
       coach: [
-        { date: "2026.05.02 08:40", requester: "박서준", target: "성장 체력 B", schoolGrade: "먼우금초등학교 3학년 외 / 초1-초3", status: "승인", manager: "센터 관리자", memo: "담당 클래스 권한 부여" },
-        { date: "2026.05.01 16:05", requester: "이하린", target: "선수반 C", schoolGrade: "해송초등학교 5학년 외 / 초5-중1", status: "승인", manager: "센터 관리자", memo: "보조 코치 권한 부여" },
+        { date: "2026.05.02 08:40", requester: "박서준", target: "성장 체력 B", schoolGrade: "먼우금초등학교 3학년 외 / 초1-초3", status: "승인", manager: "센터 관리자", memo: "코치 계정 승인" },
+        { date: "2026.05.01 16:05", requester: "이하린", target: "선수반 C", schoolGrade: "해송초등학교 5학년 외 / 초5-중1", status: "승인", manager: "센터 관리자", memo: "코치 계정 승인" },
         { date: "2026.05.01 09:45", requester: "윤태오", target: "초등 배드민턴 A", schoolGrade: "송도초등학교 4학년 외 / 초3-초5", status: "반려", manager: "센터 관리자", memo: "자격 증빙 재확인 필요" }
       ]
     };
