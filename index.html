@@ -2135,8 +2135,8 @@
             <h1>학부모 계정 관리</h1>
           </div>
           <div class="toolbar">
-            <button class="btn">미연결 계정</button>
-            <button class="btn">동의 이력</button>
+            <button class="btn account-filter" data-action="parent-unlinked" data-filtered="false">미연결 계정</button>
+            <button class="btn approval-history-open" data-history-type="parent-consent">동의 이력</button>
           </div>
         </div>
         <div class="member-summary">
@@ -2160,10 +2160,10 @@
             <table class="account-table">
               <thead><tr><th class="check-cell"><input type="checkbox" class="account-check-all" data-target="parent" /></th><th>가입일</th><th>가입 방식</th><th>가입 계정</th><th>연락처</th><th>연결 자녀</th><th>최근 로그인</th><th>상태</th></tr></thead>
               <tbody>
-                <tr class="selected" data-account="parent-hong"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>05.01</td><td><span class="badge orange">카카오</span></td><td>홍미나<br><span class="muted">hong_parent · 휴대폰 인증</span></td><td>010-3210-1829</td><td>송도초 / 4학년 / 홍길동 <span class="badge orange">승인 대기</span></td><td>오늘 09:20<br><span class="muted">카카오</span></td><td><span class="badge green">활성</span></td></tr>
-                <tr data-account="parent-kim"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.28</td><td><span class="badge green">네이버</span></td><td>김하영<br><span class="muted">kimhy · 휴대폰 인증</span></td><td>010-7742-4471</td><td>해송초 / 5학년 / 김민재 <span class="badge green">연결 완료</span></td><td>어제 18:14<br><span class="muted">네이버</span></td><td><span class="badge green">활성</span></td></tr>
-                <tr data-account="parent-park"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.24</td><td><span class="badge gray">일반</span></td><td>박은정<br><span class="muted">park_parent · 휴대폰 인증 필요</span></td><td>010-8820-5901</td><td>- <span class="badge gray">미연결</span></td><td>04.24 11:02<br><span class="muted">비밀번호</span></td><td><span class="badge orange">인증 필요</span></td></tr>
-                <tr data-account="parent-lee"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.18</td><td><span class="badge blue">구글</span></td><td>이지훈<br><span class="muted">lee_parent · 휴대폰 인증</span></td><td>010-5501-9012</td><td>먼우금초 / 3학년 / 이서아 <span class="badge green">연결 완료</span></td><td>05.01 20:44<br><span class="muted">구글</span></td><td><span class="badge green">활성</span></td></tr>
+                <tr class="selected" data-account="parent-hong" data-connection="pending"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>05.01</td><td><span class="badge orange">카카오</span></td><td>홍미나<br><span class="muted">hong_parent · 휴대폰 인증</span></td><td>010-3210-1829</td><td>송도초 / 4학년 / 홍길동 <span class="badge orange">승인 대기</span></td><td>오늘 09:20<br><span class="muted">카카오</span></td><td><span class="badge green">활성</span></td></tr>
+                <tr data-account="parent-kim" data-connection="connected"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.28</td><td><span class="badge green">네이버</span></td><td>김하영<br><span class="muted">kimhy · 휴대폰 인증</span></td><td>010-7742-4471</td><td>해송초 / 5학년 / 김민재 <span class="badge green">연결 완료</span></td><td>어제 18:14<br><span class="muted">네이버</span></td><td><span class="badge green">활성</span></td></tr>
+                <tr data-account="parent-park" data-connection="unlinked"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.24</td><td><span class="badge gray">일반</span></td><td>박은정<br><span class="muted">park_parent · 휴대폰 인증 필요</span></td><td>010-8820-5901</td><td>- <span class="badge gray">미연결</span></td><td>04.24 11:02<br><span class="muted">비밀번호</span></td><td><span class="badge orange">인증 필요</span></td></tr>
+                <tr data-account="parent-lee" data-connection="connected"><td class="check-cell"><input type="checkbox" class="account-check" /></td><td>04.18</td><td><span class="badge blue">구글</span></td><td>이지훈<br><span class="muted">lee_parent · 휴대폰 인증</span></td><td>010-5501-9012</td><td>먼우금초 / 3학년 / 이서아 <span class="badge green">연결 완료</span></td><td>05.01 20:44<br><span class="muted">구글</span></td><td><span class="badge green">활성</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -5696,6 +5696,22 @@
       button.addEventListener("click", () => downloadSelectedAccounts(button.dataset.target));
     });
 
+    document.querySelectorAll("#page-parent-accounts .account-filter").forEach((button) => {
+      button.addEventListener("click", () => {
+        const page = "#page-parent-accounts";
+        const rows = document.querySelectorAll(`${page} .account-table tbody tr[data-account]`);
+        const isFiltered = button.dataset.filtered === "true";
+        rows.forEach((row) => {
+          row.classList.toggle("hidden", !isFiltered && row.dataset.connection !== "unlinked");
+        });
+        button.dataset.filtered = isFiltered ? "false" : "true";
+        button.textContent = isFiltered ? "미연결 계정" : "전체 보기";
+        button.classList.toggle("active", !isFiltered);
+        const selectAll = document.querySelector(`${page} .account-check-all`);
+        if (selectAll) selectAll.checked = false;
+      });
+    });
+
     document.querySelectorAll(".table-export").forEach((button) => {
       button.addEventListener("click", () => downloadTableCsv(button.dataset.table, button.dataset.filename || "table.csv"));
     });
@@ -5704,11 +5720,13 @@
       button.addEventListener("click", () => {
         const titleMap = {
           parent: "자녀 연결 처리 이력",
+          "parent-consent": "동의 이력",
           student: "학생 연결 처리 이력",
           coach: "코치 승인 처리 이력"
         };
         const placeholderMap = {
           parent: "학부모명, 학생명 검색",
+          "parent-consent": "학부모명, 학생명 검색",
           student: "학생 계정, 학생명 검색",
           coach: "코치명, 희망 반 검색"
         };
