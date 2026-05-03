@@ -3787,9 +3787,9 @@
         <table>
           <thead><tr><th>처리일시</th><th>요청자</th><th>대상</th><th>처리</th><th>담당자</th><th>메모</th></tr></thead>
           <tbody id="approval-history-body">
-            <tr><td>2026.05.02 09:20</td><td>홍미나</td><td>홍길동</td><td><span class="badge green">승인</span></td><td>센터 관리자</td><td>정보 일치</td></tr>
-            <tr><td>2026.05.01 17:35</td><td>오지현</td><td>오하린</td><td><span class="badge red">반려</span></td><td>센터 관리자</td><td>학교 정보 확인 필요</td></tr>
-            <tr><td>2026.05.01 11:10</td><td>김하영</td><td>김민재</td><td><span class="badge green">승인</span></td><td>센터 관리자</td><td>기존 등록 정보 일치</td></tr>
+            <tr><td>2026.05.02 09:20</td><td>홍미나</td><td>홍길동<br><span class="muted">송도초등학교 4학년</span></td><td><span class="badge green">승인</span></td><td>센터 관리자</td><td>정보 일치</td></tr>
+            <tr><td>2026.05.01 17:35</td><td>오지현</td><td>오하린<br><span class="muted">송원초등학교 1학년</span></td><td><span class="badge red">반려</span></td><td>센터 관리자</td><td>학교 정보 확인 필요</td></tr>
+            <tr><td>2026.05.01 11:10</td><td>김하영</td><td>김민재<br><span class="muted">해송초등학교 5학년</span></td><td><span class="badge green">승인</span></td><td>센터 관리자</td><td>기존 등록 정보 일치</td></tr>
           </tbody>
         </table>
       </div>
@@ -5716,6 +5716,49 @@
       button.addEventListener("click", () => downloadTableCsv(button.dataset.table, button.dataset.filename || "table.csv"));
     });
 
+    const approvalHistoryRows = {
+      parent: [
+        { date: "2026.05.02 09:20", requester: "홍미나 / 모", target: "홍길동", schoolGrade: "송도초등학교 4학년", status: "승인", manager: "센터 관리자", memo: "정보 일치" },
+        { date: "2026.05.01 17:35", requester: "오지현 / 모", target: "오하린", schoolGrade: "송원초등학교 1학년", status: "반려", manager: "센터 관리자", memo: "학교 정보 확인 필요" },
+        { date: "2026.05.01 11:10", requester: "김하영 / 부", target: "김민재", schoolGrade: "해송초등학교 5학년", status: "승인", manager: "센터 관리자", memo: "기존 등록 정보 일치" }
+      ],
+      "parent-consent": [
+        { date: "2026.05.02 09:20", requester: "홍미나 / 모", target: "홍길동", schoolGrade: "송도초등학교 4학년", status: "승인", manager: "센터 관리자", memo: "필수 동의 완료" },
+        { date: "2026.05.01 15:42", requester: "이지훈 / 부", target: "이서아", schoolGrade: "먼우금초등학교 3학년", status: "승인", manager: "센터 관리자", memo: "마케팅 수신 미동의" },
+        { date: "2026.05.01 10:18", requester: "정다은 / 모", target: "정서윤", schoolGrade: "송명초등학교 2학년", status: "연결 해제", manager: "센터 관리자", memo: "학부모 요청" }
+      ],
+      student: [
+        { date: "2026.05.02 10:05", requester: "honggd16", target: "홍길동", schoolGrade: "송도초등학교 4학년", status: "승인", manager: "센터 관리자", memo: "학생 본인 인증 일치" },
+        { date: "2026.05.01 17:35", requester: "oh_harin19", target: "오하린", schoolGrade: "송원초등학교 1학년", status: "반려", manager: "센터 관리자", memo: "학교 정보 확인 필요" },
+        { date: "2026.05.01 13:30", requester: "kim_mj15", target: "김민재", schoolGrade: "해송초등학교 5학년", status: "승인", manager: "센터 관리자", memo: "기존 등록 정보 일치" }
+      ],
+      coach: [
+        { date: "2026.05.02 08:40", requester: "박서준", target: "성장 체력 B", schoolGrade: "먼우금초등학교 3학년 외 / 초1-초3", status: "승인", manager: "센터 관리자", memo: "담당 클래스 권한 부여" },
+        { date: "2026.05.01 16:05", requester: "이하린", target: "선수반 C", schoolGrade: "해송초등학교 5학년 외 / 초5-중1", status: "승인", manager: "센터 관리자", memo: "보조 코치 권한 부여" },
+        { date: "2026.05.01 09:45", requester: "윤태오", target: "초등 배드민턴 A", schoolGrade: "송도초등학교 4학년 외 / 초3-초5", status: "반려", manager: "센터 관리자", memo: "자격 증빙 재확인 필요" }
+      ]
+    };
+
+    function approvalStatusBadge(status) {
+      if (status === "승인") return "green";
+      if (status === "반려") return "red";
+      if (status === "연결 해제") return "gray";
+      return "orange";
+    }
+
+    function renderApprovalHistoryRows(type) {
+      const rows = approvalHistoryRows[type] || approvalHistoryRows.parent;
+      document.querySelector("#approval-history-body").innerHTML = rows.map((item) => `
+        <tr>
+          <td>${item.date}</td>
+          <td>${item.requester}</td>
+          <td>${item.target}<br><span class="muted">${item.schoolGrade}</span></td>
+          <td><span class="badge ${approvalStatusBadge(item.status)}">${item.status}</span></td>
+          <td>${item.manager}</td>
+          <td>${item.memo}</td>
+        </tr>`).join("");
+    }
+
     document.querySelectorAll(".approval-history-open").forEach((button) => {
       button.addEventListener("click", () => {
         const titleMap = {
@@ -5725,13 +5768,14 @@
           coach: "코치 승인 처리 이력"
         };
         const placeholderMap = {
-          parent: "학부모명, 학생명 검색",
-          "parent-consent": "학부모명, 학생명 검색",
-          student: "학생 계정, 학생명 검색",
-          coach: "코치명, 희망 반 검색"
+          parent: "학부모명, 학생명, 학교, 학년 검색",
+          "parent-consent": "학부모명, 학생명, 학교, 학년 검색",
+          student: "학생 계정, 학생명, 학교, 학년 검색",
+          coach: "코치명, 클래스, 대상 학년 검색"
         };
         document.querySelector("#approval-history-title").textContent = titleMap[button.dataset.historyType] || "처리 이력";
         document.querySelector("#approval-history-keyword").placeholder = placeholderMap[button.dataset.historyType] || "요청자명, 대상명 검색";
+        renderApprovalHistoryRows(button.dataset.historyType);
         document.querySelector("#approval-history-modal").classList.remove("hidden");
       });
     });
@@ -5742,9 +5786,12 @@
 
     document.querySelector("#approval-history-search-button").addEventListener("click", () => {
       const status = document.querySelector("#approval-history-status").value;
+      const keyword = document.querySelector("#approval-history-keyword").value.trim().toLowerCase();
       document.querySelectorAll("#approval-history-body tr").forEach((row) => {
-        const rowText = row.textContent;
-        row.classList.toggle("hidden", status !== "전체" && !rowText.includes(status));
+        const rowText = row.textContent.toLowerCase();
+        const matchesStatus = status === "전체" || row.textContent.includes(status);
+        const matchesKeyword = !keyword || rowText.includes(keyword);
+        row.classList.toggle("hidden", !matchesStatus || !matchesKeyword);
       });
     });
 
