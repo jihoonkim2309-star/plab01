@@ -7348,7 +7348,7 @@
       document.querySelector(selector).innerHTML = `
         <div class="info-list">
           <div class="info-row"><span>청구번호</span><strong>${item.id}</strong></div>
-          ${isReady ? `<div class="info-row"><span>조회 구분</span><strong>${item.origin}</strong></div>` : ""}
+          <div class="info-row"><span>요청 상태</span><strong>${item.requestStatus}</strong></div>
           <div class="info-row"><span>학생/학부모</span><strong>${studentMetaText(item.student)} / ${item.student} / ${item.parent}</strong></div>
           <div class="info-row"><span>수강 클래스</span><strong>${item.className}</strong></div>
           <div class="info-row"><span>상품</span><strong>${item.product}</strong></div>
