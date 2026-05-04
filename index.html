@@ -1939,8 +1939,8 @@
                 <select><option>전체 학교</option><option>송도초</option><option>해송초</option><option>먼우금초</option></select>
               </div>
               <div class="toolbar">
-                <button class="btn">필터 적용</button>
-                <button class="btn table-export" data-table="#page-members .member-table" data-filename="회원_목록.csv">엑셀</button>
+                <button class="btn">조회</button>
+                <button class="btn table-export" data-table="#page-members .member-table" data-filename="회원_목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <table class="member-table">
@@ -2194,7 +2194,7 @@
           </div>
           <div class="toolbar">
             <button class="btn grade-promotion-quick" data-promotion-filter="transition">진학 확인 필요</button>
-            <button class="btn grade-promotion-quick" data-promotion-filter="regular">일반 승급</button>
+            <button class="btn grade-promotion-quick" data-promotion-filter="regular">학년 승급</button>
             <button class="btn grade-promotion-quick" data-promotion-filter="done">승인 완료</button>
             <button class="btn primary" id="grade-history-open">처리 이력</button>
           </div>
@@ -2212,13 +2212,13 @@
             <div class="approval-actions">
               <div class="filters">
                 <select id="grade-filter-year"><option>2026학년도</option><option>2027학년도</option></select>
-                <select id="grade-filter-status"><option>전체 상태</option><option>진학 확인 필요</option><option>학부모 입력 요청</option><option>학부모 입력 완료</option><option>일반 승급 대기</option><option>승인 완료</option><option>보류</option></select>
+                <select id="grade-filter-status"><option>전체 상태</option><option>진학 확인 필요</option><option>학부모 입력 요청</option><option>학부모 입력 완료</option><option>학년 승급 대기</option><option>승인 완료</option><option>보류</option></select>
                 <select id="grade-filter-type"><option>전체 유형</option><option>일반 승급</option><option>초등→중등</option><option>중등→고등</option></select>
                 <input id="grade-filter-search" placeholder="학생명, 학교, 학년 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn" id="grade-filter-button">필터 적용</button>
-                <button class="btn table-export" data-table="#page-grade-promotion table" data-filename="진학학년승급_목록.csv">엑셀</button>
+                <button class="btn" id="grade-filter-button">조회</button>
+                <button class="btn table-export" data-table="#page-grade-promotion table" data-filename="진학학년승급_목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <table>
@@ -2264,7 +2264,7 @@
                 <select><option>전체 연결 상태</option><option>자녀 연결 완료</option><option>승인 대기</option><option>미연결</option></select>
                 <input placeholder="학부모명, 연락처, 자녀명 검색" />
               </div>
-              <div class="toolbar"><button class="btn">필터 적용</button><button class="btn primary">계정 상태 변경</button><button class="btn account-export" data-target="parent">엑셀</button></div>
+              <div class="toolbar"><button class="btn">조회</button><button class="btn primary">계정 상태 변경</button><button class="btn account-export" data-target="parent">엑셀 다운로드</button></div>
             </div>
             <table class="account-table">
               <thead><tr><th class="check-cell"><input type="checkbox" class="account-check-all" data-target="parent" /></th><th>가입일</th><th>가입 방식</th><th>가입 계정</th><th>연락처</th><th>연결 자녀</th><th>최근 로그인</th><th>상태</th></tr></thead>
@@ -2309,7 +2309,7 @@
                 <select><option>전체 연결 상태</option><option>학생 연결 완료</option><option>승인 대기</option><option>미연결</option></select>
                 <input placeholder="학생명, 계정 ID, 학교 검색" />
               </div>
-              <div class="toolbar"><button class="btn">필터 적용</button><button class="btn primary">계정 상태 변경</button><button class="btn account-export" data-target="student">엑셀</button></div>
+              <div class="toolbar"><button class="btn">조회</button><button class="btn primary">계정 상태 변경</button><button class="btn account-export" data-target="student">엑셀 다운로드</button></div>
             </div>
             <table class="account-table">
               <thead><tr><th class="check-cell"><input type="checkbox" class="account-check-all" data-target="student" /></th><th>가입일</th><th>가입 방식</th><th>가입 계정</th><th>연락처</th><th>연결 학생</th><th>최근 로그인</th><th>상태</th></tr></thead>
@@ -2351,7 +2351,7 @@
                 <select><option>전체 권한</option><option>담당 코치</option><option>보조 코치</option><option>리포트 입력</option></select>
                 <input placeholder="코치명, 연락처, 담당 클래스 검색" />
               </div>
-              <div class="toolbar"><button class="btn">필터 적용</button><button class="btn" id="coach-selected-approve">선택 승인</button><button class="btn account-export" data-target="coach">엑셀</button></div>
+              <div class="toolbar"><button class="btn">조회</button><button class="btn" id="coach-selected-approve">선택 승인</button><button class="btn account-export" data-target="coach">엑셀 다운로드</button></div>
             </div>
             <table class="account-table coach-table">
               <thead><tr><th class="check-cell"><input type="checkbox" class="account-check-all" data-target="coach" /></th><th>가입일</th><th>가입 방식</th><th>가입 계정</th><th>연락처</th><th>배정 수업</th><th>요청/역할</th><th>상태</th></tr></thead>
@@ -2397,8 +2397,8 @@
                 <input placeholder="학부모/학생 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn">필터 적용</button>
-                <button class="btn table-export" data-table="#page-parent-link .approval-table" data-filename="자녀_연결요청_목록.csv">엑셀</button>
+                <button class="btn">조회</button>
+                <button class="btn table-export" data-table="#page-parent-link .approval-table" data-filename="자녀_연결요청_목록.csv">엑셀 다운로드</button>
                 <button class="btn bulk-approve" data-target="parent">선택 승인</button>
                 <button class="btn warn bulk-reject" data-target="parent">선택 반려</button>
               </div>
@@ -2445,8 +2445,8 @@
                 <input placeholder="계정/학생 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn">필터 적용</button>
-                <button class="btn table-export" data-table="#page-student-link .approval-table" data-filename="학생_연결요청_목록.csv">엑셀</button>
+                <button class="btn">조회</button>
+                <button class="btn table-export" data-table="#page-student-link .approval-table" data-filename="학생_연결요청_목록.csv">엑셀 다운로드</button>
                 <button class="btn bulk-approve" data-target="student">선택 승인</button>
                 <button class="btn warn bulk-reject" data-target="student">선택 반려</button>
               </div>
@@ -2488,7 +2488,7 @@
           <select><option>전체 클래스</option></select>
           <select><option>전체 코치</option></select>
           <select><option>앱 표시 전체</option><option>표시</option><option>숨김</option><option>휴강 표시</option></select>
-          <button class="btn">필터 적용</button>
+          <button class="btn">조회</button>
         </div>
         <div class="grid two-col">
           <div class="panel elevated">
@@ -2583,8 +2583,8 @@
                 <input placeholder="일자, 클래스, 사유 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn">필터 적용</button>
-                <button class="btn table-export" data-table="#page-holiday-manage table" data-filename="휴강일_목록.csv">엑셀</button>
+                <button class="btn">조회</button>
+                <button class="btn table-export" data-table="#page-holiday-manage table" data-filename="휴강일_목록.csv">엑셀 다운로드</button>
                 <button class="btn holiday-action" data-action="선택 알림 발송">선택 알림 발송</button>
               </div>
             </div>
@@ -2637,8 +2637,8 @@
                 <input id="makeup-filter-search" placeholder="휴강일, 클래스, 학생 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn" id="makeup-filter-button">필터 적용</button>
-                <button class="btn table-export" data-table="#page-makeup-manage table" data-filename="보강일정_목록.csv">엑셀</button>
+                <button class="btn" id="makeup-filter-button">조회</button>
+                <button class="btn table-export" data-table="#page-makeup-manage table" data-filename="보강일정_목록.csv">엑셀 다운로드</button>
                 <button class="btn makeup-bulk-notify">선택 알림 발송</button>
               </div>
             </div>
@@ -2688,8 +2688,8 @@
                 <input id="product-filter-search" placeholder="상품명, 유형, 횟수 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn" id="product-filter-button">필터 적용</button>
-                <button class="btn table-export" data-table="#page-product-manage table" data-filename="수강상품_목록.csv">엑셀</button>
+                <button class="btn" id="product-filter-button">조회</button>
+                <button class="btn table-export" data-table="#page-product-manage table" data-filename="수강상품_목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <div class="panel-body">
@@ -2702,7 +2702,10 @@
           <div class="panel">
             <div class="panel-head">
               <p class="panel-title">상품 상세/수정</p>
-              <span class="badge blue" id="product-detail-status">미선택</span>
+              <div class="toolbar">
+                <span class="badge blue" id="product-detail-status">미선택</span>
+                <button class="btn primary hidden" id="product-edit-button">수정</button>
+              </div>
             </div>
             <div class="panel-body" id="product-detail">
               <div class="empty-state"><strong>선택된 상품이 없습니다.</strong><p>왼쪽 목록에서 상품을 선택해 주세요.</p></div>
@@ -2734,8 +2737,8 @@
                 <input id="payment-filter-search" placeholder="학생명, 청구번호, 상품 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn" id="payment-filter-button">필터 적용</button>
-                <button class="btn table-export" data-table="#page-payment-status table" data-filename="결제상태_목록.csv">엑셀</button>
+                <button class="btn" id="payment-filter-button">조회</button>
+                <button class="btn table-export" data-table="#page-payment-status table" data-filename="결제상태_목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <div class="panel-body">
@@ -2780,9 +2783,9 @@
                 <input id="renewal-filter-search" placeholder="학생명, 학부모명, 클래스 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn" id="renewal-filter-button">필터 적용</button>
+                <button class="btn" id="renewal-filter-button">조회</button>
                 <button class="btn primary renewal-bulk-request">수강 확인 요청 발송</button>
-                <button class="btn table-export" data-table="#page-renewal-confirm table" data-filename="다음달_수강확인_목록.csv">엑셀</button>
+                <button class="btn table-export" data-table="#page-renewal-confirm table" data-filename="다음달_수강확인_목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <div class="panel-body">
@@ -2827,13 +2830,13 @@
                 <input id="billing-filter-search" placeholder="학생명, 학부모명, 청구번호, 상품 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn" id="billing-filter-button">필터 적용</button>
+                <button class="btn" id="billing-filter-button">조회</button>
                 <button class="btn billing-source-filter" data-billing-source="unbilled" title="청구서가 아직 생성되지 않은 전체 대상 조회"><span class="ico">○</span>미청구 전체</button>
                 <button class="btn billing-source-filter" data-billing-source="new" title="신규 등록 후 아직 청구하지 않은 회원 조회"><span class="ico">＋</span>신규등록</button>
                 <button class="btn billing-source-filter" data-billing-source="renewal" title="다음 달 수강 확인 후 아직 청구하지 않은 회원 조회"><span class="ico">↻</span>수강확인</button>
                 <button class="btn primary" id="billing-create-button">청구서 생성</button>
                 <button class="btn" id="billing-bulk-request">결제 요청 발송</button>
-                <button class="btn table-export" data-table="#page-billing-manage table" data-filename="청구결제_목록.csv">엑셀</button>
+                <button class="btn table-export" data-table="#page-billing-manage table" data-filename="청구결제_목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <div class="panel-body">
@@ -2877,8 +2880,8 @@
                 <input id="overdue-filter-search" placeholder="학생명, 학부모명, 청구번호 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn" id="overdue-filter-button">필터 적용</button>
-                <button class="btn table-export" data-table="#page-overdue-manage table" data-filename="미납관리_목록.csv">엑셀</button>
+                <button class="btn" id="overdue-filter-button">조회</button>
+                <button class="btn table-export" data-table="#page-overdue-manage table" data-filename="미납관리_목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <div class="panel-body">
@@ -2930,10 +2933,10 @@
                 <input type="text" placeholder="학생명, 유형 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn" id="report-list-filter-button">필터 적용</button>
+                <button class="btn" id="report-list-filter-button">조회</button>
                 <button class="btn">리포트 생성</button>
                 <button class="btn">리포트 발행</button>
-                <button class="btn table-export" data-table="#page-report-list table" data-filename="리포트_작업목록.csv">엑셀</button>
+                <button class="btn table-export" data-table="#page-report-list table" data-filename="리포트_작업목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <div class="panel-body">
@@ -3011,8 +3014,8 @@
                 <input type="text" placeholder="학생명, 입력자 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn">필터 적용</button>
-                <button class="btn table-export" data-table="#page-report-data table" data-filename="측정데이터_목록.csv">엑셀</button>
+                <button class="btn">조회</button>
+                <button class="btn table-export" data-table="#page-report-data table" data-filename="측정데이터_목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <div class="panel-body">
@@ -3088,9 +3091,9 @@
                 <input type="text" placeholder="학생명, 유형 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn">필터 적용</button>
+                <button class="btn">조회</button>
                 <button class="btn primary">포털 공개</button>
-                <button class="btn table-export" data-table="#page-report-preview table" data-filename="리포트_발행목록.csv">엑셀</button>
+                <button class="btn table-export" data-table="#page-report-preview table" data-filename="리포트_발행목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <div class="panel-body">
@@ -3301,7 +3304,7 @@
                 <select><option>전체 기준</option><option>PAPS</option><option>국민체력100</option><option>PlanB 내부</option><option>수동 기준</option></select>
                 <input placeholder="항목명 검색" />
               </div>
-              <div class="toolbar"><button class="btn">필터 적용</button><button class="btn table-export" data-table="#page-report-template table" data-filename="리포트_항목템플릿.csv">엑셀</button></div>
+              <div class="toolbar"><button class="btn">조회</button><button class="btn table-export" data-table="#page-report-template table" data-filename="리포트_항목템플릿.csv">엑셀 다운로드</button></div>
             </div>
             <table>
               <thead><tr><th>카테고리</th><th>항목</th><th>단위</th><th>방향</th><th>능력치</th><th>기준 소스</th><th>상태</th></tr></thead>
@@ -3348,7 +3351,7 @@
                 <select><option>전체 기술 항목</option><option>스텝 전환</option><option>라켓 컨트롤</option><option>정확도</option></select>
                 <input placeholder="학생명, 코치명 검색" />
               </div>
-              <div class="toolbar"><button class="btn">필터 적용</button><button class="btn table-export" data-table="#page-video-feedback table" data-filename="영상피드백_목록.csv">엑셀</button></div>
+              <div class="toolbar"><button class="btn">조회</button><button class="btn table-export" data-table="#page-video-feedback table" data-filename="영상피드백_목록.csv">엑셀 다운로드</button></div>
             </div>
             <table>
               <thead><tr><th>업로드일</th><th>학생</th><th>기술 항목</th><th>코치</th><th>리포트 포함</th><th>공개</th><th>링크</th></tr></thead>
@@ -3559,8 +3562,8 @@
                 <input placeholder="클래스명, 코치명, 수업 요일 검색" />
               </div>
               <div class="toolbar">
-                <button class="btn">필터 적용</button>
-                <button class="btn table-export" data-table="#page-class-manage .class-table" data-filename="클래스_목록.csv">엑셀</button>
+                <button class="btn">조회</button>
+                <button class="btn table-export" data-table="#page-class-manage .class-table" data-filename="클래스_목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <table class="class-table">
@@ -3715,8 +3718,8 @@
                 <select><option>전체 상태</option><option>대기</option><option>완료</option><option>예외</option></select>
               </div>
               <div class="toolbar">
-                <button class="btn">필터 적용</button>
-                <button class="btn table-export" data-table="#page-detail table" data-filename="목록.csv">엑셀</button>
+                <button class="btn">조회</button>
+                <button class="btn table-export" data-table="#page-detail table" data-filename="목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <table>
@@ -4100,6 +4103,9 @@
           document.querySelectorAll(".product-row").forEach((item) => item.classList.remove("selected"));
           document.querySelector("#product-manage-layout")?.classList.remove("create-mode");
           setBadge("#product-detail-status");
+          const editButton = document.querySelector("#product-edit-button");
+          editButton?.classList.add("hidden");
+          if (editButton) editButton.onclick = null;
           document.querySelector("#product-detail").innerHTML = emptyDetail("왼쪽 목록에서 상품을 선택해 주세요.");
         },
         "renewal-confirm": () => {
@@ -6642,7 +6648,7 @@
     const gradePromotionRows = {
       hong: { student: "홍길동", currentSchool: "송도초", currentGrade: "초6", nextSchool: "", nextGrade: "중1", type: "초등→중등", status: "진학 확인 필요", parentRequest: "미발송", parentSchool: "", parentGrade: "", parentSubmittedAt: "", lastHandled: "-", memo: "초6 졸업 예정. 학부모 포털로 새 학교 확인 필요" },
       kim: { student: "김민재", currentSchool: "해송초", currentGrade: "초6", nextSchool: "", nextGrade: "중1", type: "초등→중등", status: "학부모 입력 완료", parentRequest: "응답 완료", parentSchool: "해송중", parentGrade: "중1", parentSubmittedAt: "2026.03.02", lastHandled: "2026.03.02", memo: "학부모 입력값 승인 대기" },
-      lee: { student: "이서아", currentSchool: "먼우금초", currentGrade: "초3", nextSchool: "먼우금초", nextGrade: "초4", type: "일반 승급", status: "일반 승급 대기", parentRequest: "-", parentSchool: "", parentGrade: "", parentSubmittedAt: "", lastHandled: "-", memo: "학교 변경 없음" },
+      lee: { student: "이서아", currentSchool: "먼우금초", currentGrade: "초3", nextSchool: "먼우금초", nextGrade: "초4", type: "일반 승급", status: "학년 승급 대기", parentRequest: "-", parentSchool: "", parentGrade: "", parentSubmittedAt: "", lastHandled: "-", memo: "학교 변경 없음" },
       park: { student: "박지우", currentSchool: "신정초", currentGrade: "초6", nextSchool: "", nextGrade: "중1", type: "초등→중등", status: "학부모 입력 요청", parentRequest: "발송 완료", parentSchool: "", parentGrade: "", parentSubmittedAt: "", lastHandled: "2026.03.01", memo: "학부모 포털 입력 요청 발송" },
       jung: { student: "정서윤", currentSchool: "송명초", currentGrade: "초2", nextSchool: "송명초", nextGrade: "초3", type: "일반 승급", status: "승인 완료", parentRequest: "-", parentSchool: "", parentGrade: "", parentSubmittedAt: "", lastHandled: "2026.03.01", memo: "자동 승급 승인 완료" },
       choi: { student: "최유준", currentSchool: "채드윅", currentGrade: "중3", nextSchool: "", nextGrade: "고1", type: "중등→고등", status: "학부모 입력 요청", parentRequest: "재요청", parentSchool: "", parentGrade: "", parentSubmittedAt: "", lastHandled: "2026.03.03", memo: "고등학교 진학 확인 재요청" },
@@ -6902,6 +6908,12 @@
       if (!item) return;
       document.querySelector("#product-manage-layout")?.classList.remove("create-mode");
       setBadge("#product-detail-status", item.status, item.status === "활성" ? "green" : "gray");
+      const editButton = document.querySelector("#product-edit-button");
+      if (editButton) {
+        editButton.classList.remove("hidden");
+        editButton.textContent = "수정";
+        editButton.onclick = () => handleProductAction(key, "수정");
+      }
       document.querySelector("#product-detail").innerHTML = `
         <div class="info-list">
           <div class="info-row"><span>상품명</span><strong>${item.name}</strong></div>
@@ -6920,7 +6932,6 @@
         </div>
         <div class="detail-actions">
           <button class="btn warn product-action" data-action="${item.status === "활성" ? "비활성화" : "활성화"}">${item.status === "활성" ? "비활성화" : "활성화"}</button>
-          <button class="btn primary product-action" data-action="수정">수정</button>
         </div>`;
       document.querySelectorAll("#product-detail .product-action").forEach((button) => {
         button.addEventListener("click", () => handleProductAction(key, button.dataset.action));
@@ -6933,6 +6944,9 @@
       if (!item) return;
       document.querySelector("#product-manage-layout")?.classList.remove("create-mode");
       setBadge("#product-detail-status", "수정 중", "blue");
+      const editButton = document.querySelector("#product-edit-button");
+      editButton?.classList.add("hidden");
+      if (editButton) editButton.onclick = null;
       document.querySelector("#product-detail").innerHTML = `
         <div class="info-list">
           <div class="info-row"><span>상품명</span><strong>${item.name}</strong></div>
@@ -6966,6 +6980,9 @@
       document.querySelectorAll(".product-row").forEach((item) => item.classList.remove("selected"));
       document.querySelector("#product-manage-layout")?.classList.add("create-mode");
       setBadge("#product-detail-status", "미선택", "blue");
+      const editButton = document.querySelector("#product-edit-button");
+      editButton?.classList.add("hidden");
+      if (editButton) editButton.onclick = null;
       document.querySelector("#product-detail").innerHTML = `
         <div class="empty-state"><strong>신규 상품 입력</strong><p>상품 정보를 입력한 뒤 저장을 눌러야 목록에 추가됩니다.</p></div>
         <div class="detail-block">
