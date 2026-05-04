@@ -1758,7 +1758,7 @@
           <button data-page="report-list"><span class="ico">▣</span>리포트 관리</button>
           <button class="sub" data-page="report-data">측정 데이터 관리</button>
           <button class="sub" data-page="report-preview">리포트 발행</button>
-          <button class="sub" data-page="report-template">리포트 항목 템플릿</button>
+          <button class="sub" data-page="report-template">측정 항목 관리</button>
           <button class="sub" data-page="video-feedback">영상 피드백</button>
         </div>
         <div class="nav-group">
@@ -3192,7 +3192,7 @@
             <h1>리포트 생성</h1>
           </div>
           <div class="toolbar">
-            <button class="btn" data-page="report-template">항목 템플릿</button>
+            <button class="btn" data-page="report-template">측정 항목 관리</button>
             <button class="btn" data-page="video-feedback">영상 피드백</button>
             <button class="btn primary" data-page="report-preview">리포트 발행</button>
           </div>
@@ -3285,53 +3285,45 @@
 
       <section class="content hidden" id="page-report-template">
         <div class="page-head">
-          <div><h1>리포트 항목 템플릿</h1></div>
-          <div class="toolbar"><button class="btn primary">항목 추가</button></div>
+          <div>
+            <h1>측정 항목 관리</h1>
+            <p class="subtext">리포트에 사용할 측정 항목과 입력 방식, 점수화 기준, 노출 영역을 관리합니다.</p>
+          </div>
+          <div class="toolbar"><button class="btn primary" id="measurement-add-button">항목 추가</button></div>
         </div>
         <div class="schedule-status-row">
-          <div class="summary-card"><span>활성 항목</span><strong>24</strong></div>
-          <div class="summary-card"><span>외부 기준</span><strong>PAPS</strong></div>
-          <div class="summary-card"><span>내부 기준</span><strong>누적중</strong></div>
-          <div class="summary-card"><span>밸런스 축</span><strong>5</strong></div>
+          <div class="summary-card"><span>전체 항목</span><strong id="measurement-count-total">0</strong></div>
+          <div class="summary-card"><span>리포트 사용</span><strong id="measurement-count-used">0</strong></div>
+          <div class="summary-card"><span>코치 입력</span><strong id="measurement-count-coach">0</strong></div>
+          <div class="summary-card"><span>자동 계산</span><strong id="measurement-count-auto">0</strong></div>
         </div>
         <div class="grid two-col">
           <div class="panel elevated">
-            <div class="panel-head"><p class="panel-title">항목/기준 목록</p></div>
+            <div class="panel-head"><p class="panel-title">측정 항목 목록</p></div>
             <div class="approval-actions">
               <div class="filters">
-                <select><option>전체 카테고리</option><option>신체 기본</option><option>바디 사이즈</option><option>바디 비율</option><option>기초체력</option><option>배드민턴 테스트</option></select>
-                <select><option>전체 능력치</option><option>파워</option><option>스피드</option><option>민첩성</option><option>균형성</option><option>협응성</option></select>
-                <select><option>전체 기준</option><option>PAPS</option><option>국민체력100</option><option>PlanB 내부</option><option>수동 기준</option></select>
-                <input placeholder="항목명 검색" />
+                <select id="measurement-filter-category"><option>전체 카테고리</option><option>신체 기본</option><option>바디 사이즈</option><option>바디 비율</option><option>기초체력</option><option>배드민턴 테스트</option></select>
+                <select id="measurement-filter-input"><option>전체 입력 방식</option><option>코치 입력</option><option>관리자 입력</option><option>자동 계산</option><option>외부 연동</option></select>
+                <select id="measurement-filter-use"><option>전체 사용 여부</option><option>사용</option><option>미사용</option></select>
+                <input id="measurement-filter-search" placeholder="항목명, 능력치, 노출 영역 검색" />
               </div>
-              <div class="toolbar"><button class="btn">조회</button><button class="btn table-export" data-table="#page-report-template table" data-filename="리포트_항목템플릿.csv">엑셀 다운로드</button></div>
+              <div class="toolbar"><button class="btn" id="measurement-filter-button">조회</button><button class="btn table-export" data-table="#page-report-template table" data-filename="측정항목_목록.csv">엑셀 다운로드</button></div>
             </div>
             <table>
-              <thead><tr><th>카테고리</th><th>항목</th><th>단위</th><th>방향</th><th>능력치</th><th>기준 소스</th><th>상태</th></tr></thead>
-              <tbody>
-                <tr class="selected"><td>기초체력</td><td>제자리 멀리뛰기</td><td>cm</td><td>높을수록 좋음</td><td>파워</td><td>PAPS 참고</td><td><span class="badge green">활성</span></td></tr>
-                <tr><td>기초체력</td><td>20m 달리기</td><td>sec</td><td>낮을수록 좋음</td><td>스피드</td><td>수동 기준</td><td><span class="badge green">활성</span></td></tr>
-                <tr><td>배드민턴 테스트</td><td>스텝 테스트</td><td>회</td><td>높을수록 좋음</td><td>민첩성</td><td>PlanB 내부</td><td><span class="badge green">활성</span></td></tr>
-                <tr><td>배드민턴 테스트</td><td>라켓 컨트롤</td><td>회/30초</td><td>높을수록 좋음</td><td>협응성</td><td>PlanB 내부</td><td><span class="badge green">활성</span></td></tr>
-                <tr><td>바디 비율</td><td>상하체 비율</td><td>비율</td><td>적정범위</td><td>균형성</td><td>수동 기준</td><td><span class="badge green">활성</span></td></tr>
-              </tbody>
+              <thead><tr><th>카테고리</th><th>항목</th><th>단위</th><th>입력 방식</th><th>리포트 영역</th><th>능력치</th><th>사용</th><th>상태</th></tr></thead>
+              <tbody id="measurement-table-body"></tbody>
             </table>
           </div>
           <div class="panel">
-            <div class="panel-head"><p class="panel-title">항목 수정/점수화</p><span class="badge blue">자동 계산</span></div>
-            <div class="panel-body form-grid">
-              <div class="field"><label>카테고리</label><select><option>기초체력</option><option>배드민턴 테스트</option><option>바디 비율</option></select></div>
-              <div class="field"><label>항목명</label><input value="제자리 멀리뛰기" /></div>
-              <div class="field"><label>단위</label><input value="cm" /></div>
-              <div class="field"><label>점수 방향</label><select><option>높을수록 좋음</option><option>낮을수록 좋음</option><option>적정범위</option></select></div>
-              <div class="field"><label>연결 능력치</label><select><option>파워</option><option>스피드</option><option>민첩성</option><option>균형성</option><option>협응성</option></select></div>
-              <div class="field"><label>가중치</label><input value="1.0" /></div>
-              <div class="field"><label>기준 소스</label><select><option>PAPS 참고</option><option>국민체력100 참고</option><option>PlanB 내부</option><option>수동 기준</option></select></div>
-              <div class="field"><label>기준 그룹</label><select><option>초4 / 남</option><option>초4 / 여</option><option>전체</option></select></div>
-              <div class="field"><label>보통 기준값</label><input value="149" /></div>
-              <div class="field"><label>상위 기준값</label><input value="170" /></div>
-              <div class="field span-2"><label>산식 메모</label><textarea>측정값을 기준값 대비 0~100점으로 환산하고, 파워 점수에 반영합니다. 외부 기준은 참고값이며 운영 데이터로 보정합니다.</textarea></div>
-              <div class="span-2 toolbar" style="justify-content:flex-start;"><button class="btn">수정 취소</button><button class="btn primary">수정 저장</button></div>
+            <div class="panel-head">
+              <p class="panel-title">측정 항목 상세</p>
+              <div class="toolbar">
+                <span class="badge gray" id="measurement-detail-status">미선택</span>
+                <button class="btn primary hidden" id="measurement-edit-button">수정</button>
+              </div>
+            </div>
+            <div class="panel-body" id="measurement-detail">
+              <div class="empty-state"><strong>선택된 측정 항목이 없습니다.</strong><p>왼쪽 목록에서 항목을 선택해 주세요.</p></div>
             </div>
           </div>
         </div>
@@ -3503,7 +3495,7 @@
         <div class="page-head">
           <div>
             <h1>설정</h1>
-            <p class="subtext">센터 정보, 권한, 리포트 항목 템플릿, 알림 템플릿을 관리합니다.</p>
+            <p class="subtext">센터 정보, 권한, 측정 항목, 알림 템플릿을 관리합니다.</p>
           </div>
           <div class="toolbar"><button class="btn primary">저장</button></div>
         </div>
@@ -3519,7 +3511,7 @@
             </div>
           </div>
           <div class="panel">
-            <div class="panel-head"><p class="panel-title">리포트 항목 템플릿</p><button class="btn">항목 추가</button></div>
+            <div class="panel-head"><p class="panel-title">측정 항목 관리</p><button class="btn">항목 추가</button></div>
             <table>
               <thead><tr><th>카테고리</th><th>항목</th><th>단위</th><th>원천</th><th>상태</th></tr></thead>
               <tbody>
@@ -4140,6 +4132,16 @@
           document.querySelectorAll(".billing-row").forEach((item) => item.classList.remove("selected"));
           setBadge("#billing-detail-status");
           document.querySelector("#billing-detail").innerHTML = emptyDetail("왼쪽 목록에서 청구 또는 결제 건을 선택해 주세요.");
+        },
+        "report-template": () => {
+          currentMeasurementKey = "";
+          document.querySelectorAll(".measurement-row").forEach((item) => item.classList.remove("selected"));
+          setBadge("#measurement-detail-status");
+          const editButton = document.querySelector("#measurement-edit-button");
+          editButton?.classList.add("hidden");
+          if (editButton) editButton.onclick = null;
+          document.querySelector("#measurement-detail").innerHTML = emptyDetail("왼쪽 목록에서 측정 항목을 선택해 주세요.");
+          renderMeasurementTable();
         },
         "overdue-manage": () => {
           currentInvoiceKey = "";
@@ -5188,7 +5190,7 @@
       "overdue-manage": ["미납 관리", "미납 건을 우선순위로 정렬하고 재청구/알림 발송을 처리합니다.", ["D+1", "D+3", "D+7", "장기"], ["미납 알림", "재청구"], ["학생", "청구월", "미납일", "금액", "최근 알림"], [["홍길동", "2026-05", "5일", "240,000", "D+3 발송"], ["정서윤", "2026-04", "19일", "160,000", "최종 안내"]]],
       "report-data": ["측정 데이터 관리", "코치가 입력한 인바디, 아웃바디, 기초체력, 배드민턴 데이터를 검토합니다.", ["인바디", "아웃바디", "기초체력", "배드민턴"], ["수정 승인"], ["학생", "측정월", "입력자", "완성도", "상태"], [["홍길동", "2026-05", "김도윤", "92%", "검토 대기"], ["김민재", "2026-05", "이하린", "100%", "승인"]]],
       "report-preview": ["PDF 미리보기/발행", "성장 리포트 PDF를 확인하고 학부모 앱에 공개합니다.", ["초안", "검토", "승인", "발행"], ["PDF 생성", "발행 승인"], ["학생", "측정월", "페이지", "상태", "공개"], [["홍길동", "2026-05", "2p", "승인 대기", "비공개"], ["김민재", "2026-04", "2p", "발행", "공개"]]],
-      "report-template": ["리포트 항목 템플릿", "리포트 항목, 단위, 원천, 노출 순서, 활성 상태를 설정합니다.", ["현재 신체", "바디 사이즈", "바디 비율", "테스트"], ["항목 추가"], ["카테고리", "항목", "단위", "원천", "상태"], [["아웃바디", "얼굴-어깨 비율", "%", "계산/입력", "활성"], ["배드민턴", "스텝 테스트", "회", "코치 측정", "활성"]]],
+      "report-template": ["측정 항목 관리", "리포트에 사용할 측정 항목, 입력 방식, 점수 기준, 노출 순서, 활성 상태를 설정합니다.", ["현재 신체", "바디 사이즈", "바디 비율", "테스트"], ["항목 추가"], ["카테고리", "항목", "단위", "입력 방식", "상태"], [["아웃바디", "얼굴-어깨 비율", "%", "자동 계산", "활성"], ["배드민턴", "스텝 테스트", "회", "코치 입력", "활성"]]],
       "video-feedback": ["영상 피드백", "훈련 영상을 학생/기술 항목과 연결하고 리포트 포함 여부를 관리합니다.", ["업로드", "검토", "리포트 포함"], ["영상 업로드"], ["학생", "기술 항목", "코치", "포함", "상태"], [["홍길동", "스텝", "김도윤", "Y", "검토"], ["김민재", "라켓 컨트롤", "이하린", "Y", "완료"]]],
       "route-manage": ["노선/정류장 관리", "노선, 정류장 순서, 예정 시간, 승하차 장소를 관리합니다.", ["노선", "정류장", "학생 배정"], ["노선 생성"], ["노선", "정류장", "기사", "차량", "상태"], [["1호차 송도 A", "8개", "최성훈", "71가 1234", "운영"], ["2호차 청라 B", "6개", "정민수", "72나 5581", "운영"]]],
       "bus-run": ["운행 관리", "오늘 운행 시작/종료, 탑승 예정, 미처리 학생을 관리합니다.", ["오늘", "예정", "운행중", "완료"], ["운행 시작", "운행 종료"], ["노선", "기사", "예정", "승차", "상태"], [["1호차 송도 A", "최성훈", "18", "15", "운행중"], ["2호차 청라 B", "정민수", "14", "14", "미하차 1"]]],
@@ -6648,9 +6650,245 @@
     };
 
     let currentInvoiceKey = "";
+    let currentMeasurementKey = "";
+    let measurementFormSnapshot = "";
+
+    const measurementItems = {
+      jump: { category: "기초체력", name: "제자리 멀리뛰기", unit: "cm", inputType: "코치 입력", scoreDirection: "높을수록 좋음", ability: "파워", weight: "1.0", source: "PAPS 참고", group: "초4 / 남", normal: "149", high: "170", reportUse: "사용", reportSection: "기초체력/배드민턴 테스트", order: "10", status: "활성", memo: "파워 점수에 반영합니다." },
+      run20: { category: "기초체력", name: "20m 달리기", unit: "sec", inputType: "코치 입력", scoreDirection: "낮을수록 좋음", ability: "스피드", weight: "1.0", source: "수동 기준", group: "초4 / 남", normal: "4.2", high: "3.6", reportUse: "사용", reportSection: "기초체력/배드민턴 테스트", order: "20", status: "활성", memo: "기록이 낮을수록 높은 점수로 환산합니다." },
+      step: { category: "배드민턴 테스트", name: "스텝 테스트", unit: "회", inputType: "코치 입력", scoreDirection: "높을수록 좋음", ability: "민첩성", weight: "1.2", source: "PlanB 내부", group: "전체", normal: "60", high: "80", reportUse: "사용", reportSection: "기초체력/배드민턴 테스트", order: "30", status: "활성", memo: "배드민턴 전용 민첩성 지표입니다." },
+      racket: { category: "배드민턴 테스트", name: "라켓 컨트롤", unit: "회/30초", inputType: "코치 입력", scoreDirection: "높을수록 좋음", ability: "협응성", weight: "1.0", source: "PlanB 내부", group: "전체", normal: "45", high: "65", reportUse: "사용", reportSection: "기초체력/배드민턴 테스트", order: "40", status: "활성", memo: "라켓 컨트롤 정확도를 반영합니다." },
+      ratio: { category: "바디 비율", name: "상하체 비율", unit: "비율", inputType: "자동 계산", scoreDirection: "적정범위", ability: "균형성", weight: "0.8", source: "수동 기준", group: "전체", normal: "1.10", high: "1.15", reportUse: "사용", reportSection: "바디 사이즈/비율 변화", order: "50", status: "활성", memo: "키, 앉은키 입력값을 기반으로 계산합니다." },
+      shoulder: { category: "바디 사이즈", name: "어깨너비", unit: "cm", inputType: "관리자 입력", scoreDirection: "높을수록 좋음", ability: "균형성", weight: "0.6", source: "PlanB 내부", group: "초4 / 남", normal: "35", high: "38", reportUse: "미사용", reportSection: "바디 사이즈/비율 변화", order: "60", status: "비활성", memo: "운영 기준 확정 후 사용 예정입니다." }
+    };
 
     function money(value) {
       return Number(value).toLocaleString("ko-KR");
+    }
+
+    function measurementBadge(item) {
+      if (item.status === "비활성") return "gray";
+      if (item.reportUse === "미사용") return "orange";
+      return "green";
+    }
+
+    function filteredMeasurementItems() {
+      const category = document.querySelector("#measurement-filter-category")?.value || "전체 카테고리";
+      const inputType = document.querySelector("#measurement-filter-input")?.value || "전체 입력 방식";
+      const use = document.querySelector("#measurement-filter-use")?.value || "전체 사용 여부";
+      const search = (document.querySelector("#measurement-filter-search")?.value || "").trim().toLowerCase();
+      return Object.entries(measurementItems).filter(([, item]) => {
+        const matchesCategory = category === "전체 카테고리" || item.category === category;
+        const matchesInput = inputType === "전체 입력 방식" || item.inputType === inputType;
+        const matchesUse = use === "전체 사용 여부" || item.reportUse === use;
+        const haystack = `${item.category} ${item.name} ${item.ability} ${item.reportSection} ${item.source}`.toLowerCase();
+        return matchesCategory && matchesInput && matchesUse && (!search || haystack.includes(search));
+      });
+    }
+
+    function updateMeasurementSummary() {
+      const items = Object.values(measurementItems);
+      document.querySelector("#measurement-count-total").textContent = items.length;
+      document.querySelector("#measurement-count-used").textContent = items.filter((item) => item.reportUse === "사용").length;
+      document.querySelector("#measurement-count-coach").textContent = items.filter((item) => item.inputType === "코치 입력").length;
+      document.querySelector("#measurement-count-auto").textContent = items.filter((item) => item.inputType === "자동 계산").length;
+    }
+
+    function renderMeasurementTable() {
+      const body = document.querySelector("#measurement-table-body");
+      if (!body) return;
+      const rows = filteredMeasurementItems();
+      body.innerHTML = rows.length ? rows.map(([key, item]) => `
+        <tr class="measurement-row ${key === currentMeasurementKey ? "selected" : ""}" data-measurement="${key}">
+          <td>${item.category}</td>
+          <td><strong>${item.name}</strong><div class="muted">${item.scoreDirection}</div></td>
+          <td>${item.unit}</td>
+          <td>${item.inputType}</td>
+          <td>${item.reportSection}</td>
+          <td>${item.ability}</td>
+          <td><span class="badge ${item.reportUse === "사용" ? "green" : "gray"}">${item.reportUse}</span></td>
+          <td><span class="badge ${measurementBadge(item)}">${item.status}</span></td>
+        </tr>`).join("") : `<tr><td colspan="8"><div class="empty-state"><strong>조회 결과가 없습니다.</strong><p>필터 조건을 변경해 주세요.</p></div></td></tr>`;
+      document.querySelectorAll(".measurement-row").forEach((row) => {
+        row.addEventListener("click", () => {
+          document.querySelectorAll(".measurement-row").forEach((item) => item.classList.remove("selected"));
+          row.classList.add("selected");
+          renderMeasurementDetail(row.dataset.measurement);
+        });
+      });
+      updateMeasurementSummary();
+    }
+
+    function renderMeasurementDetail(key) {
+      currentMeasurementKey = key;
+      const item = measurementItems[key];
+      if (!item) return;
+      setBadge("#measurement-detail-status", item.status, measurementBadge(item));
+      const editButton = document.querySelector("#measurement-edit-button");
+      if (editButton) {
+        editButton.classList.remove("hidden");
+        editButton.onclick = () => renderMeasurementEdit(key);
+      }
+      document.querySelector("#measurement-detail").innerHTML = `
+        <div class="info-list">
+          <div class="info-row"><span>항목명</span><strong>${item.name}</strong></div>
+          <div class="info-row"><span>카테고리</span><strong>${item.category}</strong></div>
+          <div class="info-row"><span>입력 방식</span><strong>${item.inputType}</strong></div>
+          <div class="info-row"><span>단위</span><strong>${item.unit}</strong></div>
+          <div class="info-row"><span>리포트 사용</span><strong>${item.reportUse}</strong></div>
+          <div class="info-row"><span>노출 영역</span><strong>${item.reportSection}</strong></div>
+          <div class="info-row"><span>연결 능력치</span><strong>${item.ability}</strong></div>
+          <div class="info-row"><span>점수 방향</span><strong>${item.scoreDirection}</strong></div>
+        </div>
+        <div class="detail-block">
+          <p class="detail-title">점수화 기준</p>
+          <div class="info-list">
+            <div class="info-row"><span>기준 소스</span><strong>${item.source}</strong></div>
+            <div class="info-row"><span>기준 그룹</span><strong>${item.group}</strong></div>
+            <div class="info-row"><span>보통 기준값</span><strong>${item.normal}</strong></div>
+            <div class="info-row"><span>상위 기준값</span><strong>${item.high}</strong></div>
+            <div class="info-row"><span>가중치</span><strong>${item.weight}</strong></div>
+            <div class="info-row"><span>정렬 순서</span><strong>${item.order}</strong></div>
+          </div>
+        </div>
+        <div class="detail-block"><p class="detail-title">관리 메모</p><div class="approval-note">${item.memo}</div></div>
+        <div class="detail-actions">
+          <button class="btn warn measurement-action" data-action="${item.status === "활성" ? "비활성화" : "활성화"}">${item.status === "활성" ? "비활성화" : "활성화"}</button>
+        </div>`;
+      document.querySelectorAll("#measurement-detail .measurement-action").forEach((button) => {
+        button.addEventListener("click", () => handleMeasurementAction(key, button.dataset.action));
+      });
+    }
+
+    function measurementFormHtml(item = {}, mode = "edit") {
+      const selected = (value, option) => value === option ? "selected" : "";
+      return `
+        <div class="detail-block">
+          <p class="detail-title">${mode === "new" ? "신규 측정 항목 입력" : "측정 항목 수정"}</p>
+          <div class="form-grid">
+            <div class="field"><label>카테고리</label><select class="measurement-category"><option value="">미선택</option><option ${selected(item.category, "신체 기본")}>신체 기본</option><option ${selected(item.category, "바디 사이즈")}>바디 사이즈</option><option ${selected(item.category, "바디 비율")}>바디 비율</option><option ${selected(item.category, "기초체력")}>기초체력</option><option ${selected(item.category, "배드민턴 테스트")}>배드민턴 테스트</option></select></div>
+            <div class="field"><label>항목명</label><input class="measurement-name" value="${item.name || ""}" placeholder="예: 제자리 멀리뛰기" /></div>
+            <div class="field"><label>단위</label><input class="measurement-unit" value="${item.unit || ""}" placeholder="cm, sec, 회 등" /></div>
+            <div class="field"><label>입력 방식</label><select class="measurement-input-type"><option value="">미선택</option><option ${selected(item.inputType, "코치 입력")}>코치 입력</option><option ${selected(item.inputType, "관리자 입력")}>관리자 입력</option><option ${selected(item.inputType, "자동 계산")}>자동 계산</option><option ${selected(item.inputType, "외부 연동")}>외부 연동</option></select></div>
+            <div class="field"><label>리포트 사용 여부</label><select class="measurement-report-use"><option ${selected(item.reportUse || "사용", "사용")}>사용</option><option ${selected(item.reportUse, "미사용")}>미사용</option></select></div>
+            <div class="field"><label>노출 영역</label><select class="measurement-section"><option value="">미선택</option><option ${selected(item.reportSection, "최근 3개월 변화")}>최근 3개월 변화</option><option ${selected(item.reportSection, "바디 사이즈/비율 변화")}>바디 사이즈/비율 변화</option><option ${selected(item.reportSection, "기초체력/배드민턴 테스트")}>기초체력/배드민턴 테스트</option><option ${selected(item.reportSection, "신체 능력 밸런스 분석")}>신체 능력 밸런스 분석</option><option ${selected(item.reportSection, "영상 피드백")}>영상 피드백</option></select></div>
+            <div class="field"><label>점수 방향</label><select class="measurement-direction"><option ${selected(item.scoreDirection || "높을수록 좋음", "높을수록 좋음")}>높을수록 좋음</option><option ${selected(item.scoreDirection, "낮을수록 좋음")}>낮을수록 좋음</option><option ${selected(item.scoreDirection, "적정범위")}>적정범위</option></select></div>
+            <div class="field"><label>연결 능력치</label><select class="measurement-ability"><option ${selected(item.ability || "파워", "파워")}>파워</option><option ${selected(item.ability, "스피드")}>스피드</option><option ${selected(item.ability, "민첩성")}>민첩성</option><option ${selected(item.ability, "균형성")}>균형성</option><option ${selected(item.ability, "협응성")}>협응성</option></select></div>
+            <div class="field"><label>가중치</label><input class="measurement-weight" value="${item.weight || "1.0"}" /></div>
+            <div class="field"><label>기준 소스</label><select class="measurement-source"><option ${selected(item.source || "PlanB 내부", "PlanB 내부")}>PlanB 내부</option><option ${selected(item.source, "PAPS 참고")}>PAPS 참고</option><option ${selected(item.source, "국민체력100 참고")}>국민체력100 참고</option><option ${selected(item.source, "수동 기준")}>수동 기준</option></select></div>
+            <div class="field"><label>기준 그룹</label><select class="measurement-group"><option ${selected(item.group || "전체", "전체")}>전체</option><option ${selected(item.group, "초4 / 남")}>초4 / 남</option><option ${selected(item.group, "초4 / 여")}>초4 / 여</option><option ${selected(item.group, "중등 / 남")}>중등 / 남</option><option ${selected(item.group, "중등 / 여")}>중등 / 여</option></select></div>
+            <div class="field"><label>정렬 순서</label><input class="measurement-order" value="${item.order || "10"}" /></div>
+            <div class="field"><label>보통 기준값</label><input class="measurement-normal" value="${item.normal || ""}" /></div>
+            <div class="field"><label>상위 기준값</label><input class="measurement-high" value="${item.high || ""}" /></div>
+            <div class="field"><label>상태</label><select class="measurement-status"><option ${selected(item.status || "활성", "활성")}>활성</option><option ${selected(item.status, "비활성")}>비활성</option></select></div>
+            <div class="field span-2"><label>산식/관리 메모</label><textarea class="measurement-memo">${item.memo || ""}</textarea></div>
+          </div>
+        </div>
+        <div class="detail-actions">
+          <button class="btn measurement-action" data-action="${mode === "new" ? "취소" : "수정 취소"}">취소</button>
+          <button class="btn primary measurement-action" data-action="${mode === "new" ? "신규 저장" : "수정 저장"}">${mode === "new" ? "저장" : "수정 저장"}</button>
+        </div>`;
+    }
+
+    function renderMeasurementEdit(key) {
+      const item = measurementItems[key];
+      if (!item) return;
+      setBadge("#measurement-detail-status", "수정 중", "blue");
+      document.querySelector("#measurement-edit-button")?.classList.add("hidden");
+      document.querySelector("#measurement-detail").innerHTML = measurementFormHtml(item, "edit");
+      setupFormSelectPlaceholders(document.querySelector("#measurement-detail"));
+      measurementFormSnapshot = formSnapshot(document.querySelector("#measurement-detail"));
+      document.querySelectorAll("#measurement-detail .measurement-action").forEach((button) => {
+        button.addEventListener("click", () => handleMeasurementAction(key, button.dataset.action));
+      });
+    }
+
+    function renderNewMeasurementItem() {
+      currentMeasurementKey = "__new__";
+      document.querySelectorAll(".measurement-row").forEach((item) => item.classList.remove("selected"));
+      setBadge("#measurement-detail-status", "신규", "blue");
+      document.querySelector("#measurement-edit-button")?.classList.add("hidden");
+      document.querySelector("#measurement-detail").innerHTML = measurementFormHtml({}, "new");
+      setupFormSelectPlaceholders(document.querySelector("#measurement-detail"));
+      measurementFormSnapshot = formSnapshot(document.querySelector("#measurement-detail"));
+      document.querySelectorAll("#measurement-detail .measurement-action").forEach((button) => {
+        button.addEventListener("click", () => handleMeasurementAction("__new__", button.dataset.action));
+      });
+    }
+
+    function readMeasurementForm() {
+      const detail = document.querySelector("#measurement-detail");
+      return {
+        category: formValue(".measurement-category", detail),
+        name: formValue(".measurement-name", detail),
+        unit: formValue(".measurement-unit", detail),
+        inputType: formValue(".measurement-input-type", detail),
+        reportUse: formValue(".measurement-report-use", detail),
+        reportSection: formValue(".measurement-section", detail),
+        scoreDirection: formValue(".measurement-direction", detail),
+        ability: formValue(".measurement-ability", detail),
+        weight: formValue(".measurement-weight", detail),
+        source: formValue(".measurement-source", detail),
+        group: formValue(".measurement-group", detail),
+        order: formValue(".measurement-order", detail),
+        normal: formValue(".measurement-normal", detail),
+        high: formValue(".measurement-high", detail),
+        status: formValue(".measurement-status", detail),
+        memo: formValue(".measurement-memo", detail)
+      };
+    }
+
+    function handleMeasurementAction(key, action) {
+      if (action === "수정 취소") {
+        renderMeasurementDetail(key);
+        return;
+      }
+      if (action === "취소") {
+        clearDetailState("report-template");
+        return;
+      }
+      if (action === "수정 저장" || action === "신규 저장") {
+        const detail = document.querySelector("#measurement-detail");
+        if (action === "수정 저장" && formSnapshot(detail) === measurementFormSnapshot) {
+          confirmNoEditChanges(() => renderMeasurementDetail(key));
+          return;
+        }
+        if (!validateRequiredFields([
+          { selector: ".measurement-category", label: "카테고리" },
+          { selector: ".measurement-name", label: "항목명" },
+          { selector: ".measurement-unit", label: "단위" },
+          { selector: ".measurement-input-type", label: "입력 방식" },
+          { selector: ".measurement-section", label: "노출 영역" }
+        ], "측정 항목 확인", detail)) return;
+        const next = readMeasurementForm();
+        showConfirm({
+          title: action === "신규 저장" ? "측정 항목 추가" : "측정 항목 수정 저장",
+          message: action === "신규 저장" ? "입력한 측정 항목을 추가하시겠습니까?" : "수정한 측정 항목 정보를 저장하시겠습니까?",
+          okText: action === "신규 저장" ? "저장" : "수정 저장",
+          onOk: () => {
+            const targetKey = action === "신규 저장" ? `measurement${Date.now()}` : key;
+            measurementItems[targetKey] = next;
+            currentMeasurementKey = targetKey;
+            renderMeasurementTable();
+            renderMeasurementDetail(targetKey);
+          }
+        });
+        return;
+      }
+      const item = measurementItems[key];
+      if (!item) return;
+      showConfirm({
+        title: `측정 항목 ${action}`,
+        message: `${item.name} 항목을 ${action}하시겠습니까?`,
+        okText: action,
+        okClass: action === "비활성화" ? "warn" : "primary",
+        onOk: () => {
+          item.status = action === "비활성화" ? "비활성" : "활성";
+          if (action === "비활성화") item.reportUse = "미사용";
+          renderMeasurementTable();
+          renderMeasurementDetail(key);
+        }
+      });
     }
 
     const studentMeta = {
@@ -7911,6 +8149,10 @@
     document.querySelector("#renewal-filter-button")?.addEventListener("click", renderRenewalTable);
     document.querySelector("#renewal-filter-search")?.addEventListener("input", renderRenewalTable);
     document.querySelectorAll("#renewal-filter-month, #renewal-filter-status, #renewal-filter-class").forEach((filter) => filter.addEventListener("change", renderRenewalTable));
+    document.querySelector("#measurement-add-button")?.addEventListener("click", renderNewMeasurementItem);
+    document.querySelector("#measurement-filter-button")?.addEventListener("click", renderMeasurementTable);
+    document.querySelector("#measurement-filter-search")?.addEventListener("input", renderMeasurementTable);
+    document.querySelectorAll("#measurement-filter-category, #measurement-filter-input, #measurement-filter-use").forEach((filter) => filter.addEventListener("change", renderMeasurementTable));
     document.querySelector("#billing-check-all")?.addEventListener("change", (event) => {
       document.querySelectorAll(".billing-check").forEach((checkbox) => {
         checkbox.checked = event.target.checked;
@@ -7963,9 +8205,10 @@
 
     renderRenewalTable();
     renderBillingTable();
+    renderMeasurementTable();
 
     renderGradePromotionTable();
-    ["members", "parent-accounts", "student-accounts", "coach-accounts", "parent-link", "student-link", "grade-promotion", "class-manage", "schedule", "holiday-manage", "makeup-manage", "product-manage", "payment-status", "renewal-confirm", "billing-manage", "overdue-manage"].forEach(clearDetailState);
+    ["members", "parent-accounts", "student-accounts", "coach-accounts", "parent-link", "student-link", "grade-promotion", "class-manage", "schedule", "holiday-manage", "makeup-manage", "product-manage", "payment-status", "renewal-confirm", "billing-manage", "report-template", "overdue-manage"].forEach(clearDetailState);
 
     document.querySelector("#member-edit-button").addEventListener("click", () => {
       openStudentForm("edit", currentMemberKey);
