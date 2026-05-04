@@ -1690,9 +1690,11 @@
         </div>
         <div class="nav-group">
           <div class="nav-label">결제</div>
-          <button data-page="billing-manage"><span class="ico">₩</span>상품/청구</button>
-          <button class="sub" data-page="product-manage">수강 상품 관리</button>
+          <button data-page="product-manage"><span class="ico">₩</span>수강 상품 관리</button>
           <button class="sub" data-page="renewal-confirm">다음 달 수강 확인</button>
+          <button class="sub" data-page="billing-manage">청구 관리</button>
+          <button class="sub" data-page="payment-status">결제 상태</button>
+          <button class="sub" data-page="overdue-manage">미납 관리</button>
         </div>
         <div class="nav-group">
           <div class="nav-label">리포트</div>
@@ -2552,43 +2554,6 @@
         </div>
       </section>
 
-      <section class="content hidden" id="page-products">
-        <div class="page-head">
-          <div>
-            <h1>상품/청구</h1>
-            <p class="subtext">클래스 유형과 주 수업 횟수를 기준으로 수강 상품을 매칭하고 청구를 생성합니다.</p>
-          </div>
-          <div class="toolbar">
-            <button class="btn" data-page="product-manage">수강 상품 관리</button>
-            <button class="btn primary" data-page="billing-manage">청구/결제 관리</button>
-          </div>
-        </div>
-        <div class="grid two-col">
-          <div class="panel">
-            <div class="panel-head"><p class="panel-title">청구 목록</p></div>
-            <table>
-              <thead><tr><th>학생</th><th>상품</th><th>청구월</th><th>금액</th><th>상태</th><th>액션</th></tr></thead>
-              <tbody>
-                <tr><td>홍길동</td><td>주 2회</td><td>2026-05</td><td>240,000</td><td><span class="badge red">미납</span></td><td><button class="btn">재청구</button></td></tr>
-                <tr><td>김민재</td><td>주 3회</td><td>2026-05</td><td>320,000</td><td><span class="badge green">결제완료</span></td><td><button class="btn">영수증</button></td></tr>
-                <tr><td>이서아</td><td>주 1회</td><td>2026-05</td><td>160,000</td><td><span class="badge orange">결제대기</span></td><td><button class="btn">알림</button></td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="panel">
-            <div class="panel-head"><p class="panel-title">청구 생성</p></div>
-            <div class="panel-body form-grid">
-              <div class="field"><label>생성 모드</label><select><option>월별 일괄 청구</option><option>회원별 청구</option></select></div>
-              <div class="field"><label>청구월</label><input value="2026-05" /></div>
-              <div class="field"><label>대상 반</label><select><option>전체 활성 반</option><option>초등 A</option></select></div>
-              <div class="field"><label>납부기한</label><input value="2026-05-10" /></div>
-              <div class="field span-2"><label>메모</label><textarea>5월 정규 수강료 청구</textarea></div>
-              <div class="span-2"><button class="btn primary">청구 미리보기</button></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section class="content hidden" id="page-product-manage">
         <div class="page-head">
           <div>
@@ -2652,7 +2617,7 @@
         </div>
         <div class="grid two-col">
           <div class="panel elevated">
-            <div class="panel-head"><p class="panel-title">청구/결제 목록</p></div>
+            <div class="panel-head"><p class="panel-title">결제 목록</p></div>
             <div class="approval-actions">
               <div class="filters">
                 <select id="payment-filter-month"><option>전체 월</option><option>2026-05</option><option>2026-04</option></select>
@@ -2734,22 +2699,22 @@
       <section class="content hidden" id="page-billing-manage">
         <div class="page-head">
           <div>
-            <h1>상품/청구</h1>
+            <h1>청구 관리</h1>
           </div>
         </div>
         <div class="schedule-status-row">
           <div class="summary-card"><span>청구 가능</span><strong id="billing-count-ready">0</strong></div>
           <div class="summary-card"><span>결제 요청 대기</span><strong id="billing-count-waiting">0</strong></div>
-          <div class="summary-card"><span>결제 완료</span><strong id="billing-count-paid">0</strong></div>
-          <div class="summary-card"><span>미납/실패</span><strong id="billing-count-risk">0</strong></div>
+          <div class="summary-card"><span>요청 발송</span><strong id="billing-count-paid">0</strong></div>
+          <div class="summary-card"><span>생성된 청구서</span><strong id="billing-count-risk">0</strong></div>
         </div>
         <div class="grid two-col">
           <div class="panel elevated">
-            <div class="panel-head"><p class="panel-title">청구/결제 목록</p></div>
+            <div class="panel-head"><p class="panel-title">청구 대상/청구서 목록</p></div>
             <div class="approval-actions">
               <div class="filters">
                 <select id="billing-filter-month"><option>전체 월</option><option>2026-06</option><option>2026-05</option><option>2026-04</option></select>
-                <select id="billing-filter-status"><option>전체 상태</option><option>청구 가능</option><option>결제 요청 대기</option><option>결제 대기</option><option>결제 완료</option><option>결제 실패</option><option>미납</option></select>
+                <select id="billing-filter-status"><option>전체 상태</option><option>청구 가능</option><option>결제 요청 대기</option><option>결제 대기</option><option>결제 실패</option></select>
                 <select id="billing-filter-method"><option>전체 결제 방식</option><option>청구 전</option><option>PG 온라인</option><option>현장 카드</option><option>계좌이체</option></select>
                 <input id="billing-filter-search" placeholder="학생명, 학부모명, 청구번호, 상품 검색" />
               </div>
@@ -2769,11 +2734,11 @@
           </div>
           <div class="panel">
             <div class="panel-head">
-              <p class="panel-title">청구/결제 상세</p>
+              <p class="panel-title">청구 상세</p>
               <span class="badge blue" id="billing-detail-status">미선택</span>
             </div>
             <div class="panel-body" id="billing-detail">
-              <div class="empty-state"><strong>선택된 항목이 없습니다.</strong><p>왼쪽 목록에서 청구 또는 결제 건을 선택해 주세요.</p></div>
+              <div class="empty-state"><strong>선택된 항목이 없습니다.</strong><p>왼쪽 목록에서 청구 대상 또는 청구서를 선택해 주세요.</p></div>
             </div>
           </div>
         </div>
@@ -6714,6 +6679,7 @@
       const item = invoiceDetails[key];
       if (!item) return;
       const selector = target === "overdue" ? "#overdue-detail" : "#payment-detail";
+      const isOverdueView = target === "overdue";
       setBadge(target === "overdue" ? "#overdue-detail-status" : "#payment-detail-status", item.status, paymentBadge(item.status));
       document.querySelector(selector).innerHTML = `
         <div class="info-list">
@@ -6726,21 +6692,36 @@
           <div class="info-row"><span>납부기한</span><strong>${item.dueDate}</strong></div>
           <div class="info-row"><span>최근 상태</span><strong>${item.status}</strong></div>
         </div>
-        <div class="detail-block">
-          <p class="detail-title">수동 결제 완료 처리</p>
-          <div class="form-grid">
-            <div class="field"><label>결제 방식</label><select class="invoice-manual-method"><option value="">미선택</option><option>현장 카드</option><option>계좌이체</option></select></div>
-            <div class="field"><label>결제일</label><input class="invoice-paid-date" type="date" value="2026-05-02" /></div>
-            <div class="field"><label>결제 금액</label><input class="invoice-paid-amount" value="${item.amount}" /></div>
-            <div class="field"><label>승인번호/입금자명</label><input class="invoice-paid-ref" placeholder="카드 승인번호 또는 입금자명" /></div>
-            <div class="field span-2"><label>처리 메모</label><textarea class="invoice-paid-memo">${item.memo}</textarea></div>
+        ${isOverdueView ? `
+          <div class="detail-block">
+            <p class="detail-title">미납 안내 처리</p>
+            <div class="form-grid">
+              <div class="field"><label>안내 채널</label><select class="invoice-overdue-channel"><option>카카오 알림톡</option><option>문자 SMS</option><option>전화 상담</option></select></div>
+              <div class="field"><label>후속 상태</label><select class="invoice-overdue-next"><option>D+3 안내</option><option>D+7 안내</option><option>상담 필요</option><option>납부 확인 대기</option></select></div>
+              <div class="field span-2"><label>처리 메모</label><textarea class="invoice-overdue-memo">${item.memo}</textarea></div>
+            </div>
           </div>
-        </div>
+        ` : `
+          <div class="detail-block">
+            <p class="detail-title">수동 결제 완료 처리</p>
+            <div class="form-grid">
+              <div class="field"><label>결제 방식</label><select class="invoice-manual-method"><option value="">미선택</option><option>현장 카드</option><option>계좌이체</option></select></div>
+              <div class="field"><label>결제일</label><input class="invoice-paid-date" type="date" value="2026-05-02" /></div>
+              <div class="field"><label>결제 금액</label><input class="invoice-paid-amount" value="${item.amount}" /></div>
+              <div class="field"><label>승인번호/입금자명</label><input class="invoice-paid-ref" placeholder="카드 승인번호 또는 입금자명" /></div>
+              <div class="field span-2"><label>처리 메모</label><textarea class="invoice-paid-memo">${item.memo}</textarea></div>
+            </div>
+          </div>
+        `}
         <div class="toolbar" style="justify-content:flex-start;margin-top:12px;">
-          <button class="btn primary invoice-action" data-action="결제 요청 발송" ${item.status === "결제 완료" ? "disabled" : ""}>결제 요청 발송</button>
-          <button class="btn invoice-action" data-action="PG 상태 확인">PG 상태 확인</button>
-          <button class="btn invoice-action" data-action="수동 결제 완료" ${item.status === "결제 완료" ? "disabled" : ""}>수동 결제 완료</button>
-          <button class="btn warn invoice-action" data-action="미납 처리" ${item.status === "결제 완료" || item.status === "미납" ? "disabled" : ""}>미납 처리</button>
+          ${isOverdueView ? `
+            <button class="btn primary invoice-action" data-action="미납 알림 발송">미납 알림 발송</button>
+            <button class="btn invoice-action" data-action="상담 필요 표시">상담 필요 표시</button>
+          ` : `
+            <button class="btn primary invoice-action" data-action="결제 요청 발송" ${item.status === "결제 완료" ? "disabled" : ""}>결제 요청 발송</button>
+            <button class="btn invoice-action" data-action="PG 상태 확인">PG 상태 확인</button>
+            <button class="btn invoice-action" data-action="수동 결제 완료" ${item.status === "결제 완료" ? "disabled" : ""}>수동 결제 완료</button>
+          `}
         </div>`;
       setupFormSelectPlaceholders(document.querySelector(selector));
       document.querySelector(selector).querySelectorAll(".invoice-action").forEach((button) => {
@@ -6771,13 +6752,14 @@
         "결제 요청 발송": `${item.student} 학부모 포털로 PG 결제 요청을 발송하시겠습니까?`,
         "PG 상태 확인": `${item.id}의 PG 결제 상태를 확인하시겠습니까?`,
         "수동 결제 완료": `${item.id} 건을 수동 결제 완료 처리하시겠습니까?`,
-        "미납 처리": `${item.id} 건을 미납으로 전환하시겠습니까?`
+        "미납 알림 발송": `${item.student} 학부모에게 미납 안내를 발송하시겠습니까?`,
+        "상담 필요 표시": `${item.id} 건을 상담 필요 상태로 표시하시겠습니까?`
       };
       showConfirm({
         title: action,
         message: messages[action],
         okText: action,
-        okClass: action === "미납 처리" ? "warn" : "primary",
+        okClass: action === "상담 필요 표시" ? "warn" : "primary",
         onOk: () => {
           if (action === "결제 요청 발송") {
             item.status = "결제 대기";
@@ -6797,9 +6779,15 @@
             item.lastNotice = "-";
             item.memo = detail.querySelector(".invoice-paid-memo").value || `${item.method} 수동 결제 완료`;
           }
-          if (action === "미납 처리") {
-            item.status = "미납";
-            item.lastNotice = "미납 전환";
+          if (action === "미납 알림 발송") {
+            const channel = detail.querySelector(".invoice-overdue-channel")?.value || "카카오 알림톡";
+            const next = detail.querySelector(".invoice-overdue-next")?.value || "D+3 안내";
+            item.lastNotice = next;
+            item.memo = detail.querySelector(".invoice-overdue-memo")?.value || `${channel} ${next} 발송`;
+          }
+          if (action === "상담 필요 표시") {
+            item.lastNotice = "상담 필요";
+            item.memo = detail.querySelector(".invoice-overdue-memo")?.value || "장기 미납 상담 필요";
           }
           refreshInvoiceViews(target);
         }
@@ -6850,7 +6838,7 @@
         }
       });
     });
-    document.querySelectorAll("#page-products .toolbar [data-page], #page-reports .toolbar [data-page]").forEach((button) => {
+    document.querySelectorAll("#page-reports .toolbar [data-page]").forEach((button) => {
       button.addEventListener("click", () => {
         buttons.forEach((item) => item.classList.toggle("active", item.dataset.page === button.dataset.page));
         navigateToTarget(button.dataset.page);
@@ -6910,9 +6898,9 @@
         }]);
       const issued = Object.entries(invoiceDetails).map(([key, item]) => [key, {
         source: "invoice",
-        sourceLabel: item.status === "미납" ? "미납" : "청구서",
+        sourceLabel: "청구서",
         ...item
-      }]);
+      }]).filter(([, item]) => item.status !== "결제 완료" && item.status !== "미납");
       return [...ready, ...issued];
     }
 
@@ -6934,8 +6922,8 @@
       const rows = billingRows().map(([, item]) => item);
       document.querySelector("#billing-count-ready").textContent = rows.filter((item) => item.status === "청구 가능").length;
       document.querySelector("#billing-count-waiting").textContent = rows.filter((item) => item.status === "결제 요청 대기" || item.status === "결제 대기").length;
-      document.querySelector("#billing-count-paid").textContent = rows.filter((item) => item.status === "결제 완료").length;
-      document.querySelector("#billing-count-risk").textContent = rows.filter((item) => item.status === "미납" || item.status === "결제 실패").length;
+      document.querySelector("#billing-count-paid").textContent = rows.filter((item) => item.requestStatus === "발송 완료").length;
+      document.querySelector("#billing-count-risk").textContent = rows.filter((item) => item.source === "invoice").length;
     }
 
     function selectedBillingKeys() {
@@ -7002,25 +6990,22 @@
           <div class="info-row"><span>최근 상태</span><strong>${item.status}</strong></div>
         </div>
         <div class="detail-block">
-          <p class="detail-title">${isReady ? "청구서 생성" : "결제 처리"}</p>
+          <p class="detail-title">${isReady ? "청구서 생성" : "결제 요청 발송"}</p>
           <div class="form-grid">
             ${isReady ? `
               <div class="field"><label>납부기한</label><input class="billing-due-date" type="date" value="2026-06-10" /></div>
               <div class="field"><label>생성 후 상태</label><input value="결제 요청 대기" readonly /></div>
               <div class="field span-2"><label>청구 메모</label><textarea class="billing-memo">${item.memo}</textarea></div>
             ` : `
-              <div class="field"><label>결제 방식</label><select class="billing-manual-method"><option value="">미선택</option><option>현장 카드</option><option>계좌이체</option></select></div>
-              <div class="field"><label>결제일</label><input class="billing-paid-date" type="date" value="2026-05-02" /></div>
-              <div class="field"><label>결제 금액</label><input class="billing-paid-amount" value="${item.amount}" /></div>
-              <div class="field"><label>승인번호/입금자명</label><input class="billing-paid-ref" placeholder="카드 승인번호 또는 입금자명" /></div>
+              <div class="field"><label>결제 요청 상태</label><input value="${item.requestStatus}" readonly /></div>
+              <div class="field"><label>최근 안내</label><input value="${item.lastNotice}" readonly /></div>
+              <div class="field span-2"><label>청구 메모</label><textarea readonly>${item.memo}</textarea></div>
             `}
           </div>
         </div>
         <div class="toolbar" style="justify-content:flex-start;margin-top:12px;">
           ${isReady ? `<button class="btn primary billing-action" data-action="청구서 생성">청구서 생성</button>` : `
             <button class="btn primary billing-action" data-action="결제 요청 발송" ${item.status === "결제 완료" ? "disabled" : ""}>결제 요청 발송</button>
-            <button class="btn billing-action" data-action="수동 결제 완료" ${item.status === "결제 완료" ? "disabled" : ""}>수동 결제 완료</button>
-            <button class="btn warn billing-action" data-action="미납 처리" ${item.status === "결제 완료" || item.status === "미납" ? "disabled" : ""}>미납 처리</button>
           `}
         </div>`;
       setupFormSelectPlaceholders(document.querySelector("#billing-detail"));
@@ -7063,7 +7048,7 @@
         title: action,
         message: `${item.student}의 ${item.month} ${action} 처리를 진행하시겠습니까?`,
         okText: action,
-        okClass: action === "미납 처리" ? "warn" : "primary",
+        okClass: "primary",
         onOk: () => {
           if (action === "청구서 생성") {
             const invoiceKey = createInvoiceFromCandidate(key);
@@ -7073,17 +7058,6 @@
               invoiceDetails[key].requestStatus = "발송 완료";
               invoiceDetails[key].status = invoiceDetails[key].status === "결제 실패" || invoiceDetails[key].status === "결제 요청 대기" ? "결제 대기" : invoiceDetails[key].status;
               invoiceDetails[key].lastNotice = "결제 요청";
-            }
-            if (action === "수동 결제 완료") {
-              invoiceDetails[key].method = document.querySelector(".billing-manual-method")?.value || invoiceDetails[key].method;
-              invoiceDetails[key].status = "결제 완료";
-              invoiceDetails[key].paidAt = document.querySelector(".billing-paid-date")?.value || "2026-05-02";
-              invoiceDetails[key].failReason = "-";
-              invoiceDetails[key].lastNotice = "-";
-            }
-            if (action === "미납 처리") {
-              invoiceDetails[key].status = "미납";
-              invoiceDetails[key].lastNotice = "미납 전환";
             }
           }
           renderBillingTable();
