@@ -3814,6 +3814,28 @@
       };
     }
 
+    function formValue(selector, root = document) {
+      return (root.querySelector(selector)?.value || "").trim();
+    }
+
+    function showRequiredMessage(title, labels, focusTarget) {
+      showConfirm({
+        title,
+        message: `${labels.join(", ")} 항목을 입력/선택해 주세요.`,
+        okText: "확인",
+        onOk: () => focusTarget?.focus()
+      });
+    }
+
+    function validateRequiredFields(fields, title, root = document) {
+      const missing = fields.filter(({ selector }) => !formValue(selector, root));
+      if (missing.length) {
+        showRequiredMessage(title, missing.map((item) => item.label), root.querySelector(missing[0].selector));
+        return false;
+      }
+      return true;
+    }
+
     const inviteCopy = {
       parent: {
         title: "학부모 초대",
@@ -4617,12 +4639,12 @@
       if (action === "휴강일 등록") {
         body.innerHTML = `
           <div class="form-grid">
-            <div class="field"><label>휴강일</label><input type="date" value="2026-05-04" /></div>
+            <div class="field"><label>휴강일</label><input id="holiday-date-input" type="date" value="2026-05-04" /></div>
             <div class="field"><label>휴강 범위</label><select id="holiday-scope"><option value="all">센터 전체</option><option value="class">특정 클래스</option></select></div>
             <div class="field hidden" id="holiday-class-field"><label>대상 클래스</label><select id="schedule-source-class">${scheduleClassOptions()}</select></div>
             <div class="field"><label>휴강 유형</label><select id="holiday-type-select"><option>법정공휴일</option><option>센터 정기 휴무</option><option>센터 사정</option><option>코치 사정</option><option>시설 문제</option><option>기타</option></select></div>
             <div class="field"><label>보강 필요 여부</label><input id="holiday-makeup-policy" value="보강 없음 - 법정공휴일 기준" readonly /></div>
-            <div class="field span-2"><label>휴강 사유</label><textarea placeholder="공휴일, 센터 행사, 코치 일정 등"></textarea></div>
+            <div class="field span-2"><label>휴강 사유</label><textarea id="holiday-reason-input" placeholder="공휴일, 센터 행사, 코치 일정 등"></textarea></div>
           </div>
           <div class="approval-note" style="margin-top:12px;">법정공휴일/센터 정기 휴무는 보강 없음, 센터/코치/시설 사정은 보강 필요로 기본 판정됩니다. 알림은 휴강 목록에서 대상 확정 후 발송합니다.</div>`;
       }
@@ -4654,6 +4676,14 @@
         holidayType.addEventListener("change", syncMakeupPolicy);
       }
       save.onclick = () => {
+        const required = [
+          { selector: "#holiday-date-input", label: "휴강일" },
+          { selector: "#holiday-scope", label: "휴강 범위" },
+          { selector: "#holiday-type-select", label: "휴강 유형" },
+          { selector: "#holiday-reason-input", label: "휴강 사유" }
+        ];
+        if (holidayScope?.value === "class") required.push({ selector: "#schedule-source-class", label: "대상 클래스" });
+        if (!validateRequiredFields(required, "휴강일 정보 확인", body)) return;
         showConfirm({
           title: action,
           message: "선택한 일자를 휴강일로 등록하시겠습니까?",
@@ -5374,6 +5404,32 @@
 
     document.querySelector("#class-create-save-button").addEventListener("click", () => {
       const isEdit = classFormMode === "edit";
+      const required = [
+        { selector: "#class-name-input", label: "클래스명" },
+        { selector: "#class-type-select", label: "클래스 유형" },
+        { selector: "#class-status-select", label: "운영 상태" },
+        { selector: "#class-weekly-count-select", label: "주 수업 횟수" },
+        { selector: "#class-sport-select", label: "종목" },
+        { selector: "#class-level-select", label: "레벨" },
+        { selector: "#class-grade-start-select", label: "최소 학년" },
+        { selector: "#class-grade-end-select", label: "최대 학년" },
+        { selector: "#class-capacity-input", label: "정원" },
+        { selector: "#class-start-hour", label: "시작 시" },
+        { selector: "#class-start-minute", label: "시작 분" },
+        { selector: "#class-end-hour", label: "종료 시" },
+        { selector: "#class-end-minute", label: "종료 분" },
+        { selector: "#class-place-select", label: "수업 장소" },
+        { selector: "#class-main-coach-select", label: "담당 코치" }
+      ];
+      if (!validateRequiredFields(required, "클래스 정보 확인", document.querySelector("#page-class-create"))) return;
+      if (!document.querySelectorAll(".class-weekday:checked").length) {
+        showRequiredMessage("클래스 정보 확인", ["기본 요일"], document.querySelector(".class-weekday"));
+        return;
+      }
+      if (Number(formValue("#class-capacity-input")) <= 0) {
+        showConfirm({ title: "클래스 정보 확인", message: "정원은 1명 이상 숫자로 입력해 주세요.", okText: "확인", onOk: () => document.querySelector("#class-capacity-input").focus() });
+        return;
+      }
       showConfirm({
         title: isEdit ? "클래스 수정 저장" : "클래스 생성",
         message: isEdit ? "수정한 클래스 정보를 저장하시겠습니까?" : "입력한 정보로 신규 클래스를 생성하시겠습니까?",
@@ -7392,6 +7448,21 @@
 
     document.querySelector("#student-save-button").addEventListener("click", () => {
       const isCreate = studentFormMode === "create";
+      const required = [
+        { selector: "#student-form-name", label: "학생명" },
+        { selector: "#student-form-birth", label: "생년월일" },
+        { selector: "#student-form-school", label: "학교" },
+        { selector: "#student-form-grade", label: "학년" },
+        { selector: "#student-form-sport", label: "주 종목" },
+        { selector: "#student-form-level", label: "레벨" },
+        { selector: "#student-form-status", label: "회원 상태" },
+        { selector: "#student-form-registered-at", label: "등록일" },
+        { selector: "#student-form-class", label: "수강 클래스" },
+        { selector: "#student-form-product", label: "결제 상품" },
+        { selector: "#student-form-enroll-start", label: "수강 시작일" },
+        { selector: "#student-form-billing-month", label: "청구 시작월" }
+      ];
+      if (!validateRequiredFields(required, "학생 정보 확인", document.querySelector("#page-student-create"))) return;
       showConfirm({
         title: isCreate ? "신규 회원 등록" : "수정사항 저장",
         message: isCreate ? "입력한 정보로 신규 회원을 등록하시겠습니까?" : "변경된 내용을 저장하시겠습니까?",
