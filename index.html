@@ -3331,7 +3331,7 @@
               <div class="field"><label>보통 기준값</label><input value="149" /></div>
               <div class="field"><label>상위 기준값</label><input value="170" /></div>
               <div class="field span-2"><label>산식 메모</label><textarea>측정값을 기준값 대비 0~100점으로 환산하고, 파워 점수에 반영합니다. 외부 기준은 참고값이며 운영 데이터로 보정합니다.</textarea></div>
-              <div class="span-2 toolbar" style="justify-content:flex-start;"><button class="btn">수정 취소</button><button class="btn primary">저장</button></div>
+              <div class="span-2 toolbar" style="justify-content:flex-start;"><button class="btn">수정 취소</button><button class="btn primary">수정 저장</button></div>
             </div>
           </div>
         </div>
@@ -3893,6 +3893,9 @@
     let currentClassKey = "badminton-a";
     let studentFormMode = "create";
     let studentFormDirty = false;
+    let studentFormSnapshot = "";
+    let classFormSnapshot = "";
+    let productFormSnapshot = "";
     let pendingNavigation = null;
 
     function updateSelectEmptyState(select) {
@@ -3936,6 +3939,24 @@
 
     function formValue(selector, root = document) {
       return (root.querySelector(selector)?.value || "").trim();
+    }
+
+    function formSnapshot(scope) {
+      return Array.from(scope.querySelectorAll("input, select, textarea")).map((field) => {
+        const type = (field.getAttribute("type") || "").toLowerCase();
+        const value = type === "checkbox" || type === "radio" ? field.checked : field.value;
+        return `${field.id || field.name || field.className || field.tagName}:${value}`;
+      }).join("|");
+    }
+
+    function confirmNoEditChanges(onOk) {
+      showConfirm({
+        title: "수정 내용 없음",
+        message: "수정된 내용이 없습니다. 수정을 취소하고 상세 화면으로 돌아가시겠습니까?",
+        okText: "수정 취소",
+        okClass: "warn",
+        onOk
+      });
     }
 
     function showRequiredMessage(title, labels, focusTarget) {
@@ -4509,6 +4530,8 @@
       document.querySelector('[data-page="student-create"]').classList.add("active");
       pages.forEach((page) => page.classList.toggle("hidden", page.id !== "page-student-create"));
       setupFormSelectPlaceholders(document.querySelector("#page-student-create"));
+      studentFormSnapshot = formSnapshot(document.querySelector("#page-student-create"));
+      studentFormDirty = false;
     }
 
     function renderMemberDetail(key) {
@@ -5137,12 +5160,19 @@
         </div>
 
         <div class="toolbar" style="justify-content:flex-start;">
-          <button class="btn primary" id="member-save-button">저장</button>
+          <button class="btn primary" id="member-save-button">수정 저장</button>
           <button class="btn" id="member-cancel-button">취소</button>
         </div>`;
 
       document.querySelector("#member-cancel-button").addEventListener("click", () => renderMemberDetail(currentMemberKey));
-      document.querySelector("#member-save-button").addEventListener("click", () => renderMemberDetail(currentMemberKey));
+      const memberEditSnapshot = formSnapshot(document.querySelector("#member-detail"));
+      document.querySelector("#member-save-button").addEventListener("click", () => {
+        if (formSnapshot(document.querySelector("#member-detail")) === memberEditSnapshot) {
+          confirmNoEditChanges(() => renderMemberDetail(currentMemberKey));
+          return;
+        }
+        renderMemberDetail(currentMemberKey);
+      });
     }
 
     const detailPages = {
@@ -5262,7 +5292,7 @@
       button.addEventListener("click", () => {
         const target = button.dataset.page;
         document.body.classList.remove("drawer-open");
-        if (isStudentFormOpen() && studentFormMode === "edit" && target !== "student-create") {
+        if (isStudentFormOpen() && studentFormMode === "edit" && target !== "student-create" && formSnapshot(document.querySelector("#page-student-create")) !== studentFormSnapshot) {
           pendingNavigation = button;
           showConfirm({
             title: "수정사항 취소",
@@ -5305,7 +5335,7 @@
     });
 
     document.querySelector("#brand-home").addEventListener("click", () => {
-      if (isStudentFormOpen() && studentFormMode === "edit") {
+      if (isStudentFormOpen() && studentFormMode === "edit" && formSnapshot(document.querySelector("#page-student-create")) !== studentFormSnapshot) {
         showConfirm({
           title: "수정사항 취소",
           message: "수정 중인 내용이 있습니다. 저장하지 않고 이동하면 변경사항이 취소됩니다. 수정사항을 취소하시겠습니까?",
@@ -5551,6 +5581,7 @@
       } else {
         resetClassForm();
       }
+      classFormSnapshot = formSnapshot(document.querySelector("#page-class-create"));
     }
 
     function openClassCreate() {
@@ -5582,8 +5613,16 @@
       });
     });
 
-    document.querySelector("#class-create-save-button").addEventListener("click", () => {
+      document.querySelector("#class-create-save-button").addEventListener("click", () => {
       const isEdit = classFormMode === "edit";
+      if (isEdit && formSnapshot(document.querySelector("#page-class-create")) === classFormSnapshot) {
+        confirmNoEditChanges(() => {
+          buttons.forEach((item) => item.classList.toggle("active", item.dataset.page === "class-manage"));
+          navigateToTarget("class-manage");
+          renderClassDetail(currentClassEditKey || currentClassKey);
+        });
+        return;
+      }
       const required = [
         { selector: "#class-name-input", label: "클래스명" },
         { selector: "#class-type-select", label: "클래스 유형" },
@@ -6942,7 +6981,7 @@
       currentProductKey = key;
       const item = billingProducts[key];
       if (!item) return;
-      document.querySelector("#product-manage-layout")?.classList.remove("create-mode");
+      document.querySelector("#product-manage-layout")?.classList.add("create-mode");
       setBadge("#product-detail-status", "수정 중", "blue");
       const editButton = document.querySelector("#product-edit-button");
       editButton?.classList.add("hidden");
@@ -6967,9 +7006,10 @@
         </div>
         <div class="detail-actions">
           <button class="btn product-action" data-action="수정 취소">취소</button>
-          <button class="btn primary product-action" data-action="저장">저장</button>
+          <button class="btn primary product-action" data-action="수정 저장">수정 저장</button>
         </div>`;
       setupFormSelectPlaceholders(document.querySelector("#product-detail"));
+      productFormSnapshot = formSnapshot(document.querySelector("#product-detail"));
       document.querySelectorAll("#product-detail .product-action").forEach((button) => {
         button.addEventListener("click", () => handleProductAction(key, button.dataset.action));
       });
@@ -7178,7 +7218,11 @@
       const item = billingProducts[key];
       const detail = document.querySelector("#product-detail");
       const isNew = action === "신규 저장";
-      const isSave = action === "저장";
+      const isSave = action === "수정 저장" || action === "저장";
+      if (isSave && formSnapshot(detail) === productFormSnapshot) {
+        confirmNoEditChanges(() => renderProductDetail(key));
+        return;
+      }
       const name = detail.querySelector(".product-name")?.value.trim() || "";
       const type = detail.querySelector(".product-type")?.value || "";
       const weekly = detail.querySelector(".product-weekly")?.value || "";
@@ -7202,9 +7246,9 @@
         return;
       }
       showConfirm({
-        title: action === "저장" || isNew ? "수강 상품 저장" : `상품 ${action}`,
-        message: isNew ? "입력한 정보로 신규 수강 상품을 추가하시겠습니까?" : action === "저장" ? "변경한 상품 정보를 저장하시겠습니까?" : `${item.name} 상품을 ${action}하시겠습니까?`,
-        okText: isNew ? "저장" : action,
+        title: isSave || isNew ? "수강 상품 저장" : `상품 ${action}`,
+        message: isNew ? "입력한 정보로 신규 수강 상품을 추가하시겠습니까?" : isSave ? "변경한 상품 정보를 저장하시겠습니까?" : `${item.name} 상품을 ${action}하시겠습니까?`,
+        okText: isNew ? "저장" : isSave ? "수정 저장" : action,
         okClass: action === "비활성화" ? "warn" : "primary",
         onOk: () => {
           if (isNew) {
@@ -7217,7 +7261,7 @@
             updateClassProductMatch();
             return;
           }
-          if (action === "저장") {
+          if (isSave) {
             item.name = name || item.name;
             item.type = type;
             item.weekly = weekly;
@@ -7964,6 +8008,10 @@
 
     document.querySelector("#student-save-button").addEventListener("click", () => {
       const isCreate = studentFormMode === "create";
+      if (!isCreate && formSnapshot(document.querySelector("#page-student-create")) === studentFormSnapshot) {
+        confirmNoEditChanges(backToMembers);
+        return;
+      }
       const required = [
         { selector: "#student-form-name", label: "학생명" },
         { selector: "#student-form-birth", label: "생년월일" },
@@ -7980,9 +8028,9 @@
       ];
       if (!validateRequiredFields(required, "학생 정보 확인", document.querySelector("#page-student-create"))) return;
       showConfirm({
-        title: isCreate ? "신규 회원 등록" : "수정사항 저장",
+        title: isCreate ? "신규 회원 등록" : "수정 저장",
         message: isCreate ? "입력한 정보로 신규 회원을 등록하시겠습니까?" : "변경된 내용을 저장하시겠습니까?",
-        okText: isCreate ? "신규 회원 등록" : "저장",
+        okText: isCreate ? "신규 회원 등록" : "수정 저장",
         onOk: backToMembers
       });
     });
