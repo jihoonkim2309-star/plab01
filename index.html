@@ -723,6 +723,18 @@
       min-width: 168px;
     }
 
+    .student-id {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      line-height: 1.45;
+    }
+
+    .student-id strong {
+      font-weight: 900;
+    }
+
     .profile-hero {
       display: grid;
       grid-template-columns: 76px 1fr;
@@ -2342,10 +2354,10 @@
             <table class="approval-table">
               <thead><tr><th class="check-cell"><input type="checkbox" class="approval-check-all" data-target="parent" /></th><th>요청일</th><th>학부모</th><th>요청 학생 정보</th><th>연결 학생</th><th>상태</th></tr></thead>
               <tbody>
-                <tr class="selected" data-approval="parent-hong" data-status="pending"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>05.01</td><td>홍미나 / 모<br><span class="muted">010-****-1829</span></td><td>홍길동 / 2016.03.12 / 송도초</td><td><strong>홍길동</strong></td><td><span class="badge orange">승인 대기</span></td></tr>
-                <tr data-approval="parent-choi" data-status="pending"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>05.01</td><td>최민석 / 부<br><span class="muted">010-****-7720</span></td><td>최유준 / 2014.09.18 / 채드윅</td><td><strong>최유준</strong></td><td><span class="badge orange">승인 대기</span></td></tr>
-                <tr data-approval="parent-oh" data-status="review"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>04.30</td><td>오지현 / 모<br><span class="muted">010-****-1910</span></td><td>오하린 / 2019.01.08 / 송원초</td><td><strong>오하린</strong></td><td><span class="badge red">검토 필요</span></td></tr>
-                <tr data-approval="parent-kim" data-status="approved"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>04.28</td><td>김하영 / 부<br><span class="muted">010-****-4471</span></td><td>김민재 / 2015.08.09 / 해송초</td><td><strong>김민재</strong></td><td><span class="badge green">승인 완료</span></td></tr>
+                <tr class="selected" data-approval="parent-hong" data-status="pending"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>05.01</td><td>홍미나 / 모<br><span class="muted">010-****-1829</span></td><td>송도초 / 4학년 / 홍길동<br><span class="muted">2016.03.12</span></td><td>송도초 / 4학년 / 홍길동 <span class="badge orange">승인 대기</span></td><td><span class="badge orange">승인 대기</span></td></tr>
+                <tr data-approval="parent-choi" data-status="pending"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>05.01</td><td>최민석 / 부<br><span class="muted">010-****-7720</span></td><td>채드윅 / 6학년 / 최유준<br><span class="muted">2014.09.18</span></td><td>채드윅 / 6학년 / 최유준 <span class="badge orange">승인 대기</span></td><td><span class="badge orange">승인 대기</span></td></tr>
+                <tr data-approval="parent-oh" data-status="review"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>04.30</td><td>오지현 / 모<br><span class="muted">010-****-1910</span></td><td>송원초 / 1학년 / 오하린<br><span class="muted">2019.01.08</span></td><td>송원초 / 1학년 / 오하린 <span class="badge red">검토 필요</span></td><td><span class="badge red">검토 필요</span></td></tr>
+                <tr data-approval="parent-kim" data-status="approved"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>04.28</td><td>김하영 / 부<br><span class="muted">010-****-4471</span></td><td>해송초 / 5학년 / 김민재<br><span class="muted">2015.08.09</span></td><td>해송초 / 5학년 / 김민재 <span class="badge green">승인 완료</span></td><td><span class="badge green">승인 완료</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -2390,10 +2402,10 @@
             <table class="approval-table">
               <thead><tr><th class="check-cell"><input type="checkbox" class="approval-check-all" data-target="student" /></th><th>요청일</th><th>학생 계정</th><th>요청 학생 정보</th><th>연결 학생</th><th>상태</th></tr></thead>
               <tbody>
-                <tr class="selected" data-approval="student-hong" data-status="pending"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>05.01</td><td>honggd16</td><td>홍길동 / 2016.03.12 / 송도초</td><td><strong>홍길동</strong></td><td><span class="badge orange">승인 대기</span></td></tr>
-                <tr data-approval="student-lee" data-status="approved"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>04.30</td><td>lee_sa17</td><td>이서아 / 2017.11.24 / 먼우금초</td><td><strong>이서아</strong></td><td><span class="badge green">승인 완료</span></td></tr>
-                <tr data-approval="student-park" data-status="review"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>04.30</td><td>jiwoo16</td><td>박지우 / 2016.05.19 / 신정초</td><td><strong>박지우</strong></td><td><span class="badge red">검토 필요</span></td></tr>
-                <tr data-approval="student-oh" data-status="pending"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>04.29</td><td>oh_harin19</td><td>오하린 / 2019.01.08 / 송원초</td><td><strong>오하린</strong></td><td><span class="badge orange">승인 대기</span></td></tr>
+                <tr class="selected" data-approval="student-hong" data-status="pending"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>05.01</td><td>honggd16</td><td>송도초 / 4학년 / 홍길동<br><span class="muted">2016.03.12</span></td><td>송도초 / 4학년 / 홍길동 <span class="badge orange">승인 대기</span></td><td><span class="badge orange">승인 대기</span></td></tr>
+                <tr data-approval="student-lee" data-status="approved"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>04.30</td><td>lee_sa17</td><td>먼우금초 / 3학년 / 이서아<br><span class="muted">2017.11.24</span></td><td>먼우금초 / 3학년 / 이서아 <span class="badge green">승인 완료</span></td><td><span class="badge green">승인 완료</span></td></tr>
+                <tr data-approval="student-park" data-status="review"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>04.30</td><td>jiwoo16</td><td>신정초 / 4학년 / 박지우<br><span class="muted">2016.05.19</span></td><td>신정초 / 4학년 / 박지우 <span class="badge red">검토 필요</span></td><td><span class="badge red">검토 필요</span></td></tr>
+                <tr data-approval="student-oh" data-status="pending"><td class="check-cell"><input type="checkbox" class="approval-check" /></td><td>04.29</td><td>oh_harin19</td><td>송원초 / 1학년 / 오하린<br><span class="muted">2019.01.08</span></td><td>송원초 / 1학년 / 오하린 <span class="badge orange">승인 대기</span></td><td><span class="badge orange">승인 대기</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -2878,7 +2890,7 @@
                 <tbody>
                     <tr data-report="hong">
                     <td class="check-cell"><input type="checkbox" class="report-check" /></td>
-                    <td><strong>홍길동</strong><div class="muted">10세 남 · 2016.03.15</div></td>
+                    <td><strong>홍길동</strong><div class="muted">송도초 / 4학년 · 10세 남</div></td>
                     <td><span class="badge green">결제 완료</span></td>
                     <td>신체 성장</td>
                     <td>2026-05</td>
@@ -2888,7 +2900,7 @@
                   </tr>
                   <tr data-report="kim">
                     <td class="check-cell"><input type="checkbox" class="report-check" /></td>
-                    <td><strong>김민재</strong><div class="muted">11세 남 · 2015.08.09</div></td>
+                    <td><strong>김민재</strong><div class="muted">해송초 / 5학년 · 11세 남</div></td>
                     <td><span class="badge green">결제 완료</span></td>
                     <td>영상 피드백</td>
                     <td>2026-05</td>
@@ -2898,7 +2910,7 @@
                   </tr>
                   <tr data-report="lee">
                     <td class="check-cell"><input type="checkbox" class="report-check" /></td>
-                    <td><strong>이서아</strong><div class="muted">9세 여 · 2017.01.22</div></td>
+                    <td><strong>이서아</strong><div class="muted">먼우금초 / 3학년 · 9세 여</div></td>
                     <td><span class="badge green">결제 완료</span></td>
                     <td>기록 리포트</td>
                     <td>2026-04</td>
@@ -2957,7 +2969,7 @@
                 <tbody>
                   <tr data-report-data="hong">
                     <td class="check-cell"><input type="checkbox" class="report-data-check" /></td>
-                    <td><strong>홍길동</strong><div class="muted">10세 남 · 2016.03.15</div></td>
+                    <td><strong>홍길동</strong><div class="muted">송도초 / 4학년 · 10세 남</div></td>
                     <td>2026-05</td>
                     <td>인바디</td>
                     <td>김도윤</td>
@@ -2966,7 +2978,7 @@
                   </tr>
                   <tr data-report-data="kim">
                     <td class="check-cell"><input type="checkbox" class="report-data-check" /></td>
-                    <td><strong>김민재</strong><div class="muted">11세 남 · 2015.08.09</div></td>
+                    <td><strong>김민재</strong><div class="muted">해송초 / 5학년 · 11세 남</div></td>
                     <td>2026-05</td>
                     <td>배드민턴</td>
                     <td>이하린</td>
@@ -2975,7 +2987,7 @@
                   </tr>
                   <tr data-report-data="lee">
                     <td class="check-cell"><input type="checkbox" class="report-data-check" /></td>
-                    <td><strong>이서아</strong><div class="muted">9세 여 · 2017.01.22</div></td>
+                    <td><strong>이서아</strong><div class="muted">먼우금초 / 3학년 · 9세 여</div></td>
                     <td>2026-04</td>
                     <td>기초체력</td>
                     <td>박서준</td>
@@ -3033,9 +3045,9 @@
               <table>
                 <thead><tr><th>학생</th><th>측정월</th><th>유형</th><th>상태</th><th>공개 상태</th></tr></thead>
                 <tbody>
-                  <tr><td><strong>홍길동</strong></td><td>2026-05</td><td>신체 성장</td><td><span class="badge orange">발행 준비</span></td><td>공개 대기</td></tr>
-                  <tr><td><strong>김민재</strong></td><td>2026-05</td><td>영상 피드백</td><td><span class="badge blue">공개 대기</span></td><td>미공개</td></tr>
-                  <tr><td><strong>이서아</strong></td><td>2026-04</td><td>기록 리포트</td><td><span class="badge green">공개 완료</span></td><td>공개</td></tr>
+                  <tr><td><strong>홍길동</strong><div class="muted">송도초 / 4학년</div></td><td>2026-05</td><td>신체 성장</td><td><span class="badge orange">발행 준비</span></td><td>공개 대기</td></tr>
+                  <tr><td><strong>김민재</strong><div class="muted">해송초 / 5학년</div></td><td>2026-05</td><td>영상 피드백</td><td><span class="badge blue">공개 대기</span></td><td>미공개</td></tr>
+                  <tr><td><strong>이서아</strong><div class="muted">먼우금초 / 3학년</div></td><td>2026-04</td><td>기록 리포트</td><td><span class="badge green">공개 완료</span></td><td>공개</td></tr>
                 </tbody>
               </table>
             </div>
@@ -3289,9 +3301,9 @@
             <table>
               <thead><tr><th>업로드일</th><th>학생</th><th>기술 항목</th><th>코치</th><th>리포트 포함</th><th>공개</th><th>링크</th></tr></thead>
               <tbody>
-                <tr class="selected"><td>05.20</td><td>홍길동</td><td>스텝 전환</td><td>김도윤</td><td><span class="badge green">포함</span></td><td><span class="badge blue">앱 공개</span></td><td><span class="badge orange">발송 대기</span></td></tr>
-                <tr><td>05.18</td><td>김민재</td><td>라켓 컨트롤</td><td>이하린</td><td><span class="badge green">포함</span></td><td><span class="badge green">공개</span></td><td><span class="badge green">발송 완료</span></td></tr>
-                <tr><td>05.15</td><td>이서아</td><td>정확도</td><td>박서준</td><td><span class="badge gray">제외</span></td><td><span class="badge gray">비공개</span></td><td><span class="badge gray">미발송</span></td></tr>
+                <tr class="selected"><td>05.20</td><td><strong>홍길동</strong><div class="muted">송도초 / 4학년</div></td><td>스텝 전환</td><td>김도윤</td><td><span class="badge green">포함</span></td><td><span class="badge blue">앱 공개</span></td><td><span class="badge orange">발송 대기</span></td></tr>
+                <tr><td>05.18</td><td><strong>김민재</strong><div class="muted">해송초 / 5학년</div></td><td>라켓 컨트롤</td><td>이하린</td><td><span class="badge green">포함</span></td><td><span class="badge green">공개</span></td><td><span class="badge green">발송 완료</span></td></tr>
+                <tr><td>05.15</td><td><strong>이서아</strong><div class="muted">먼우금초 / 3학년</div></td><td>정확도</td><td>박서준</td><td><span class="badge gray">제외</span></td><td><span class="badge gray">비공개</span></td><td><span class="badge gray">미발송</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -3352,8 +3364,8 @@
           <table>
             <thead><tr><th>학생</th><th>노선</th><th>구분</th><th>방식</th><th>처리자</th><th>시간</th><th>상태</th></tr></thead>
             <tbody>
-              <tr><td><div class="student-cell"><div class="avatar mini">홍</div>홍길동</div></td><td>1호차 송도 A</td><td>승차</td><td>QR</td><td>학생</td><td>15:13</td><td><span class="badge green">완료</span></td></tr>
-              <tr><td><div class="student-cell"><div class="avatar mini">박</div>박지우</div></td><td>2호차 청라 B</td><td>하차</td><td>수동</td><td>기사</td><td>18:22</td><td><span class="badge orange">사유 필요</span></td></tr>
+              <tr><td><div class="student-cell"><div class="avatar mini">홍</div><div><strong>홍길동</strong><div class="muted">송도초 / 4학년</div></div></div></td><td>1호차 송도 A</td><td>승차</td><td>QR</td><td>학생</td><td>15:13</td><td><span class="badge green">완료</span></td></tr>
+              <tr><td><div class="student-cell"><div class="avatar mini">박</div><div><strong>박지우</strong><div class="muted">신정초 / 4학년</div></div></div></td><td>2호차 청라 B</td><td>하차</td><td>수동</td><td>기사</td><td>18:22</td><td><span class="badge orange">사유 필요</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -3423,9 +3435,9 @@
             <table>
               <thead><tr><th>액션</th><th>수행자</th><th>대상</th><th>사유</th><th>시간</th></tr></thead>
               <tbody>
-                <tr><td>긴급 연락처 열람</td><td>최성훈 기사</td><td>홍길동</td><td>하차 확인</td><td>18:22</td></tr>
+                <tr><td>긴급 연락처 열람</td><td>최성훈 기사</td><td>송도초 / 4학년 / 홍길동</td><td>하차 확인</td><td>18:22</td></tr>
                 <tr><td>결제 상태 변경</td><td>오관리</td><td>INV-1038</td><td>PG 실패 반영</td><td>10:18</td></tr>
-                <tr><td>리포트 발행</td><td>오관리</td><td>김민재</td><td>-</td><td>09:31</td></tr>
+                <tr><td>리포트 발행</td><td>오관리</td><td>해송초 / 5학년 / 김민재</td><td>-</td><td>09:31</td></tr>
               </tbody>
             </table>
           </div>
@@ -3782,9 +3794,9 @@
         <table>
           <thead><tr><th>처리일시</th><th>요청자</th><th>대상</th><th>처리</th><th>담당자</th><th>메모</th></tr></thead>
           <tbody id="approval-history-body">
-            <tr><td>2026.05.02 09:20</td><td>홍미나</td><td>홍길동<br><span class="muted">송도초등학교 4학년</span></td><td><span class="badge green">승인</span></td><td>센터 관리자</td><td>정보 일치</td></tr>
-            <tr><td>2026.05.01 17:35</td><td>오지현</td><td>오하린<br><span class="muted">송원초등학교 1학년</span></td><td><span class="badge red">반려</span></td><td>센터 관리자</td><td>학교 정보 확인 필요</td></tr>
-            <tr><td>2026.05.01 11:10</td><td>김하영</td><td>김민재<br><span class="muted">해송초등학교 5학년</span></td><td><span class="badge green">승인</span></td><td>센터 관리자</td><td>기존 등록 정보 일치</td></tr>
+            <tr><td>2026.05.02 09:20</td><td>홍미나</td><td>송도초 / 4학년 / 홍길동</td><td><span class="badge green">승인</span></td><td>센터 관리자</td><td>정보 일치</td></tr>
+            <tr><td>2026.05.01 17:35</td><td>오지현</td><td>송원초 / 1학년 / 오하린</td><td><span class="badge red">반려</span></td><td>센터 관리자</td><td>학교 정보 확인 필요</td></tr>
+            <tr><td>2026.05.01 11:10</td><td>김하영</td><td>해송초 / 5학년 / 김민재</td><td><span class="badge green">승인</span></td><td>센터 관리자</td><td>기존 등록 정보 일치</td></tr>
           </tbody>
         </table>
       </div>
@@ -5106,8 +5118,19 @@
       document.querySelector("#detail-main-title").textContent = `${title} 목록`;
       document.querySelector("#detail-search-input").placeholder = `${title} 검색`;
       document.querySelector("#page-detail .table-export").dataset.filename = `${title}_목록.csv`;
+      const formatDetailCell = (cell, index) => {
+        const column = columns[index] || "";
+        const text = String(cell);
+        if (["학생", "대상", "연결 학생"].includes(column) && studentMeta[text]) return studentTwoLine(text);
+        if (column === "요청 학생 정보") {
+          const name = Object.keys(studentMeta).find((student) => text.includes(student));
+          if (name) return `${studentMetaText(name)} / ${name}<div class="muted">${text.replace(name, "").replace(/^ \/ /, "")}</div>`;
+        }
+        if (index === 4) return `<span class="badge ${text.includes("실패") || text.includes("필요") || text.includes("신규") ? "red" : text.includes("대기") || text.includes("미하차") ? "orange" : "green"}">${cell}</span>`;
+        return cell;
+      };
       document.querySelector("#detail-table-head").innerHTML = `<tr>${columns.map((column) => `<th>${column}</th>`).join("")}</tr>`;
-      document.querySelector("#detail-table-body").innerHTML = rows.map((row) => `<tr>${row.map((cell, index) => `<td>${index === 4 ? `<span class="badge ${String(cell).includes("실패") || String(cell).includes("필요") || String(cell).includes("신규") ? "red" : String(cell).includes("대기") || String(cell).includes("미하차") ? "orange" : "green"}">${cell}</span>` : cell}</td>`).join("")}</tr>`).join("");
+      document.querySelector("#detail-table-body").innerHTML = rows.map((row) => `<tr>${row.map((cell, index) => `<td>${formatDetailCell(cell, index)}</td>`).join("")}</tr>`).join("");
       const workflow = workflowMap[key] || [["조회", "목록 확인"], ["상세", "선택 항목 검토"], ["처리", "상태 변경"], ["로그", "이력 저장"]];
       document.querySelector("#detail-side").innerHTML = `
         <div class="task-list">
@@ -5925,7 +5948,7 @@
         <tr>
           <td>${item.date}</td>
           <td>${item.requester}</td>
-          <td>${item.target}<br><span class="muted">${item.schoolGrade}</span></td>
+          <td>${studentMeta[item.target] ? studentOneLine(item.target) : `${item.target}<br><span class="muted">${item.schoolGrade}</span>`}</td>
           <td><span class="badge ${approvalStatusBadge(item.status)}">${item.status}</span></td>
           <td>${item.manager}</td>
           <td>${item.memo}</td>
@@ -6480,6 +6503,34 @@
       return Number(value).toLocaleString("ko-KR");
     }
 
+    const studentMeta = {
+      "홍길동": { school: "송도초", grade: "4학년", detail: "송도초 / 4학년" },
+      "김민재": { school: "해송초", grade: "5학년", detail: "해송초 / 5학년" },
+      "이서아": { school: "먼우금초", grade: "3학년", detail: "먼우금초 / 3학년" },
+      "박지우": { school: "신정초", grade: "4학년", detail: "신정초 / 4학년" },
+      "정서윤": { school: "송명초", grade: "2학년", detail: "송명초 / 2학년" },
+      "최유준": { school: "채드윅", grade: "6학년", detail: "채드윅 / 6학년" },
+      "오하린": { school: "송원초", grade: "1학년", detail: "송원초 / 1학년" },
+      "윤태오": { school: "송도초", grade: "4학년", detail: "송도초 / 4학년" },
+      "문하준": { school: "해송초", grade: "2학년", detail: "해송초 / 2학년" },
+      "강도윤": { school: "송도초", grade: "3학년", detail: "송도초 / 3학년" },
+      "문서하": { school: "먼우금초", grade: "2학년", detail: "먼우금초 / 2학년" },
+      "한지율": { school: "해송초", grade: "1학년", detail: "해송초 / 1학년" }
+    };
+
+    function studentMetaText(name) {
+      return studentMeta[name]?.detail || "학교/학년 미등록";
+    }
+
+    function studentOneLine(name, badge = "", strong = false) {
+      const label = `${studentMetaText(name)} / ${name}`;
+      return `<span class="student-id">${strong ? `<strong>${label}</strong>` : label}${badge ? ` ${badge}` : ""}</span>`;
+    }
+
+    function studentTwoLine(name, subtext = studentMetaText(name)) {
+      return `<strong>${name}</strong><div class="muted">${subtext}</div>`;
+    }
+
     let currentProductKey = "";
 
     function findBillingProduct(type, weekly) {
@@ -6867,7 +6918,7 @@
       const rows = filteredInvoices(false);
       body.innerHTML = rows.length ? rows.map(([key, item]) => `
         <tr class="payment-row ${key === currentInvoiceKey ? "selected" : ""}" data-invoice="${key}">
-          <td>${item.id}</td><td>${item.student}<br><span class="muted">${item.parent}</span></td><td>${item.product}</td><td>${item.month}</td><td>${money(item.amount)}</td><td>${item.method}</td><td><span class="badge ${paymentBadge(item.status)}">${item.status}</span></td>
+          <td>${item.id}</td><td>${studentTwoLine(item.student, `${studentMetaText(item.student)} / ${item.parent}`)}</td><td>${item.product}</td><td>${item.month}</td><td>${money(item.amount)}</td><td>${item.method}</td><td><span class="badge ${paymentBadge(item.status)}">${item.status}</span></td>
         </tr>`).join("") : `<tr><td colspan="7"><div class="empty-state"><strong>조회 결과가 없습니다.</strong><p>필터 조건을 변경해 주세요.</p></div></td></tr>`;
       bindPaymentRows();
       updatePaymentSummary();
@@ -6879,7 +6930,7 @@
       const rows = filteredInvoices(true);
       body.innerHTML = rows.length ? rows.map(([key, item]) => `
         <tr class="overdue-row ${key === currentInvoiceKey ? "selected" : ""}" data-invoice="${key}">
-          <td>${item.id}</td><td>${item.student}<br><span class="muted">${item.parent}</span></td><td>${item.product}</td><td>${item.dueDate}</td><td>D+3</td><td>${money(item.amount)}</td><td>${item.lastNotice}</td>
+          <td>${item.id}</td><td>${studentTwoLine(item.student, `${studentMetaText(item.student)} / ${item.parent}`)}</td><td>${item.product}</td><td>${item.dueDate}</td><td>D+3</td><td>${money(item.amount)}</td><td>${item.lastNotice}</td>
         </tr>`).join("") : `<tr><td colspan="7"><div class="empty-state"><strong>미납 건이 없습니다.</strong><p>필터 조건을 변경해 주세요.</p></div></td></tr>`;
       bindOverdueRows();
       updatePaymentSummary();
@@ -6896,7 +6947,7 @@
         <div class="info-list">
           <div class="info-row"><span>청구번호</span><strong>${item.id}</strong></div>
           ${isReady ? `<div class="info-row"><span>조회 구분</span><strong>${item.origin}</strong></div>` : ""}
-          <div class="info-row"><span>학생/학부모</span><strong>${item.student} / ${item.parent}</strong></div>
+          <div class="info-row"><span>학생/학부모</span><strong>${studentMetaText(item.student)} / ${item.student} / ${item.parent}</strong></div>
           <div class="info-row"><span>수강 클래스</span><strong>${item.className}</strong></div>
           <div class="info-row"><span>상품</span><strong>${item.product}</strong></div>
           <div class="info-row"><span>청구월</span><strong>${item.month}</strong></div>
@@ -7163,7 +7214,7 @@
         <tr class="billing-row ${key === currentBillingKey ? "selected" : ""}" data-billing="${key}">
           <td><input class="billing-check" type="checkbox" ${checked.has(key) ? "checked" : ""} /></td>
           <td>${item.sourceLabel}</td>
-          <td>${item.student}<br><span class="muted">${item.parent}</span></td>
+          <td>${studentTwoLine(item.student, `${studentMetaText(item.student)} / ${item.parent}`)}</td>
           <td>${item.product}<br><span class="muted">${item.className}</span></td>
           <td>${item.month}</td>
           <td>${money(item.amount)}원</td>
@@ -7194,7 +7245,7 @@
       document.querySelector("#billing-detail").innerHTML = `
         <div class="info-list">
           <div class="info-row"><span>청구번호</span><strong>${item.id}</strong></div>
-          <div class="info-row"><span>학생/학부모</span><strong>${item.student} / ${item.parent}</strong></div>
+          <div class="info-row"><span>학생/학부모</span><strong>${studentMetaText(item.student)} / ${item.student} / ${item.parent}</strong></div>
           ${isReady ? `<div class="info-row"><span>계정 연동</span><strong>학부모 ${item.parentAccount} / 학생 ${item.studentAccount}</strong></div>` : ""}
           <div class="info-row"><span>수강 클래스</span><strong>${item.className}</strong></div>
           ${isReady ? `<div class="info-row"><span>매칭 기준</span><strong>${item.classType} / ${item.weekly}</strong></div>` : ""}
@@ -7329,7 +7380,7 @@
       body.innerHTML = rows.length ? rows.map(([key, item]) => `
         <tr class="renewal-row ${key === currentRenewalKey ? "selected" : ""}" data-renewal="${key}">
           <td><input class="renewal-check" type="checkbox" ${checked.has(key) ? "checked" : ""} /></td>
-          <td>${item.student}<br><span class="muted">${item.parent}</span></td>
+          <td>${studentTwoLine(item.student, `${studentMetaText(item.student)} / ${item.parent}`)}</td>
           <td>${item.className}<br><span class="muted">${item.classType} · ${item.weekly}</span></td>
           <td>${item.product}<br><span class="muted">${money(item.amount)}원</span></td>
           <td>${item.response}</td>
@@ -7348,7 +7399,7 @@
       setBadge("#renewal-detail-status", item.status, renewalBadge(item.status));
       document.querySelector("#renewal-detail").innerHTML = `
         <div class="info-list">
-          <div class="info-row"><span>학생/학부모</span><strong>${item.student} / ${item.parent}</strong></div>
+          <div class="info-row"><span>학생/학부모</span><strong>${studentMetaText(item.student)} / ${item.student} / ${item.parent}</strong></div>
           <div class="info-row"><span>확인 월</span><strong>${item.nextMonth}</strong></div>
           <div class="info-row"><span>현재 수강</span><strong>${item.className}</strong></div>
           <div class="info-row"><span>매칭 기준</span><strong>${item.classType} / ${item.weekly}</strong></div>
