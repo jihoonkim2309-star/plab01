@@ -6432,6 +6432,30 @@
       });
     }
 
+    function renderNewProductDetail() {
+      currentProductKey = "__new__";
+      document.querySelectorAll(".product-row").forEach((item) => item.classList.remove("selected"));
+      setBadge("#product-detail-status", "미선택", "blue");
+      document.querySelector("#product-detail").innerHTML = `
+        <div class="empty-state"><strong>신규 상품 입력</strong><p>상품 정보를 입력한 뒤 저장을 눌러야 목록에 추가됩니다.</p></div>
+        <div class="detail-block">
+          <p class="detail-title">상품 추가</p>
+          <div class="form-grid">
+            <div class="field"><label>상품명</label><input class="product-name" placeholder="상품명 입력" /></div>
+            <div class="field"><label>클래스 유형</label><select class="product-type"><option value="">미선택</option><option>정규반</option><option>특강</option><option>개인레슨</option></select></div>
+            <div class="field"><label>주 수업 횟수</label><select class="product-weekly"><option value="">미선택</option><option>주 1회</option><option>주 2회</option><option>주 3회</option><option>주 4회</option><option>주 5회</option><option>주 6회</option><option>주 7회</option><option>단건</option></select></div>
+            <div class="field"><label>금액</label><input class="product-price" placeholder="금액 입력" /></div>
+            <div class="field"><label>상태</label><select class="product-status"><option value="">미선택</option><option>활성</option><option>비활성</option></select></div>
+            <div class="field"><label>청구 방식</label><select class="product-cycle"><option value="">미선택</option><option>월 청구</option><option>단건 청구</option></select></div>
+          </div>
+        </div>
+        <div class="toolbar" style="justify-content:flex-start;margin-top:12px;">
+          <button class="btn primary product-action" data-action="신규 저장">저장</button>
+        </div>`;
+      setupFormSelectPlaceholders(document.querySelector("#product-detail"));
+      document.querySelector("#product-detail .product-action")?.addEventListener("click", () => handleProductAction("__new__", "신규 저장"));
+    }
+
     const reportListDetails = {
       hong: {
         name: "홍길동",
@@ -6591,19 +6615,39 @@
     function handleProductAction(key, action) {
       const item = billingProducts[key];
       const detail = document.querySelector("#product-detail");
+      const isNew = action === "신규 저장";
+      const name = detail.querySelector(".product-name")?.value.trim() || "";
+      const type = detail.querySelector(".product-type")?.value || "";
+      const weekly = detail.querySelector(".product-weekly")?.value || "";
+      const price = Number(String(detail.querySelector(".product-price")?.value || "").replaceAll(",", ""));
+      const status = detail.querySelector(".product-status")?.value || "";
+      const cycle = detail.querySelector(".product-cycle")?.value || "";
+      if (isNew && (!name || !type || !weekly || !price || !status || !cycle)) {
+        showConfirm({ title: "상품 정보 확인", message: "상품명, 클래스 유형, 주 수업 횟수, 금액, 상태, 청구 방식을 모두 입력해 주세요.", okText: "확인", onOk: () => {} });
+        return;
+      }
       showConfirm({
-        title: action === "저장" ? "수강 상품 저장" : `상품 ${action}`,
-        message: action === "저장" ? "변경한 상품 정보를 저장하시겠습니까?" : `${item.name} 상품을 ${action}하시겠습니까?`,
-        okText: action,
+        title: action === "저장" || isNew ? "수강 상품 저장" : `상품 ${action}`,
+        message: isNew ? "입력한 정보로 신규 수강 상품을 추가하시겠습니까?" : action === "저장" ? "변경한 상품 정보를 저장하시겠습니까?" : `${item.name} 상품을 ${action}하시겠습니까?`,
+        okText: isNew ? "저장" : action,
         okClass: action === "비활성화" ? "warn" : "primary",
         onOk: () => {
+          if (isNew) {
+            const newKey = `product${Date.now()}`;
+            billingProducts[newKey] = { name, type, weekly, cycle, price, status, matched: "-" };
+            currentProductKey = newKey;
+            renderProductTable();
+            renderProductDetail(newKey);
+            updateClassProductMatch();
+            return;
+          }
           if (action === "저장") {
-            item.name = detail.querySelector(".product-name").value.trim() || item.name;
-            item.type = detail.querySelector(".product-type").value;
-            item.weekly = detail.querySelector(".product-weekly").value;
-            item.price = Number(String(detail.querySelector(".product-price").value).replaceAll(",", "")) || item.price;
-            item.status = detail.querySelector(".product-status").value;
-            item.cycle = detail.querySelector(".product-cycle").value;
+            item.name = name || item.name;
+            item.type = type;
+            item.weekly = weekly;
+            item.price = price || item.price;
+            item.status = status;
+            item.cycle = cycle;
           } else {
             item.status = action === "비활성화" ? "비활성" : "활성";
           }
@@ -6825,18 +6869,7 @@
     document.querySelector("#product-filter-search")?.addEventListener("input", renderProductTable);
     document.querySelectorAll("#product-filter-type, #product-filter-weekly, #product-filter-status").forEach((filter) => filter.addEventListener("change", renderProductTable));
     document.querySelector("#product-new-button")?.addEventListener("click", () => {
-      showConfirm({
-        title: "상품 추가",
-        message: "신규 상품은 클래스 유형과 주 수업 횟수를 기준으로 생성합니다. 새 상품 입력 폼을 열까요?",
-        okText: "상품 추가",
-        onOk: () => {
-          const key = `product${Date.now()}`;
-          billingProducts[key] = { name: "신규 수강 상품", type: "정규반", weekly: "주 1회", cycle: "월 청구", price: 0, status: "비활성", matched: "-" };
-          currentProductKey = key;
-          renderProductTable();
-          renderProductDetail(key);
-        }
-      });
+      renderNewProductDetail();
     });
     document.querySelectorAll("#page-reports .toolbar [data-page]").forEach((button) => {
       button.addEventListener("click", () => {
