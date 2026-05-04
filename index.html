@@ -923,6 +923,21 @@
       gap: 14px;
     }
 
+    .product-manage-layout.create-mode {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .product-manage-layout.create-mode .product-list-panel {
+      display: none;
+    }
+
+    .detail-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
     .field {
       display: flex;
       flex-direction: column;
@@ -1536,6 +1551,9 @@
       }
       .toolbar {
         justify-content: flex-start;
+      }
+      .detail-actions {
+        justify-content: flex-end;
       }
       .kpis,
       .ops-board,
@@ -2569,8 +2587,8 @@
           <div class="summary-card"><span>클래스 매칭</span><strong id="product-count-matched">4</strong></div>
           <div class="summary-card"><span>청구 방식</span><strong>월 청구</strong></div>
         </div>
-        <div class="grid two-col">
-          <div class="panel elevated">
+        <div class="grid two-col product-manage-layout" id="product-manage-layout">
+          <div class="panel elevated product-list-panel">
             <div class="panel-head"><p class="panel-title">상품 목록</p></div>
             <div class="approval-actions">
               <div class="filters">
@@ -3895,6 +3913,7 @@
         "product-manage": () => {
           currentProductKey = "";
           document.querySelectorAll(".product-row").forEach((item) => item.classList.remove("selected"));
+          document.querySelector("#product-manage-layout")?.classList.remove("create-mode");
           setBadge("#product-detail-status");
           document.querySelector("#product-detail").innerHTML = emptyDetail("왼쪽 목록에서 상품을 선택해 주세요.");
         },
@@ -6402,6 +6421,7 @@
       currentProductKey = key;
       const item = billingProducts[key];
       if (!item) return;
+      document.querySelector("#product-manage-layout")?.classList.remove("create-mode");
       setBadge("#product-detail-status", item.status, item.status === "활성" ? "green" : "gray");
       document.querySelector("#product-detail").innerHTML = `
         <div class="info-list">
@@ -6422,9 +6442,9 @@
             <div class="field"><label>청구 방식</label><select class="product-cycle"><option selected>${item.cycle}</option><option>월 청구</option><option>단건 청구</option></select></div>
           </div>
         </div>
-        <div class="toolbar" style="justify-content:flex-start;margin-top:12px;">
-          <button class="btn primary product-action" data-action="저장">저장</button>
+        <div class="detail-actions">
           <button class="btn warn product-action" data-action="${item.status === "활성" ? "비활성화" : "활성화"}">${item.status === "활성" ? "비활성화" : "활성화"}</button>
+          <button class="btn primary product-action" data-action="저장">저장</button>
         </div>`;
       setupFormSelectPlaceholders(document.querySelector("#product-detail"));
       document.querySelectorAll("#product-detail .product-action").forEach((button) => {
@@ -6435,6 +6455,7 @@
     function renderNewProductDetail() {
       currentProductKey = "__new__";
       document.querySelectorAll(".product-row").forEach((item) => item.classList.remove("selected"));
+      document.querySelector("#product-manage-layout")?.classList.add("create-mode");
       setBadge("#product-detail-status", "미선택", "blue");
       document.querySelector("#product-detail").innerHTML = `
         <div class="empty-state"><strong>신규 상품 입력</strong><p>상품 정보를 입력한 뒤 저장을 눌러야 목록에 추가됩니다.</p></div>
@@ -6449,11 +6470,14 @@
             <div class="field"><label>청구 방식</label><select class="product-cycle"><option value="">미선택</option><option>월 청구</option><option>단건 청구</option></select></div>
           </div>
         </div>
-        <div class="toolbar" style="justify-content:flex-start;margin-top:12px;">
+        <div class="detail-actions">
+          <button class="btn product-action" data-action="취소">취소</button>
           <button class="btn primary product-action" data-action="신규 저장">저장</button>
         </div>`;
       setupFormSelectPlaceholders(document.querySelector("#product-detail"));
-      document.querySelector("#product-detail .product-action")?.addEventListener("click", () => handleProductAction("__new__", "신규 저장"));
+      document.querySelectorAll("#product-detail .product-action").forEach((button) => {
+        button.addEventListener("click", () => handleProductAction("__new__", button.dataset.action));
+      });
     }
 
     const reportListDetails = {
@@ -6613,6 +6637,10 @@
     }
 
     function handleProductAction(key, action) {
+      if (action === "취소") {
+        clearDetailState("product-manage");
+        return;
+      }
       const item = billingProducts[key];
       const detail = document.querySelector("#product-detail");
       const isNew = action === "신규 저장";
@@ -6636,6 +6664,7 @@
             const newKey = `product${Date.now()}`;
             billingProducts[newKey] = { name, type, weekly, cycle, price, status, matched: "-" };
             currentProductKey = newKey;
+            document.querySelector("#product-manage-layout")?.classList.remove("create-mode");
             renderProductTable();
             renderProductDetail(newKey);
             updateClassProductMatch();
