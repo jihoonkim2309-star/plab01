@@ -378,6 +378,13 @@
       border-color: var(--brand);
     }
 
+    .btn.toggle-active {
+      border-color: var(--brand);
+      background: var(--green-soft);
+      color: var(--green);
+      font-weight: 900;
+    }
+
     .btn.warn {
       background: var(--orange-soft);
       color: var(--orange);
@@ -2757,6 +2764,9 @@
               </div>
               <div class="toolbar">
                 <button class="btn" id="billing-filter-button">필터 적용</button>
+                <button class="btn billing-source-filter" data-billing-source="unbilled" title="청구서가 아직 생성되지 않은 전체 대상 조회"><span class="ico">○</span>미청구 전체</button>
+                <button class="btn billing-source-filter" data-billing-source="new" title="신규 등록 후 아직 청구하지 않은 회원 조회"><span class="ico">＋</span>신규등록</button>
+                <button class="btn billing-source-filter" data-billing-source="renewal" title="다음 달 수강 확인 후 아직 청구하지 않은 회원 조회"><span class="ico">↻</span>수강확인</button>
                 <button class="btn primary" id="billing-create-button">청구서 생성</button>
                 <button class="btn" id="billing-bulk-request">결제 요청 발송</button>
                 <button class="btn table-export" data-table="#page-billing-manage table" data-filename="청구결제_목록.csv">엑셀</button>
@@ -6459,6 +6469,8 @@
       inv1038: { id: "INV-1038", student: "홍길동", parent: "홍미나", className: "초등 배드민턴 A", product: "주 2회 정규반", month: "2026-05", amount: 240000, dueDate: "2026-05-10", method: "PG 온라인", status: "결제 실패", requestStatus: "발송 완료", lastNotice: "D+3 발송", failReason: "카드 승인 거절", paidAt: "-", memo: "학부모 포털 결제 실패 후 재요청 필요" },
       inv1039: { id: "INV-1039", student: "김민재", parent: "김하영", className: "선수반 C", product: "주 3회 정규반", month: "2026-05", amount: 320000, dueDate: "2026-05-10", method: "PG 온라인", status: "결제 완료", requestStatus: "발송 완료", lastNotice: "-", failReason: "-", paidAt: "2026-05-03", memo: "PG 신용카드 결제 완료" },
       inv1040: { id: "INV-1040", student: "이서아", parent: "이지훈", className: "성장 체력 B", product: "주 1회 정규반", month: "2026-05", amount: 160000, dueDate: "2026-05-10", method: "PG 온라인", status: "결제 대기", requestStatus: "발송 완료", lastNotice: "결제 요청", failReason: "-", paidAt: "-", memo: "학부모 포털 결제 대기" },
+      inv1041: { id: "INV-1041", student: "최유준", parent: "최민석", className: "선수반 C", product: "개인레슨", month: "2026-06", amount: 420000, dueDate: "2026-06-10", method: "PG 온라인", status: "결제 대기", requestStatus: "발송 완료", lastNotice: "결제 요청", failReason: "-", paidAt: "-", memo: "결제 요청 발송 완료 후 학부모 결제 대기" },
+      inv1042: { id: "INV-1042", student: "문하준", parent: "문지현", className: "방학 스텝 특강", product: "특강 단건", month: "2026-06", amount: 180000, dueDate: "2026-06-12", method: "PG 온라인", status: "결제 대기", requestStatus: "발송 완료", lastNotice: "결제 요청", failReason: "-", paidAt: "-", memo: "특강 청구서 생성 후 결제 요청 발송 완료" },
       inv1022: { id: "INV-1022", student: "정서윤", parent: "정다은", className: "입문반 D", product: "주 1회 정규반", month: "2026-04", amount: 160000, dueDate: "2026-04-10", method: "계좌이체", status: "미납", requestStatus: "발송 완료", lastNotice: "최종 안내", failReason: "-", paidAt: "-", memo: "입금 확인 필요" }
     };
 
@@ -6883,6 +6895,7 @@
       document.querySelector(selector).innerHTML = `
         <div class="info-list">
           <div class="info-row"><span>청구번호</span><strong>${item.id}</strong></div>
+          ${isReady ? `<div class="info-row"><span>조회 구분</span><strong>${item.origin}</strong></div>` : ""}
           <div class="info-row"><span>학생/학부모</span><strong>${item.student} / ${item.parent}</strong></div>
           <div class="info-row"><span>수강 클래스</span><strong>${item.className}</strong></div>
           <div class="info-row"><span>상품</span><strong>${item.product}</strong></div>
@@ -7047,11 +7060,13 @@
 
     let currentRenewalKey = "";
     let currentBillingKey = "";
+    let currentBillingSourceFilter = "all";
 
     const billingCandidates = {
-      billPark: { student: "박지우", parent: "박민서", studentAccount: "연동 완료", parentAccount: "연동 완료", className: "초등 배드민턴 A", classType: "정규반", weekly: "주 2회", product: "정규반 주 2회", month: "2026-06", amount: 240000, status: "청구 가능", method: "청구 전", dueDate: "미정", memo: "학생 등록, 계정 연동, 클래스 배정 완료" },
-      billOh: { student: "오하린", parent: "오정민", studentAccount: "연동 완료", parentAccount: "연동 완료", className: "입문반 D", classType: "정규반", weekly: "주 1회", product: "정규반 주 1회", month: "2026-06", amount: 160000, status: "청구 가능", method: "청구 전", dueDate: "미정", memo: "신규 등록 후 첫 청구 대상" },
-      billYoon: { student: "윤태오", parent: "윤서영", studentAccount: "연동 완료", parentAccount: "연동 완료", className: "성장 체력 B", classType: "정규반", weekly: "주 2회", product: "정규반 주 2회", month: "2026-06", amount: 240000, status: "청구 가능", method: "청구 전", dueDate: "미정", memo: "대기에서 클래스 배정 완료" }
+      billHong: { origin: "다음달 수강확인", student: "홍길동", parent: "홍미나", studentAccount: "연동 완료", parentAccount: "연동 완료", className: "초등 배드민턴 A", classType: "정규반", weekly: "주 2회", product: "정규반 주 2회", month: "2026-06", amount: 240000, status: "청구 가능", method: "청구 전", dueDate: "미정", memo: "다음 달 수강 확인에서 재수강 확정" },
+      billPark: { origin: "다음달 수강확인", student: "박지우", parent: "박민서", studentAccount: "연동 완료", parentAccount: "연동 완료", className: "초등 배드민턴 A", classType: "정규반", weekly: "주 2회", product: "정규반 주 2회", month: "2026-06", amount: 240000, status: "청구 가능", method: "청구 전", dueDate: "미정", memo: "학생 등록, 계정 연동, 클래스 배정 완료" },
+      billOh: { origin: "신규등록", student: "오하린", parent: "오정민", studentAccount: "연동 완료", parentAccount: "연동 완료", className: "입문반 D", classType: "정규반", weekly: "주 1회", product: "정규반 주 1회", month: "2026-06", amount: 160000, status: "청구 가능", method: "청구 전", dueDate: "미정", memo: "신규 등록 후 첫 청구 대상" },
+      billYoon: { origin: "신규등록", student: "윤태오", parent: "윤서영", studentAccount: "연동 완료", parentAccount: "연동 완료", className: "성장 체력 B", classType: "정규반", weekly: "주 2회", product: "정규반 주 2회", month: "2026-06", amount: 240000, status: "청구 가능", method: "청구 전", dueDate: "미정", memo: "대기에서 클래스 배정 완료" }
     };
 
     function billingStatusBadge(status) {
@@ -7067,7 +7082,8 @@
         .filter(([, item]) => item.status === "청구 가능")
         .map(([key, item]) => [key, {
           source: "candidate",
-          sourceLabel: "청구 가능",
+          origin: item.origin,
+          sourceLabel: item.origin || "청구 가능",
           id: "-",
           student: item.student,
           parent: item.parent,
@@ -7101,8 +7117,12 @@
         const matchesMonth = month === "전체 월" || item.month === month;
         const matchesStatus = status === "전체 상태" || item.status === status;
         const matchesMethod = method === "전체 결제 방식" || item.method === method;
+        const matchesSource = currentBillingSourceFilter === "all"
+          || (currentBillingSourceFilter === "unbilled" && item.source === "candidate")
+          || (currentBillingSourceFilter === "new" && item.source === "candidate" && item.origin === "신규등록")
+          || (currentBillingSourceFilter === "renewal" && item.source === "candidate" && item.origin === "다음달 수강확인");
         const haystack = `${item.id} ${item.student} ${item.parent} ${item.className} ${item.product}`.toLowerCase();
-        return matchesMonth && matchesStatus && matchesMethod && (!search || haystack.includes(search));
+        return matchesMonth && matchesStatus && matchesMethod && matchesSource && (!search || haystack.includes(search));
       });
     }
 
@@ -7116,6 +7136,12 @@
 
     function selectedBillingKeys() {
       return Array.from(document.querySelectorAll(".billing-check:checked")).map((item) => item.closest("tr")?.dataset.billing).filter(Boolean);
+    }
+
+    function updateBillingSourceButtons() {
+      document.querySelectorAll(".billing-source-filter").forEach((button) => {
+        button.classList.toggle("toggle-active", button.dataset.billingSource === currentBillingSourceFilter);
+      });
     }
 
     function updateBillingActionButtons() {
@@ -7155,6 +7181,7 @@
       });
       updateBillingSummary();
       updateBillingActionButtons();
+      updateBillingSourceButtons();
     }
 
     function renderBillingDetail(key) {
@@ -7440,6 +7467,15 @@
     document.querySelector("#billing-filter-button")?.addEventListener("click", renderBillingTable);
     document.querySelector("#billing-filter-search")?.addEventListener("input", renderBillingTable);
     document.querySelectorAll("#billing-filter-month, #billing-filter-status, #billing-filter-method").forEach((filter) => filter.addEventListener("change", renderBillingTable));
+    document.querySelectorAll(".billing-source-filter").forEach((button) => {
+      button.addEventListener("click", () => {
+        currentBillingSourceFilter = currentBillingSourceFilter === button.dataset.billingSource ? "all" : button.dataset.billingSource;
+        document.querySelector("#billing-filter-status").value = currentBillingSourceFilter === "all" ? "전체 상태" : "청구 가능";
+        document.querySelector("#billing-filter-method").value = currentBillingSourceFilter === "all" ? "전체 결제 방식" : "청구 전";
+        document.querySelector("#billing-filter-search").value = "";
+        renderBillingTable();
+      });
+    });
     document.querySelector("#billing-create-button")?.addEventListener("click", () => {
       const keys = selectedBillingKeys().filter((key) => billingCandidates[key]?.status === "청구 가능");
       showConfirm({
