@@ -971,6 +971,25 @@
       background: #fbfcfc;
     }
 
+    .field.has-error label {
+      color: #b42318;
+    }
+
+    .field.has-error input,
+    .field.has-error select,
+    .field.has-error textarea {
+      border-color: #ef4444;
+      background: #fff7f7;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, .12);
+    }
+
+    .field-error-text {
+      color: #b42318;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
     .field select option {
       color: var(--text);
     }
@@ -3827,9 +3846,47 @@
       });
     }
 
+    function clearFieldError(field) {
+      const fieldWrap = field?.closest(".field");
+      if (!fieldWrap) return;
+      fieldWrap.classList.remove("has-error");
+      fieldWrap.querySelector(".field-error-text")?.remove();
+    }
+
+    function clearValidationErrors(root = document) {
+      root.querySelectorAll(".field.has-error").forEach((fieldWrap) => {
+        fieldWrap.classList.remove("has-error");
+        fieldWrap.querySelector(".field-error-text")?.remove();
+      });
+    }
+
+    function markFieldError(field, message = "필수 항목입니다.") {
+      const fieldWrap = field?.closest(".field");
+      if (!fieldWrap) return;
+      fieldWrap.classList.add("has-error");
+      let error = fieldWrap.querySelector(".field-error-text");
+      if (!error) {
+        error = document.createElement("div");
+        error.className = "field-error-text";
+        fieldWrap.appendChild(error);
+      }
+      error.textContent = message;
+      if (!field.dataset.errorBound) {
+        field.addEventListener("input", () => {
+          if ((field.value || "").trim()) clearFieldError(field);
+        });
+        field.addEventListener("change", () => {
+          if ((field.value || "").trim()) clearFieldError(field);
+        });
+        field.dataset.errorBound = "true";
+      }
+    }
+
     function validateRequiredFields(fields, title, root = document) {
+      clearValidationErrors(root);
       const missing = fields.filter(({ selector }) => !formValue(selector, root));
       if (missing.length) {
+        missing.forEach((item) => markFieldError(root.querySelector(item.selector), `${item.label}을 입력/선택해 주세요.`));
         showRequiredMessage(title, missing.map((item) => item.label), root.querySelector(missing[0].selector));
         return false;
       }
@@ -5427,6 +5484,7 @@
         return;
       }
       if (Number(formValue("#class-capacity-input")) <= 0) {
+        markFieldError(document.querySelector("#class-capacity-input"), "정원은 1명 이상 숫자로 입력해 주세요.");
         showConfirm({ title: "클래스 정보 확인", message: "정원은 1명 이상 숫자로 입력해 주세요.", okText: "확인", onOk: () => document.querySelector("#class-capacity-input").focus() });
         return;
       }
@@ -6706,8 +6764,20 @@
       const price = Number(String(detail.querySelector(".product-price")?.value || "").replaceAll(",", ""));
       const status = detail.querySelector(".product-status")?.value || "";
       const cycle = detail.querySelector(".product-cycle")?.value || "";
-      if (isNew && (!name || !type || !weekly || !price || !status || !cycle)) {
-        showConfirm({ title: "상품 정보 확인", message: "상품명, 클래스 유형, 주 수업 횟수, 금액, 상태, 청구 방식을 모두 입력해 주세요.", okText: "확인", onOk: () => {} });
+      if (isNew && !validateRequiredFields([
+        { selector: ".product-name", label: "상품명" },
+        { selector: ".product-type", label: "클래스 유형" },
+        { selector: ".product-weekly", label: "주 수업 횟수" },
+        { selector: ".product-price", label: "금액" },
+        { selector: ".product-status", label: "상태" },
+        { selector: ".product-cycle", label: "청구 방식" }
+      ], "상품 정보 확인", detail)) {
+        return;
+      }
+      if (isNew && price <= 0) {
+        clearValidationErrors(detail);
+        markFieldError(detail.querySelector(".product-price"), "금액은 1원 이상 숫자로 입력해 주세요.");
+        showConfirm({ title: "상품 정보 확인", message: "금액은 1원 이상 숫자로 입력해 주세요.", okText: "확인", onOk: () => detail.querySelector(".product-price")?.focus() });
         return;
       }
       showConfirm({
