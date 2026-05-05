@@ -2916,63 +2916,32 @@
           </div>
         </div>
         <div class="schedule-status-row">
-          <div class="summary-card"><span>결제 완료 대상</span><strong>18건</strong></div>
-          <div class="summary-card"><span>리포트 생성 대기</span><strong>8건</strong></div>
-          <div class="summary-card"><span>생성 완료</span><strong>12건</strong></div>
-          <div class="summary-card"><span>발행 대기</span><strong>5건</strong></div>
+          <div class="summary-card"><span>결제 완료 대상</span><strong id="report-count-paid">0건</strong></div>
+          <div class="summary-card"><span>측정 대기</span><strong id="report-count-measure-wait">0건</strong></div>
+          <div class="summary-card"><span>생성 가능</span><strong id="report-count-ready">0건</strong></div>
+          <div class="summary-card"><span>발행 대기</span><strong id="report-count-publish">0건</strong></div>
         </div>
         <div class="grid two-col">
           <div class="panel elevated">
             <div class="panel-head"><p class="panel-title">리포트 작업 목록</p></div>
             <div class="approval-actions">
               <div class="filters">
-                <select><option>전체 측정월</option><option>2026-05</option><option>2026-04</option><option>2026-03</option></select>
-                <select><option>전체 상태</option><option>측정값 입력 대기</option><option>검토 필요</option><option>PDF 발행 대기</option><option>발행 완료</option></select>
-                <select><option>전체 유형</option><option>신체 성장</option><option>기록 리포트</option><option>영상 피드백</option></select>
-                <input type="text" placeholder="학생명, 유형 검색" />
+                <select id="report-filter-month"><option>전체 측정월</option><option>2026-05</option><option>2026-04</option><option>2026-03</option></select>
+                <select id="report-filter-status"><option>전체 상태</option><option>측정 대기</option><option>측정 입력 완료</option><option>측정 승인 완료</option><option>리포트 생성 대기</option><option>리포트 생성 완료</option><option>발행 대기</option><option>발행 완료</option></select>
+                <select id="report-filter-type"><option>전체 유형</option><option>신체 성장</option><option>기록 리포트</option><option>영상 피드백</option></select>
+                <input id="report-filter-search" type="text" placeholder="학생명, 유형 검색" />
               </div>
               <div class="toolbar">
                 <button class="btn" id="report-list-filter-button">조회</button>
-                <button class="btn">리포트 생성</button>
-                <button class="btn">리포트 발행</button>
+                <button class="btn report-bulk-action" data-action="리포트 생성">리포트 생성</button>
+                <button class="btn report-bulk-action" data-action="리포트 발행">리포트 발행</button>
                 <button class="btn table-export" data-table="#page-report-list table" data-filename="리포트_작업목록.csv">엑셀 다운로드</button>
               </div>
             </div>
             <div class="panel-body">
               <table>
-                <thead><tr><th class="check-cell"><input type="checkbox" id="report-select-all" /></th><th>학생</th><th>결제 상태</th><th>리포트 유형</th><th>측정월</th><th>진행 단계</th><th>상태</th><th>마지막 업데이트</th></tr></thead>
-                <tbody>
-                    <tr data-report="hong">
-                    <td class="check-cell"><input type="checkbox" class="report-check" /></td>
-                    <td><strong>홍길동</strong><div class="muted">송도초 / 4학년 · 10세 남</div></td>
-                    <td><span class="badge green">결제 완료</span></td>
-                    <td>신체 성장</td>
-                    <td>2026-05</td>
-                    <td>생성 대기</td>
-                    <td><span class="badge orange">생성 대기</span></td>
-                    <td>2026.05.01</td>
-                  </tr>
-                  <tr data-report="kim">
-                    <td class="check-cell"><input type="checkbox" class="report-check" /></td>
-                    <td><strong>김민재</strong><div class="muted">해송초 / 5학년 · 11세 남</div></td>
-                    <td><span class="badge green">결제 완료</span></td>
-                    <td>영상 피드백</td>
-                    <td>2026-05</td>
-                    <td>생성 완료</td>
-                    <td><span class="badge blue">생성 완료</span></td>
-                    <td>2026.05.02</td>
-                  </tr>
-                  <tr data-report="lee">
-                    <td class="check-cell"><input type="checkbox" class="report-check" /></td>
-                    <td><strong>이서아</strong><div class="muted">먼우금초 / 3학년 · 9세 여</div></td>
-                    <td><span class="badge green">결제 완료</span></td>
-                    <td>기록 리포트</td>
-                    <td>2026-04</td>
-                    <td>발행 대기</td>
-                    <td><span class="badge green">발행 대기</span></td>
-                    <td>2026.04.28</td>
-                  </tr>
-                </tbody>
+                <thead><tr><th class="check-cell"><input type="checkbox" id="report-select-all" /></th><th>학생</th><th>결제 상태</th><th>측정 데이터</th><th>리포트 유형</th><th>측정월</th><th>리포트 단계</th><th>발행</th><th>마지막 업데이트</th></tr></thead>
+                <tbody id="report-work-body"></tbody>
               </table>
             </div>
           </div>
@@ -4141,6 +4110,13 @@
           if (editButton) editButton.onclick = null;
           document.querySelector("#measurement-detail").innerHTML = emptyDetail("왼쪽 목록에서 측정 항목을 선택해 주세요.");
           renderMeasurementTable();
+        },
+        "report-list": () => {
+          currentReportKey = "";
+          document.querySelectorAll(".report-row").forEach((item) => item.classList.remove("selected"));
+          setBadge("#report-list-detail-status");
+          document.querySelector("#report-list-detail-body").innerHTML = emptyDetail("왼쪽 목록에서 리포트 대상을 선택해 주세요.");
+          renderReportWorkTable();
         },
         "overdue-manage": () => {
           currentInvoiceKey = "";
@@ -5361,15 +5337,6 @@
         document.querySelectorAll(".member-table tbody tr").forEach((item) => item.classList.remove("selected"));
         row.classList.add("selected");
         renderMemberDetail(row.dataset.student);
-      });
-    });
-
-    document.querySelectorAll("#page-report-list tbody tr[data-report]").forEach((row) => {
-      row.addEventListener("click", (event) => {
-        if (event.target.matches("input")) return;
-        document.querySelectorAll("#page-report-list tbody tr").forEach((item) => item.classList.remove("selected"));
-        row.classList.add("selected");
-        renderReportListDetail(row.dataset.report);
       });
     });
 
@@ -7289,7 +7256,11 @@
         age: "10세 남",
         type: "신체 성장",
         month: "2026-05",
-        status: "생성 대기",
+        paymentStatus: "결제 완료",
+        measurementStatus: "측정 승인 완료",
+        reportStage: "리포트 생성 대기",
+        publishStatus: "미발행",
+        status: "리포트 생성 대기",
         lastUpdate: "2026.05.01",
         coach: "김도윤",
         source: "PAPS + PlanB 내부 기준",
@@ -7304,7 +7275,11 @@
         age: "11세 남",
         type: "영상 피드백",
         month: "2026-05",
-        status: "검토 필요",
+        paymentStatus: "결제 완료",
+        measurementStatus: "측정 입력 완료",
+        reportStage: "측정 검토 필요",
+        publishStatus: "미발행",
+        status: "측정 입력 완료",
         lastUpdate: "2026.05.02",
         coach: "이하린",
         source: "운동 영상 분석",
@@ -7319,6 +7294,10 @@
         age: "9세 여",
         type: "기록 리포트",
         month: "2026-04",
+        paymentStatus: "결제 완료",
+        measurementStatus: "측정 승인 완료",
+        reportStage: "발행 대기",
+        publishStatus: "미공개",
         status: "발행 대기",
         lastUpdate: "2026.04.28",
         coach: "박서준",
@@ -7328,19 +7307,112 @@
         publicTarget: "학부모 앱",
         memo: "발행 준비 완료",
         comment: "기록 항목 확인 후 PDF 발행"
+      },
+      park: {
+        name: "박지우",
+        age: "10세 여",
+        type: "신체 성장",
+        month: "2026-05",
+        paymentStatus: "결제 완료",
+        measurementStatus: "측정 대기",
+        reportStage: "측정 대기",
+        publishStatus: "미발행",
+        status: "측정 대기",
+        lastUpdate: "-",
+        coach: "김도윤",
+        source: "측정 데이터 미입력",
+        recent: "-",
+        pdfStatus: "생성 불가",
+        publicTarget: "학부모 앱",
+        memo: "코치 측정 데이터 입력 후 생성 가능",
+        comment: "측정 데이터가 아직 없습니다."
       }
     };
 
+    let currentReportKey = "";
+
+    function reportStatusBadge(status) {
+      if (status === "결제 완료" || status === "측정 승인 완료" || status === "발행 완료") return "green";
+      if (status === "리포트 생성 대기" || status === "발행 대기" || status === "측정 입력 완료") return "orange";
+      if (status === "리포트 생성 완료") return "blue";
+      if (status === "측정 대기" || status === "측정 검토 필요" || status === "미발행" || status === "미공개") return "gray";
+      return "blue";
+    }
+
+    function filteredReportWorkItems() {
+      const month = document.querySelector("#report-filter-month")?.value || "전체 측정월";
+      const status = document.querySelector("#report-filter-status")?.value || "전체 상태";
+      const type = document.querySelector("#report-filter-type")?.value || "전체 유형";
+      const search = (document.querySelector("#report-filter-search")?.value || "").trim().toLowerCase();
+      return Object.entries(reportListDetails).filter(([, item]) => {
+        const statuses = [item.measurementStatus, item.reportStage, item.publishStatus, item.status];
+        const haystack = `${item.name} ${item.type} ${item.coach} ${item.measurementStatus} ${item.reportStage}`.toLowerCase();
+        return (month === "전체 측정월" || item.month === month)
+          && (status === "전체 상태" || statuses.includes(status))
+          && (type === "전체 유형" || item.type === type)
+          && (!search || haystack.includes(search));
+      });
+    }
+
+    function updateReportSummary() {
+      const items = Object.values(reportListDetails);
+      document.querySelector("#report-count-paid").textContent = `${items.filter((item) => item.paymentStatus === "결제 완료").length}건`;
+      document.querySelector("#report-count-measure-wait").textContent = `${items.filter((item) => item.measurementStatus === "측정 대기").length}건`;
+      document.querySelector("#report-count-ready").textContent = `${items.filter((item) => item.measurementStatus === "측정 승인 완료" && item.reportStage === "리포트 생성 대기").length}건`;
+      document.querySelector("#report-count-publish").textContent = `${items.filter((item) => item.reportStage === "발행 대기").length}건`;
+    }
+
+    function selectedReportKeys() {
+      return Array.from(document.querySelectorAll(".report-check:checked")).map((checkbox) => checkbox.closest(".report-row").dataset.report);
+    }
+
+    function renderReportWorkTable() {
+      const body = document.querySelector("#report-work-body");
+      if (!body) return;
+      const checked = new Set(selectedReportKeys());
+      const rows = filteredReportWorkItems();
+      body.innerHTML = rows.length ? rows.map(([key, item]) => `
+        <tr class="report-row ${key === currentReportKey ? "selected" : ""}" data-report="${key}">
+          <td class="check-cell"><input type="checkbox" class="report-check" ${checked.has(key) ? "checked" : ""} /></td>
+          <td>${studentTwoLine(item.name, `${studentMetaText(item.name)} · ${item.age}`)}</td>
+          <td><span class="badge ${reportStatusBadge(item.paymentStatus)}">${item.paymentStatus}</span></td>
+          <td><span class="badge ${reportStatusBadge(item.measurementStatus)}">${item.measurementStatus}</span></td>
+          <td>${item.type}</td>
+          <td>${item.month}</td>
+          <td><span class="badge ${reportStatusBadge(item.reportStage)}">${item.reportStage}</span></td>
+          <td><span class="badge ${reportStatusBadge(item.publishStatus)}">${item.publishStatus}</span></td>
+          <td>${item.lastUpdate}</td>
+        </tr>`).join("") : `<tr><td colspan="9"><div class="empty-state"><strong>조회 결과가 없습니다.</strong><p>필터 조건을 변경해 주세요.</p></div></td></tr>`;
+      document.querySelectorAll(".report-row").forEach((row) => {
+        row.addEventListener("click", (event) => {
+          if (event.target.matches("input")) return;
+          document.querySelectorAll(".report-row").forEach((item) => item.classList.remove("selected"));
+          row.classList.add("selected");
+          renderReportListDetail(row.dataset.report);
+        });
+      });
+      updateReportSummary();
+    }
+
+    function canCreateReport(item) {
+      return item.paymentStatus === "결제 완료" && item.measurementStatus === "측정 승인 완료" && item.reportStage === "리포트 생성 대기";
+    }
+
+    function canPublishReport(item) {
+      return item.reportStage === "발행 대기" && item.publishStatus !== "발행 완료";
+    }
+
     function renderReportListDetail(key) {
+      currentReportKey = key;
       const item = reportListDetails[key];
       if (!item) return;
-      const statusColor = item.status === "발행 대기" ? "green" : item.status === "검토 필요" ? "orange" : "blue";
-      document.querySelector("#report-list-detail-status").textContent = item.status;
-      document.querySelector("#report-list-detail-status").className = `badge ${statusColor}`;
+      setBadge("#report-list-detail-status", item.status, reportStatusBadge(item.status));
       document.querySelector("#report-list-detail-body").innerHTML = `
         <div class="info-list">
           <div class="info-row"><span>학생</span><strong>${item.name}</strong></div>
           <div class="info-row"><span>나이/성별</span><strong>${item.age}</strong></div>
+          <div class="info-row"><span>결제 상태</span><strong>${item.paymentStatus}</strong></div>
+          <div class="info-row"><span>측정 데이터</span><strong>${item.measurementStatus}</strong></div>
           <div class="info-row"><span>리포트 유형</span><strong>${item.type}</strong></div>
           <div class="info-row"><span>측정월</span><strong>${item.month}</strong></div>
           <div class="info-row"><span>입력 코치</span><strong>${item.coach}</strong></div>
@@ -7350,7 +7422,9 @@
           <p class="detail-title">리포트 상태</p>
           <div class="info-list">
             <div class="info-row"><span>마지막 업데이트</span><strong>${item.lastUpdate}</strong></div>
+            <div class="info-row"><span>리포트 단계</span><strong>${item.reportStage}</strong></div>
             <div class="info-row"><span>PDF 상태</span><strong>${item.pdfStatus}</strong></div>
+            <div class="info-row"><span>발행 상태</span><strong>${item.publishStatus}</strong></div>
             <div class="info-row"><span>공개 대상</span><strong>${item.publicTarget}</strong></div>
           </div>
         </div>
@@ -7363,10 +7437,73 @@
           <div class="info-list"><div class="info-row"><span>코멘트</span><strong>${item.comment}</strong></div></div>
         </div>
         <div class="toolbar" style="justify-content: flex-start; gap: 8px; margin-top: 16px;">
-          <button class="btn primary">수정</button>
-          <button class="btn">PDF 확인</button>
-          <button class="btn warn">발행 취소</button>
+          <button class="btn report-detail-action" data-action="측정 데이터 확인">측정 데이터 확인</button>
+          <button class="btn primary report-detail-action" data-action="리포트 생성" ${canCreateReport(item) ? "" : "disabled"}>리포트 생성</button>
+          <button class="btn report-detail-action" data-action="미리보기" ${item.reportStage === "리포트 생성 완료" || item.reportStage === "발행 대기" || item.publishStatus === "발행 완료" ? "" : "disabled"}>미리보기</button>
+          <button class="btn primary report-detail-action" data-action="리포트 발행" ${canPublishReport(item) ? "" : "disabled"}>리포트 발행</button>
+          <button class="btn warn report-detail-action" data-action="발행 취소" ${item.publishStatus === "발행 완료" ? "" : "disabled"}>발행 취소</button>
         </div>`;
+      document.querySelectorAll("#report-list-detail-body .report-detail-action").forEach((button) => {
+        button.addEventListener("click", () => handleReportAction([key], button.dataset.action));
+      });
+    }
+
+    function handleReportAction(keys, action) {
+      const targets = keys.map((key) => [key, reportListDetails[key]]).filter(([, item]) => item);
+      if (!targets.length) {
+        showConfirm({ title: "선택 필요", message: "처리할 리포트 대상을 먼저 선택해 주세요.", okText: "확인", onOk: () => {} });
+        return;
+      }
+      if (action === "측정 데이터 확인") {
+        buttons.forEach((item) => item.classList.remove("active"));
+        document.querySelector('[data-page="report-data"]').classList.add("active");
+        navigateToTarget("report-data");
+        return;
+      }
+      if (action === "미리보기") {
+        buttons.forEach((item) => item.classList.remove("active"));
+        document.querySelector('[data-page="reports"]').classList.add("active");
+        navigateToTarget("reports");
+        return;
+      }
+      const eligible = targets.filter(([, item]) => action === "리포트 생성" ? canCreateReport(item) : action === "리포트 발행" ? canPublishReport(item) : item.publishStatus === "발행 완료");
+      if (!eligible.length) {
+        showConfirm({ title: "처리 불가", message: action === "리포트 생성" ? "측정 데이터 승인 완료 상태인 리포트 생성 대기 건만 생성할 수 있습니다." : "발행 대기 상태의 리포트만 처리할 수 있습니다.", okText: "확인", onOk: () => {} });
+        return;
+      }
+      showConfirm({
+        title: action,
+        message: `${eligible.length}건을 '${action}' 처리하시겠습니까?`,
+        okText: action,
+        okClass: action === "발행 취소" ? "warn" : "primary",
+        onOk: () => {
+          eligible.forEach(([, item]) => {
+            if (action === "리포트 생성") {
+              item.reportStage = "발행 대기";
+              item.status = "발행 대기";
+              item.pdfStatus = "생성 완료";
+              item.lastUpdate = "2026.05.05";
+              item.memo = "승인된 측정 데이터로 리포트가 생성되었습니다.";
+            }
+            if (action === "리포트 발행") {
+              item.publishStatus = "발행 완료";
+              item.reportStage = "발행 완료";
+              item.status = "발행 완료";
+              item.pdfStatus = "발행 완료";
+              item.lastUpdate = "2026.05.05";
+              item.memo = "학부모 포털에 리포트를 공개했습니다.";
+            }
+            if (action === "발행 취소") {
+              item.publishStatus = "미공개";
+              item.reportStage = "발행 대기";
+              item.status = "발행 대기";
+              item.memo = "관리자가 발행을 취소했습니다.";
+            }
+          });
+          renderReportWorkTable();
+          if (currentReportKey) renderReportListDetail(currentReportKey);
+        }
+      });
     }
 
     const reportDataDetails = {
@@ -8148,6 +8285,19 @@
     document.querySelector("#renewal-filter-button")?.addEventListener("click", renderRenewalTable);
     document.querySelector("#renewal-filter-search")?.addEventListener("input", renderRenewalTable);
     document.querySelectorAll("#renewal-filter-month, #renewal-filter-status, #renewal-filter-class").forEach((filter) => filter.addEventListener("change", renderRenewalTable));
+    document.querySelector("#report-select-all")?.addEventListener("change", (event) => {
+      document.querySelectorAll(".report-check").forEach((checkbox) => {
+        checkbox.checked = event.target.checked;
+      });
+    });
+    document.querySelector("#report-list-filter-button")?.addEventListener("click", renderReportWorkTable);
+    document.querySelector("#report-filter-search")?.addEventListener("input", renderReportWorkTable);
+    document.querySelectorAll("#report-filter-month, #report-filter-status, #report-filter-type").forEach((filter) => filter.addEventListener("change", renderReportWorkTable));
+    document.querySelector("#report-list-create-button")?.addEventListener("click", () => handleReportAction(selectedReportKeys(), "리포트 생성"));
+    document.querySelector("#report-list-publish-button")?.addEventListener("click", () => handleReportAction(selectedReportKeys(), "리포트 발행"));
+    document.querySelectorAll(".report-bulk-action").forEach((button) => {
+      button.addEventListener("click", () => handleReportAction(selectedReportKeys(), button.dataset.action));
+    });
     document.querySelector("#measurement-add-button")?.addEventListener("click", renderNewMeasurementItem);
     document.querySelector("#measurement-filter-button")?.addEventListener("click", renderMeasurementTable);
     document.querySelector("#measurement-filter-search")?.addEventListener("input", renderMeasurementTable);
@@ -8205,9 +8355,10 @@
     renderRenewalTable();
     renderBillingTable();
     renderMeasurementTable();
+    renderReportWorkTable();
 
     renderGradePromotionTable();
-    ["members", "parent-accounts", "student-accounts", "coach-accounts", "parent-link", "student-link", "grade-promotion", "class-manage", "schedule", "holiday-manage", "makeup-manage", "product-manage", "payment-status", "renewal-confirm", "billing-manage", "report-template", "overdue-manage"].forEach(clearDetailState);
+    ["members", "parent-accounts", "student-accounts", "coach-accounts", "parent-link", "student-link", "grade-promotion", "class-manage", "schedule", "holiday-manage", "makeup-manage", "product-manage", "payment-status", "renewal-confirm", "billing-manage", "report-list", "report-template", "overdue-manage"].forEach(clearDetailState);
 
     document.querySelector("#member-edit-button").addEventListener("click", () => {
       openStudentForm("edit", currentMemberKey);
