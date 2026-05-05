@@ -1757,9 +1757,8 @@
           <div class="nav-label">리포트</div>
           <button data-page="report-list"><span class="ico">▣</span>리포트 관리</button>
           <button class="sub" data-page="report-data">측정 데이터 관리</button>
-          <button class="sub" data-page="report-preview">리포트 발행</button>
           <button class="sub" data-page="report-template">측정 항목 관리</button>
-          <button class="sub" data-page="video-feedback">영상 피드백</button>
+          <button class="sub" data-page="video-feedback">영상 데이터 관리</button>
         </div>
         <div class="nav-group">
           <div class="nav-label">셔틀</div>
@@ -2907,7 +2906,7 @@
         <div class="page-head">
           <div>
             <h1>리포트 관리</h1>
-            <p class="subtext">결제 완료 회원을 리포트 대상 목록으로 정리하고, 이후 코치 포털 입력을 거쳐 생성 대기 → 리포트 생성 → 리포트 발행 순으로 처리합니다.</p>
+            <p class="subtext">결제 완료 회원 중 측정 데이터가 승인된 일반 리포트를 생성하고, 상세에서 미리보기와 발행까지 처리합니다. 영상 리포트는 영상 데이터 관리에서 별도로 처리합니다.</p>
           </div>
           <div class="toolbar">
             <button class="btn" data-page="report-data">측정 데이터 검토</button>
@@ -2928,7 +2927,7 @@
               <div class="filters">
                 <select id="report-filter-month"><option>전체 측정월</option><option>2026-05</option><option>2026-04</option><option>2026-03</option></select>
                 <select id="report-filter-status"><option>전체 상태</option><option>측정 대기</option><option>측정 입력 완료</option><option>측정 승인 완료</option><option>리포트 생성 대기</option><option>리포트 생성 완료</option><option>발행 대기</option><option>발행 완료</option></select>
-                <select id="report-filter-type"><option>전체 유형</option><option>신체 성장</option><option>기록 리포트</option><option>영상 피드백</option></select>
+                <select id="report-filter-type"><option>전체 유형</option><option>신체 성장</option><option>기록 리포트</option><option>체력 측정 리포트</option><option>배드민턴 측정 리포트</option></select>
                 <input id="report-filter-search" type="text" placeholder="학생명, 유형 검색" />
               </div>
               <div class="toolbar">
@@ -3030,60 +3029,6 @@
         </div>
       </section>
 
-      <section class="content hidden" id="page-report-preview">
-        <div class="page-head">
-          <div>
-            <h1>리포트 발행</h1>
-            <p class="subtext">학부모 포털에 노출할 리포트를 발행합니다. PDF 다운로드 기능은 이후 학부모 포털에서 제공될 예정입니다.</p>
-          </div>
-          <div class="toolbar">
-            <button class="btn" data-page="report-list">리포트 목록</button>
-            <button class="btn" data-page="report-data">측정 데이터 관리</button>
-            <button class="btn primary">포털 공개</button>
-          </div>
-        </div>
-        <div class="schedule-status-row">
-          <div class="summary-card"><span>발행 준비</span><strong>5건</strong></div>
-          <div class="summary-card"><span>공개 대기</span><strong>3건</strong></div>
-          <div class="summary-card"><span>공개 완료</span><strong>2건</strong></div>
-          <div class="summary-card"><span>PDF 다운로드 예정</span><strong>추후</strong></div>
-        </div>
-        <div class="grid two-col">
-          <div class="panel elevated">
-            <div class="panel-head"><p class="panel-title">발행 대상 목록</p></div>
-            <div class="approval-actions">
-              <div class="filters">
-                <select><option>전체 측정월</option><option>2026-05</option><option>2026-04</option></select>
-                <select><option>전체 공개 상태</option><option>공개 대기</option><option>공개 완료</option></select>
-                <select><option>전체 유형</option><option>신체 성장</option><option>기록 리포트</option><option>영상 피드백</option></select>
-                <input type="text" placeholder="학생명, 유형 검색" />
-              </div>
-              <div class="toolbar">
-                <button class="btn">조회</button>
-                <button class="btn primary">포털 공개</button>
-                <button class="btn table-export" data-table="#page-report-preview table" data-filename="리포트_발행목록.csv">엑셀 다운로드</button>
-              </div>
-            </div>
-            <div class="panel-body">
-              <table>
-                <thead><tr><th>학생</th><th>측정월</th><th>유형</th><th>상태</th><th>공개 상태</th></tr></thead>
-                <tbody>
-                  <tr><td><strong>홍길동</strong><div class="muted">송도초 / 4학년</div></td><td>2026-05</td><td>신체 성장</td><td><span class="badge orange">발행 준비</span></td><td>공개 대기</td></tr>
-                  <tr><td><strong>김민재</strong><div class="muted">해송초 / 5학년</div></td><td>2026-05</td><td>영상 피드백</td><td><span class="badge blue">공개 대기</span></td><td>미공개</td></tr>
-                  <tr><td><strong>이서아</strong><div class="muted">먼우금초 / 3학년</div></td><td>2026-04</td><td>기록 리포트</td><td><span class="badge green">공개 완료</span></td><td>공개</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="panel">
-            <div class="panel-head"><p class="panel-title">선택 리포트 정보</p><span class="badge gray">미선택</span></div>
-            <div class="panel-body">
-              <div class="empty-state"><strong>선택된 리포트가 없습니다.</strong><p>왼쪽 목록에서 공개할 리포트를 선택해 주세요.</p></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section class="content hidden" id="page-report-detail">
         <div class="page-head">
           <div>
@@ -3093,7 +3038,7 @@
           <div class="toolbar">
             <button class="btn" data-page="report-list">리포트 목록</button>
             <button class="btn" data-page="reports">리포트 생성</button>
-            <button class="btn primary" data-page="report-preview">발행하기</button>
+            <button class="btn primary" data-page="report-list">리포트 관리</button>
           </div>
         </div>
         <div class="schedule-status-row">
@@ -3133,7 +3078,7 @@
               </div>
               <div class="toolbar" style="justify-content:flex-start;margin-top:16px; gap: 8px;">
                 <button class="btn primary" data-page="reports">생성/수정</button>
-                <button class="btn" data-page="report-preview">미리보기</button>
+                <button class="btn" data-page="reports">미리보기</button>
                 <button class="btn warn">발행 취소</button>
               </div>
             </div>
@@ -3161,8 +3106,8 @@
           </div>
           <div class="toolbar">
             <button class="btn" data-page="report-template">측정 항목 관리</button>
-            <button class="btn" data-page="video-feedback">영상 피드백</button>
-            <button class="btn primary" data-page="report-preview">리포트 발행</button>
+            <button class="btn" data-page="video-feedback">영상 데이터 관리</button>
+            <button class="btn primary" data-page="report-list">리포트 관리</button>
           </div>
         </div>
         <div class="grid two-col">
@@ -3226,8 +3171,8 @@
                 </div>
               </div>
               <div>
-                <div class="report-section-title">5. 영상 피드백</div>
-                <div class="video-preview">영상 썸네일 / 공개 링크</div>
+                <div class="report-section-title">5. 코치 종합 코멘트</div>
+                <div class="video-preview">리포트 코멘트 / 성장 포인트</div>
                 <div class="info-list" style="margin-top:10px;">
                   <div class="info-row"><span>기술 항목</span><strong>스텝 전환</strong></div>
                   <div class="info-row"><span>코치 피드백</span><strong>첫 스텝 반응은 좋아졌고, 좌우 전환 시 중심 유지가 필요합니다.</strong></div>
@@ -3244,7 +3189,7 @@
               <div class="field"><label>기준 소스</label><select><option>PAPS + PlanB 내부 기준</option><option>국민체력100 참고</option><option>PlanB 내부 기준</option></select></div>
               <div class="field"><label>점수 보정</label><select><option>자동 계산</option><option>관리자 수동 보정</option></select></div>
               <div class="field span-2"><label>코치 코멘트</label><textarea>하체 파워와 반응 속도가 안정적으로 향상되고 있습니다.</textarea></div>
-              <div class="field span-2"><label>영상 피드백</label><select><option>스텝 전환 영상 포함</option><option>영상 제외</option></select></div>
+              <div class="field span-2"><label>종합 코멘트</label><select><option>코치 코멘트 포함</option><option>관리자 코멘트만 사용</option></select></div>
               <div class="span-2 toolbar" style="justify-content:flex-start;"><button class="btn">데이터 검토</button><button class="btn">PDF 미리보기</button><button class="btn primary">발행 승인</button></div>
             </div>
           </div>
@@ -3299,22 +3244,25 @@
 
       <section class="content hidden" id="page-video-feedback">
         <div class="page-head">
-          <div><h1>영상 피드백</h1></div>
+          <div>
+            <h1>영상 데이터 관리</h1>
+            <p class="subtext">훈련 영상, 코치 피드백, 영상 리포트 포함 여부, 앱 공개와 링크 발송을 별도로 관리합니다.</p>
+          </div>
           <div class="toolbar"><button class="btn primary">영상 업로드</button></div>
         </div>
         <div class="grid two-col">
           <div class="panel elevated">
-            <div class="panel-head"><p class="panel-title">영상 피드백 목록</p></div>
+            <div class="panel-head"><p class="panel-title">영상 데이터 목록</p></div>
             <div class="approval-actions">
               <div class="filters">
                 <select><option>전체 공개 상태</option><option>비공개</option><option>앱 공개</option><option>링크 발송 완료</option></select>
                 <select><option>전체 기술 항목</option><option>스텝 전환</option><option>라켓 컨트롤</option><option>정확도</option></select>
                 <input placeholder="학생명, 코치명 검색" />
               </div>
-              <div class="toolbar"><button class="btn">조회</button><button class="btn table-export" data-table="#page-video-feedback table" data-filename="영상피드백_목록.csv">엑셀 다운로드</button></div>
+              <div class="toolbar"><button class="btn">조회</button><button class="btn table-export" data-table="#page-video-feedback table" data-filename="영상데이터_목록.csv">엑셀 다운로드</button></div>
             </div>
             <table>
-              <thead><tr><th>업로드일</th><th>학생</th><th>기술 항목</th><th>코치</th><th>리포트 포함</th><th>공개</th><th>링크</th></tr></thead>
+              <thead><tr><th>업로드일</th><th>학생</th><th>기술 항목</th><th>코치</th><th>영상 리포트</th><th>공개</th><th>링크</th></tr></thead>
               <tbody>
                 <tr class="selected"><td>05.20</td><td><strong>홍길동</strong><div class="muted">송도초 / 4학년</div></td><td>스텝 전환</td><td>김도윤</td><td><span class="badge green">포함</span></td><td><span class="badge blue">앱 공개</span></td><td><span class="badge orange">발송 대기</span></td></tr>
                 <tr><td>05.18</td><td><strong>김민재</strong><div class="muted">해송초 / 5학년</div></td><td>라켓 컨트롤</td><td>이하린</td><td><span class="badge green">포함</span></td><td><span class="badge green">공개</span></td><td><span class="badge green">발송 완료</span></td></tr>
@@ -3323,7 +3271,7 @@
             </table>
           </div>
           <div class="panel">
-            <div class="panel-head"><p class="panel-title">영상 상세/공유</p><span class="badge orange">발송 대기</span></div>
+            <div class="panel-head"><p class="panel-title">영상 데이터 상세/공개</p><span class="badge orange">발송 대기</span></div>
             <div class="panel-body">
               <div class="video-preview">훈련 영상 미리보기</div>
               <div class="form-grid" style="margin-top:14px;">
@@ -3331,7 +3279,7 @@
                 <div class="field"><label>기술 항목</label><select><option>스텝 전환</option><option>라켓 컨트롤</option><option>정확도</option></select></div>
                 <div class="field span-2"><label>코치 피드백</label><textarea>첫 스텝 반응은 좋아졌고, 좌우 전환 시 중심 유지가 필요합니다.</textarea></div>
                 <div class="field span-2"><label>개선 포인트</label><textarea>오른발 착지 후 라켓 준비 자세를 더 빠르게 가져갑니다.</textarea></div>
-                <div class="field"><label>리포트 포함</label><select><option>포함</option><option>제외</option></select></div>
+                <div class="field"><label>영상 리포트 포함</label><select><option>포함</option><option>제외</option></select></div>
                 <div class="field"><label>공개 범위</label><select><option>학부모 앱 공개</option><option>비공개</option></select></div>
                 <div class="field span-2"><label>공개 링크</label><input value="https://planb.grow/video/vf_20260520_hong" /></div>
                 <div class="span-2 toolbar" style="justify-content:flex-start;"><button class="btn">링크 복사</button><button class="btn">앱 공개</button><button class="btn primary">카카오 링크 발송</button></div>
@@ -4937,7 +4885,7 @@
               <label class="time-check"><input type="checkbox" checked /> 학생별 코멘트 작성</label>
               <label class="time-check"><input type="checkbox" checked /> 측정 데이터 입력</label>
               <label class="time-check"><input type="checkbox" /> 성장 리포트 초안 작성</label>
-              <label class="time-check"><input type="checkbox" /> 영상 피드백 작성</label>
+              <label class="time-check"><input type="checkbox" /> 영상 데이터 작성</label>
             </div>
             <div class="toolbar" style="justify-content:flex-start;margin-top:12px;"><button class="btn primary coach-action" data-action="업무 권한 저장">저장</button></div>
           </div>` : ""}`}`;
@@ -5164,9 +5112,8 @@
       "payment-status": ["결제 상태", "청구별 거래 성공/실패, 영수증, 결제 알림 이력을 확인합니다.", ["전체", "성공", "실패", "환불"], ["결제 요청"], ["청구번호", "학생", "금액", "결제상태", "실패 사유"], [["INV-1038", "홍길동", "240,000", "실패", "카드 승인 거절"], ["INV-1039", "김민재", "320,000", "성공", "-"]]],
       "overdue-manage": ["미납 관리", "미납 건을 우선순위로 정렬하고 재청구/알림 발송을 처리합니다.", ["D+1", "D+3", "D+7", "장기"], ["미납 알림", "재청구"], ["학생", "청구월", "미납일", "금액", "최근 알림"], [["홍길동", "2026-05", "5일", "240,000", "D+3 발송"], ["정서윤", "2026-04", "19일", "160,000", "최종 안내"]]],
       "report-data": ["측정 데이터 관리", "코치가 입력한 인바디, 아웃바디, 기초체력, 배드민턴 데이터를 검토합니다.", ["인바디", "아웃바디", "기초체력", "배드민턴"], ["수정 승인"], ["학생", "측정월", "입력자", "완성도", "상태"], [["홍길동", "2026-05", "김도윤", "92%", "검토 대기"], ["김민재", "2026-05", "이하린", "100%", "승인"]]],
-      "report-preview": ["PDF 미리보기/발행", "성장 리포트 PDF를 확인하고 학부모 앱에 공개합니다.", ["초안", "검토", "승인", "발행"], ["PDF 생성", "발행 승인"], ["학생", "측정월", "페이지", "상태", "공개"], [["홍길동", "2026-05", "2p", "승인 대기", "비공개"], ["김민재", "2026-04", "2p", "발행", "공개"]]],
       "report-template": ["측정 항목 관리", "리포트에 사용할 측정 항목, 입력 방식, 점수 기준, 노출 순서, 활성 상태를 설정합니다.", ["현재 신체", "바디 사이즈", "바디 비율", "테스트"], ["항목 추가"], ["카테고리", "항목", "단위", "입력 방식", "상태"], [["아웃바디", "얼굴-어깨 비율", "%", "자동 계산", "활성"], ["배드민턴", "스텝 테스트", "회", "코치 입력", "활성"]]],
-      "video-feedback": ["영상 피드백", "훈련 영상을 학생/기술 항목과 연결하고 리포트 포함 여부를 관리합니다.", ["업로드", "검토", "리포트 포함"], ["영상 업로드"], ["학생", "기술 항목", "코치", "포함", "상태"], [["홍길동", "스텝", "김도윤", "Y", "검토"], ["김민재", "라켓 컨트롤", "이하린", "Y", "완료"]]],
+      "video-feedback": ["영상 데이터 관리", "훈련 영상과 코치 피드백을 관리하고 영상 리포트 공개와 링크 발송을 처리합니다.", ["업로드", "검토", "영상 리포트", "공개"], ["영상 업로드"], ["학생", "기술 항목", "코치", "포함", "상태"], [["홍길동", "스텝", "김도윤", "Y", "검토"], ["김민재", "라켓 컨트롤", "이하린", "Y", "완료"]]],
       "route-manage": ["노선/정류장 관리", "노선, 정류장 순서, 예정 시간, 승하차 장소를 관리합니다.", ["노선", "정류장", "학생 배정"], ["노선 생성"], ["노선", "정류장", "기사", "차량", "상태"], [["1호차 송도 A", "8개", "최성훈", "71가 1234", "운영"], ["2호차 청라 B", "6개", "정민수", "72나 5581", "운영"]]],
       "bus-run": ["운행 관리", "오늘 운행 시작/종료, 탑승 예정, 미처리 학생을 관리합니다.", ["오늘", "예정", "운행중", "완료"], ["운행 시작", "운행 종료"], ["노선", "기사", "예정", "승차", "상태"], [["1호차 송도 A", "최성훈", "18", "15", "운행중"], ["2호차 청라 B", "정민수", "14", "14", "미하차 1"]]],
       "boarding-log": ["승하차 로그", "QR/수동 승하차 처리 이력과 예외 사유를 확인합니다.", ["전체", "QR", "수동", "예외"], ["로그 내보내기"], ["학생", "노선", "구분", "방식", "상태"], [["홍길동", "1호차", "승차", "QR", "완료"], ["박지우", "2호차", "하차", "수동", "사유 필요"]]],
@@ -5191,9 +5138,8 @@
         "payment-status": [["상태 확인", "PG 거래 결과"], ["실패 사유", "거절/오류 메시지"], ["재요청", "결제 링크 재발송"], ["로그", "transactions/audit 기록"]],
         "overdue-manage": [["미납 분류", "D+1/D+3/D+7"], ["알림 발송", "미납 안내"], ["상담 연결", "장기 미납 상담"], ["상태 변경", "납부/보류/정리"]],
         "report-data": [["데이터 검토", "인바디/아웃바디/수기"], ["오류 수정", "측정값 보정"], ["승인", "리포트 생성 가능"], ["이력", "수정 로그 저장"]],
-        "report-preview": [["초안 생성", "데이터/코멘트 취합"], ["PDF 확인", "2페이지 리포트 미리보기"], ["발행 승인", "학부모 앱 공개"], ["알림", "리포트 발행 알림"]],
         "report-template": [["항목 추가", "카테고리/단위/원천"], ["순서 변경", "PDF 노출 순서"], ["활성 관리", "사용 중 항목 보호"], ["버전 관리", "운영 중 변경 이력"]],
-        "video-feedback": [["영상 업로드", "학생/기술 항목 연결"], ["코치 의견", "개선 포인트 입력"], ["리포트 포함", "PDF/앱 표시 여부"], ["검토", "관리자 확인"]],
+        "video-feedback": [["영상 업로드", "학생/기술 항목 연결"], ["코치 의견", "개선 포인트 입력"], ["영상 리포트", "일반 리포트와 별도 관리"], ["공개", "앱 공개/링크 발송"]],
         "route-manage": [["노선 생성", "차량/기사 연결"], ["정류장 순서", "승하차 위치/시간"], ["학생 배정", "교통 이용 학생 연결"], ["운영", "앱/기사 포털 반영"]],
         "bus-run": [["운행 생성", "오늘 노선 자동 생성"], ["운행 시작", "기사 포털 활성"], ["승하차 모니터링", "미처리 학생 확인"], ["운행 종료", "로그 마감"]],
         "boarding-log": [["로그 조회", "QR/수동 구분"], ["예외 확인", "미승차/미하차"], ["사유 검토", "수동 처리 사유"], ["감사 로그", "개인정보/수동 처리 기록"]],
@@ -6737,7 +6683,7 @@
             <div class="field"><label>단위</label><input class="measurement-unit" value="${item.unit || ""}" placeholder="cm, sec, 회 등" /></div>
             <div class="field"><label>입력 방식</label><select class="measurement-input-type"><option value="">미선택</option><option ${selected(item.inputType, "코치 입력")}>코치 입력</option><option ${selected(item.inputType, "관리자 입력")}>관리자 입력</option><option ${selected(item.inputType, "자동 계산")}>자동 계산</option><option ${selected(item.inputType, "외부 연동")}>외부 연동</option></select></div>
             <div class="field"><label>리포트 사용 여부</label><select class="measurement-report-use"><option ${selected(item.reportUse || "사용", "사용")}>사용</option><option ${selected(item.reportUse, "미사용")}>미사용</option></select></div>
-            <div class="field"><label>노출 영역</label><select class="measurement-section"><option value="">미선택</option><option ${selected(item.reportSection, "최근 3개월 변화")}>최근 3개월 변화</option><option ${selected(item.reportSection, "바디 사이즈/비율 변화")}>바디 사이즈/비율 변화</option><option ${selected(item.reportSection, "기초체력/배드민턴 테스트")}>기초체력/배드민턴 테스트</option><option ${selected(item.reportSection, "신체 능력 밸런스 분석")}>신체 능력 밸런스 분석</option><option ${selected(item.reportSection, "영상 피드백")}>영상 피드백</option></select></div>
+            <div class="field"><label>노출 영역</label><select class="measurement-section"><option value="">미선택</option><option ${selected(item.reportSection, "최근 3개월 변화")}>최근 3개월 변화</option><option ${selected(item.reportSection, "바디 사이즈/비율 변화")}>바디 사이즈/비율 변화</option><option ${selected(item.reportSection, "기초체력/배드민턴 테스트")}>기초체력/배드민턴 테스트</option><option ${selected(item.reportSection, "신체 능력 밸런스 분석")}>신체 능력 밸런스 분석</option><option ${selected(item.reportSection, "코치 종합 코멘트")}>코치 종합 코멘트</option></select></div>
             <div class="field"><label>점수 방향</label><select class="measurement-direction"><option ${selected(item.scoreDirection || "높을수록 좋음", "높을수록 좋음")}>높을수록 좋음</option><option ${selected(item.scoreDirection, "낮을수록 좋음")}>낮을수록 좋음</option><option ${selected(item.scoreDirection, "적정범위")}>적정범위</option></select></div>
             <div class="field"><label>연결 능력치</label><select class="measurement-ability"><option ${selected(item.ability || "파워", "파워")}>파워</option><option ${selected(item.ability, "스피드")}>스피드</option><option ${selected(item.ability, "민첩성")}>민첩성</option><option ${selected(item.ability, "균형성")}>균형성</option><option ${selected(item.ability, "협응성")}>협응성</option></select></div>
             <div class="field"><label>가중치</label><input class="measurement-weight" value="${item.weight || "1.0"}" /></div>
@@ -7273,7 +7219,7 @@
       kim: {
         name: "김민재",
         age: "11세 남",
-        type: "영상 피드백",
+        type: "배드민턴 측정 리포트",
         month: "2026-05",
         paymentStatus: "결제 완료",
         measurementStatus: "측정 입력 완료",
@@ -7282,11 +7228,11 @@
         status: "측정 입력 완료",
         lastUpdate: "2026.05.02",
         coach: "이하린",
-        source: "운동 영상 분석",
+        source: "배드민턴 측정 데이터",
         recent: "2026년 4월",
         pdfStatus: "검토 중",
         publicTarget: "학부모 앱",
-        memo: "스텝 전환 피드백 필요",
+        memo: "스텝 전환 측정값 검토 필요",
         comment: "좌우 전환 시 중심 잡기 집중"
       },
       lee: {
