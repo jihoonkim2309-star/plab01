@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const fs=require\\('fs'\\); const s=fs.readFileSync\\('index.html','utf8'\\); console.log\\('len',s.length\\); const m=s.match\\(/<script>\\([\\\\\\\\s\\\\\\\\S]*?\\)<\\\\\\\\/script>/\\); if\\(m\\){ try { new Function\\(m[1]\\); console.log\\('JS parses OK'\\); } catch\\(e\\) { console.log\\('JS parse error:', e.message\\); }}\")",
+      "PowerShell(Get-Command node, nodejs, deno -ErrorAction SilentlyContinue)",
+      "PowerShell($content = Get-Content -Raw index.html; $open = \\([regex]::Matches\\($content, '{'\\)\\).Count; $close = \\([regex]::Matches\\($content, '}'\\)\\).Count; \"open: $open close: $close diff: $\\($open - $close\\)\")",
+      "PowerShell(Get-Command python, python3, py -ErrorAction SilentlyContinue)",
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)"
+    ]
+  }
+}
