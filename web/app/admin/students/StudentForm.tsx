@@ -21,6 +21,8 @@ function Field({
   span2?: boolean;
   placeholder?: string;
 }) {
+  const dateProps =
+    type === "date" ? { min: "1900-01-01", max: "2100-12-31" } : {};
   return (
     <div className={`field${span2 ? " span-2" : ""}`}>
       <label>{label}</label>
@@ -29,6 +31,7 @@ function Field({
         type={type}
         defaultValue={value ?? ""}
         placeholder={placeholder}
+        {...dateProps}
       />
     </div>
   );
