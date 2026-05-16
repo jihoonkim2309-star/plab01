@@ -3,21 +3,28 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { deleteStudent } from "../actions";
 
-const ROWS: [string, string][] = [
+const BASIC: [string, string][] = [
   ["성별", "gender"],
   ["생년월일", "birth"],
   ["학교", "school"],
   ["학년", "grade"],
   ["주 종목", "sport"],
   ["레벨", "level"],
-  ["회원 상태", "status"],
+];
+
+const ENROLL: [string, string][] = [
   ["수강 클래스", "class_name"],
   ["결제 상품", "product"],
   ["셔틀 이용", "shuttle_use"],
   ["노선", "route"],
-  ["건강/주의사항", "caution"],
-  ["운영 메모", "memo"],
 ];
+
+const STATUS_BADGE: Record<string, string> = {
+  활성: "green",
+  상담중: "blue",
+  대기: "orange",
+  휴면: "gray",
+};
 
 export default async function StudentDetailPage({
   params,
@@ -34,42 +41,94 @@ export default async function StudentDetailPage({
 
   if (!s) notFound();
 
-  return (
-    <div>
-      <Link
-        href="/admin/students"
-        className="text-sm text-zinc-500 hover:text-zinc-800"
-      >
-        ← 학생 목록
-      </Link>
-
-      <div className="flex items-center justify-between mt-2 mb-6">
-        <h1 className="text-2xl font-bold text-zinc-900">{s.name}</h1>
-        <div className="flex gap-3">
-          <Link
-            href={`/admin/students/${id}/edit`}
-            className="rounded-md bg-zinc-900 text-white px-4 py-2 text-sm font-medium"
-          >
-            수정
-          </Link>
-          <form action={deleteStudent.bind(null, id)}>
-            <button className="rounded-md border border-rose-300 text-rose-600 px-4 py-2 text-sm font-medium">
-              삭제
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow divide-y divide-zinc-100">
-        {ROWS.map(([label, key]) => (
-          <div key={key} className="flex px-6 py-3 text-sm">
-            <div className="w-32 text-zinc-500">{label}</div>
-            <div className="text-zinc-900 whitespace-pre-wrap">
-              {s[key] ?? "-"}
-            </div>
+  const InfoBlock = ({
+    title,
+    rows,
+  }: {
+    title: string;
+    rows: [string, string][];
+  }) => (
+    <div className="detail-block">
+      <p className="detail-title">{title}</p>
+      <div className="info-list">
+        {rows.map(([label, key]) => (
+          <div className="info-row" key={key}>
+            <span>{label}</span>
+            <strong>{s[key] ?? "-"}</strong>
           </div>
         ))}
       </div>
     </div>
+  );
+
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1>{s.name}</h1>
+          <p className="subtext">
+            <Link href="/admin/students" style={{ color: "var(--muted)" }}>
+              ← 학생 목록
+            </Link>
+          </p>
+        </div>
+        <div className="toolbar">
+          <Link className="btn primary" href={`/admin/students/${id}/edit`}>
+            수정
+          </Link>
+          <form action={deleteStudent.bind(null, id)}>
+            <button className="btn danger">삭제</button>
+          </form>
+        </div>
+      </div>
+
+      <div className="grid two-col">
+        <div className="panel">
+          <div className="panel-body">
+            <div className="profile-hero">
+              <div className="avatar">{s.name?.charAt(0)}</div>
+              <div>
+                <strong style={{ fontSize: 20 }}>{s.name}</strong>
+                <div className="muted">
+                  {[s.class_name, s.product, s.shuttle_use === "이용" ? "셔틀 이용" : null]
+                    .filter(Boolean)
+                    .join(" · ") || "수강 정보 미입력"}
+                </div>
+                <div style={{ marginTop: 9 }}>
+                  <span
+                    className={`badge ${STATUS_BADGE[s.status] ?? "gray"}`}
+                  >
+                    {s.status}
+                  </span>{" "}
+                  <span className="badge gray">{s.gender}</span>
+                </div>
+              </div>
+            </div>
+            <InfoBlock title="기본 정보" rows={BASIC} />
+            <InfoBlock title="수강 / 셔틀" rows={ENROLL} />
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-head">
+            <p className="panel-title">메모</p>
+          </div>
+          <div className="panel-body">
+            <div className="detail-block" style={{ marginTop: 0 }}>
+              <p className="detail-title">건강 / 주의사항</p>
+              <div className="approval-note" style={{ whiteSpace: "pre-wrap" }}>
+                {s.caution || "-"}
+              </div>
+            </div>
+            <div className="detail-block">
+              <p className="detail-title">운영 메모</p>
+              <div className="approval-note" style={{ whiteSpace: "pre-wrap" }}>
+                {s.memo || "-"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

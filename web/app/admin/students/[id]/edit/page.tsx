@@ -20,19 +20,26 @@ export default async function EditStudentPage({
   if (!s) notFound();
 
   return (
-    <div>
-      <Link
-        href={`/admin/students/${id}`}
-        className="text-sm text-zinc-500 hover:text-zinc-800"
-      >
-        ← {s.name} 상세
-      </Link>
-      <h1 className="text-2xl font-bold text-zinc-900 mt-2 mb-6">학생 정보 수정</h1>
+    <>
+      <div className="page-head">
+        <div>
+          <h1>학생 정보 수정</h1>
+          <p className="subtext">
+            <Link
+              href={`/admin/students/${id}`}
+              style={{ color: "var(--muted)" }}
+            >
+              ← {s.name} 상세
+            </Link>
+          </p>
+        </div>
+      </div>
       <StudentForm
         student={s}
         action={updateStudent.bind(null, id)}
         submitLabel="수정 저장"
+        cancelHref={`/admin/students/${id}`}
       />
-    </div>
+    </>
   );
 }

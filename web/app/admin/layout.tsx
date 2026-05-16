@@ -1,6 +1,7 @@
-import Link from "next/link";
+import "./admin.css";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import Sidebar from "./Sidebar";
 import { signOut } from "./actions";
 
 export default async function AdminLayout({
@@ -22,40 +23,63 @@ export default async function AdminLayout({
     .single();
 
   const needsBootstrap = !profile?.role || !profile?.center_id;
+  const initial = (profile?.name ?? user.email ?? "A").charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-zinc-100">
-      <header className="bg-zinc-900 text-white">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <span className="font-bold">플랜비 본점 · 어드민</span>
-            <nav className="flex gap-4 text-sm text-zinc-300">
-              <Link href="/admin/students" className="hover:text-white">
-                학생 관리
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-4 text-sm">
-            <span className="text-zinc-400">{profile?.name ?? user.email}</span>
+    <div className="admin-shell app">
+      <Sidebar />
+      <div className="drawer-backdrop" />
+
+      <main className="main">
+        <header className="topbar">
+          <select className="center-select" aria-label="센터 선택" defaultValue="플랜비 본점">
+            <option>플랜비 본점</option>
+          </select>
+          <input className="search" placeholder="학생명, 학부모명, 청구번호 검색" />
+          <div className="profile">
+            <div className="avatar">{initial}</div>
+            <span>{profile?.name ?? user.email}</span>
             <form action={signOut}>
-              <button className="text-zinc-300 hover:text-white">로그아웃</button>
+              <button className="btn" style={{ minHeight: 34 }}>
+                로그아웃
+              </button>
             </form>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {needsBootstrap && (
-        <div className="bg-amber-100 border-b border-amber-300 text-amber-900 text-sm">
-          <div className="max-w-5xl mx-auto px-4 py-3">
-            아직 이 계정에 <b>센터/권한</b>이 지정되지 않았습니다. Supabase SQL
-            Editor 에서 <code>schema.sql</code> 하단의 부트스트랩 SQL을 실행해
-            센터를 만들고 이 계정을 <code>admin</code> 으로 승격하세요. (현재
-            이메일: <b>{user.email}</b>)
+        <div className="workspace-strip">
+          <div className="crumb">
+            <strong>플랜비 본점</strong>
+            <span>/</span>
+            <span>Phase 1 운영 콘솔</span>
+            <span>/</span>
+            <span>2026년 5월 운영월</span>
+          </div>
+          <div className="system-state">
+            <span className="badge green">DB 정상</span>
+            <span className="badge blue">Slice 1 가동</span>
           </div>
         </div>
-      )}
 
-      <main className="max-w-5xl mx-auto px-4 py-8">{children}</main>
+        <section className="content">
+          {needsBootstrap && (
+            <div
+              className="panel"
+              style={{
+                background: "var(--orange-soft)",
+                borderColor: "#f0d19a",
+                color: "var(--orange)",
+                padding: "12px 16px",
+              }}
+            >
+              아직 이 계정에 <b>센터/권한</b>이 지정되지 않았습니다. Supabase SQL
+              Editor에서 부트스트랩 SQL을 실행해 센터를 만들고 이 계정을{" "}
+              <b>admin</b>으로 승격하세요. (현재 이메일: <b>{user.email}</b>)
+            </div>
+          )}
+          {children}
+        </section>
+      </main>
     </div>
   );
 }
