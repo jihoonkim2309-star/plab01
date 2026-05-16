@@ -42,9 +42,9 @@ export const NAV: NavGroup[] = [
     items: [
       { label: "클래스 관리", slug: "class-manage", href: "/admin/classes", icon: "□", ready: true },
       { label: "클래스 생성", slug: "class-create", href: "/admin/classes/new", sub: true, ready: true },
-      { label: "월간 시간표", slug: "schedule", href: p("schedule"), icon: "□" },
-      { label: "휴강일 관리", slug: "holiday-manage", href: p("holiday-manage"), sub: true },
-      { label: "보강 일정 관리", slug: "makeup-manage", href: p("makeup-manage"), sub: true },
+      { label: "월간 시간표", slug: "schedule", href: "/admin/schedule", icon: "□", ready: true },
+      { label: "휴강일 관리", slug: "holiday-manage", href: "/admin/holidays", sub: true, ready: true },
+      { label: "보강 일정 관리", slug: "makeup-manage", href: "/admin/makeups", sub: true, ready: true },
     ],
   },
   {
