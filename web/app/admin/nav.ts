@@ -51,10 +51,10 @@ export const NAV: NavGroup[] = [
     label: "결제",
     items: [
       { label: "수강 상품 관리", slug: "product-manage", href: "/admin/products", icon: "₩", ready: true },
-      { label: "다음 달 수강 확인", slug: "renewal-confirm", href: p("renewal-confirm"), sub: true },
-      { label: "청구 관리", slug: "billing-manage", href: p("billing-manage"), sub: true },
-      { label: "결제 상태", slug: "payment-status", href: p("payment-status"), sub: true },
-      { label: "미납 관리", slug: "overdue-manage", href: p("overdue-manage"), sub: true },
+      { label: "다음 달 수강 확인", slug: "renewal-confirm", href: "/admin/renewals", sub: true, ready: true },
+      { label: "청구 관리", slug: "billing-manage", href: "/admin/billing", sub: true, ready: true },
+      { label: "결제 상태", slug: "payment-status", href: "/admin/payment-status", sub: true, ready: true },
+      { label: "미납 관리", slug: "overdue-manage", href: "/admin/overdue", sub: true, ready: true },
     ],
   },
   {

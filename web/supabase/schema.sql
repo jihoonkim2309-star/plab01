@@ -422,6 +422,50 @@ begin
   end loop;
 end $$;
 
+-- ---------- 12. 결제일 자동 청구 (Vercel Cron 이 RPC 호출) -------------
+-- SECURITY DEFINER: RLS 우회. 관리자가 '확정'한 수강건만, 이미 청구된 건
+-- 제외하고 멱등 생성. 매일 호출되며 billing_day == 오늘인 센터만 처리.
+create or replace function public.generate_due_invoices()
+returns integer language plpgsql security definer set search_path = public as $$
+declare
+  v_count integer := 0;
+  v_period text := to_char(current_date, 'YYYY-MM');
+  r record;
+begin
+  for r in
+    select rc.enrollment_id, e.student_id, e.center_id,
+           c.billing_day, p.name as pname, p.price as pprice
+    from public.renewal_confirmations rc
+    join public.enrollments e on e.id = rc.enrollment_id
+    join public.centers c on c.id = e.center_id
+    left join public.products p on p.id = e.product_id
+    where rc.status = '확정'
+      and rc.target_month = v_period
+      and c.billing_day = extract(day from current_date)::int
+      and not exists (
+        select 1 from public.invoices i
+        where i.student_id = e.student_id and i.period = v_period
+      )
+  loop
+    with ins as (
+      insert into public.invoices
+        (center_id, student_id, period, amount, status, source, due_date, issued_at)
+      values
+        (r.center_id, r.student_id, v_period, coalesce(r.pprice,0),
+         '청구', '수강확인',
+         (v_period || '-' || lpad(least(r.billing_day,28)::text,2,'0'))::date,
+         now())
+      returning id
+    )
+    insert into public.invoice_items (center_id, invoice_id, enrollment_id, label, amount)
+    select r.center_id, ins.id, r.enrollment_id, coalesce(r.pname,'수강료'),
+           coalesce(r.pprice,0)
+    from ins;
+    v_count := v_count + 1;
+  end loop;
+  return v_count;
+end $$;
+
 -- =====================================================================
 --  부트스트랩 (최초 1회) — 아래 주석을 해제해서 실행하세요.
 --  1) 먼저 앱에서 어드민 계정으로 회원가입(또는 Supabase Auth에서 유저 생성)
