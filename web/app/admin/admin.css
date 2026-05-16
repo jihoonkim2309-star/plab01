@@ -476,6 +476,18 @@
 .two-col { grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr); }
 .three-col { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
+.student-form-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.55fr);
+  gap: 14px;
+  align-items: start;
+}
+.student-side-stack { display: grid; gap: 14px; }
+.student-main-stack { display: grid; gap: 14px; align-content: start; }
+.student-photo-card .profile-hero { grid-template-columns: 92px 1fr; min-height: 132px; }
+.student-photo-card .avatar { width: 92px; height: 92px; font-size: 23px; }
+.student-photo-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
 .filters {
   display: flex;
   align-items: center;
@@ -707,6 +719,7 @@
   .member-layout,
   .approval-layout,
   .member-summary,
+  .student-form-layout,
   .three-col,
   .two-col { grid-template-columns: 1fr 1fr; }
   .workspace-strip { align-items: flex-start; flex-direction: column; }
@@ -741,6 +754,7 @@
   .account-layout,
   .approval-layout,
   .member-summary,
+  .student-form-layout,
   .three-col,
   .two-col,
   .form-grid { grid-template-columns: 1fr; }

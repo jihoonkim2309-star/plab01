@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import StudentForm from "../../StudentForm";
@@ -25,27 +24,13 @@ export default async function EditStudentPage({
     .order("name");
 
   return (
-    <>
-      <div className="page-head">
-        <div>
-          <h1>학생 정보 수정</h1>
-          <p className="subtext">
-            <Link
-              href={`/admin/students/${id}`}
-              style={{ color: "var(--muted)" }}
-            >
-              ← {s.name} 상세
-            </Link>
-          </p>
-        </div>
-      </div>
-      <StudentForm
-        student={s}
-        classes={classes ?? []}
-        action={updateStudent.bind(null, id)}
-        submitLabel="수정 저장"
-        cancelHref={`/admin/students/${id}`}
-      />
-    </>
+    <StudentForm
+      title="학생 정보 수정"
+      student={s}
+      classes={classes ?? []}
+      action={updateStudent.bind(null, id)}
+      submitLabel="수정 저장"
+      cancelHref={`/admin/students/${id}`}
+    />
   );
 }
