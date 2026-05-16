@@ -1,8 +1,8 @@
-﻿import { createServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// 紐⑤뱺 ?붿껌?먯꽌 Supabase ?몄뀡??媛깆떊?섍퀬, 濡쒓렇???????ъ슜?먭?
-// 蹂댄샇???섏씠吏(/admin)???묎렐?섎㈃ 濡쒓렇???섏씠吏濡?蹂대궦??
+// 모든 요청에서 Supabase 세션을 갱신하고, 로그인 안 한 사용자가
+// 보호된 경로(/admin, /prototype.html)에 접근하면 로그인 페이지로 보낸다.
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -32,20 +32,21 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isAdminArea = path.startsWith("/admin");
+  const isProto = path === "/prototype.html";
+  const isProtected = path.startsWith("/admin") || isProto;
   const isLogin = path === "/login";
 
-  if (isAdminArea && !user) {
+  if (isProtected && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
   if (isLogin && user) {
-    return NextResponse.redirect(new URL("/admin", request.url));
+    return NextResponse.redirect(new URL("/prototype.html", request.url));
   }
 
   return response;
 }
 
 export const config = {
-  // ?뺤쟻 ?먯궛? ?쒖쇅?섍퀬 紐⑤뱺 寃쎈줈?먯꽌 ?숈옉.
+  // 정적 자산은 제외하고 모든 경로에서 동작.
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };
