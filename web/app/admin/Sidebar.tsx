@@ -8,6 +8,8 @@ function isActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === "/admin";
   if (href === "/admin/students")
     return pathname === "/admin/students" || pathname.startsWith("/admin/students/");
+  if (href === "/admin/classes")
+    return pathname === "/admin/classes" || pathname.startsWith("/admin/classes/");
   return pathname === href;
 }
 

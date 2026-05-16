@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const FIELDS = [
   "name",
@@ -13,7 +14,7 @@ const FIELDS = [
   "sport",
   "level",
   "status",
-  "class_name",
+  "class_id",
   "product",
   "shuttle_use",
   "route",
@@ -30,30 +31,26 @@ function readForm(formData: FormData) {
   return row;
 }
 
-async function requireCenterId() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: profile } = await supabase
-    .from("users")
-    .select("center_id, role")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.center_id || profile.role !== "admin") {
-    throw new Error(
-      "센터/권한이 설정되지 않았습니다. 부트스트랩 SQL을 먼저 실행하세요.",
-    );
+// 선택한 클래스의 이름을 class_name 에 비정규화 저장 (목록/상세 표시용).
+async function withClassName(
+  supabase: SupabaseClient,
+  row: Record<string, string | null>,
+): Promise<Record<string, string | null>> {
+  if (row.class_id) {
+    const { data: cls } = await supabase
+      .from("classes")
+      .select("name")
+      .eq("id", row.class_id)
+      .single();
+    const name = (cls as { name: string } | null)?.name ?? null;
+    return { ...row, class_name: name };
   }
-  return { supabase, centerId: profile.center_id as string };
+  return { ...row, class_name: null };
 }
 
 export async function createStudent(formData: FormData) {
-  const { supabase, centerId } = await requireCenterId();
-  const row = readForm(formData);
+  const { supabase, centerId } = await requireCenter();
+  const row = await withClassName(supabase, readForm(formData));
   if (!row.name) throw new Error("학생명은 필수입니다.");
 
   const { error } = await supabase
@@ -66,8 +63,8 @@ export async function createStudent(formData: FormData) {
 }
 
 export async function updateStudent(id: string, formData: FormData) {
-  const { supabase } = await requireCenterId();
-  const row = readForm(formData);
+  const { supabase } = await requireCenter();
+  const row = await withClassName(supabase, readForm(formData));
   if (!row.name) throw new Error("학생명은 필수입니다.");
 
   const { error } = await supabase.from("students").update(row).eq("id", id);
@@ -79,7 +76,7 @@ export async function updateStudent(id: string, formData: FormData) {
 }
 
 export async function deleteStudent(id: string) {
-  const { supabase } = await requireCenterId();
+  const { supabase } = await requireCenter();
   const { error } = await supabase.from("students").delete().eq("id", id);
   if (error) throw new Error("삭제 실패: " + error.message);
 

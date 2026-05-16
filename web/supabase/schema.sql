@@ -157,6 +157,37 @@ drop trigger if exists students_touch on public.students;
 create trigger students_touch before update on public.students
   for each row execute function public.touch_updated_at();
 
+-- ---------- 10. classes (클래스) + 학생 연결 [Phase B 추가] -------------
+create table if not exists public.classes (
+  id          uuid primary key default gen_random_uuid(),
+  center_id   uuid not null references public.centers(id) on delete cascade,
+  name        text not null,
+  sport       text,
+  level       text,
+  capacity    integer,
+  coach       text,
+  schedule    text,                       -- 요일/시간 자유 텍스트 (수업운영 슬라이스에서 정규화 예정)
+  status      text not null default '운영',
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+-- 학생 → 클래스 실제 연결 (FK). class_name 은 목록 표시용 비정규화 컬럼으로 유지.
+alter table public.students
+  add column if not exists class_id uuid references public.classes(id) on delete set null;
+
+alter table public.classes enable row level security;
+
+drop policy if exists classes_admin_all on public.classes;
+create policy classes_admin_all on public.classes
+  for all
+  using  (center_id = public.current_center_id() and public.current_role() = 'admin')
+  with check (center_id = public.current_center_id() and public.current_role() = 'admin');
+
+drop trigger if exists classes_touch on public.classes;
+create trigger classes_touch before update on public.classes
+  for each row execute function public.touch_updated_at();
+
 -- =====================================================================
 --  부트스트랩 (최초 1회) — 아래 주석을 해제해서 실행하세요.
 --  1) 먼저 앱에서 어드민 계정으로 회원가입(또는 Supabase Auth에서 유저 생성)

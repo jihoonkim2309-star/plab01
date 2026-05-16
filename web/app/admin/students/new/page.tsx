@@ -1,8 +1,15 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import StudentForm from "../StudentForm";
 import { createStudent } from "../actions";
 
-export default function NewStudentPage() {
+export default async function NewStudentPage() {
+  const supabase = await createClient();
+  const { data: classes } = await supabase
+    .from("classes")
+    .select("id, name")
+    .order("name");
+
   return (
     <>
       <div className="page-head">
@@ -16,6 +23,7 @@ export default function NewStudentPage() {
         </div>
       </div>
       <StudentForm
+        classes={classes ?? []}
         action={createStudent}
         submitLabel="등록"
         cancelHref="/admin/students"

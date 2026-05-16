@@ -40,8 +40,8 @@ export const NAV: NavGroup[] = [
   {
     label: "수업 운영",
     items: [
-      { label: "클래스 관리", slug: "class-manage", href: p("class-manage"), icon: "□" },
-      { label: "클래스 생성", slug: "class-create", href: p("class-create"), sub: true },
+      { label: "클래스 관리", slug: "class-manage", href: "/admin/classes", icon: "□", ready: true },
+      { label: "클래스 생성", slug: "class-create", href: "/admin/classes/new", sub: true, ready: true },
       { label: "월간 시간표", slug: "schedule", href: p("schedule"), icon: "□" },
       { label: "휴강일 관리", slug: "holiday-manage", href: p("holiday-manage"), sub: true },
       { label: "보강 일정 관리", slug: "makeup-manage", href: p("makeup-manage"), sub: true },

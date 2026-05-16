@@ -19,6 +19,11 @@ export default async function EditStudentPage({
 
   if (!s) notFound();
 
+  const { data: classes } = await supabase
+    .from("classes")
+    .select("id, name")
+    .order("name");
+
   return (
     <>
       <div className="page-head">
@@ -36,6 +41,7 @@ export default async function EditStudentPage({
       </div>
       <StudentForm
         student={s}
+        classes={classes ?? []}
         action={updateStudent.bind(null, id)}
         submitLabel="수정 저장"
         cancelHref={`/admin/students/${id}`}

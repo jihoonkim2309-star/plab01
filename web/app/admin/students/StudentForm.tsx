@@ -65,11 +65,13 @@ function Textarea({
 
 export default function StudentForm({
   student,
+  classes,
   action,
   submitLabel,
   cancelHref,
 }: {
   student?: Student;
+  classes: { id: string; name: string }[];
   action: (formData: FormData) => void;
   submitLabel: string;
   cancelHref: string;
@@ -101,7 +103,22 @@ export default function StudentForm({
               value={s.status}
               options={["활성", "상담중", "대기", "휴면"]}
             />
-            <Field label="수강 클래스" name="class_name" value={s.class_name} />
+            <div className="field">
+              <label>수강 클래스</label>
+              <select name="class_id" defaultValue={(s.class_id as string) ?? ""}>
+                <option value="">선택 안 함</option>
+                {classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              {classes.length === 0 && (
+                <span className="muted">
+                  등록된 클래스가 없습니다 — “클래스 관리”에서 먼저 생성하세요.
+                </span>
+              )}
+            </div>
             <Field label="결제 상품" name="product" value={s.product} />
             <Select
               label="셔틀 이용"
