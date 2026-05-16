@@ -10,7 +10,10 @@ const FIELDS = [
   "level",
   "capacity",
   "coach",
-  "schedule",
+  "coach_id",
+  "start_time",
+  "end_time",
+  "place",
   "status",
 ] as const;
 
@@ -24,6 +27,15 @@ function readForm(formData: FormData) {
       row[f] = v === null || v === "" ? null : String(v);
     }
   }
+  // 요일 다중 선택 → "월,수,금"
+  const days = formData.getAll("days").map(String).filter(Boolean);
+  row.days_of_week = days.length ? days.join(",") : null;
+  // 표시용 일정 텍스트 (목록/학생폼 등에서 재사용)
+  const t =
+    row.start_time && row.end_time
+      ? ` ${row.start_time}~${row.end_time}`
+      : "";
+  row.schedule = days.length ? `${days.join("·")}${t}` : null;
   return row;
 }
 

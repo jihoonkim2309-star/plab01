@@ -580,6 +580,26 @@
 
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 
+.weekday-picker {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+.weekday-picker label {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  background: #fff;
+  cursor: pointer;
+}
+.weekday-picker input { accent-color: var(--brand); }
+
 .detail-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 
 .field { display: flex; flex-direction: column; gap: 6px; }
@@ -759,6 +779,7 @@
   .two-col,
   .form-grid { grid-template-columns: 1fr; }
   .span-2 { grid-column: span 1; }
+  .weekday-picker { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .sidebar-footer { display: none; }
   .admin-shell table { display: block; overflow-x: auto; white-space: nowrap; }
 }

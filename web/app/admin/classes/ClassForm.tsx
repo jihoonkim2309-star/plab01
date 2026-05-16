@@ -1,18 +1,23 @@
 type ClassRow = Record<string, string | number | null> | null;
 
+const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
+
 export default function ClassForm({
   cls,
+  coaches,
   action,
   submitLabel,
   cancelHref,
 }: {
   cls?: ClassRow;
+  coaches: { id: string; name: string | null }[];
   action: (formData: FormData) => void;
   submitLabel: string;
   cancelHref: string;
 }) {
   const c = cls ?? {};
   const v = (k: string) => (c[k] == null ? "" : String(c[k]));
+  const selectedDays = v("days_of_week").split(",").filter(Boolean);
 
   return (
     <form action={action}>
@@ -45,14 +50,59 @@ export default function ClassForm({
             </div>
             <div className="field">
               <label>정원</label>
-              <input name="capacity" type="number" min={1} defaultValue={v("capacity")} />
+              <input
+                name="capacity"
+                type="number"
+                min={1}
+                defaultValue={v("capacity")}
+              />
             </div>
             <div className="field">
-              <label>담당 코치</label>
+              <label>담당 코치 (계정)</label>
+              <select name="coach_id" defaultValue={v("coach_id")}>
+                <option value="">미지정</option>
+                {coaches.map((co) => (
+                  <option key={co.id} value={co.id}>
+                    {co.name ?? "(이름없음)"}
+                  </option>
+                ))}
+              </select>
+              {coaches.length === 0 && (
+                <span className="muted">
+                  코치 계정이 없으면 아래 텍스트로 임시 표기
+                </span>
+              )}
+            </div>
+            <div className="field">
+              <label>담당 코치 (텍스트)</label>
               <input
                 name="coach"
                 defaultValue={v("coach")}
-                placeholder="코치 계정 슬라이스 전까지 텍스트"
+                placeholder="코치 계정 없을 때 임시 표기"
+              />
+            </div>
+            <div className="field">
+              <label>시작 시간</label>
+              <input
+                name="start_time"
+                type="time"
+                defaultValue={v("start_time").slice(0, 5)}
+              />
+            </div>
+            <div className="field">
+              <label>종료 시간</label>
+              <input
+                name="end_time"
+                type="time"
+                defaultValue={v("end_time").slice(0, 5)}
+              />
+            </div>
+            <div className="field">
+              <label>장소</label>
+              <input
+                name="place"
+                defaultValue={v("place")}
+                placeholder="예: A코트 / 체력장"
               />
             </div>
             <div className="field">
@@ -65,12 +115,20 @@ export default function ClassForm({
               </select>
             </div>
             <div className="field span-2">
-              <label>수업 일정 (요일/시간)</label>
-              <input
-                name="schedule"
-                defaultValue={v("schedule")}
-                placeholder="예: 월·수·금 17:00~18:30"
-              />
+              <label>수업 요일</label>
+              <div className="weekday-picker">
+                {WEEKDAYS.map((d) => (
+                  <label key={d}>
+                    <input
+                      type="checkbox"
+                      name="days"
+                      value={d}
+                      defaultChecked={selectedDays.includes(d)}
+                    />
+                    {d}
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 

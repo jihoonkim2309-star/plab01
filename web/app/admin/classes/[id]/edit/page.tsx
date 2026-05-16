@@ -19,6 +19,12 @@ export default async function EditClassPage({
 
   if (!c) notFound();
 
+  const { data: coaches } = await supabase
+    .from("users")
+    .select("id, name")
+    .eq("role", "coach")
+    .order("name");
+
   return (
     <>
       <div className="page-head">
@@ -38,6 +44,7 @@ export default async function EditClassPage({
       </div>
       <ClassForm
         cls={c}
+        coaches={coaches ?? []}
         action={updateClass.bind(null, id)}
         submitLabel="수정 저장"
         cancelHref="/admin/classes"

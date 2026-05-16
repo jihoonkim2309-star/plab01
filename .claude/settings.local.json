@@ -6,7 +6,20 @@
       "PowerShell($content = Get-Content -Raw index.html; $open = \\([regex]::Matches\\($content, '{'\\)\\).Count; $close = \\([regex]::Matches\\($content, '}'\\)\\).Count; \"open: $open close: $close diff: $\\($open - $close\\)\")",
       "PowerShell(Get-Command python, python3, py -ErrorAction SilentlyContinue)",
       "PowerShell(node --version)",
-      "PowerShell(npm --version)"
+      "PowerShell(npm --version)",
+      "Bash(cd *)",
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(node *)",
+      "PowerShell(*)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -fd*)",
+      "PowerShell(Remove-Item -Recurse -Force *)"
     ]
   }
 }
