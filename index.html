@@ -3029,76 +3029,6 @@
         </div>
       </section>
 
-      <section class="content hidden" id="page-report-detail">
-        <div class="page-head">
-          <div>
-            <h1>리포트 상세</h1>
-            <p class="subtext">선택한 학생의 리포트 생성, 검토, 발행 현황을 한 번에 관리합니다.</p>
-          </div>
-          <div class="toolbar">
-            <button class="btn" data-page="report-list">리포트 목록</button>
-            <button class="btn" data-page="reports">리포트 생성</button>
-            <button class="btn primary" data-page="report-list">리포트 관리</button>
-          </div>
-        </div>
-        <div class="schedule-status-row">
-          <div class="summary-card"><span>학생</span><strong>홍길동</strong></div>
-          <div class="summary-card"><span>측정월</span><strong>2026-05</strong></div>
-          <div class="summary-card"><span>리포트 상태</span><strong>생성 대기</strong></div>
-          <div class="summary-card"><span>발행</span><strong>미발행</strong></div>
-        </div>
-        <div class="grid two-col">
-          <div class="panel elevated">
-            <div class="panel-head"><p class="panel-title">리포트 정보</p></div>
-            <div class="panel-body">
-              <div class="info-list">
-                <div class="info-row"><span>학생</span><strong>홍길동</strong></div>
-                <div class="info-row"><span>나이/성별</span><strong>10세 남</strong></div>
-                <div class="info-row"><span>리포트 유형</span><strong>신체 성장</strong></div>
-                <div class="info-row"><span>측정 기준</span><strong>PAPS + PlanB 내부 기준</strong></div>
-                <div class="info-row"><span>입력 코치</span><strong>김도윤</strong></div>
-                <div class="info-row"><span>마지막 업데이트</span><strong>2026.05.01</strong></div>
-              </div>
-              <div class="form-grid" style="margin-top:16px;">
-                <div class="field"><label>리포트 상태</label><select><option>생성 대기</option><option>검토 필요</option><option>발행 대기</option><option>발행 완료</option></select></div>
-                <div class="field"><label>담당 검토자</label><select><option>미지정</option><option>김수진</option><option>이하린</option></select></div>
-                <div class="field span-2"><label>관리자 메모</label><textarea>리포트 데이터 확인 필요</textarea></div>
-              </div>
-            </div>
-          </div>
-          <div class="panel">
-            <div class="panel-head"><p class="panel-title">최근 리포트/발행</p><span class="badge orange">미발행</span></div>
-            <div class="panel-body">
-              <div class="info-list">
-                <div class="info-row"><span>최근 리포트</span><strong>2026년 4월</strong></div>
-                <div class="info-row"><span>최종 검토</span><strong>2026.05.01</strong></div>
-                <div class="info-row"><span>공개 상태</span><strong>초안</strong></div>
-                <div class="info-row"><span>공개 대상</span><strong>학부모 앱</strong></div>
-                <div class="info-row"><span>알림 발송</span><strong>미발송</strong></div>
-              </div>
-              <div class="toolbar" style="justify-content:flex-start;margin-top:16px; gap: 8px;">
-                <button class="btn primary" data-page="reports">생성/수정</button>
-                <button class="btn" data-page="reports">미리보기</button>
-                <button class="btn warn">발행 취소</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="panel-head"><p class="panel-title">리포트 히스토리</p></div>
-          <div class="panel-body">
-            <table>
-              <thead><tr><th>일시</th><th>작업</th><th>담당자</th><th>메모</th></tr></thead>
-              <tbody>
-                <tr><td>2026.05.01 14:22</td><td>데이터 입력 완료</td><td>김도윤</td><td>측정값 검토 필요</td></tr>
-                <tr><td>2026.05.01 15:10</td><td>관리자 코멘트 추가</td><td>수진</td><td>상체 성장 알림</td></tr>
-                <tr><td>2026.04.28 10:05</td><td>발행 승인</td><td>이하린</td><td>학부모용 공개 준비</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
       <section class="content hidden" id="page-reports">
         <div class="page-head">
           <div>
@@ -3841,7 +3771,7 @@
       cancel.onclick = close;
       ok.onclick = () => {
         close();
-        onOk();
+        if (typeof onOk === "function") onOk();
       };
     }
 
@@ -4022,7 +3952,7 @@
           document.querySelector("#makeup-detail").innerHTML = emptyDetail("왼쪽 목록에서 보강 건을 선택해 주세요.");
         },
         "payment-status": () => {
-          currentInvoiceKey = "";
+          currentPaymentKey = "";
           document.querySelectorAll(".payment-row").forEach((item) => item.classList.remove("selected"));
           setBadge("#payment-detail-status");
           document.querySelector("#payment-detail").innerHTML = emptyDetail("왼쪽 목록에서 청구 건을 선택해 주세요.");
@@ -4067,7 +3997,7 @@
           renderReportWorkTable();
         },
         "overdue-manage": () => {
-          currentInvoiceKey = "";
+          currentOverdueKey = "";
           document.querySelectorAll(".overdue-row").forEach((item) => item.classList.remove("selected"));
           setBadge("#overdue-detail-status", "미선택", "red");
           document.querySelector("#overdue-detail").innerHTML = emptyDetail("왼쪽 목록에서 미납 건을 선택해 주세요.");
@@ -4103,49 +4033,49 @@
 
     const memberDetails = {
       hong: {
-        initial: "홍", name: "홍길동", meta: "초등 배드민턴 A · 주 2회 · 셔틀 이용",
+        initial: "홍", name: "홍길동", gender: "남", meta: "초등 배드민턴 A · 주 2회 · 셔틀 이용",
         badges: [["활성", "green"], ["미납 1건", "red"], ["리포트 공개 4건", "blue"]],
         basic: [["학교/학년", "송도초등학교 4학년"], ["생년월일", "2016.03.12"], ["주 종목/레벨", "배드민턴 · 초급"], ["건강 주의사항", "무릎 통증 관찰"]],
         parent: [["요청자", "홍미나 / 모"], ["인증/연락", "010-****-1829"], ["상태", "승인 대기"]],
         operation: [["수강 클래스", "초등 배드민턴 A 외 1개"], ["상품", "주 2회 정규반 / 여름 특강"], ["셔틀", "1호차 송도 A"], ["최근 리포트", "2026년 4월 발행"]]
       },
       kim: {
-        initial: "김", name: "김민재", meta: "선수반 C · 주 3회 · 셔틀 미이용",
+        initial: "김", name: "김민재", gender: "남", meta: "선수반 C · 주 3회 · 셔틀 미이용",
         badges: [["활성", "green"], ["정상 수납", "green"], ["리포트 발행", "blue"]],
         basic: [["학교/학년", "해송초등학교 5학년"], ["생년월일", "2015.08.09"], ["주 종목/레벨", "배드민턴 · 선수반"], ["건강 주의사항", "특이사항 없음"]],
         parent: [["연결 학부모", "김하영 / 부"], ["인증/연락", "010-****-4471"], ["상태", "연결 완료"]],
         operation: [["수강 클래스", "선수반 C"], ["상품", "주 3회 정규반"], ["셔틀", "미이용"], ["최근 리포트", "2026년 4월 발행"]]
       },
       lee: {
-        initial: "이", name: "이서아", meta: "성장 체력 B · 주 1회 · 셔틀 이용",
+        initial: "이", name: "이서아", gender: "여", meta: "성장 체력 B · 주 1회 · 셔틀 이용",
         badges: [["활성", "green"], ["셔틀 이용", "green"], ["문의 없음", "gray"]],
         basic: [["학교/학년", "먼우금초등학교 3학년"], ["생년월일", "2017.11.24"], ["주 종목/레벨", "기초체력 · 입문"], ["건강 주의사항", "알레르기 확인 필요"]],
         parent: [["연결 학부모", "이지훈 / 부"], ["인증/연락", "010-****-9012"], ["상태", "연결 완료"]],
         operation: [["수강 클래스", "성장 체력 B"], ["상품", "주 1회 정규반"], ["셔틀", "1호차 송도 A"], ["최근 상태", "오늘 승차 15:21"]]
       },
       park: {
-        initial: "박", name: "박지우", meta: "초등 배드민턴 A · 주 2회 · 보강 예정",
+        initial: "박", name: "박지우", gender: "여", meta: "초등 배드민턴 A · 주 2회 · 보강 예정",
         badges: [["활성", "green"], ["학부모 미연결", "gray"], ["보강", "orange"]],
         basic: [["학교/학년", "신정초등학교 4학년"], ["생년월일", "2016.05.19"], ["주 종목/레벨", "배드민턴 · 초급"], ["건강 주의사항", "손목 보호대 권장"]],
         parent: [["연결 학부모", "없음"], ["연락처", "-"], ["상태", "학부모 요청 대기"]],
         operation: [["수강 클래스", "초등 배드민턴 A"], ["상품", "주 2회 정규반"], ["셔틀", "2호차 청라 B"], ["최근 상태", "하차 수동 확인"]]
       },
       jung: {
-        initial: "정", name: "정서윤", meta: "입문반 · 주 1회 · 미납 관리",
+        initial: "정", name: "정서윤", gender: "여", meta: "입문반 · 주 1회 · 미납 관리",
         badges: [["활성", "green"], ["장기 미납", "red"], ["상담 필요", "orange"]],
         basic: [["학교/학년", "송명초등학교 2학년"], ["생년월일", "2018.02.02"], ["주 종목/레벨", "배드민턴 · 입문"], ["건강 주의사항", "없음"]],
         parent: [["연결 학부모", "정다은 / 모"], ["인증/연락", "010-****-3310"], ["상태", "연결 완료"]],
         operation: [["수강 클래스", "입문반"], ["상품", "주 1회 정규반"], ["셔틀", "미이용"], ["최근 문의", "결제 일정 문의 1건"]]
       },
       choi: {
-        initial: "최", name: "최유준", meta: "선수반 C · 개인레슨 · 측정 완료",
+        initial: "최", name: "최유준", gender: "남", meta: "선수반 C · 개인레슨 · 측정 완료",
         badges: [["활성", "green"], ["승인 대기", "orange"], ["측정 완료", "blue"]],
         basic: [["학교/학년", "채드윅 6학년"], ["생년월일", "2014.09.18"], ["주 종목/레벨", "배드민턴 · 선수반"], ["건강 주의사항", "발목 재활 이력"]],
         parent: [["요청자", "최민석 / 부"], ["인증/연락", "010-****-7720"], ["상태", "승인 대기"]],
         operation: [["수강 클래스", "선수반 C"], ["상품", "개인레슨"], ["셔틀", "미이용"], ["최근 리포트", "5월 측정 완료"]]
       },
       oh: {
-        initial: "오", name: "오하린", meta: "입문반 · 주 1회 · 신규 등록",
+        initial: "오", name: "오하린", gender: "여", meta: "입문반 · 주 1회 · 신규 등록",
         badges: [["신규", "blue"], ["학부모 미연결", "gray"], ["셔틀 이용", "green"]],
         basic: [["학교/학년", "송원초등학교 1학년"], ["생년월일", "2019.01.08"], ["주 종목/레벨", "기초체력 · 입문"], ["건강 주의사항", "초기 상담 필요"]],
         parent: [["연결 학부모", "없음"], ["연락처", "-"], ["상태", "학부모 요청 대기"]],
@@ -4379,7 +4309,7 @@
       return {
         name: item.name,
         birth,
-        gender: item.meta.includes("여") ? "여" : "남",
+        gender: item.gender || "남",
         school: schoolGrade.replace(/\s([0-9]학년|초[0-9]|중[0-9]|중등)$/, ""),
         grade: normalizeGradeLabel((schoolGrade.match(/([0-9]학년|초[0-9]|중[0-9]|중등)/) || ["초4"])[0]),
         sport: sportLevel[0] || "배드민턴",
@@ -4408,6 +4338,7 @@
       const isEdit = mode === "edit";
       studentFormMode = mode;
       studentFormDirty = false;
+      clearValidationErrors(document.querySelector("#page-student-create"));
       document.querySelector("#student-form-title").textContent = isEdit ? "학생 정보 수정" : "학생 등록";
       document.querySelector("#student-save-button").textContent = isEdit ? "수정 저장" : "학생 저장";
       if (!isEdit) {
@@ -4928,7 +4859,7 @@
             <button class="btn warn class-action" data-class-action="deactivate">비활성화</button>
           </div>
         </div>
-        <div class="detail-block"><p class="detail-title">운영 메모</p><div class="approval-note">${item.memo}</div></div>
+        <div class="detail-block"><p class="detail-title">운영 메모</p><div class="approval-note">${escapeHtml(item.memo)}</div></div>
         <div class="detail-block" id="class-action-panel">
           <p class="detail-title">작업 패널</p>
           <div class="approval-note">왼쪽 작업 버튼을 선택하면 클래스 운영 상태 변경 작업을 이 영역에서 처리합니다. 월간 시간표 생성은 월간 시간표 메뉴에서 클래스 정보를 기준으로 진행합니다.</div>
@@ -5030,29 +4961,30 @@
       const item = memberDetails[key];
       if (!item) return;
       const value = memberFieldValues(item);
+      const selOpt = (current, opt) => current === opt ? "selected" : "";
       document.querySelector("#member-detail").innerHTML = `
         <div class="detail-block">
           <p class="detail-title">학생 정보 수정</p>
           <div class="form-grid">
-            <div class="field"><label>학생명</label><input value="${value.name}" /></div>
-            <div class="field"><label>생년월일</label><input type="date" value="${value.birth}" /></div>
-            <div class="field"><label>성별</label><select><option selected>남</option><option>여</option><option>미입력</option></select></div>
-            <div class="field"><label>학교</label><input value="${value.school}" /></div>
-            <div class="field"><label>학년</label><select><option>${value.grade}</option><option>1학년</option><option>2학년</option><option>3학년</option><option>4학년</option><option>5학년</option><option>6학년</option><option>중등</option></select></div>
-            <div class="field"><label>학생 연락처</label><input placeholder="선택 입력" /></div>
-            <div class="field"><label>주 종목</label><select><option>${value.sport}</option><option>배드민턴</option><option>기초체력</option><option>복합반</option></select></div>
-            <div class="field"><label>레벨</label><select><option>${value.level}</option><option>입문</option><option>초급</option><option>중급</option><option>선수반</option></select></div>
-            <div class="field"><label>회원 상태</label><select><option>${value.status}</option><option>활성</option><option>상담중</option><option>대기</option><option>휴면</option></select></div>
+            <div class="field"><label>학생명</label><input class="member-edit-name" value="${escapeHtml(value.name)}" /></div>
+            <div class="field"><label>생년월일</label><input class="member-edit-birth" type="date" value="${escapeHtml(value.birth)}" /></div>
+            <div class="field"><label>성별</label><select class="member-edit-gender"><option ${selOpt(value.gender, "남")}>남</option><option ${selOpt(value.gender, "여")}>여</option><option ${selOpt(value.gender, "미입력")}>미입력</option></select></div>
+            <div class="field"><label>학교</label><input class="member-edit-school" value="${escapeHtml(value.school)}" /></div>
+            <div class="field"><label>학년</label><select class="member-edit-grade"><option>${escapeHtml(value.grade)}</option><option>1학년</option><option>2학년</option><option>3학년</option><option>4학년</option><option>5학년</option><option>6학년</option><option>중등</option></select></div>
+            <div class="field"><label>학생 연락처</label><input class="member-edit-contact" placeholder="선택 입력" /></div>
+            <div class="field"><label>주 종목</label><select class="member-edit-sport"><option>${escapeHtml(value.sport)}</option><option>배드민턴</option><option>기초체력</option><option>복합반</option></select></div>
+            <div class="field"><label>레벨</label><select class="member-edit-level"><option>${escapeHtml(value.level)}</option><option>입문</option><option>초급</option><option>중급</option><option>선수반</option></select></div>
+            <div class="field"><label>회원 상태</label><select class="member-edit-status"><option>${escapeHtml(value.status)}</option><option>활성</option><option>상담중</option><option>대기</option><option>휴면</option></select></div>
             <div class="field"><label>등록일</label><input type="date" value="2026-05-01" /></div>
-            <div class="field span-2"><label>주소</label><input placeholder="도로명 주소" /></div>
-            <div class="field span-2"><label>건강/주의사항</label><textarea>${value.caution}</textarea></div>
+            <div class="field span-2"><label>주소</label><input class="member-edit-address" placeholder="도로명 주소" /></div>
+            <div class="field span-2"><label>건강/주의사항</label><textarea class="member-edit-caution">${escapeHtml(value.caution)}</textarea></div>
           </div>
         </div>
 
         <div class="detail-block">
           <p class="detail-title">학생 사진</p>
           <div class="student-cell">
-            <div class="avatar">${item.initial}</div>
+            <div class="avatar">${escapeHtml(item.initial)}</div>
             <button class="btn">사진 업로드</button>
             <button class="btn">카메라 촬영</button>
             <button class="btn">삭제</button>
@@ -5062,13 +4994,13 @@
         <div class="detail-block">
           <p class="detail-title">수강 클래스/결제</p>
           <div class="form-grid">
-            <div class="field"><label>수강 클래스</label><select><option>${value.className}</option><option>초등 배드민턴 A</option><option>성장 체력 B</option><option>선수반 C</option><option>방학 스텝 특강</option></select></div>
-            <div class="field"><label>결제 상품</label><select><option>${value.product}</option><option>주 2회 정규반</option><option>주 1회 정규반</option><option>주 3회 정규반</option><option>여름 특강</option><option>개인레슨</option></select></div>
+            <div class="field"><label>수강 클래스</label><select class="member-edit-class"><option>${escapeHtml(value.className)}</option><option>초등 배드민턴 A</option><option>성장 체력 B</option><option>선수반 C</option><option>방학 스텝 특강</option></select></div>
+            <div class="field"><label>결제 상품</label><select class="member-edit-product"><option>${escapeHtml(value.product)}</option><option>주 2회 정규반</option><option>주 1회 정규반</option><option>주 3회 정규반</option><option>여름 특강</option><option>개인레슨</option></select></div>
             <div class="field"><label>수강 시작일</label><input type="date" value="2026-05-01" /></div>
             <div class="field"><label>청구 시작월</label><input value="2026-05" /></div>
           </div>
           <div class="task-list" style="margin-top:14px;">
-            <div class="task"><span class="task-mark"></span><div><strong>${value.className}</strong><div class="muted">${value.product} · 2026-05부터 청구</div></div><span class="badge green">수강중</span></div>
+            <div class="task"><span class="task-mark"></span><div><strong>${escapeHtml(value.className)}</strong><div class="muted">${escapeHtml(value.product)} · 2026-05부터 청구</div></div><span class="badge green">수강중</span></div>
             <div class="task"><span class="task-mark orange"></span><div><strong>방학 스텝 특강</strong><div class="muted">특강 상품 · 단건 청구 예정</div></div><span class="badge orange">추가 가능</span></div>
           </div>
         </div>
@@ -5076,8 +5008,8 @@
         <div class="detail-block">
           <p class="detail-title">셔틀/학생 앱</p>
           <div class="form-grid">
-            <div class="field"><label>셔틀 이용 여부</label><select><option>${value.shuttleUse}</option><option>이용</option><option>미이용</option></select></div>
-            <div class="field"><label>노선</label><select><option>${value.route || "선택 없음"}</option><option>1호차 송도 A</option><option>2호차 청라 B</option></select></div>
+            <div class="field"><label>셔틀 이용 여부</label><select class="member-edit-shuttle-use"><option>${escapeHtml(value.shuttleUse)}</option><option>이용</option><option>미이용</option></select></div>
+            <div class="field"><label>노선</label><select class="member-edit-route"><option>${escapeHtml(value.route || "선택 없음")}</option><option>1호차 송도 A</option><option>2호차 청라 B</option></select></div>
             <div class="field"><label>승차 정류장</label><input value="${value.route ? "센트럴파크" : ""}" /></div>
             <div class="field"><label>하차 정류장</label><input value="${value.route ? "센트럴파크" : ""}" /></div>
             <div class="field span-2"><label>학생 앱 계정</label><select><option>계정 활성</option><option>나중에 생성</option><option>비활성</option></select></div>
@@ -5092,12 +5024,57 @@
       document.querySelector("#member-cancel-button").addEventListener("click", () => renderMemberDetail(currentMemberKey));
       const memberEditSnapshot = formSnapshot(document.querySelector("#member-detail"));
       document.querySelector("#member-save-button").addEventListener("click", () => {
-        if (formSnapshot(document.querySelector("#member-detail")) === memberEditSnapshot) {
+        const root = document.querySelector("#member-detail");
+        if (formSnapshot(root) === memberEditSnapshot) {
           confirmNoEditChanges(() => renderMemberDetail(currentMemberKey));
           return;
         }
-        renderMemberDetail(currentMemberKey);
+        applyMemberEdit(currentMemberKey, root);
+        showConfirm({
+          title: "수정 저장 완료",
+          message: `${item.name} 학생의 변경 사항이 저장되었습니다.`,
+          okText: "확인",
+          okClass: "primary",
+          onOk: () => renderMemberDetail(currentMemberKey)
+        });
       });
+    }
+
+    function applyMemberEdit(key, root) {
+      const item = memberDetails[key];
+      if (!item) return;
+      const v = (selector) => (root.querySelector(selector)?.value || "").trim();
+      const name = v(".member-edit-name") || item.name;
+      const birth = v(".member-edit-birth").replaceAll("-", ".");
+      const gender = v(".member-edit-gender") || item.gender;
+      const school = v(".member-edit-school");
+      const grade = v(".member-edit-grade");
+      const sport = v(".member-edit-sport");
+      const level = v(".member-edit-level");
+      const status = v(".member-edit-status");
+      const caution = v(".member-edit-caution");
+      const className = v(".member-edit-class");
+      const product = v(".member-edit-product");
+      const shuttleUse = v(".member-edit-shuttle-use");
+      const route = v(".member-edit-route");
+      item.name = name;
+      item.gender = gender;
+      const setBasic = (label, value) => {
+        const row = item.basic.find(([l]) => l === label);
+        if (row) row[1] = value;
+      };
+      const setOperation = (label, value) => {
+        const row = item.operation.find(([l]) => l === label);
+        if (row) row[1] = value;
+      };
+      setBasic("학교/학년", `${school}${school && grade ? " " : ""}${grade}`.trim());
+      if (birth) setBasic("생년월일", birth);
+      setBasic("주 종목/레벨", `${sport} · ${level}`);
+      setBasic("건강 주의사항", caution);
+      setOperation("수강 클래스", className);
+      setOperation("상품", product);
+      setOperation("셔틀", shuttleUse === "이용" ? (route && route !== "선택 없음" ? route : "1호차 송도 A") : "미이용");
+      if (item.badges[0]) item.badges[0][0] = status || item.badges[0][0];
     }
 
     const detailPages = {
@@ -5215,7 +5192,7 @@
       button.addEventListener("click", () => {
         const target = button.dataset.page;
         document.body.classList.remove("drawer-open");
-        if (isStudentFormOpen() && studentFormMode === "edit" && target !== "student-create" && formSnapshot(document.querySelector("#page-student-create")) !== studentFormSnapshot) {
+        if (isStudentFormOpen() && studentFormMode === "edit" && formSnapshot(document.querySelector("#page-student-create")) !== studentFormSnapshot) {
           pendingNavigation = button;
           showConfirm({
             title: "수정사항 취소",
@@ -5226,7 +5203,8 @@
               studentFormDirty = false;
               buttons.forEach((item) => item.classList.remove("active"));
               pendingNavigation.classList.add("active");
-              navigateToTarget(target);
+              if (target === "student-create") openStudentForm("create");
+              else navigateToTarget(target);
               pendingNavigation = null;
             }
           });
@@ -5487,6 +5465,7 @@
       currentClassEditKey = mode === "edit" ? key : null;
       buttons.forEach((item) => item.classList.toggle("active", item.dataset.page === "class-create"));
       navigateToTarget("class-create");
+      clearValidationErrors(document.querySelector("#page-class-create"));
       setupFormSelectPlaceholders(document.querySelector("#page-class-create"));
       document.querySelector("#class-form-title").textContent = mode === "edit" ? "클래스 정보 수정" : "클래스 생성";
       document.querySelector("#class-create-save-button").textContent = mode === "edit" ? "수정 저장" : "클래스 생성";
@@ -5994,7 +5973,7 @@
           <td>${studentMeta[item.target] ? studentOneLine(item.target) : `${item.target}<br><span class="muted">${item.schoolGrade}</span>`}</td>
           <td><span class="badge ${approvalStatusBadge(item.status)}">${item.status}</span></td>
           <td>${item.manager}</td>
-          <td>${item.memo}</td>
+          <td>${escapeHtml(item.memo)}</td>
         </tr>`).join("");
     }
 
@@ -6110,9 +6089,9 @@
           <button class="btn primary" id="schedule-class-edit-button">클래스 수정</button>
         </div>`;
       const editButton = document.querySelector("#schedule-class-edit-button");
-      if (eventItem.dataset.class) {
-        currentClassKey = eventItem.dataset.class;
-        editButton.addEventListener("click", () => openClassForm("edit", currentClassKey));
+      const eventClassKey = eventItem.dataset.class;
+      if (eventClassKey) {
+        editButton.addEventListener("click", () => openClassForm("edit", eventClassKey));
       } else {
         editButton.disabled = true;
         editButton.textContent = "수정 대상 없음";
@@ -6320,7 +6299,7 @@
             <div class="field"><label>수업 장소</label><select class="makeup-place" ${isExcluded || isDone ? "disabled" : ""}>${selectedIfAssigned(item.place)}<option>1코트</option><option>2코트</option><option>체력존</option></select></div>
             <div class="field"><label>앱 표시 상태</label><input value="보강 표시 - 저장 후 월간 시간표 반영" readonly /></div>
             <div class="field span-2"><label>대상 학생</label><textarea class="makeup-students" ${isExcluded || isDone ? "disabled" : ""}>${item.studentNames}</textarea></div>
-            <div class="field span-2"><label>관리 메모</label><textarea class="makeup-note" ${isDone ? "disabled" : ""}>${item.note}</textarea></div>
+            <div class="field span-2"><label>관리 메모</label><textarea class="makeup-note" ${isDone ? "disabled" : ""}>${escapeHtml(item.note)}</textarea></div>
           </div>
         </div>
         <div class="toolbar" style="justify-content:flex-start;margin-top:12px;">
@@ -6418,7 +6397,7 @@
           <div class="info-row"><span>발송 대상 기준</span><strong>발송 시점 수강/연장자 재계산</strong></div>
         </div>
         <div class="detail-block"><p class="detail-title">휴강 사유</p><div class="approval-note">${item.reason}</div></div>
-        <div class="detail-block"><p class="detail-title">처리 메모</p><div class="approval-note">${item.note}</div></div>
+        <div class="detail-block"><p class="detail-title">처리 메모</p><div class="approval-note">${escapeHtml(item.note)}</div></div>
         ${item.makeup === "보강 필요" ? `<div class="detail-block"><p class="detail-title">보강 연결</p><div class="approval-note">이 휴강 건은 보강 일정 관리의 보강 필요 목록에 자동으로 표시됩니다.</div><button class="btn" style="margin-top:10px;" id="holiday-go-makeup">보강 일정 관리로 이동</button></div>` : ""}
         <div class="detail-block"><p class="detail-title">알림 대상 확정</p><div class="approval-note">휴강 등록일 기준이 아니라 알림 발송 시점의 수강 클래스, 연장 신청, 신규 등록, 휴면/퇴원 상태를 기준으로 수신자를 다시 계산합니다.</div></div>
         <div class="toolbar" style="justify-content:flex-start;margin-top:12px;">
@@ -6561,7 +6540,8 @@
       inv1022: { id: "INV-1022", student: "정서윤", parent: "정다은", className: "입문반 D", product: "주 1회 정규반", month: "2026-04", amount: 160000, dueDate: "2026-04-10", method: "계좌이체", status: "미납", requestStatus: "발송 완료", lastNotice: "최종 안내", failReason: "-", paidAt: "-", memo: "입금 확인 필요" }
     };
 
-    let currentInvoiceKey = "";
+    let currentPaymentKey = "";
+    let currentOverdueKey = "";
     let currentMeasurementKey = "";
     let measurementFormSnapshot = "";
 
@@ -6576,6 +6556,16 @@
 
     function money(value) {
       return Number(value).toLocaleString("ko-KR");
+    }
+
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return "";
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#39;");
     }
 
     function measurementBadge(item) {
@@ -6612,14 +6602,14 @@
       const rows = filteredMeasurementItems();
       body.innerHTML = rows.length ? rows.map(([key, item]) => `
         <tr class="measurement-row ${key === currentMeasurementKey ? "selected" : ""}" data-measurement="${key}">
-          <td>${item.category}</td>
-          <td><strong>${item.name}</strong><div class="muted">${item.scoreDirection}</div></td>
-          <td>${item.unit}</td>
-          <td>${item.inputType}</td>
-          <td>${item.reportSection}</td>
-          <td>${item.ability}</td>
-          <td><span class="badge ${item.reportUse === "사용" ? "green" : "gray"}">${item.reportUse}</span></td>
-          <td><span class="badge ${measurementBadge(item)}">${item.status}</span></td>
+          <td>${escapeHtml(item.category)}</td>
+          <td><strong>${escapeHtml(item.name)}</strong><div class="muted">${escapeHtml(item.scoreDirection)}</div></td>
+          <td>${escapeHtml(item.unit)}</td>
+          <td>${escapeHtml(item.inputType)}</td>
+          <td>${escapeHtml(item.reportSection)}</td>
+          <td>${escapeHtml(item.ability)}</td>
+          <td><span class="badge ${item.reportUse === "사용" ? "green" : "gray"}">${escapeHtml(item.reportUse)}</span></td>
+          <td><span class="badge ${measurementBadge(item)}">${escapeHtml(item.status)}</span></td>
         </tr>`).join("") : `<tr><td colspan="8"><div class="empty-state"><strong>조회 결과가 없습니다.</strong><p>필터 조건을 변경해 주세요.</p></div></td></tr>`;
       document.querySelectorAll(".measurement-row").forEach((row) => {
         row.addEventListener("click", () => {
@@ -6643,27 +6633,27 @@
       }
       document.querySelector("#measurement-detail").innerHTML = `
         <div class="info-list">
-          <div class="info-row"><span>항목명</span><strong>${item.name}</strong></div>
-          <div class="info-row"><span>카테고리</span><strong>${item.category}</strong></div>
-          <div class="info-row"><span>입력 방식</span><strong>${item.inputType}</strong></div>
-          <div class="info-row"><span>단위</span><strong>${item.unit}</strong></div>
-          <div class="info-row"><span>리포트 사용</span><strong>${item.reportUse}</strong></div>
-          <div class="info-row"><span>노출 영역</span><strong>${item.reportSection}</strong></div>
-          <div class="info-row"><span>연결 능력치</span><strong>${item.ability}</strong></div>
-          <div class="info-row"><span>점수 방향</span><strong>${item.scoreDirection}</strong></div>
+          <div class="info-row"><span>항목명</span><strong>${escapeHtml(item.name)}</strong></div>
+          <div class="info-row"><span>카테고리</span><strong>${escapeHtml(item.category)}</strong></div>
+          <div class="info-row"><span>입력 방식</span><strong>${escapeHtml(item.inputType)}</strong></div>
+          <div class="info-row"><span>단위</span><strong>${escapeHtml(item.unit)}</strong></div>
+          <div class="info-row"><span>리포트 사용</span><strong>${escapeHtml(item.reportUse)}</strong></div>
+          <div class="info-row"><span>노출 영역</span><strong>${escapeHtml(item.reportSection)}</strong></div>
+          <div class="info-row"><span>연결 능력치</span><strong>${escapeHtml(item.ability)}</strong></div>
+          <div class="info-row"><span>점수 방향</span><strong>${escapeHtml(item.scoreDirection)}</strong></div>
         </div>
         <div class="detail-block">
           <p class="detail-title">점수화 기준</p>
           <div class="info-list">
-            <div class="info-row"><span>기준 소스</span><strong>${item.source}</strong></div>
-            <div class="info-row"><span>기준 그룹</span><strong>${item.group}</strong></div>
-            <div class="info-row"><span>보통 기준값</span><strong>${item.normal}</strong></div>
-            <div class="info-row"><span>상위 기준값</span><strong>${item.high}</strong></div>
-            <div class="info-row"><span>가중치</span><strong>${item.weight}</strong></div>
-            <div class="info-row"><span>정렬 순서</span><strong>${item.order}</strong></div>
+            <div class="info-row"><span>기준 소스</span><strong>${escapeHtml(item.source)}</strong></div>
+            <div class="info-row"><span>기준 그룹</span><strong>${escapeHtml(item.group)}</strong></div>
+            <div class="info-row"><span>보통 기준값</span><strong>${escapeHtml(item.normal)}</strong></div>
+            <div class="info-row"><span>상위 기준값</span><strong>${escapeHtml(item.high)}</strong></div>
+            <div class="info-row"><span>가중치</span><strong>${escapeHtml(item.weight)}</strong></div>
+            <div class="info-row"><span>정렬 순서</span><strong>${escapeHtml(item.order)}</strong></div>
           </div>
         </div>
-        <div class="detail-block"><p class="detail-title">관리 메모</p><div class="approval-note">${item.memo}</div></div>
+        <div class="detail-block"><p class="detail-title">관리 메모</p><div class="approval-note">${escapeHtml(item.memo)}</div></div>
         <div class="detail-actions">
           <button class="btn warn measurement-action" data-action="${item.status === "활성" ? "비활성화" : "활성화"}">${item.status === "활성" ? "비활성화" : "활성화"}</button>
         </div>`;
@@ -6679,21 +6669,21 @@
           <p class="detail-title">${mode === "new" ? "신규 측정 항목 입력" : "측정 항목 수정"}</p>
           <div class="form-grid">
             <div class="field"><label>카테고리</label><select class="measurement-category"><option value="">미선택</option><option ${selected(item.category, "신체 기본")}>신체 기본</option><option ${selected(item.category, "바디 사이즈")}>바디 사이즈</option><option ${selected(item.category, "바디 비율")}>바디 비율</option><option ${selected(item.category, "기초체력")}>기초체력</option><option ${selected(item.category, "배드민턴 테스트")}>배드민턴 테스트</option></select></div>
-            <div class="field"><label>항목명</label><input class="measurement-name" value="${item.name || ""}" placeholder="예: 제자리 멀리뛰기" /></div>
-            <div class="field"><label>단위</label><input class="measurement-unit" value="${item.unit || ""}" placeholder="cm, sec, 회 등" /></div>
+            <div class="field"><label>항목명</label><input class="measurement-name" value="${escapeHtml(item.name)}" placeholder="예: 제자리 멀리뛰기" /></div>
+            <div class="field"><label>단위</label><input class="measurement-unit" value="${escapeHtml(item.unit)}" placeholder="cm, sec, 회 등" /></div>
             <div class="field"><label>입력 방식</label><select class="measurement-input-type"><option value="">미선택</option><option ${selected(item.inputType, "코치 입력")}>코치 입력</option><option ${selected(item.inputType, "관리자 입력")}>관리자 입력</option><option ${selected(item.inputType, "자동 계산")}>자동 계산</option><option ${selected(item.inputType, "외부 연동")}>외부 연동</option></select></div>
             <div class="field"><label>리포트 사용 여부</label><select class="measurement-report-use"><option ${selected(item.reportUse || "사용", "사용")}>사용</option><option ${selected(item.reportUse, "미사용")}>미사용</option></select></div>
             <div class="field"><label>노출 영역</label><select class="measurement-section"><option value="">미선택</option><option ${selected(item.reportSection, "최근 3개월 변화")}>최근 3개월 변화</option><option ${selected(item.reportSection, "바디 사이즈/비율 변화")}>바디 사이즈/비율 변화</option><option ${selected(item.reportSection, "기초체력/배드민턴 테스트")}>기초체력/배드민턴 테스트</option><option ${selected(item.reportSection, "신체 능력 밸런스 분석")}>신체 능력 밸런스 분석</option><option ${selected(item.reportSection, "코치 종합 코멘트")}>코치 종합 코멘트</option></select></div>
             <div class="field"><label>점수 방향</label><select class="measurement-direction"><option ${selected(item.scoreDirection || "높을수록 좋음", "높을수록 좋음")}>높을수록 좋음</option><option ${selected(item.scoreDirection, "낮을수록 좋음")}>낮을수록 좋음</option><option ${selected(item.scoreDirection, "적정범위")}>적정범위</option></select></div>
             <div class="field"><label>연결 능력치</label><select class="measurement-ability"><option ${selected(item.ability || "파워", "파워")}>파워</option><option ${selected(item.ability, "스피드")}>스피드</option><option ${selected(item.ability, "민첩성")}>민첩성</option><option ${selected(item.ability, "균형성")}>균형성</option><option ${selected(item.ability, "협응성")}>협응성</option></select></div>
-            <div class="field"><label>가중치</label><input class="measurement-weight" value="${item.weight || "1.0"}" /></div>
+            <div class="field"><label>가중치</label><input class="measurement-weight" value="${escapeHtml(item.weight || "1.0")}" /></div>
             <div class="field"><label>기준 소스</label><select class="measurement-source"><option ${selected(item.source || "PlanB 내부", "PlanB 내부")}>PlanB 내부</option><option ${selected(item.source, "PAPS 참고")}>PAPS 참고</option><option ${selected(item.source, "국민체력100 참고")}>국민체력100 참고</option><option ${selected(item.source, "수동 기준")}>수동 기준</option></select></div>
             <div class="field"><label>기준 그룹</label><select class="measurement-group"><option ${selected(item.group || "전체", "전체")}>전체</option><option ${selected(item.group, "초4 / 남")}>초4 / 남</option><option ${selected(item.group, "초4 / 여")}>초4 / 여</option><option ${selected(item.group, "중등 / 남")}>중등 / 남</option><option ${selected(item.group, "중등 / 여")}>중등 / 여</option></select></div>
-            <div class="field"><label>정렬 순서</label><input class="measurement-order" value="${item.order || "10"}" /></div>
-            <div class="field"><label>보통 기준값</label><input class="measurement-normal" value="${item.normal || ""}" /></div>
-            <div class="field"><label>상위 기준값</label><input class="measurement-high" value="${item.high || ""}" /></div>
+            <div class="field"><label>정렬 순서</label><input class="measurement-order" value="${escapeHtml(item.order || "10")}" /></div>
+            <div class="field"><label>보통 기준값</label><input class="measurement-normal" value="${escapeHtml(item.normal)}" /></div>
+            <div class="field"><label>상위 기준값</label><input class="measurement-high" value="${escapeHtml(item.high)}" /></div>
             <div class="field"><label>상태</label><select class="measurement-status"><option ${selected(item.status || "활성", "활성")}>활성</option><option ${selected(item.status, "비활성")}>비활성</option></select></div>
-            <div class="field span-2"><label>산식/관리 메모</label><textarea class="measurement-memo">${item.memo || ""}</textarea></div>
+            <div class="field span-2"><label>산식/관리 메모</label><textarea class="measurement-memo">${escapeHtml(item.memo)}</textarea></div>
           </div>
         </div>
         <div class="detail-actions">
@@ -6938,7 +6928,7 @@
             <div class="field"><label>반영 예정 학년</label><input value="${isTransition ? (item.parentGrade || item.nextGrade) : item.nextGrade}" readonly /></div>
             <div class="field"><label>처리 상태</label><input value="${item.status}" readonly /></div>
             <div class="field"><label>학부모 요청 상태</label><input value="${item.parentRequest}" readonly /></div>
-            <div class="field span-2"><label>처리 메모</label><textarea class="grade-memo">${item.memo}</textarea></div>
+            <div class="field span-2"><label>처리 메모</label><textarea class="grade-memo">${escapeHtml(item.memo)}</textarea></div>
           </div>
         </div>
         <div class="detail-actions">
@@ -6957,7 +6947,7 @@
       const detail = document.querySelector("#grade-promotion-detail");
       const memo = detail.querySelector(".grade-memo").value.trim();
       if (action === "승인" && item.type !== "일반 승급" && !item.parentSchool) {
-        showConfirm({ title: "학부모 입력 확인", message: "진학 대상은 학부모 포털에서 새 학교 정보가 접수된 뒤 승인할 수 있습니다.", okText: "확인" });
+        showConfirm({ title: "학부모 입력 확인", message: "진학 대상은 학부모 포털에서 새 학교 정보가 접수된 뒤 승인할 수 있습니다.", okText: "확인", onOk: () => {} });
         return;
       }
       showConfirm({
@@ -7013,7 +7003,7 @@
       const keyword = (document.querySelector("#grade-history-keyword")?.value || "").trim().toLowerCase();
       const rows = gradeHistoryRows.filter((item) => {
         const matchesStatus = status === "전체" || item.status === status;
-        const haystack = `${item.student} ${item.before} ${item.after} ${item.memo}`.toLowerCase();
+        const haystack = `${item.student} ${item.before} ${item.after} ${escapeHtml(item.memo)}`.toLowerCase();
         return matchesStatus && (!keyword || haystack.includes(keyword));
       });
       document.querySelector("#grade-history-body").innerHTML = rows.map((item) => `
@@ -7024,7 +7014,7 @@
           <td>${item.after}</td>
           <td><span class="badge ${gradeStatusBadge(item.status)}">${item.status}</span></td>
           <td>${item.manager}</td>
-          <td>${item.memo}</td>
+          <td>${escapeHtml(item.memo)}</td>
         </tr>`).join("");
     }
 
@@ -7376,7 +7366,7 @@
         </div>
         <div class="detail-block">
           <p class="detail-title">관리자 메모</p>
-          <div class="info-list"><div class="info-row"><span>메모</span><strong>${item.memo}</strong></div></div>
+          <div class="info-list"><div class="info-row"><span>메모</span><strong>${escapeHtml(item.memo)}</strong></div></div>
         </div>
         <div class="detail-block">
           <p class="detail-title">코치 코멘트</p>
@@ -7509,7 +7499,7 @@
         </div>
         <div class="detail-block">
           <p class="detail-title">검토 코멘트</p>
-          <div class="info-list"><div class="info-row"><span>관리자 메모</span><strong>${item.memo}</strong></div></div>
+          <div class="info-list"><div class="info-row"><span>관리자 메모</span><strong>${escapeHtml(item.memo)}</strong></div></div>
         </div>
         <div class="detail-block">
           <p class="detail-title">코치 피드백</p>
@@ -7606,13 +7596,32 @@
       return "orange";
     }
 
+    const TODAY = "2026-05-14";
+    function overdueDays(dueDate) {
+      if (!dueDate || dueDate === "미정") return 0;
+      const [y1, m1, d1] = TODAY.split("-").map(Number);
+      const [y2, m2, d2] = dueDate.split("-").map(Number);
+      const today = Date.UTC(y1, m1 - 1, d1);
+      const due = Date.UTC(y2, m2 - 1, d2);
+      return Math.max(0, Math.round((today - due) / 86400000));
+    }
+    function overdueBucket(days) {
+      if (days >= 30) return "장기";
+      if (days >= 7) return "D+7";
+      if (days >= 3) return "D+3";
+      if (days >= 1) return "D+1";
+      return "";
+    }
+
     function filteredInvoices(overdueOnly = false) {
-      const month = document.querySelector(overdueOnly ? "#overdue-filter-days" : "#payment-filter-month")?.value || "";
+      const month = overdueOnly ? "" : (document.querySelector("#payment-filter-month")?.value || "");
+      const bucket = overdueOnly ? (document.querySelector("#overdue-filter-days")?.value || "전체 미납") : "";
       const status = document.querySelector("#payment-filter-status")?.value || "전체 상태";
       const method = document.querySelector("#payment-filter-method")?.value || "전체 결제 방식";
       const search = (document.querySelector(overdueOnly ? "#overdue-filter-search" : "#payment-filter-search")?.value || "").trim().toLowerCase();
       return Object.entries(invoiceDetails).filter(([, item]) => {
         if (overdueOnly && item.status !== "미납") return false;
+        if (overdueOnly && bucket && bucket !== "전체 미납" && overdueBucket(overdueDays(item.dueDate)) !== bucket) return false;
         if (!overdueOnly && month && month !== "전체 월" && item.month !== month) return false;
         if (!overdueOnly && status !== "전체 상태" && item.status !== status) return false;
         if (!overdueOnly && method !== "전체 결제 방식" && item.method !== method) return false;
@@ -7629,7 +7638,7 @@
       document.querySelector("#pay-count-overdue").textContent = items.filter((item) => item.status === "미납").length;
       const overdue = items.filter((item) => item.status === "미납");
       document.querySelector("#overdue-count-total").textContent = overdue.length;
-      document.querySelector("#overdue-count-d3").textContent = overdue.length;
+      document.querySelector("#overdue-count-d3").textContent = overdue.filter((item) => overdueDays(item.dueDate) >= 3).length;
       document.querySelector("#overdue-count-notice").textContent = overdue.filter((item) => item.lastNotice !== "최종 안내").length;
       document.querySelector("#overdue-total-amount").textContent = money(overdue.reduce((sum, item) => sum + item.amount, 0));
     }
@@ -7639,7 +7648,7 @@
       if (!body) return;
       const rows = filteredInvoices(false);
       body.innerHTML = rows.length ? rows.map(([key, item]) => `
-        <tr class="payment-row ${key === currentInvoiceKey ? "selected" : ""}" data-invoice="${key}">
+        <tr class="payment-row ${key === currentPaymentKey ? "selected" : ""}" data-invoice="${key}">
           <td>${item.id}</td><td>${studentTwoLine(item.student, `${studentMetaText(item.student)} / ${item.parent}`)}</td><td>${item.product}</td><td>${item.month}</td><td>${money(item.amount)}</td><td>${item.method}</td><td><span class="badge ${paymentBadge(item.status)}">${item.status}</span></td>
         </tr>`).join("") : `<tr><td colspan="7"><div class="empty-state"><strong>조회 결과가 없습니다.</strong><p>필터 조건을 변경해 주세요.</p></div></td></tr>`;
       bindPaymentRows();
@@ -7650,16 +7659,21 @@
       const body = document.querySelector("#overdue-table-body");
       if (!body) return;
       const rows = filteredInvoices(true);
-      body.innerHTML = rows.length ? rows.map(([key, item]) => `
-        <tr class="overdue-row ${key === currentInvoiceKey ? "selected" : ""}" data-invoice="${key}">
-          <td>${item.id}</td><td>${studentTwoLine(item.student, `${studentMetaText(item.student)} / ${item.parent}`)}</td><td>${item.product}</td><td>${item.dueDate}</td><td>D+3</td><td>${money(item.amount)}</td><td>${item.lastNotice}</td>
-        </tr>`).join("") : `<tr><td colspan="7"><div class="empty-state"><strong>미납 건이 없습니다.</strong><p>필터 조건을 변경해 주세요.</p></div></td></tr>`;
+      body.innerHTML = rows.length ? rows.map(([key, item]) => {
+        const days = overdueDays(item.dueDate);
+        const dLabel = days >= 30 ? `장기 (${days}일)` : `D+${days}`;
+        return `
+        <tr class="overdue-row ${key === currentOverdueKey ? "selected" : ""}" data-invoice="${key}">
+          <td>${item.id}</td><td>${studentTwoLine(item.student, `${studentMetaText(item.student)} / ${item.parent}`)}</td><td>${item.product}</td><td>${item.dueDate}</td><td>${dLabel}</td><td>${money(item.amount)}</td><td>${item.lastNotice}</td>
+        </tr>`;
+      }).join("") : `<tr><td colspan="7"><div class="empty-state"><strong>미납 건이 없습니다.</strong><p>필터 조건을 변경해 주세요.</p></div></td></tr>`;
       bindOverdueRows();
       updatePaymentSummary();
     }
 
     function renderInvoiceDetail(key, target = "payment") {
-      currentInvoiceKey = key;
+      if (target === "overdue") currentOverdueKey = key;
+      else currentPaymentKey = key;
       const item = invoiceDetails[key];
       if (!item) return;
       const selector = target === "overdue" ? "#overdue-detail" : "#payment-detail";
@@ -7683,7 +7697,7 @@
             <div class="form-grid">
               <div class="field"><label>안내 채널</label><select class="invoice-overdue-channel"><option>카카오 알림톡</option><option>문자 SMS</option><option>전화 상담</option></select></div>
               <div class="field"><label>후속 상태</label><select class="invoice-overdue-next"><option>D+3 안내</option><option>D+7 안내</option><option>상담 필요</option><option>납부 확인 대기</option></select></div>
-              <div class="field span-2"><label>처리 메모</label><textarea class="invoice-overdue-memo">${item.memo}</textarea></div>
+              <div class="field span-2"><label>처리 메모</label><textarea class="invoice-overdue-memo">${escapeHtml(item.memo)}</textarea></div>
             </div>
           </div>
         ` : `
@@ -7694,7 +7708,7 @@
               <div class="field"><label>결제일</label><input class="invoice-paid-date" type="date" value="2026-05-02" /></div>
               <div class="field"><label>결제 금액</label><input class="invoice-paid-amount" value="${item.amount}" /></div>
               <div class="field"><label>승인번호/입금자명</label><input class="invoice-paid-ref" placeholder="카드 승인번호 또는 입금자명" /></div>
-              <div class="field span-2"><label>처리 메모</label><textarea class="invoice-paid-memo">${item.memo}</textarea></div>
+              <div class="field span-2"><label>처리 메모</label><textarea class="invoice-paid-memo">${escapeHtml(item.memo)}</textarea></div>
             </div>
           </div>
         `}
@@ -7717,7 +7731,8 @@
     function refreshInvoiceViews(target) {
       renderPaymentTable();
       renderOverdueTable();
-      if (currentInvoiceKey && invoiceDetails[currentInvoiceKey]) renderInvoiceDetail(currentInvoiceKey, target);
+      const key = target === "overdue" ? currentOverdueKey : currentPaymentKey;
+      if (key && invoiceDetails[key]) renderInvoiceDetail(key, target);
     }
 
     function handleInvoiceAction(key, action, target) {
@@ -7983,11 +7998,11 @@
             ${isReady ? `
               <div class="field"><label>납부기한</label><input class="billing-due-date" type="date" value="2026-06-10" /></div>
               <div class="field"><label>생성 후 상태</label><input value="결제 요청 대기" readonly /></div>
-              <div class="field span-2"><label>청구 메모</label><textarea class="billing-memo">${item.memo}</textarea></div>
+              <div class="field span-2"><label>청구 메모</label><textarea class="billing-memo">${escapeHtml(item.memo)}</textarea></div>
             ` : `
               <div class="field"><label>결제 요청 상태</label><input value="${item.requestStatus}" readonly /></div>
               <div class="field"><label>최근 안내</label><input value="${item.lastNotice}" readonly /></div>
-              <div class="field span-2"><label>청구 메모</label><textarea readonly>${item.memo}</textarea></div>
+              <div class="field span-2"><label>청구 메모</label><textarea readonly>${escapeHtml(item.memo)}</textarea></div>
             `}
           </div>
         </div>
@@ -8136,7 +8151,7 @@
           <div class="form-grid">
             <div class="field"><label>처리 상태</label><select class="renewal-status"><option selected>${item.status}</option><option>재수강 확정</option><option>변경 상담</option><option>휴회</option><option>퇴원 예정</option><option>미응답</option><option>청구 생성 완료</option></select></div>
             <div class="field"><label>청구 대상</label><select class="renewal-billable"><option selected>${item.billable}</option><option>청구 가능</option><option>보류</option><option>제외</option></select></div>
-            <div class="field span-2"><label>메모</label><textarea class="renewal-note">${item.note}</textarea></div>
+            <div class="field span-2"><label>메모</label><textarea class="renewal-note">${escapeHtml(item.note)}</textarea></div>
           </div>
         </div>
         <div class="toolbar" style="justify-content:flex-start;margin-top:12px;">
