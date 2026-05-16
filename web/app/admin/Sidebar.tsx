@@ -10,6 +10,8 @@ function isActive(pathname: string, href: string) {
     return pathname === "/admin/students" || pathname.startsWith("/admin/students/");
   if (href === "/admin/classes")
     return pathname === "/admin/classes" || pathname.startsWith("/admin/classes/");
+  if (href === "/admin/grade-promotions")
+    return pathname.startsWith("/admin/grade-promotions");
   return pathname === href;
 }
 

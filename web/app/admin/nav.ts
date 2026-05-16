@@ -29,7 +29,7 @@ export const NAV: NavGroup[] = [
     items: [
       { label: "회원 목록/상세", slug: "members", href: "/admin/students", icon: "☉", ready: true },
       { label: "학생 등록", slug: "student-create", href: "/admin/students/new", sub: true, ready: true },
-      { label: "진학/학년 승급 관리", slug: "grade-promotion", href: p("grade-promotion"), sub: true },
+      { label: "진학/학년 승급 관리", slug: "grade-promotion", href: "/admin/grade-promotions", sub: true, ready: true },
       { label: "학부모 계정 관리", slug: "parent-accounts", href: p("parent-accounts"), sub: true },
       { label: "자녀 연결 승인", slug: "parent-link", href: p("parent-link"), sub: true },
       { label: "학생 계정 관리", slug: "student-accounts", href: p("student-accounts"), sub: true },
