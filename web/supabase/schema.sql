@@ -189,6 +189,236 @@ create trigger classes_touch before update on public.classes
   for each row execute function public.touch_updated_at();
 
 -- =====================================================================
+--  11. 전체 도메인 스키마 [어드민 전체] — 리포트/셔틀 제외
+--  모든 테이블 center_id + RLS(같은 센터 어드민만). 재실행 안전.
+-- =====================================================================
+
+-- 공용: 해당 center 의 어드민인가?
+create or replace function public.is_center_admin(cid uuid)
+returns boolean language sql stable as $$
+  select cid = public.current_center_id() and public.current_role() = 'admin'
+$$;
+
+-- centers 설정 컬럼 보강
+alter table public.centers add column if not exists contact_phone  text;
+alter table public.centers add column if not exists address        text;
+alter table public.centers add column if not exists pg_mode        text not null default 'test';   -- test|live
+alter table public.centers add column if not exists notify_enabled boolean not null default false;
+
+-- classes 정규화 컬럼 보강
+alter table public.classes add column if not exists coach_id     uuid references public.users(id) on delete set null;
+alter table public.classes add column if not exists days_of_week text;       -- 예: "월,수,금"
+alter table public.classes add column if not exists start_time   time;
+alter table public.classes add column if not exists end_time     time;
+alter table public.classes add column if not exists place        text;
+
+-- 수강 상품
+create table if not exists public.products (
+  id               uuid primary key default gen_random_uuid(),
+  center_id        uuid not null references public.centers(id) on delete cascade,
+  name             text not null,
+  kind             text not null default '정규반',     -- 정규반|특강|개인레슨
+  sessions_per_week integer,
+  price            integer not null default 0,
+  billing_cycle    text not null default '월',          -- 월|단건
+  active           boolean not null default true,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+alter table public.students add column if not exists product_id uuid references public.products(id) on delete set null;
+
+-- 수강 등록 (학생-클래스-상품)
+create table if not exists public.enrollments (
+  id                  uuid primary key default gen_random_uuid(),
+  center_id           uuid not null references public.centers(id) on delete cascade,
+  student_id          uuid not null references public.students(id) on delete cascade,
+  class_id            uuid references public.classes(id) on delete set null,
+  product_id          uuid references public.products(id) on delete set null,
+  start_date          date,
+  billing_start_month text,                              -- YYYY-MM
+  status              text not null default '수강중',     -- 수강중|대기|종료
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now()
+);
+
+-- 다음 달 수강 확인
+create table if not exists public.renewal_confirmations (
+  id           uuid primary key default gen_random_uuid(),
+  center_id    uuid not null references public.centers(id) on delete cascade,
+  enrollment_id uuid not null references public.enrollments(id) on delete cascade,
+  target_month text not null,                            -- YYYY-MM
+  status       text not null default '대기',              -- 대기|확정|보류
+  decided_by   uuid references public.users(id) on delete set null,
+  decided_at   timestamptz,
+  created_at   timestamptz not null default now(),
+  unique (enrollment_id, target_month)
+);
+
+-- 청구서
+create table if not exists public.invoices (
+  id         uuid primary key default gen_random_uuid(),
+  center_id  uuid not null references public.centers(id) on delete cascade,
+  student_id uuid not null references public.students(id) on delete cascade,
+  period     text not null,                              -- YYYY-MM
+  amount     integer not null default 0,
+  status     text not null default '대기',               -- 대기|청구|결제완료|실패|환불
+  source     text not null default '미청구',             -- 신규|수강확인|미청구
+  due_date   date,
+  issued_at  timestamptz,
+  paid_at    timestamptz,
+  method     text,
+  pg_tx_id   text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.invoice_items (
+  id            uuid primary key default gen_random_uuid(),
+  center_id     uuid not null references public.centers(id) on delete cascade,
+  invoice_id    uuid not null references public.invoices(id) on delete cascade,
+  enrollment_id uuid references public.enrollments(id) on delete set null,
+  label         text not null,
+  amount        integer not null default 0
+);
+
+-- 결제 시도/결과 (PortOne — pg_mode=test 동안 샌드박스)
+create table if not exists public.payments (
+  id            uuid primary key default gen_random_uuid(),
+  center_id     uuid not null references public.centers(id) on delete cascade,
+  invoice_id    uuid not null references public.invoices(id) on delete cascade,
+  amount        integer not null default 0,
+  status        text not null default '대기',            -- 대기|성공|실패|환불
+  provider      text not null default 'portone',
+  pg_tx_id      text,
+  receipt_url   text,
+  failed_reason text,
+  paid_at       timestamptz,
+  created_at    timestamptz not null default now()
+);
+
+-- 미납 처리 로그
+create table if not exists public.overdue_actions (
+  id         uuid primary key default gen_random_uuid(),
+  center_id  uuid not null references public.centers(id) on delete cascade,
+  invoice_id uuid not null references public.invoices(id) on delete cascade,
+  action     text not null,                              -- 재청구|알림|메모
+  memo       text,
+  created_by uuid references public.users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+-- 휴강 / 보강
+create table if not exists public.holidays (
+  id           uuid primary key default gen_random_uuid(),
+  center_id    uuid not null references public.centers(id) on delete cascade,
+  holiday_date date not null,
+  reason       text,
+  class_id     uuid references public.classes(id) on delete cascade,   -- null = 전체 휴강
+  notify       boolean not null default false,
+  created_at   timestamptz not null default now()
+);
+create table if not exists public.makeups (
+  id            uuid primary key default gen_random_uuid(),
+  center_id     uuid not null references public.centers(id) on delete cascade,
+  class_id      uuid not null references public.classes(id) on delete cascade,
+  original_date date,
+  makeup_date   date,
+  reason        text,
+  status        text not null default '예정',            -- 예정|완료|취소
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+-- 진학 / 학년 승급
+create table if not exists public.grade_promotions (
+  id           uuid primary key default gen_random_uuid(),
+  center_id    uuid not null references public.centers(id) on delete cascade,
+  student_id   uuid not null references public.students(id) on delete cascade,
+  school_year  text,
+  from_grade   text,
+  to_grade     text,
+  promo_type   text,                                     -- 일반 승급|초등→중등|중등→고등
+  status       text not null default '진학 확인 필요',    -- 진학 확인 필요|학부모 입력 요청|승인 완료|보류
+  note         text,
+  processed_at timestamptz,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
+-- 상담: 문의 + 메시지
+create table if not exists public.inquiries (
+  id             uuid primary key default gen_random_uuid(),
+  center_id      uuid not null references public.centers(id) on delete cascade,
+  requester_name text,
+  contact        text,
+  channel        text not null default '웹',             -- 웹|전화|앱
+  subject        text not null,
+  body           text,
+  status         text not null default '접수',           -- 접수|처리중|완료
+  assignee       uuid references public.users(id) on delete set null,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+create table if not exists public.support_messages (
+  id         uuid primary key default gen_random_uuid(),
+  center_id  uuid not null references public.centers(id) on delete cascade,
+  inquiry_id uuid not null references public.inquiries(id) on delete cascade,
+  sender     text not null,                              -- admin|customer
+  body       text not null,
+  created_at timestamptz not null default now()
+);
+
+-- 시스템: 알림 발송 로그 / 감사 로그
+create table if not exists public.notifications (
+  id         uuid primary key default gen_random_uuid(),
+  center_id  uuid not null references public.centers(id) on delete cascade,
+  kind       text not null,                              -- push|alimtalk
+  recipient  text,
+  template   text,
+  payload    jsonb,
+  status     text not null default '대기',               -- 대기|성공|실패
+  provider   text,
+  error      text,
+  created_at timestamptz not null default now(),
+  sent_at    timestamptz
+);
+create table if not exists public.audit_logs (
+  id           uuid primary key default gen_random_uuid(),
+  center_id    uuid not null references public.centers(id) on delete cascade,
+  actor        uuid references public.users(id) on delete set null,
+  action       text not null,
+  target_table text,
+  target_id    text,
+  detail       jsonb,
+  created_at   timestamptz not null default now()
+);
+
+-- RLS + 정책 (같은 센터 어드민 전체 권한) + updated_at 트리거
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'products','enrollments','renewal_confirmations','invoices','invoice_items',
+    'payments','overdue_actions','holidays','makeups','grade_promotions',
+    'inquiries','support_messages','notifications','audit_logs'
+  ] loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('drop policy if exists %I on public.%I', t||'_admin_all', t);
+    execute format(
+      'create policy %I on public.%I for all using (public.is_center_admin(center_id)) with check (public.is_center_admin(center_id))',
+      t||'_admin_all', t);
+  end loop;
+
+  foreach t in array array[
+    'products','enrollments','invoices','makeups','grade_promotions','inquiries'
+  ] loop
+    execute format('drop trigger if exists %I on public.%I', t||'_touch', t);
+    execute format(
+      'create trigger %I before update on public.%I for each row execute function public.touch_updated_at()',
+      t||'_touch', t);
+  end loop;
+end $$;
+
+-- =====================================================================
 --  부트스트랩 (최초 1회) — 아래 주석을 해제해서 실행하세요.
 --  1) 먼저 앱에서 어드민 계정으로 회원가입(또는 Supabase Auth에서 유저 생성)
 --  2) 그 후 아래를 실행해 센터 1개 생성 + 그 계정을 admin으로 승격
