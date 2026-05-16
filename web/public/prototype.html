@@ -8439,5 +8439,26 @@
       document.body.classList.remove("drawer-open");
     });
   </script>
+<script>
+(function () {
+  var MAP = {
+    "members": "/admin/students",
+    "student-create": "/admin/students/new",
+    "class-manage": "/admin/classes",
+    "class-create": "/admin/classes/new"
+  };
+  document.addEventListener("click", function (e) {
+    var t = e.target;
+    var btn = t && t.closest ? t.closest("[data-page]") : null;
+    if (!btn) return;
+    var dp = btn.getAttribute("data-page");
+    if (MAP[dp]) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.assign(MAP[dp]);
+    }
+  }, true);
+})();
+</script>
 </body>
 </html>
