@@ -343,6 +343,10 @@ create table if not exists public.grade_promotions (
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
+-- 학교 변경 승급(초6→중1 등) 시 새 학교. 일반 승급이면 null.
+alter table public.grade_promotions add column if not exists to_school text;
+-- 학부모 입력/승인 필요 여부 (학교 변경이면 true)
+alter table public.grade_promotions add column if not exists needs_parent_input boolean not null default false;
 
 -- 상담: 문의 + 메시지
 create table if not exists public.inquiries (

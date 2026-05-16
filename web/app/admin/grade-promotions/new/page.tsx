@@ -1,18 +1,13 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { createGradePromotion } from "../actions";
+import { nextGrade, promoMeta } from "@/lib/promotion";
+import { bulkCreateGradePromotions } from "../actions";
 
-const GRADE_OPTIONS = [
-  "5세", "6세", "7세",
-  "초1", "초2", "초3", "초4", "초5", "초6",
-  "중1", "중2", "중3",
-];
-
-export default async function NewGradePromotionPage() {
+export default async function BulkNewPage() {
   const supabase = await createClient();
   const { data: students } = await supabase
     .from("students")
-    .select("id, name, grade, school")
+    .select("id, name, school, grade")
     .order("name");
 
   const list = students ?? [];
@@ -21,90 +16,98 @@ export default async function NewGradePromotionPage() {
     <>
       <div className="page-head">
         <div>
-          <h1>승급 등록</h1>
+          <h1>승급 대상 일괄 생성</h1>
           <p className="subtext">
-            <Link
-              href="/admin/grade-promotions"
-              style={{ color: "var(--muted)" }}
-            >
+            <Link href="/admin/grade-promotions" style={{ color: "var(--muted)" }}>
               ← 진학/학년 승급 관리
             </Link>
           </p>
         </div>
       </div>
 
-      <form action={createGradePromotion}>
-        <div className="panel">
+      <form action={bulkCreateGradePromotions}>
+        <div className="panel elevated">
           <div className="panel-head">
-            <p className="panel-title">승급 대상 등록</p>
-            <span className="badge blue">필수</span>
-          </div>
-          <div className="panel-body">
-            <div className="form-grid">
-              <div className="field span-2">
-                <label>학생 *</label>
-                <select name="student_id" required defaultValue="">
-                  <option value="" disabled>
-                    학생 선택
-                  </option>
-                  {list.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                      {s.school ? ` · ${s.school}` : ""}
-                      {s.grade ? ` · 현재 ${s.grade}` : ""}
-                    </option>
-                  ))}
-                </select>
-                {list.length === 0 && (
-                  <span className="muted">
-                    등록된 학생이 없습니다 — 회원 관리에서 먼저 등록하세요.
-                  </span>
-                )}
-              </div>
-              <div className="field">
-                <label>학년도</label>
-                <select name="school_year" defaultValue="2026학년도">
-                  <option>2026학년도</option>
-                  <option>2027학년도</option>
-                </select>
-              </div>
-              <div className="field">
-                <label>승급 후 학년</label>
-                <select name="to_grade" defaultValue="">
-                  <option value="">미선택</option>
-                  {GRADE_OPTIONS.map((g) => (
-                    <option key={g}>{g}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label>유형</label>
-                <select name="promo_type" defaultValue="일반 승급">
-                  <option>일반 승급</option>
-                  <option>초등→중등</option>
-                  <option>중등→고등</option>
-                </select>
-              </div>
-              <div className="field">
-                <label>현재 학년</label>
-                <input disabled placeholder="선택한 학생 기준 자동" />
-              </div>
-              <div className="field span-2">
-                <label>메모</label>
-                <textarea name="note" placeholder="진학 확인 사항 등" />
-              </div>
-            </div>
-
-            <div className="detail-actions">
-              <a className="btn" href="/admin/grade-promotions">
-                취소
-              </a>
-              <button type="submit" className="btn primary">
-                등록
-              </button>
+            <p className="panel-title">대상 학생 선택</p>
+            <div className="toolbar">
+              <select name="school_year" defaultValue="2026학년도">
+                <option>2026학년도</option>
+                <option>2027학년도</option>
+              </select>
+              <button className="btn primary">선택 학생 일괄 생성</button>
             </div>
           </div>
+          <table>
+            <thead>
+              <tr>
+                <th className="check-cell"></th>
+                <th>학생</th>
+                <th>현재 학교/학년</th>
+                <th>승급 후(자동)</th>
+                <th>유형</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((s) => {
+                const to = nextGrade(s.grade);
+                const meta = promoMeta(to);
+                return (
+                  <tr key={s.id}>
+                    <td className="check-cell">
+                      <input
+                        type="checkbox"
+                        name="student_ids"
+                        value={s.id}
+                        defaultChecked={!!to}
+                        disabled={!to}
+                      />
+                    </td>
+                    <td>
+                      <strong>{s.name}</strong>
+                    </td>
+                    <td className="muted">
+                      {[s.school, s.grade].filter(Boolean).join(" ") || "-"}
+                    </td>
+                    <td>
+                      {to ? (
+                        <strong>{to}</strong>
+                      ) : (
+                        <span className="muted">졸업/대상 아님</span>
+                      )}
+                    </td>
+                    <td>
+                      {to ? (
+                        <span
+                          className={`badge ${meta.needsParentInput ? "blue" : "gray"}`}
+                        >
+                          {meta.type}
+                          {meta.needsParentInput ? " · 학교변경" : ""}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+              {list.length === 0 && (
+                <tr>
+                  <td colSpan={5}>
+                    <div className="empty-state">
+                      <strong>학생이 없습니다</strong>
+                      <p>회원 관리에서 학생을 먼저 등록하세요.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
+        <p className="muted" style={{ marginTop: 10 }}>
+          학교 변경 유형(초등 입학·초등→중등·중등→고등)은 “학부모 입력 요청”
+          상태로 생성됩니다. 학부모 앱 단계 전까지는 상세에서 관리자가 새 학교를
+          대행 입력할 수 있습니다.
+        </p>
       </form>
     </>
   );
