@@ -15,7 +15,7 @@ const FIELDS = [
   "level",
   "status",
   "class_id",
-  "product",
+  "product_id",
   "shuttle_use",
   "route",
   "caution",
@@ -31,26 +31,34 @@ function readForm(formData: FormData) {
   return row;
 }
 
-// 선택한 클래스의 이름을 class_name 에 비정규화 저장 (목록/상세 표시용).
-async function withClassName(
+// 선택한 클래스/상품의 이름을 비정규화 컬럼(class_name/product)에 저장 (목록·상세 표시용).
+async function denormalize(
   supabase: SupabaseClient,
   row: Record<string, string | null>,
 ): Promise<Record<string, string | null>> {
+  const out = { ...row, class_name: null as string | null, product: null as string | null };
   if (row.class_id) {
-    const { data: cls } = await supabase
+    const { data } = await supabase
       .from("classes")
       .select("name")
       .eq("id", row.class_id)
       .single();
-    const name = (cls as { name: string } | null)?.name ?? null;
-    return { ...row, class_name: name };
+    out.class_name = (data as { name: string } | null)?.name ?? null;
   }
-  return { ...row, class_name: null };
+  if (row.product_id) {
+    const { data } = await supabase
+      .from("products")
+      .select("name")
+      .eq("id", row.product_id)
+      .single();
+    out.product = (data as { name: string } | null)?.name ?? null;
+  }
+  return out;
 }
 
 export async function createStudent(formData: FormData) {
   const { supabase, centerId } = await requireCenter();
-  const row = await withClassName(supabase, readForm(formData));
+  const row = await denormalize(supabase, readForm(formData));
   if (!row.name) throw new Error("학생명은 필수입니다.");
 
   const { error } = await supabase
@@ -64,7 +72,7 @@ export async function createStudent(formData: FormData) {
 
 export async function updateStudent(id: string, formData: FormData) {
   const { supabase } = await requireCenter();
-  const row = await withClassName(supabase, readForm(formData));
+  const row = await denormalize(supabase, readForm(formData));
   if (!row.name) throw new Error("학생명은 필수입니다.");
 
   const { error } = await supabase.from("students").update(row).eq("id", id);

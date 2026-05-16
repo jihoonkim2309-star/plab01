@@ -50,7 +50,7 @@ export const NAV: NavGroup[] = [
   {
     label: "결제",
     items: [
-      { label: "수강 상품 관리", slug: "product-manage", href: p("product-manage"), icon: "₩" },
+      { label: "수강 상품 관리", slug: "product-manage", href: "/admin/products", icon: "₩", ready: true },
       { label: "다음 달 수강 확인", slug: "renewal-confirm", href: p("renewal-confirm"), sub: true },
       { label: "청구 관리", slug: "billing-manage", href: p("billing-manage"), sub: true },
       { label: "결제 상태", slug: "payment-status", href: p("payment-status"), sub: true },

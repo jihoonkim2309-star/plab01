@@ -8,11 +8,17 @@ export default async function NewStudentPage() {
     .from("classes")
     .select("id, name")
     .order("name");
+  const { data: products } = await supabase
+    .from("products")
+    .select("id, name")
+    .eq("active", true)
+    .order("name");
 
   return (
     <StudentForm
       title="학생 등록"
       classes={classes ?? []}
+      products={products ?? []}
       action={createStudent}
       submitLabel="학생 저장"
       cancelHref="/admin/students"
