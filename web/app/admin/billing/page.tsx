@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getCenterPg } from "@/lib/portone";
+import PayButton from "./PayButton";
 import { generateInvoices, bulkInvoiceStatus, deleteInvoice } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -40,6 +42,19 @@ export default async function BillingPage({
     paid_at: string | null;
     students: { name: string } | null;
   }[];
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: prof } = await supabase
+    .from("users")
+    .select("center_id")
+    .eq("id", user?.id ?? "")
+    .single();
+  const pg = await getCenterPg(
+    supabase,
+    (prof as { center_id: string } | null)?.center_id ?? "",
+  );
 
   const sum = (f: (s: string) => boolean) =>
     list.filter((i) => f(i.status)).reduce((a, b) => a + Number(b.amount), 0);
@@ -138,14 +153,25 @@ export default async function BillingPage({
                   </span>
                 </td>
                 <td>
-                  <form action={deleteInvoice.bind(null, i.id, period)}>
-                    <button
-                      className="btn danger"
-                      style={{ minHeight: 30, padding: "4px 10px" }}
-                    >
-                      삭제
-                    </button>
-                  </form>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    {(i.status === "청구" || i.status === "실패") && (
+                      <PayButton
+                        invoiceId={i.id}
+                        amount={Number(i.amount)}
+                        orderName={`${period} 수강료 · ${i.students?.name ?? ""}`}
+                        storeId={pg.storeId}
+                        channelKey={pg.channelKey}
+                      />
+                    )}
+                    <form action={deleteInvoice.bind(null, i.id, period)}>
+                      <button
+                        className="btn danger"
+                        style={{ minHeight: 30, padding: "4px 10px" }}
+                      >
+                        삭제
+                      </button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             ))}
