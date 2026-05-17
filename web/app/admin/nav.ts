@@ -88,10 +88,10 @@ export const NAV: NavGroup[] = [
   {
     label: "시스템",
     items: [
-      { label: "알림/로그", slug: "logs", href: p("logs"), icon: "≡" },
-      { label: "알림 발송 로그", slug: "notification-log", href: p("notification-log"), sub: true },
-      { label: "감사 로그", slug: "audit-log", href: p("audit-log"), sub: true },
-      { label: "설정", slug: "settings", href: p("settings"), icon: "⚙" },
+      { label: "알림/로그", slug: "logs", href: "/admin/notifications", icon: "≡", ready: true },
+      { label: "알림 발송 로그", slug: "notification-log", href: "/admin/notifications", sub: true, ready: true },
+      { label: "감사 로그", slug: "audit-log", href: "/admin/audit-logs", sub: true, ready: true },
+      { label: "설정", slug: "settings", href: "/admin/settings", icon: "⚙", ready: true },
     ],
   },
 ];

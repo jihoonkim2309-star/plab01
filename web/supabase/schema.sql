@@ -204,6 +204,10 @@ alter table public.centers add column if not exists contact_phone  text;
 alter table public.centers add column if not exists address        text;
 alter table public.centers add column if not exists pg_mode        text not null default 'test';   -- test|live
 alter table public.centers add column if not exists notify_enabled boolean not null default false;
+-- 센터별 PG(PortOne) 설정 — 프랜차이즈: 지점마다 자기 PG 키
+alter table public.centers add column if not exists pg_store_id    text;
+alter table public.centers add column if not exists pg_channel_key text;
+alter table public.centers add column if not exists pg_api_secret  text;
 
 -- classes 정규화 컬럼 보강
 alter table public.classes add column if not exists coach_id     uuid references public.users(id) on delete set null;
