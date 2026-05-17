@@ -1,3 +1,5 @@
+import PhotoUpload from "./PhotoUpload";
+
 type Student = Record<string, string | null> | null;
 
 const GRADE_OPTIONS = [
@@ -235,23 +237,21 @@ export default function StudentForm({
               <span className="badge green">식별용</span>
             </div>
             <div className="panel-body">
-              <div className="profile-hero">
-                <div className="avatar">사진</div>
-                <div>
-                  <strong style={{ fontSize: 18 }}>학생 사진 등록</strong>
-                  <div className="student-photo-actions">
-                    <button type="button" className="btn" disabled>
-                      사진 업로드
-                    </button>
-                    <button type="button" className="btn" disabled>
-                      삭제
-                    </button>
-                  </div>
-                  <div className="muted" style={{ marginTop: 8 }}>
-                    스토리지 연동은 다음 슬라이스
-                  </div>
+              {s.id ? (
+                <PhotoUpload
+                  studentId={s.id as string}
+                  photoUrl={(s.photo_url as string) ?? null}
+                  initial={(s.name as string)?.charAt(0) ?? "?"}
+                />
+              ) : (
+                <div className="empty-state">
+                  <strong>학생 저장 후 사진 등록</strong>
+                  <p>
+                    먼저 학생을 저장하면 사진 첨부(또는 모바일에서 촬영)가
+                    활성화됩니다.
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

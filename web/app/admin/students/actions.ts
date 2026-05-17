@@ -83,6 +83,34 @@ export async function updateStudent(id: string, formData: FormData) {
   redirect(`/admin/students/${id}`);
 }
 
+export async function uploadStudentPhoto(id: string, formData: FormData) {
+  const { supabase } = await requireCenter();
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0)
+    return { ok: false, error: "파일이 없습니다." };
+
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `${id}/${Date.now()}.${ext}`;
+  const { error: upErr } = await supabase.storage
+    .from("student-photos")
+    .upload(path, file, { upsert: true, contentType: file.type });
+  if (upErr) return { ok: false, error: "업로드 실패: " + upErr.message };
+
+  const { data: pub } = supabase.storage
+    .from("student-photos")
+    .getPublicUrl(path);
+
+  const { error } = await supabase
+    .from("students")
+    .update({ photo_url: pub.publicUrl })
+    .eq("id", id);
+  if (error) return { ok: false, error: "저장 실패: " + error.message };
+
+  revalidatePath(`/admin/students/${id}/edit`);
+  revalidatePath("/admin/students");
+  return { ok: true, url: pub.publicUrl };
+}
+
 export async function deleteStudent(id: string) {
   const { supabase } = await requireCenter();
   const { error } = await supabase.from("students").delete().eq("id", id);

@@ -470,6 +470,31 @@ begin
   return v_count;
 end $$;
 
+-- ---------- 13. 학생 사진 (Supabase Storage) --------------------------
+alter table public.students add column if not exists photo_url text;
+
+-- 공개 읽기 버킷 (식별용 사진). 재실행 안전.
+insert into storage.buckets (id, name, public)
+values ('student-photos', 'student-photos', true)
+on conflict (id) do nothing;
+
+-- 로그인한 사용자(어드민)는 업로드/수정/삭제, 공개 읽기
+drop policy if exists student_photos_read on storage.objects;
+create policy student_photos_read on storage.objects
+  for select using (bucket_id = 'student-photos');
+
+drop policy if exists student_photos_write on storage.objects;
+create policy student_photos_write on storage.objects
+  for insert to authenticated with check (bucket_id = 'student-photos');
+
+drop policy if exists student_photos_update on storage.objects;
+create policy student_photos_update on storage.objects
+  for update to authenticated using (bucket_id = 'student-photos');
+
+drop policy if exists student_photos_delete on storage.objects;
+create policy student_photos_delete on storage.objects
+  for delete to authenticated using (bucket_id = 'student-photos');
+
 -- =====================================================================
 --  부트스트랩 (최초 1회) — 아래 주석을 해제해서 실행하세요.
 --  1) 먼저 앱에서 어드민 계정으로 회원가입(또는 Supabase Auth에서 유저 생성)
