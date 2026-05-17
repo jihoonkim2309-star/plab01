@@ -15,6 +15,8 @@ function isActive(pathname: string, href: string) {
   if (href === "/admin/schedule") return pathname.startsWith("/admin/schedule");
   if (href === "/admin/products") return pathname.startsWith("/admin/products");
   if (href === "/admin/billing") return pathname.startsWith("/admin/billing");
+  if (href.startsWith("/admin/support"))
+    return pathname.startsWith("/admin/support");
   return pathname === href;
 }
 

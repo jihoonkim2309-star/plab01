@@ -79,10 +79,10 @@ export const NAV: NavGroup[] = [
   {
     label: "상담",
     items: [
-      { label: "문의/채팅", slug: "support", href: p("support"), icon: "✉" },
-      { label: "문의 티켓", slug: "inquiry-ticket", href: p("inquiry-ticket"), sub: true },
-      { label: "1:1 채팅 상담", slug: "chat-counsel", href: p("chat-counsel"), sub: true },
-      { label: "상담 이력", slug: "support-history", href: p("support-history"), sub: true },
+      { label: "문의/채팅", slug: "support", href: "/admin/support", icon: "✉", ready: true },
+      { label: "문의 티켓", slug: "inquiry-ticket", href: "/admin/support", sub: true, ready: true },
+      { label: "1:1 채팅 상담", slug: "chat-counsel", href: "/admin/support", sub: true, ready: true },
+      { label: "상담 이력", slug: "support-history", href: "/admin/support?s=완료", sub: true, ready: true },
     ],
   },
   {
