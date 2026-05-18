@@ -113,6 +113,67 @@ begin
 end $$;
 
 -- =====================================================================
+--  결제 더미 (별도 블록 — 학생 시드 후 / 재실행해도 1회만 추가)
+--  결제 상태·미납 화면이 전 상태로 차도록: 결제완료·실패·환불·미납
+--  + payments 거래기록. 마커: invoices.pg_tx_id LIKE 'SEEDPAY%'
+-- =====================================================================
+do $$
+declare
+  cid uuid;
+  lastm text := to_char((current_date - interval '1 month'), 'YYYY-MM');
+  v_id uuid;
+  v_status text;
+  rec record;
+begin
+  select id into cid from public.centers
+    order by (name = '플랜비 본점') desc, created_at asc limit 1;
+  if cid is null then return; end if;
+
+  if exists (select 1 from public.invoices
+             where center_id = cid and pg_tx_id like 'SEEDPAY%') then
+    raise notice '결제 더미 이미 있음 (스킵).';
+    return;
+  end if;
+
+  -- 시드 학생 5명 → 지난달 청구서 + 다양한 결제 상태/거래기록
+  for rec in
+    select st.id as sid, st.name
+    from public.students st
+    where st.center_id = cid and st.memo = '[SEED]'
+    order by st.name
+    limit 5
+  loop
+    v_status := (array['결제완료','결제완료','실패','환불','청구'])
+                  [1 + (abs(hashtext(rec.name)) % 5)];
+
+    insert into public.invoices
+      (center_id, student_id, period, amount, status, source,
+       due_date, issued_at, paid_at, method, pg_tx_id)
+    values
+      (cid, rec.sid, lastm, 150000, v_status, '수강확인',
+       (lastm || '-10')::date, now(),
+       case when v_status in ('결제완료','환불') then now() end,
+       'card', 'SEEDPAY-' || left(rec.sid::text, 8))
+    returning id into v_id;
+
+    insert into public.payments
+      (center_id, invoice_id, amount, status, provider, pg_tx_id,
+       failed_reason, paid_at)
+    values
+      (cid, v_id, 150000,
+       case v_status when '결제완료' then '성공'
+                     when '환불' then '환불'
+                     when '실패' then '실패'
+                     else '대기' end,
+       'portone', 'SEEDPAY-' || left(rec.sid::text, 8),
+       case when v_status = '실패' then '한도 초과(테스트)' end,
+       case when v_status in ('결제완료','환불') then now() end);
+  end loop;
+
+  raise notice '결제 더미 완료: 지난달 청구서·거래기록 5건 (결제완료·실패·환불·미납).';
+end $$;
+
+-- =====================================================================
 --  정리(cleanup) — 시드 데이터만 삭제하려면 아래 주석 해제 후 실행
 -- ---------------------------------------------------------------------
 -- do $$
@@ -123,6 +184,9 @@ end $$;
 --   delete from public.inquiries where center_id=cid
 --     and subject in ('셔틀 노선 문의','수강 변경 문의');
 --   delete from public.grade_promotions where center_id=cid and note='[SEED]';
+--   delete from public.payments where center_id=cid and (pg_tx_id like 'SEEDPAY%'
+--     or invoice_id in (select id from public.invoices where center_id=cid
+--       and student_id in (select id from public.students where center_id=cid and memo='[SEED]')));
 --   delete from public.invoices where center_id=cid and student_id in
 --     (select id from public.students where center_id=cid and memo='[SEED]');
 --   delete from public.enrollments where center_id=cid and student_id in
