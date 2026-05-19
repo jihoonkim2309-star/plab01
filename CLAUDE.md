@@ -3,6 +3,11 @@
 > 이 파일은 매 세션 자동으로 읽힙니다. 프로젝트의 변하지 않는 맥락을 적어 둡니다.
 > 진행 상태 등 자주 바뀌는 내용은 Claude 메모리에서 별도 관리됩니다.
 
+> ⚠️ **프로젝트 경로 = `C:\dev\plab01`** (OneDrive·Documents 밖). OneDrive가
+> 코드 git repo를 동기화하면 .git 소실·충돌본이 생기므로, 코드는 반드시 이
+> 경로에서 열고 백업은 GitHub로만 한다. 구 경로
+> `C:\Users\Administrator\Documents\Hoon\plab01`(OneDrive 백업영역)은 사용 금지.
+
 ## 프로젝트란
 
 배드민턴 + 기초체력 학원("플랜비 본점") 운영 관리 시스템.
