@@ -35,7 +35,9 @@ export default async function StudentsPage({
 
   const { data: students, error } = await supabase
     .from("students")
-    .select("id, name, gender, school, grade, status, class_name, shuttle_use")
+    .select(
+      "id, name, gender, school, grade, status, class_name, shuttle_use, photo_url",
+    )
     .order("created_at", { ascending: false });
 
   const list = students ?? [];
@@ -170,7 +172,7 @@ export default async function StudentsPage({
               <div className="toolbar">
                 <Link
                   className="btn primary"
-                  href={`/admin/students/${selected.id}/edit`}
+                  href={`/admin/students/${selected.id}/edit?from=${encodeURIComponent(`/admin/students?student=${selected.id}`)}`}
                 >
                   수정
                 </Link>
@@ -189,7 +191,17 @@ export default async function StudentsPage({
             ) : (
               <>
                 <div className="profile-hero">
-                  <div className="avatar">{selected.name?.charAt(0)}</div>
+                  <div className="avatar">
+                    {selected.photo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={selected.photo_url}
+                        alt={selected.name ?? "학생 사진"}
+                      />
+                    ) : (
+                      selected.name?.charAt(0)
+                    )}
+                  </div>
                   <div>
                     <strong style={{ fontSize: 20 }}>{selected.name}</strong>
                     <div className="muted">

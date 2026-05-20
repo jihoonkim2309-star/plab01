@@ -73,7 +73,10 @@ export default async function StudentDetailPage({
           </p>
         </div>
         <div className="toolbar">
-          <Link className="btn primary" href={`/admin/students/${id}/edit`}>
+          <Link
+            className="btn primary"
+            href={`/admin/students/${id}/edit?from=${encodeURIComponent(`/admin/students/${id}`)}`}
+          >
             수정
           </Link>
           <form action={deleteStudent.bind(null, id)}>

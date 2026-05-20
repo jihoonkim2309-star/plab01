@@ -5,10 +5,13 @@ import { updateStudent } from "../../actions";
 
 export default async function EditStudentPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const { id } = await params;
+  const { from } = await searchParams;
   const supabase = await createClient();
   const { data: s } = await supabase
     .from("students")
@@ -17,6 +20,10 @@ export default async function EditStudentPage({
     .single();
 
   if (!s) notFound();
+
+  // 열림 리디렉트 방지: 같은 어드민 영역 경로만 허용
+  const cancelHref =
+    from && /^\/admin\//.test(from) ? from : "/admin/students";
 
   const { data: classes } = await supabase
     .from("classes")
@@ -36,7 +43,7 @@ export default async function EditStudentPage({
       products={products ?? []}
       action={updateStudent.bind(null, id)}
       submitLabel="수정 저장"
-      cancelHref="/admin/students"
+      cancelHref={cancelHref}
     />
   );
 }
