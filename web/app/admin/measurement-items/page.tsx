@@ -20,7 +20,8 @@ export default async function MeasurementItemsPage() {
     .order("sort_order", { ascending: true });
   const list = data ?? [];
 
-  const byCat = (c: string) => list.filter((i) => i.category === c).length;
+  const byCat = (c: string) =>
+    list.filter((i) => i.category === c && i.active).length;
 
   return (
     <>
@@ -47,28 +48,28 @@ export default async function MeasurementItemsPage() {
 
       <div className="member-summary">
         <div className="summary-card">
-          <span>전체 항목</span>
-          <strong>{list.length}</strong>
+          <span>전체 (활성)</span>
+          <strong>{list.filter((i) => i.active).length}</strong>
         </div>
         <div className="summary-card">
           <span>신체</span>
           <strong>{byCat("신체")}</strong>
         </div>
         <div className="summary-card">
+          <span>바디사이즈</span>
+          <strong>{byCat("바디사이즈")}</strong>
+        </div>
+        <div className="summary-card">
           <span>바디비율</span>
           <strong>{byCat("바디비율")}</strong>
         </div>
         <div className="summary-card">
-          <span>체력</span>
-          <strong>{byCat("체력")}</strong>
+          <span>기초체력</span>
+          <strong>{byCat("기초체력")}</strong>
         </div>
         <div className="summary-card">
           <span>배드민턴</span>
           <strong>{byCat("배드민턴")}</strong>
-        </div>
-        <div className="summary-card">
-          <span>밸런스</span>
-          <strong>{byCat("밸런스")}</strong>
         </div>
       </div>
 
