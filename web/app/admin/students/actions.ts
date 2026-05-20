@@ -185,3 +185,34 @@ export async function deleteStudent(id: string) {
   revalidatePath("/admin/students");
   redirect("/admin/students");
 }
+
+// 일괄 상태 변경 — 폼 버튼의 name="status" value="활성/상담중/대기/휴면"
+export async function bulkSetStudentStatus(formData: FormData) {
+  const { supabase } = await requireCenter();
+  const ids = formData.getAll("ids").map(String).filter(Boolean);
+  const status = String(formData.get("status") ?? "");
+  if (ids.length === 0) throw new Error("선택된 학생이 없습니다.");
+  if (!status) throw new Error("상태가 지정되지 않았습니다.");
+
+  const { error } = await supabase
+    .from("students")
+    .update({ status })
+    .in("id", ids);
+  if (error) throw new Error("일괄 상태 변경 실패: " + error.message);
+
+  revalidatePath("/admin/students");
+  redirect("/admin/students");
+}
+
+// 일괄 삭제 — confirm 은 클라이언트에서 ConfirmButton 으로 처리
+export async function bulkDeleteStudents(formData: FormData) {
+  const { supabase } = await requireCenter();
+  const ids = formData.getAll("ids").map(String).filter(Boolean);
+  if (ids.length === 0) throw new Error("선택된 학생이 없습니다.");
+
+  const { error } = await supabase.from("students").delete().in("id", ids);
+  if (error) throw new Error("일괄 삭제 실패: " + error.message);
+
+  revalidatePath("/admin/students");
+  redirect("/admin/students");
+}
