@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Sidebar from "./Sidebar";
 import GlobalLoading from "./GlobalLoading";
+import SuppressInvalidTooltip from "./SuppressInvalidTooltip";
 import { signOut } from "./actions";
 
 export default async function AdminLayout({
@@ -32,6 +33,7 @@ export default async function AdminLayout({
       <Suspense fallback={null}>
         <GlobalLoading />
       </Suspense>
+      <SuppressInvalidTooltip />
       <Sidebar />
       <div className="drawer-backdrop" />
 
