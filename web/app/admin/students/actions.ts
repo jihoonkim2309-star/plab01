@@ -61,10 +61,31 @@ export async function createStudent(formData: FormData) {
   const row = await denormalize(supabase, readForm(formData));
   if (!row.name) throw new Error("학생명은 필수입니다.");
 
-  const { error } = await supabase
+  const { data: created, error } = await supabase
     .from("students")
-    .insert({ ...row, center_id: centerId });
+    .insert({ ...row, center_id: centerId })
+    .select("id")
+    .single();
   if (error) throw new Error("등록 실패: " + error.message);
+
+  // 신규 등록 시 사진이 함께 들어왔다면 학생 id 확보 후 업로드 (실패해도 학생 생성은 유지).
+  const photo = formData.get("photo");
+  if (photo instanceof File && photo.size > 0 && created?.id) {
+    const ext = (photo.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${created.id}/${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("student-photos")
+      .upload(path, photo, { upsert: true, contentType: photo.type });
+    if (!upErr) {
+      const { data: pub } = supabase.storage
+        .from("student-photos")
+        .getPublicUrl(path);
+      await supabase
+        .from("students")
+        .update({ photo_url: pub.publicUrl })
+        .eq("id", created.id);
+    }
+  }
 
   revalidatePath("/admin/students");
   redirect("/admin/students");

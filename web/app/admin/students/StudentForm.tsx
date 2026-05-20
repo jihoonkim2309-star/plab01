@@ -237,21 +237,11 @@ export default function StudentForm({
               <span className="badge green">식별용</span>
             </div>
             <div className="panel-body">
-              {s.id ? (
-                <PhotoUpload
-                  studentId={s.id as string}
-                  photoUrl={(s.photo_url as string) ?? null}
-                  initial={(s.name as string)?.charAt(0) ?? "?"}
-                />
-              ) : (
-                <div className="empty-state">
-                  <strong>학생 저장 후 사진 등록</strong>
-                  <p>
-                    먼저 학생을 저장하면 사진 첨부(또는 모바일에서 촬영)가
-                    활성화됩니다.
-                  </p>
-                </div>
-              )}
+              <PhotoUpload
+                studentId={(s.id as string) ?? null}
+                photoUrl={(s.photo_url as string) ?? null}
+                initial={(s.name as string)?.charAt(0) ?? "?"}
+              />
             </div>
           </div>
 
