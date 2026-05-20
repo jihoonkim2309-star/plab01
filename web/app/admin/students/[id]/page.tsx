@@ -86,7 +86,14 @@ export default async function StudentDetailPage({
         <div className="panel">
           <div className="panel-body">
             <div className="profile-hero">
-              <div className="avatar">{s.name?.charAt(0)}</div>
+              <div className="avatar">
+                {s.photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={s.photo_url} alt={s.name ?? "학생 사진"} />
+                ) : (
+                  s.name?.charAt(0)
+                )}
+              </div>
               <div>
                 <strong style={{ fontSize: 20 }}>{s.name}</strong>
                 <div className="muted">

@@ -132,6 +132,20 @@ export async function uploadStudentPhoto(id: string, formData: FormData) {
   return { ok: true, url: pub.publicUrl };
 }
 
+// 학생 사진 제거 (photo_url 비우기). Storage 파일은 보존(상시 회전 비용 절감).
+export async function removeStudentPhoto(id: string) {
+  const { supabase } = await requireCenter();
+  const { error } = await supabase
+    .from("students")
+    .update({ photo_url: null })
+    .eq("id", id);
+  if (error) return { ok: false, error: "삭제 실패: " + error.message };
+  revalidatePath(`/admin/students/${id}/edit`);
+  revalidatePath(`/admin/students/${id}`);
+  revalidatePath("/admin/students");
+  return { ok: true };
+}
+
 export async function deleteStudent(id: string) {
   const { supabase } = await requireCenter();
   const { error } = await supabase.from("students").delete().eq("id", id);

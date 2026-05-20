@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { uploadStudentPhoto } from "./actions";
+import { uploadStudentPhoto, removeStudentPhoto } from "./actions";
 
 export default function PhotoUpload({
   studentId,
@@ -96,7 +96,7 @@ export default function PhotoUpload({
             disabled={pending}
             onClick={() => pickRef.current?.click()}
           >
-            사진 첨부
+            {displayUrl ? "사진 변경" : "사진 첨부"}
           </button>
           {coarse && (
             <button
@@ -106,6 +106,32 @@ export default function PhotoUpload({
               onClick={() => camRef.current?.click()}
             >
               촬영
+            </button>
+          )}
+          {displayUrl && (
+            <button
+              type="button"
+              className="btn"
+              disabled={pending}
+              onClick={() => {
+                if (!confirm("학생 사진을 삭제할까요?")) return;
+                if (isDeferred) {
+                  // 신규 등록 모드: 로컬 미리보기·hidden 파일 입력만 초기화
+                  if (previewUrl) URL.revokeObjectURL(previewUrl);
+                  setPreviewUrl(null);
+                  if (deferredRef.current) deferredRef.current.value = "";
+                  if (pickRef.current) pickRef.current.value = "";
+                  if (camRef.current) camRef.current.value = "";
+                  return;
+                }
+                start(async () => {
+                  const r = await removeStudentPhoto(studentId);
+                  if (r?.ok) router.refresh();
+                  else setMsg(r?.error ?? "실패");
+                });
+              }}
+            >
+              사진 삭제
             </button>
           )}
         </div>

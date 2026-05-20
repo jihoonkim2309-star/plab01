@@ -36,7 +36,7 @@ export default async function EditStudentPage({
       products={products ?? []}
       action={updateStudent.bind(null, id)}
       submitLabel="수정 저장"
-      cancelHref={`/admin/students/${id}`}
+      cancelHref="/admin/students"
     />
   );
 }
