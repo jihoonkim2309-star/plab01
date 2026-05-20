@@ -496,6 +496,202 @@ create policy student_photos_delete on storage.objects
   for delete to authenticated using (bucket_id = 'student-photos');
 
 -- =====================================================================
+--  14. 리포트 / 측정 — Phase 1 실구현 (2026-05-20 추가)
+--  - measurement_items : 항목 마스터(센터별, 어드민 관리)
+--  - measurements      : 학생×월 측정 컨테이너(상태 워크플로)
+--  - measurement_values: 항목별 값
+--  - reports           : 월간 리포트(4종 유형, snapshot으로 동결)
+--  RLS: 어드민 전권 + 코치는 측정 read/write 가능. 승인/발행은 코드에서 admin만.
+-- =====================================================================
+
+-- 공용: 해당 center 의 어드민 또는 코치(=staff)인가?
+create or replace function public.is_center_staff(cid uuid)
+returns boolean language sql stable as $$
+  select cid = public.current_center_id()
+     and public.current_role() in ('admin','coach')
+$$;
+
+-- 14.1 측정 항목 마스터
+create table if not exists public.measurement_items (
+  id          uuid primary key default gen_random_uuid(),
+  center_id   uuid not null references public.centers(id) on delete cascade,
+  category    text not null,                  -- 신체|바디비율|체력|배드민턴|밸런스
+  name        text not null,
+  unit        text,                            -- cm|kg|%|sec|점 등
+  value_kind  text not null default 'number',  -- number|text
+  sort_order  integer not null default 0,
+  active      boolean not null default true,
+  created_at  timestamptz not null default now(),
+  unique (center_id, name)
+);
+
+-- 14.2 학생×월 측정 컨테이너
+create table if not exists public.measurements (
+  id                uuid primary key default gen_random_uuid(),
+  center_id         uuid not null references public.centers(id) on delete cascade,
+  student_id        uuid not null references public.students(id) on delete cascade,
+  measurement_month text not null,            -- YYYY-MM
+  status            text not null default '대기',  -- 대기|입력완료|승인완료|반려
+  measured_by       uuid references public.users(id) on delete set null,
+  measured_at       timestamptz,
+  reviewed_by       uuid references public.users(id) on delete set null,
+  reviewed_at       timestamptz,
+  reject_reason     text,
+  notes             text,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  unique (student_id, measurement_month)
+);
+
+-- 14.3 항목별 값
+create table if not exists public.measurement_values (
+  measurement_id  uuid not null references public.measurements(id) on delete cascade,
+  item_id         uuid not null references public.measurement_items(id) on delete restrict,
+  value_num       numeric,
+  value_text      text,
+  primary key (measurement_id, item_id)
+);
+
+-- 14.4 월간 리포트 (한 측정에서 유형별 N개 생성 가능)
+create table if not exists public.reports (
+  id                uuid primary key default gen_random_uuid(),
+  center_id         uuid not null references public.centers(id) on delete cascade,
+  student_id        uuid not null references public.students(id) on delete cascade,
+  measurement_id    uuid references public.measurements(id) on delete set null,
+  report_month      text not null,            -- YYYY-MM
+  report_type       text not null,            -- 신체성장|기록|체력측정|배드민턴측정
+  status            text not null default '생성대기',  -- 생성대기|생성완료|발행완료
+  snapshot          jsonb,                     -- 발행 시점 동결(섹션·값·점수·코멘트)
+  coach_comment     text,
+  admin_comment     text,
+  published_at      timestamptz,
+  public_to_parent  boolean not null default false,
+  generated_by      uuid references public.users(id) on delete set null,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  unique (student_id, report_month, report_type)
+);
+
+-- 14.5 인덱스
+create index if not exists idx_measurements_center_month on public.measurements (center_id, measurement_month);
+create index if not exists idx_measurements_status       on public.measurements (status);
+create index if not exists idx_reports_center_month_type on public.reports (center_id, report_month, report_type);
+create index if not exists idx_reports_status            on public.reports (status);
+
+-- 14.6 updated_at 트리거
+drop trigger if exists measurements_touch on public.measurements;
+create trigger measurements_touch before update on public.measurements
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists reports_touch on public.reports;
+create trigger reports_touch before update on public.reports
+  for each row execute function public.touch_updated_at();
+
+-- 14.7 RLS
+alter table public.measurement_items  enable row level security;
+alter table public.measurements       enable row level security;
+alter table public.measurement_values enable row level security;
+alter table public.reports            enable row level security;
+
+-- measurement_items: staff read, admin write
+drop policy if exists mi_staff_read  on public.measurement_items;
+create policy mi_staff_read  on public.measurement_items
+  for select using (public.is_center_staff(center_id));
+
+drop policy if exists mi_admin_write on public.measurement_items;
+create policy mi_admin_write on public.measurement_items
+  for all using (public.is_center_admin(center_id))
+     with check (public.is_center_admin(center_id));
+
+-- measurements: staff read/insert/update, admin delete (승인/발행은 액션 레벨에서 추가 가드)
+drop policy if exists m_staff_read   on public.measurements;
+create policy m_staff_read   on public.measurements
+  for select using (public.is_center_staff(center_id));
+
+drop policy if exists m_staff_insert on public.measurements;
+create policy m_staff_insert on public.measurements
+  for insert with check (public.is_center_staff(center_id));
+
+drop policy if exists m_staff_update on public.measurements;
+create policy m_staff_update on public.measurements
+  for update using (public.is_center_staff(center_id))
+             with check (public.is_center_staff(center_id));
+
+drop policy if exists m_admin_delete on public.measurements;
+create policy m_admin_delete on public.measurements
+  for delete using (public.is_center_admin(center_id));
+
+-- measurement_values: 부모 measurement 의 center 권한 따름
+drop policy if exists mv_staff_all   on public.measurement_values;
+create policy mv_staff_all   on public.measurement_values
+  for all using (exists (
+        select 1 from public.measurements m
+         where m.id = measurement_id and public.is_center_staff(m.center_id)
+      ))
+  with check (exists (
+        select 1 from public.measurements m
+         where m.id = measurement_id and public.is_center_staff(m.center_id)
+      ));
+
+-- reports: admin 전권, coach read만
+drop policy if exists r_admin_all    on public.reports;
+create policy r_admin_all    on public.reports
+  for all using (public.is_center_admin(center_id))
+     with check (public.is_center_admin(center_id));
+
+drop policy if exists r_coach_read   on public.reports;
+create policy r_coach_read   on public.reports
+  for select using (public.is_center_staff(center_id));
+
+-- =====================================================================
+--  14.8 측정 항목 시드 — 프로토타입 항목 그대로 (재실행 안전, 센터별)
+--  사용: select public.seed_measurement_items('<center_id>');
+--  - SQL Editor 직접 실행: auth.uid() = null 이라 통과
+--  - 앱 RPC 호출: 해당 센터 admin 만 통과
+-- =====================================================================
+create or replace function public.seed_measurement_items(cid uuid)
+returns integer language plpgsql security definer set search_path = public as $$
+declare
+  v_count integer := 0;
+  v record;
+begin
+  if auth.uid() is not null and not public.is_center_admin(cid) then
+    raise exception 'permission denied: not center admin';
+  end if;
+
+  for v in
+    select * from (values
+      ('신체',     '키',             'cm',   'number',  10),
+      ('신체',     '몸무게',         'kg',   'number',  20),
+      ('신체',     '골격근량',       'kg',   'number',  30),
+      ('신체',     '체지방률',       '%',    'number',  40),
+      ('바디비율', '어깨너비',       'cm',   'number',  110),
+      ('바디비율', '허리둘레',       'cm',   'number',  120),
+      ('바디비율', '팔-키 비율',     '%',    'number',  130),
+      ('바디비율', '상하체 비율',    '비율', 'number',  140),
+      ('체력',     '제자리 멀리뛰기','cm',   'number',  210),
+      ('체력',     '20m 달리기',     'sec',  'number',  220),
+      ('체력',     '스텝 테스트',    '회',   'number',  230),
+      ('체력',     '정확도 테스트',  '%',    'number',  240),
+      ('배드민턴', '서비스 정확도',  '%',    'number',  310),
+      ('배드민턴', '풋워크 스피드',  'sec',  'number',  320),
+      ('배드민턴', '랠리 지속',      '회',   'number',  330),
+      ('밸런스',   '파워',           '점',   'number',  410),
+      ('밸런스',   '스피드',         '점',   'number',  420),
+      ('밸런스',   '민첩성',         '점',   'number',  430),
+      ('밸런스',   '균형성',         '점',   'number',  440),
+      ('밸런스',   '협응성',         '점',   'number',  450)
+    ) as t(category, name, unit, value_kind, sort_order)
+  loop
+    insert into public.measurement_items (center_id, category, name, unit, value_kind, sort_order)
+    values (cid, v.category, v.name, v.unit, v.value_kind, v.sort_order)
+    on conflict (center_id, name) do nothing;
+    if found then v_count := v_count + 1; end if;
+  end loop;
+  return v_count;
+end $$;
+
+-- =====================================================================
 --  부트스트랩 (최초 1회) — 아래 주석을 해제해서 실행하세요.
 --  1) 먼저 앱에서 어드민 계정으로 회원가입(또는 Supabase Auth에서 유저 생성)
 --  2) 그 후 아래를 실행해 센터 1개 생성 + 그 계정을 admin으로 승격
