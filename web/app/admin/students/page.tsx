@@ -2,6 +2,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { deleteStudent } from "./actions";
 import ConfirmButton from "../ConfirmButton";
+import FilterBar from "../FilterBar";
+import StatusChips from "../StatusChips";
+import SearchInput from "../SearchInput";
 
 const STATUS_BADGE: Record<string, string> = {
   활성: "green",
@@ -29,19 +32,34 @@ const ENROLL: [string, string][] = [
 export default async function StudentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ student?: string }>;
+  searchParams: Promise<{
+    student?: string;
+    q?: string;
+    status?: string;
+    shuttle?: string;
+  }>;
 }) {
-  const { student: selectedId } = await searchParams;
+  const { student: selectedId, q, status, shuttle: shuttleFilter } =
+    await searchParams;
   const supabase = await createClient();
 
-  // 목록과 선택된 학생 상세를 병렬로 조회 (직렬 → 병렬, 왕복 시간 절반)
+  // 검색·필터 적용한 목록 + 선택된 학생 상세를 병렬로 조회
+  let listQuery = supabase
+    .from("students")
+    .select(
+      "id, name, gender, school, grade, status, class_name, shuttle_use, photo_url",
+    )
+    .order("created_at", { ascending: false });
+  if (q) {
+    listQuery = listQuery.or(`name.ilike.%${q}%,school.ilike.%${q}%`);
+  }
+  if (status) listQuery = listQuery.eq("status", status);
+  if (shuttleFilter === "이용") listQuery = listQuery.eq("shuttle_use", "이용");
+  else if (shuttleFilter === "미이용")
+    listQuery = listQuery.or("shuttle_use.is.null,shuttle_use.neq.이용");
+
   const [listRes, selectedRes] = await Promise.all([
-    supabase
-      .from("students")
-      .select(
-        "id, name, gender, school, grade, status, class_name, shuttle_use, photo_url",
-      )
-      .order("created_at", { ascending: false }),
+    listQuery,
     selectedId
       ? supabase.from("students").select("*").eq("id", selectedId).single()
       : Promise.resolve({ data: null }),
@@ -51,6 +69,7 @@ export default async function StudentsPage({
   const active = list.filter((s) => s.status === "활성").length;
   const shuttle = list.filter((s) => s.shuttle_use === "이용").length;
   const selected = selectedRes.data;
+  const hasActiveFilter = !!(q || status || shuttleFilter);
 
   return (
     <>
@@ -93,6 +112,37 @@ export default async function StudentsPage({
         <div className="panel">
           <div className="panel-head">
             <p className="panel-title">학생 목록</p>
+          </div>
+
+          <div className="panel-body" style={{ paddingBottom: 0 }}>
+            <FilterBar>
+              <StatusChips
+                param="status"
+                current={status}
+                options={[
+                  { value: "활성", label: "활성" },
+                  { value: "상담중", label: "상담중" },
+                  { value: "대기", label: "대기" },
+                  { value: "휴면", label: "휴면" },
+                ]}
+              />
+              <StatusChips
+                param="shuttle"
+                current={shuttleFilter}
+                allLabel="셔틀 전체"
+                options={[
+                  { value: "이용", label: "이용" },
+                  { value: "미이용", label: "미이용" },
+                ]}
+              />
+              <div style={{ flex: 1 }} />
+              <SearchInput param="q" current={q} placeholder="이름·학교 검색" />
+              {hasActiveFilter && (
+                <Link className="btn" href="/admin/students">
+                  초기화
+                </Link>
+              )}
+            </FilterBar>
           </div>
 
           {error && (

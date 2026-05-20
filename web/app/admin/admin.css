@@ -749,6 +749,48 @@
 .account-table tr.selected td,
 .class-table tr.selected td { background: var(--brand-soft); }
 
+/* 공통 필터 바 (FilterBar / StatusChips / FilterSelect / SearchInput) */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.filter-bar .filter-chips { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.filter-bar .filter-search {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-width: 200px;
+  font-size: 13px;
+  background: #fafaf7;
+}
+.filter-bar .filter-search:focus { outline: 2px solid #0F6E56; outline-offset: -1px; background: #fff; }
+.filter-bar .filter-select {
+  height: 34px;
+  padding: 0 30px 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+  background: #fafaf7;
+  cursor: pointer;
+}
+.filter-bar .filter-spacer { flex: 1; }
+.filter-bar .filter-reset {
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
 /* 공통 월 네비 컨트롤 (MonthNav.tsx) */
 .month-nav {
   display: inline-flex;
@@ -831,15 +873,16 @@
   inset: 0;
   z-index: 0;
 }
-/* 셀 안 인터랙티브 요소(수정 버튼·체크박스 등)는 위로 올려 클릭 가능 유지 */
-.row-link-host > td > a:not(.row-link-stretch),
-.row-link-host > td > button,
-.row-link-host > td > form,
-.row-link-host > td > .btn,
-.row-link-host > td > input,
-.row-link-host > td > select,
-.row-link-host > td.check-cell,
-.row-link-host > td.check-cell * { position: relative; z-index: 1; }
+/* 셀 안 인터랙티브 요소(수정 버튼·체크박스·이동 버튼 등)는 stretched ::after
+   위로 올려 클릭 가능 유지. 직계뿐 아니라 wrapping div 안에 있어도 동작. */
+.row-link-host td a:not(.row-link-stretch),
+.row-link-host td button,
+.row-link-host td form,
+.row-link-host td .btn,
+.row-link-host td input,
+.row-link-host td select,
+.row-link-host td.check-cell,
+.row-link-host td.check-cell * { position: relative; z-index: 1; }
 
 /* 일괄 체크박스 테이블 행 호버 강조 (행 어디든 클릭 시 체크 토글) */
 .check-row-host tbody tr { cursor: pointer; }
