@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import CheckRowToggle from "../CheckRowToggle";
 import { syncEnrollments, bulkRenewal } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -88,6 +89,7 @@ export default async function RenewalsPage({
             </button>
           </div>
         </div>
+        <CheckRowToggle>
         <table>
           <thead>
             <tr>
@@ -134,6 +136,7 @@ export default async function RenewalsPage({
             )}
           </tbody>
         </table>
+        </CheckRowToggle>
       </form>
 
       <p className="muted" style={{ marginTop: 10 }}>

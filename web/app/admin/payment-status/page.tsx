@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import CheckRowToggle from "../CheckRowToggle";
 import { setPaymentStatus } from "./actions";
 
 const SB: Record<string, string> = {
@@ -73,6 +74,7 @@ export default async function PaymentStatusPage({
             </button>
           </div>
         </div>
+        <CheckRowToggle>
         <table>
           <thead>
             <tr>
@@ -119,6 +121,7 @@ export default async function PaymentStatusPage({
             )}
           </tbody>
         </table>
+        </CheckRowToggle>
       </form>
     </>
   );

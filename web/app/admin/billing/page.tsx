@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCenterPg } from "@/lib/portone";
+import CheckRowToggle from "../CheckRowToggle";
 import PayButton from "./PayButton";
 import { generateInvoices, bulkInvoiceStatus, deleteInvoice } from "./actions";
 
@@ -123,6 +124,7 @@ export default async function BillingPage({
             </button>
           </div>
         </div>
+        <CheckRowToggle>
         <table>
           <thead>
             <tr>
@@ -190,6 +192,7 @@ export default async function BillingPage({
             )}
           </tbody>
         </table>
+        </CheckRowToggle>
       </form>
 
       <p className="muted" style={{ marginTop: 10 }}>

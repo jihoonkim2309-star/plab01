@@ -31,14 +31,31 @@ export default async function ReportsPage({
   const supabase = await createClient();
 
   // 목록 쿼리 (월간 통합 리포트만)
-  const { data: rows } = await supabase
-    .from("reports")
-    .select(
-      "id, student_id, report_month, report_type, status, public_to_parent, published_at, students(name)",
-    )
-    .eq("report_month", target)
-    .order("created_at", { ascending: false });
-  const list = (rows ?? []) as unknown as {
+  // 목록 + 승인 측정 카운트 + 선택된 리포트 디테일 → 한 번에 병렬
+  const [listRes, approvedRes, detailRes] = await Promise.all([
+    supabase
+      .from("reports")
+      .select(
+        "id, student_id, report_month, report_type, status, public_to_parent, published_at, students(name)",
+      )
+      .eq("report_month", target)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("measurements")
+      .select("id", { count: "exact", head: false })
+      .eq("measurement_month", target)
+      .eq("status", "승인완료"),
+    rid
+      ? supabase
+          .from("reports")
+          .select(
+            "id, snapshot, coach_comment, admin_comment, public_to_parent, published_at",
+          )
+          .eq("id", rid)
+          .single()
+      : Promise.resolve({ data: null }),
+  ]);
+  const list = (listRes.data ?? []) as unknown as {
     id: string;
     student_id: string;
     report_month: string;
@@ -50,26 +67,9 @@ export default async function ReportsPage({
   }[];
 
   const cnt = (s: string) => list.filter((r) => r.status === s).length;
-
-  // 승인 완료 측정 수
-  const { data: approvedMs } = await supabase
-    .from("measurements")
-    .select("id", { count: "exact", head: false })
-    .eq("measurement_month", target)
-    .eq("status", "승인완료");
-  const approvedCount = approvedMs?.length ?? 0;
-
-  // 우측 디테일
+  const approvedCount = approvedRes.data?.length ?? 0;
   const selected = rid ? list.find((r) => r.id === rid) ?? null : null;
-  const { data: rDetail } = selected
-    ? await supabase
-        .from("reports")
-        .select(
-          "id, snapshot, coach_comment, admin_comment, public_to_parent, published_at",
-        )
-        .eq("id", selected.id)
-        .single()
-    : { data: null };
+  const rDetail = detailRes.data;
 
   const navUrl = (p: { ym?: string; rid?: string | null }) => {
     const qs = new URLSearchParams();

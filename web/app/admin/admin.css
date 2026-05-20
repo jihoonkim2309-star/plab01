@@ -831,11 +831,19 @@
   inset: 0;
   z-index: 0;
 }
-/* 셀 안 인터랙티브 요소(수정 버튼 등)는 위로 올려 클릭 가능 유지 */
+/* 셀 안 인터랙티브 요소(수정 버튼·체크박스 등)는 위로 올려 클릭 가능 유지 */
 .row-link-host > td > a:not(.row-link-stretch),
 .row-link-host > td > button,
 .row-link-host > td > form,
-.row-link-host > td > .btn { position: relative; z-index: 1; }
+.row-link-host > td > .btn,
+.row-link-host > td > input,
+.row-link-host > td > select,
+.row-link-host > td.check-cell,
+.row-link-host > td.check-cell * { position: relative; z-index: 1; }
+
+/* 일괄 체크박스 테이블 행 호버 강조 (행 어디든 클릭 시 체크 토글) */
+.check-row-host tbody tr { cursor: pointer; }
+.check-row-host tbody tr:hover > td { background: rgba(15, 110, 86, 0.05); }
 
 .detail-block {
   border: 1px solid var(--line);

@@ -98,13 +98,17 @@ export default async function GradePromotionsPage({
             </thead>
             <tbody>
               {list.map((g) => (
-                <tr key={g.id} className={g.id === sel ? "selected" : ""}>
+                <tr
+                  key={g.id}
+                  className={`row-link-host ${g.id === sel ? "selected" : ""}`}
+                >
                   <td className="check-cell">
                     <input type="checkbox" name="ids" value={g.id} />
                   </td>
                   <td>
                     <Link
                       href={`/admin/grade-promotions?sel=${g.id}`}
+                      className="row-link-stretch"
                       style={{ fontWeight: 900, color: "var(--text)" }}
                     >
                       {g.students?.name ?? "-"}

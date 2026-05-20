@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import CheckRowToggle from "../CheckRowToggle";
 import { bulkOverdueAction } from "./actions";
 
 function daysOver(due: string | null): number {
@@ -71,6 +72,7 @@ export default async function OverduePage() {
             </button>
           </div>
         </div>
+        <CheckRowToggle>
         <table>
           <thead>
             <tr>
@@ -125,6 +127,7 @@ export default async function OverduePage() {
             )}
           </tbody>
         </table>
+        </CheckRowToggle>
       </form>
     </>
   );

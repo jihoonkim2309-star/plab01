@@ -100,10 +100,14 @@ export default async function SupportPage({
             </thead>
             <tbody>
               {list.map((i) => (
-                <tr key={i.id} className={i.id === sel ? "selected" : ""}>
+                <tr
+                  key={i.id}
+                  className={`row-link-host ${i.id === sel ? "selected" : ""}`}
+                >
                   <td>
                     <a
                       href={`/admin/support?sel=${i.id}`}
+                      className="row-link-stretch"
                       style={{ fontWeight: 900, color: "var(--text)" }}
                     >
                       {i.subject}
