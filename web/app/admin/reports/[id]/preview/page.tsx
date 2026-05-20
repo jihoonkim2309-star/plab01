@@ -2,38 +2,13 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import PrintButton from "./PrintButton";
 import IconLibrary, { ICON_ID } from "./IconLibrary";
-import RadarChart, { type BalanceScores } from "./RadarChart";
-
-type TrendCell = number | string | null;
-type SnapshotTrendItem = {
-  name: string;
-  unit: string | null;
-  category: string;
-  icon: string | null;
-  values: [TrendCell, TrendCell, TrendCell, TrendCell];
-  change_abs: number | null;
-  change_pct: number | null;
-};
-type SnapshotSection = {
-  category: string;
-  title: string;
-  items: SnapshotTrendItem[];
-};
-type Snapshot = {
-  student: {
-    id: string;
-    name: string | null;
-    gender: string | null;
-    birth: string | null;
-    school: string | null;
-    grade: string | null;
-  };
-  measurement_month: string;
-  months: [string, string, string, string];
-  month_dates: [string, string, string, string];
-  sections: SnapshotSection[];
-  balance?: BalanceScores | null;
-};
+import RadarChart from "./RadarChart";
+import { buildSnapshot } from "../../snapshot";
+import type {
+  Snapshot,
+  SnapshotTrendItem,
+  TrendCell,
+} from "../../snapshot";
 
 function ageFromBirth(b: string | null) {
   if (!b) return null;
@@ -76,12 +51,22 @@ export default async function ReportPreviewPage({
   const supabase = await createClient();
   const { data: r } = await supabase
     .from("reports")
-    .select("id, report_month, report_type, status, snapshot, coach_comment, admin_comment, published_at, public_to_parent")
+    .select(
+      "id, student_id, report_month, report_type, status, snapshot, coach_comment, admin_comment, published_at, public_to_parent",
+    )
     .eq("id", id)
     .single();
   if (!r) notFound();
 
-  const snap = (r.snapshot ?? null) as Snapshot | null;
+  // 발행완료 = DB에 동결된 snapshot 사용. 그 외엔 항상 라이브 빌드해서
+  // 최신 측정값·아이콘·밸런스 점수가 자동 반영되도록 (수동 "재반영" 불필요).
+  let snap: Snapshot | null;
+  if (r.status === "발행완료" && r.snapshot) {
+    snap = r.snapshot as Snapshot;
+  } else {
+    const { snapshot } = await buildSnapshot(supabase, r.student_id, r.report_month);
+    snap = snapshot;
+  }
   const student = snap?.student;
   const age = ageFromBirth(student?.birth ?? null);
 

@@ -4,7 +4,6 @@ import {
   deleteReport,
   generateReportsForMonth,
   publishReport,
-  regenerateSnapshot,
   unpublishReport,
   updateReport,
 } from "./actions";
@@ -232,7 +231,7 @@ export default async function ReportsPage({
                 </span>
               </div>
               <div className="panel-body">
-                {/* 미리보기·재생성 */}
+                {/* 미리보기 — 발행 전엔 최신 측정값으로 항상 라이브 빌드됨 */}
                 <div
                   className="toolbar"
                   style={{ justifyContent: "flex-start", marginBottom: 12 }}
@@ -244,12 +243,12 @@ export default async function ReportsPage({
                   >
                     PDF 미리보기 (새 창)
                   </Link>
-                  <form action={regenerateSnapshot}>
-                    <input type="hidden" name="id" value={selected.id} />
-                    <button className="btn" type="submit">
-                      측정값 재반영
-                    </button>
-                  </form>
+                  <span
+                    className="muted"
+                    style={{ fontSize: 12, alignSelf: "center" }}
+                  >
+                    발행 전엔 최신 측정값이 자동 반영됩니다. 발행 시점에 동결.
+                  </span>
                 </div>
 
                 {/* 코멘트/공개 */}
