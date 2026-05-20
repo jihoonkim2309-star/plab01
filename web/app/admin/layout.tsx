@@ -20,7 +20,7 @@ export default async function AdminLayout({
   } = await supabase.auth.getSession();
   if (!session) redirect("/login");
   const userId = session.user.id;
-  const userEmail = session.userEmail;
+  const userEmail = session.user.email;
 
   const { data: profile } = await supabase
     .from("users")
