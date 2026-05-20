@@ -179,12 +179,13 @@ export default async function MeasurementsPage({
                 return (
                   <tr
                     key={s.id}
-                    className={selected?.id === s.id ? "selected" : ""}
+                    className={`row-link-host ${selected?.id === s.id ? "selected" : ""}`}
                   >
                     <td>
                       <Link
                         href={navUrl({ ym: target, sid: s.id })}
-                        style={{ textDecoration: "none", color: "inherit" }}
+                        className="row-link-stretch"
+                        style={{ color: "inherit" }}
                       >
                         <strong>{s.name}</strong>
                         <div className="muted" style={{ fontSize: 12 }}>

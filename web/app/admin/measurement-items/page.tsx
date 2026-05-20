@@ -152,7 +152,7 @@ export default async function MeasurementItemsPage() {
           </thead>
           <tbody>
             {list.map((i) => (
-              <tr key={i.id}>
+              <tr key={i.id} className="row-link-host">
                 <td>
                   <span className={`badge ${CAT_BADGE[i.category] ?? "gray"}`}>
                     {i.category}
@@ -166,7 +166,13 @@ export default async function MeasurementItemsPage() {
                   />
                 </td>
                 <td>
-                  <strong>{i.name}</strong>
+                  <Link
+                    href={`/admin/measurement-items/${i.id}/edit`}
+                    className="row-link-stretch"
+                    style={{ fontWeight: 900, color: "var(--text)" }}
+                  >
+                    {i.name}
+                  </Link>
                 </td>
                 <td className="muted">{i.unit ?? "-"}</td>
                 <td className="muted">{i.value_kind}</td>

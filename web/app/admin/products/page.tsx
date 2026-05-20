@@ -69,9 +69,15 @@ export default async function ProductsPage() {
           </thead>
           <tbody>
             {list.map((p) => (
-              <tr key={p.id}>
+              <tr key={p.id} className="row-link-host">
                 <td>
-                  <strong>{p.name}</strong>
+                  <Link
+                    href={`/admin/products/${p.id}/edit`}
+                    className="row-link-stretch"
+                    style={{ fontWeight: 900, color: "var(--text)" }}
+                  >
+                    {p.name}
+                  </Link>
                 </td>
                 <td className="muted">{p.kind}</td>
                 <td className="muted">

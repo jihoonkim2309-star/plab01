@@ -159,12 +159,13 @@ export default async function ReportsPage({
               {list.map((r) => (
                 <tr
                   key={r.id}
-                  className={selected?.id === r.id ? "selected" : ""}
+                  className={`row-link-host ${selected?.id === r.id ? "selected" : ""}`}
                 >
                   <td>
                     <Link
                       href={navUrl({ ym: target, rid: r.id })}
-                      style={{ textDecoration: "none", color: "inherit" }}
+                      className="row-link-stretch"
+                      style={{ color: "inherit" }}
                     >
                       <strong>{r.students?.name ?? "-"}</strong>
                     </Link>

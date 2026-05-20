@@ -95,9 +95,15 @@ export default async function ClassesPage() {
           </thead>
           <tbody>
             {list.map((c) => (
-              <tr key={c.id}>
+              <tr key={c.id} className="row-link-host">
                 <td>
-                  <strong>{c.name}</strong>
+                  <Link
+                    href={`/admin/classes/${c.id}/edit`}
+                    className="row-link-stretch"
+                    style={{ fontWeight: 900, color: "var(--text)" }}
+                  >
+                    {c.name}
+                  </Link>
                 </td>
                 <td className="muted">{c.sport ?? "-"}</td>
                 <td className="muted">{c.level ?? "-"}</td>

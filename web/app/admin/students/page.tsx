@@ -116,10 +116,14 @@ export default async function StudentsPage({
             </thead>
             <tbody>
               {list.map((s) => (
-                <tr key={s.id} className={s.id === selectedId ? "selected" : ""}>
+                <tr
+                  key={s.id}
+                  className={`row-link-host ${s.id === selectedId ? "selected" : ""}`}
+                >
                   <td>
                     <Link
                       href={`/admin/students?student=${s.id}`}
+                      className="row-link-stretch"
                       style={{ fontWeight: 900, color: "var(--text)" }}
                     >
                       {s.name}
