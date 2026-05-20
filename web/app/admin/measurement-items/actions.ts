@@ -25,28 +25,50 @@ function readForm(formData: FormData) {
   return row;
 }
 
-// 폼에 함께 들어온 icon_file 을 Storage 에 올리고 icon_url 을 갱신
-async function uploadIconIfPresent(
+// 폼에 staged 된 아이콘 변경(파일 첨부 / 삭제 / 복귀) 일괄 적용.
+// 폼 내부에선 즉시 DB 안 건드리고 hidden field 로 stage → 여기서 [저장] 시 한 번에.
+async function applyIconChanges(
   supabase: Awaited<ReturnType<typeof requireCenter>>["supabase"],
   itemId: string,
   formData: FormData,
 ) {
   const file = formData.get("icon_file");
-  if (!(file instanceof File) || file.size === 0) return;
-  const ext = (file.name.split(".").pop() || "png").toLowerCase();
-  const path = `${itemId}/${Date.now()}.${ext}`;
-  const { error: upErr } = await supabase.storage
-    .from("measurement-item-icons")
-    .upload(path, file, { upsert: true, contentType: file.type });
-  if (upErr) return;
-  const { data: pub } = supabase.storage
-    .from("measurement-item-icons")
-    .getPublicUrl(path);
-  // 업로드 = 아이콘 다시 보이게 (icon_hidden=false 로 복귀)
-  await supabase
-    .from("measurement_items")
-    .update({ icon_url: pub.publicUrl, icon_hidden: false })
-    .eq("id", itemId);
+  const action = String(formData.get("icon_action") ?? "");
+  const hasNewFile = file instanceof File && file.size > 0;
+
+  if (hasNewFile) {
+    // 파일 첨부가 다른 staged action 보다 우선 — 업로드 + 보이게
+    const f = file as File;
+    const ext = (f.name.split(".").pop() || "png").toLowerCase();
+    const path = `${itemId}/${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("measurement-item-icons")
+      .upload(path, f, { upsert: true, contentType: f.type });
+    if (upErr) return;
+    const { data: pub } = supabase.storage
+      .from("measurement-item-icons")
+      .getPublicUrl(path);
+    await supabase
+      .from("measurement_items")
+      .update({ icon_url: pub.publicUrl, icon_hidden: false })
+      .eq("id", itemId);
+    return;
+  }
+  if (action === "remove") {
+    await supabase
+      .from("measurement_items")
+      .update({ icon_url: null, icon_hidden: true })
+      .eq("id", itemId);
+    return;
+  }
+  if (action === "restore") {
+    await supabase
+      .from("measurement_items")
+      .update({ icon_hidden: false })
+      .eq("id", itemId);
+    return;
+  }
+  // 변경 없음 → no-op
 }
 
 export async function createItem(formData: FormData) {
@@ -60,7 +82,7 @@ export async function createItem(formData: FormData) {
     .single();
   if (error) throw new Error("등록 실패: " + error.message);
 
-  if (created?.id) await uploadIconIfPresent(supabase, created.id, formData);
+  if (created?.id) await applyIconChanges(supabase, created.id, formData);
 
   revalidatePath("/admin/measurement-items");
   redirect("/admin/measurement-items");
@@ -76,7 +98,7 @@ export async function updateItem(id: string, formData: FormData) {
     .eq("id", id);
   if (error) throw new Error("수정 실패: " + error.message);
 
-  await uploadIconIfPresent(supabase, id, formData);
+  await applyIconChanges(supabase, id, formData);
 
   revalidatePath("/admin/measurement-items");
   redirect("/admin/measurement-items");

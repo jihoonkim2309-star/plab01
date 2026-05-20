@@ -56,6 +56,43 @@ async function denormalize(
   return out;
 }
 
+// 폼에 staged 된 사진 변경(파일 첨부 / 삭제) 일괄 적용. [저장] 시점에만 호출.
+async function applyPhotoChanges(
+  supabase: Awaited<ReturnType<typeof requireCenter>>["supabase"],
+  studentId: string,
+  formData: FormData,
+) {
+  const file = formData.get("photo_file");
+  const action = String(formData.get("photo_action") ?? "");
+  const hasNewFile = file instanceof File && file.size > 0;
+
+  if (hasNewFile) {
+    const f = file as File;
+    const ext = (f.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${studentId}/${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("student-photos")
+      .upload(path, f, { upsert: true, contentType: f.type });
+    if (upErr) return;
+    const { data: pub } = supabase.storage
+      .from("student-photos")
+      .getPublicUrl(path);
+    await supabase
+      .from("students")
+      .update({ photo_url: pub.publicUrl })
+      .eq("id", studentId);
+    return;
+  }
+  if (action === "remove") {
+    await supabase
+      .from("students")
+      .update({ photo_url: null })
+      .eq("id", studentId);
+    return;
+  }
+  // 변경 없음 → no-op
+}
+
 export async function createStudent(formData: FormData) {
   const { supabase, centerId } = await requireCenter();
   const row = await denormalize(supabase, readForm(formData));
@@ -68,24 +105,7 @@ export async function createStudent(formData: FormData) {
     .single();
   if (error) throw new Error("등록 실패: " + error.message);
 
-  // 신규 등록 시 사진이 함께 들어왔다면 학생 id 확보 후 업로드 (실패해도 학생 생성은 유지).
-  const photo = formData.get("photo");
-  if (photo instanceof File && photo.size > 0 && created?.id) {
-    const ext = (photo.name.split(".").pop() || "jpg").toLowerCase();
-    const path = `${created.id}/${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage
-      .from("student-photos")
-      .upload(path, photo, { upsert: true, contentType: photo.type });
-    if (!upErr) {
-      const { data: pub } = supabase.storage
-        .from("student-photos")
-        .getPublicUrl(path);
-      await supabase
-        .from("students")
-        .update({ photo_url: pub.publicUrl })
-        .eq("id", created.id);
-    }
-  }
+  if (created?.id) await applyPhotoChanges(supabase, created.id, formData);
 
   revalidatePath("/admin/students");
   redirect("/admin/students");
@@ -98,6 +118,8 @@ export async function updateStudent(id: string, formData: FormData) {
 
   const { error } = await supabase.from("students").update(row).eq("id", id);
   if (error) throw new Error("수정 실패: " + error.message);
+
+  await applyPhotoChanges(supabase, id, formData);
 
   revalidatePath("/admin/students");
   revalidatePath(`/admin/students/${id}`);
