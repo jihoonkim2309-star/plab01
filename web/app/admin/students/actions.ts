@@ -128,6 +128,7 @@ export async function uploadStudentPhoto(id: string, formData: FormData) {
   if (error) return { ok: false, error: "저장 실패: " + error.message };
 
   revalidatePath(`/admin/students/${id}/edit`);
+  revalidatePath(`/admin/students/${id}`);
   revalidatePath("/admin/students");
   return { ok: true, url: pub.publicUrl };
 }
