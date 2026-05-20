@@ -13,19 +13,21 @@ export default function CheckRowToggle({
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const root = ref.current;
+    const root: HTMLDivElement | null = ref.current;
     if (!root) return;
+    const host: HTMLDivElement = root;
 
     function onClick(e: MouseEvent) {
       const target = e.target as Element | null;
       if (!target) return;
-      // 인터랙티브 요소 클릭은 스킵
       if (
-        target.closest("input, button, a, label, select, textarea, .btn, .no-row-toggle")
+        target.closest(
+          "input, button, a, label, select, textarea, .btn, .no-row-toggle",
+        )
       )
         return;
       const tr = target.closest("tr");
-      if (!tr || !root.contains(tr)) return;
+      if (!tr || !host.contains(tr)) return;
       const cb = tr.querySelector<HTMLInputElement>(
         'input[type="checkbox"][name="ids"]',
       );
@@ -34,8 +36,8 @@ export default function CheckRowToggle({
       cb.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    root.addEventListener("click", onClick);
-    return () => root.removeEventListener("click", onClick);
+    host.addEventListener("click", onClick);
+    return () => host.removeEventListener("click", onClick);
   }, []);
 
   return (
