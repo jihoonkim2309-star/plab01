@@ -42,9 +42,10 @@ async function uploadIconIfPresent(
   const { data: pub } = supabase.storage
     .from("measurement-item-icons")
     .getPublicUrl(path);
+  // 업로드 = 아이콘 다시 보이게 (icon_hidden=false 로 복귀)
   await supabase
     .from("measurement_items")
-    .update({ icon_url: pub.publicUrl })
+    .update({ icon_url: pub.publicUrl, icon_hidden: false })
     .eq("id", itemId);
 }
 
@@ -81,13 +82,26 @@ export async function updateItem(id: string, formData: FormData) {
   redirect("/admin/measurement-items");
 }
 
+// 아이콘 완전 숨기기: 업로드본 제거 + 기본 SVG 매핑도 가리도록 icon_hidden=true.
+// 다시 업로드하면 icon_hidden=false 로 자동 복귀.
 export async function removeItemIcon(id: string) {
   const { supabase } = await requireCenter();
   const { error } = await supabase
     .from("measurement_items")
-    .update({ icon_url: null })
+    .update({ icon_url: null, icon_hidden: true })
     .eq("id", id);
   if (error) throw new Error("아이콘 제거 실패: " + error.message);
+  revalidatePath("/admin/measurement-items");
+}
+
+// 명시적 "기본 아이콘으로 복귀" (icon_hidden=false, icon_url 유지).
+export async function restoreItemIcon(id: string) {
+  const { supabase } = await requireCenter();
+  const { error } = await supabase
+    .from("measurement_items")
+    .update({ icon_hidden: false })
+    .eq("id", id);
+  if (error) throw new Error("기본 아이콘 복귀 실패: " + error.message);
   revalidatePath("/admin/measurement-items");
 }
 

@@ -528,6 +528,7 @@ create table if not exists public.measurement_items (
 -- 기존 행 보강 (재실행 안전)
 alter table public.measurement_items add column if not exists icon text;
 alter table public.measurement_items add column if not exists icon_url text;  -- 업로드한 SVG/이미지 공개 URL
+alter table public.measurement_items add column if not exists icon_hidden boolean not null default false;  -- true 면 업로드/SVG 매핑 둘 다 안 그림 (어드민이 명시적으로 아이콘 안 보이게)
 
 -- 측정 항목 아이콘 업로드 버킷 (공개 읽기, 인증 사용자가 쓰기)
 insert into storage.buckets (id, name, public)

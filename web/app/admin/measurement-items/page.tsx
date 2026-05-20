@@ -18,7 +18,7 @@ export default async function MeasurementItemsPage() {
   const { data, error } = await supabase
     .from("measurement_items")
     .select(
-      "id, category, name, unit, value_kind, sort_order, active, icon, icon_url",
+      "id, category, name, unit, value_kind, sort_order, active, icon, icon_url, icon_hidden",
     )
     .order("sort_order", { ascending: true });
   const list = data ?? [];
@@ -113,6 +113,7 @@ export default async function MeasurementItemsPage() {
                     category={i.category}
                     fallback={i.icon ?? null}
                     iconUrl={i.icon_url ?? null}
+                    iconHidden={i.icon_hidden ?? false}
                   />
                 </td>
                 <td>

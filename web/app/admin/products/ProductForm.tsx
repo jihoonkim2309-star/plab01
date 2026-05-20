@@ -1,22 +1,57 @@
+import Link from "next/link";
+import ConfirmButton from "../ConfirmButton";
+
 type P = Record<string, string | number | boolean | null> | null;
 
 export default function ProductForm({
   product,
   action,
+  title,
   submitLabel,
   cancelHref,
+  deleteAction,
+  deleteMessage,
 }: {
   product?: P;
   action: (formData: FormData) => void;
+  title: string;
   submitLabel: string;
   cancelHref: string;
+  deleteAction?: (formData: FormData) => void;
+  deleteMessage?: string;
 }) {
   const p = product ?? {};
   const v = (k: string) => (p[k] == null ? "" : String(p[k]));
   const active = p.active === undefined ? true : !!p.active;
+  const isEdit = !!p.id;
 
   return (
     <form action={action}>
+      <div className="page-head">
+        <div>
+          <h1>{title}</h1>
+        </div>
+        <div className="toolbar">
+          {isEdit && deleteAction && (
+            <ConfirmButton
+              message={deleteMessage ?? "이 상품을 삭제할까요?"}
+              className="btn danger"
+              type="submit"
+              formAction={deleteAction}
+              formNoValidate
+            >
+              삭제
+            </ConfirmButton>
+          )}
+          <Link className="btn" href={cancelHref}>
+            취소
+          </Link>
+          <button type="submit" className="btn primary">
+            {submitLabel}
+          </button>
+        </div>
+      </div>
+
       <div className="panel">
         <div className="panel-head">
           <p className="panel-title">상품 정보</p>
@@ -83,15 +118,6 @@ export default function ProductForm({
                 활성 (학생 등록 드롭다운에 노출)
               </label>
             </div>
-          </div>
-
-          <div className="detail-actions">
-            <a className="btn" href={cancelHref}>
-              취소
-            </a>
-            <button type="submit" className="btn primary">
-              {submitLabel}
-            </button>
           </div>
         </div>
       </div>

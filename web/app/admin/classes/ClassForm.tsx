@@ -1,3 +1,6 @@
+import Link from "next/link";
+import ConfirmButton from "../ConfirmButton";
+
 type ClassRow = Record<string, string | number | null> | null;
 
 const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
@@ -6,21 +9,53 @@ export default function ClassForm({
   cls,
   coaches,
   action,
+  title,
   submitLabel,
   cancelHref,
+  deleteAction,
+  deleteMessage,
 }: {
   cls?: ClassRow;
   coaches: { id: string; name: string | null }[];
   action: (formData: FormData) => void;
+  title: string;
   submitLabel: string;
   cancelHref: string;
+  deleteAction?: (formData: FormData) => void;
+  deleteMessage?: string;
 }) {
   const c = cls ?? {};
   const v = (k: string) => (c[k] == null ? "" : String(c[k]));
   const selectedDays = v("days_of_week").split(",").filter(Boolean);
+  const isEdit = !!c.id;
 
   return (
     <form action={action}>
+      <div className="page-head">
+        <div>
+          <h1>{title}</h1>
+        </div>
+        <div className="toolbar">
+          {isEdit && deleteAction && (
+            <ConfirmButton
+              message={deleteMessage ?? "이 클래스를 삭제할까요?"}
+              className="btn danger"
+              type="submit"
+              formAction={deleteAction}
+              formNoValidate
+            >
+              삭제
+            </ConfirmButton>
+          )}
+          <Link className="btn" href={cancelHref}>
+            취소
+          </Link>
+          <button type="submit" className="btn primary">
+            {submitLabel}
+          </button>
+        </div>
+      </div>
+
       <div className="panel">
         <div className="panel-head">
           <p className="panel-title">클래스 정보</p>
@@ -130,15 +165,6 @@ export default function ClassForm({
                 ))}
               </div>
             </div>
-          </div>
-
-          <div className="detail-actions">
-            <a className="btn" href={cancelHref}>
-              취소
-            </a>
-            <button type="submit" className="btn primary">
-              {submitLabel}
-            </button>
           </div>
         </div>
       </div>

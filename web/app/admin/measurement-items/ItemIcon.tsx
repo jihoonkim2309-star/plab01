@@ -22,14 +22,18 @@ export default function ItemIcon({
   category,
   fallback,
   iconUrl,
+  iconHidden = false,
   size = 32,
 }: {
   name: string;
   category: string;
   fallback: string | null;
   iconUrl: string | null;
+  iconHidden?: boolean;
   size?: number;
 }) {
+  // 어드민이 명시적으로 가린 항목 → 아이콘 없음
+  if (iconHidden) return <span className="muted">-</span>;
   // 1순위: 업로드한 파일
   if (iconUrl) {
     return (

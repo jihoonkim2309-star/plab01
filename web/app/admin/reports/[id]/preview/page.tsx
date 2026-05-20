@@ -253,22 +253,24 @@ export default async function ReportPreviewPage({
                     return (
                       <tr key={it.name}>
                         <td className="cell-label">
-                          <span className="icon-badge">
-                            {it.iconUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={it.iconUrl}
-                                alt=""
-                                style={{
-                                  width: 22,
-                                  height: 22,
-                                  objectFit: "contain",
-                                }}
-                              />
-                            ) : iconId ? (
-                              <svg width="20" height="20" viewBox="0 0 28 28"><use href={`#${iconId}`} /></svg>
-                            ) : null}
-                          </span>
+                          {!it.iconHidden && (
+                            <span className="icon-badge">
+                              {it.iconUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={it.iconUrl}
+                                  alt=""
+                                  style={{
+                                    width: 22,
+                                    height: 22,
+                                    objectFit: "contain",
+                                  }}
+                                />
+                              ) : iconId ? (
+                                <svg width="20" height="20" viewBox="0 0 28 28"><use href={`#${iconId}`} /></svg>
+                              ) : null}
+                            </span>
+                          )}
                           {it.name} {it.unit ? `(${it.unit})` : ""}
                         </td>
                         <Cell v={it.values[0]} />
@@ -473,19 +475,21 @@ function SmallSection({
             return (
               <tr key={it.name}>
                 <td className="cell-label">
-                  {it.iconUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={it.iconUrl}
-                      alt=""
-                      className={cls}
-                      style={{ width: w, height: h, objectFit: "contain" }}
-                    />
-                  ) : iconId ? (
-                    <svg width={w} height={h} viewBox={vb} className={cls}>
-                      <use href={`#${iconId}`} />
-                    </svg>
-                  ) : null}
+                  {!it.iconHidden && (
+                    it.iconUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={it.iconUrl}
+                        alt=""
+                        className={cls}
+                        style={{ width: w, height: h, objectFit: "contain" }}
+                      />
+                    ) : iconId ? (
+                      <svg width={w} height={h} viewBox={vb} className={cls}>
+                        <use href={`#${iconId}`} />
+                      </svg>
+                    ) : null
+                  )}
                   {it.name}
                 </td>
                 <Cell v={it.values[0]} />
