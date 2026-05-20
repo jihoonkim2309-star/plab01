@@ -1,3 +1,5 @@
+import FilePicker from "../FilePicker";
+import ConfirmButton from "../ConfirmButton";
 import { removeItemIcon } from "./actions";
 
 type Item = {
@@ -122,15 +124,16 @@ export default function ItemForm({
               없음
             </div>
           )}
-          <input
+          <FilePicker
             name="icon_file"
-            type="file"
             accept="image/svg+xml,image/png,image/jpeg,image/webp"
+            label={iconUrl ? "아이콘 변경" : "아이콘 첨부"}
+            changedLabel="다른 파일 선택"
           />
         </div>
         <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
-          권장: 정사각형 64×64 이상의 SVG (또는 투명 PNG). 새 파일을 선택하면
-          기존 아이콘을 덮어씁니다.
+          권장: 정사각형 64×64 이상의 SVG(또는 투명 PNG). 신체 카테고리는 녹색
+          배지 위에 표시되니 어두운 외곽선 SVG가 잘 보입니다.
         </div>
       </div>
 
@@ -154,14 +157,15 @@ export default function ItemForm({
 
       {item?.id && iconUrl && (
         <div className="span-2">
-          <button
+          <ConfirmButton
+            message="이 아이콘을 삭제할까요?"
             className="btn"
             type="submit"
             formAction={removeItemIcon.bind(null, item.id)}
             formNoValidate
           >
             아이콘 삭제
-          </button>
+          </ConfirmButton>
         </div>
       )}
     </form>

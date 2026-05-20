@@ -5,6 +5,7 @@ import {
   setInquiryStatus,
   deleteInquiry,
 } from "./actions";
+import ConfirmButton from "../ConfirmButton";
 
 const SB: Record<string, string> = {
   접수: "orange",
@@ -257,9 +258,14 @@ export default async function SupportPage({
                       </form>
                     ))}
                     <form action={deleteInquiry.bind(null, selected.id)}>
-                      <button className="btn danger" style={{ width: "100%" }}>
+                      <ConfirmButton
+                        message={`'${selected.subject}' 문의를 삭제할까요? 메시지 이력도 함께 사라집니다.`}
+                        className="btn danger"
+                        style={{ width: "100%" }}
+                        type="submit"
+                      >
                         삭제
-                      </button>
+                      </ConfirmButton>
                     </form>
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { deleteStudent } from "../actions";
+import ConfirmButton from "../../ConfirmButton";
 
 const BASIC: [string, string][] = [
   ["성별", "gender"],
@@ -80,7 +81,13 @@ export default async function StudentDetailPage({
             수정
           </Link>
           <form action={deleteStudent.bind(null, id)}>
-            <button className="btn danger">삭제</button>
+            <ConfirmButton
+              message={`'${s.name ?? "학생"}'을(를) 삭제할까요? 되돌릴 수 없습니다.`}
+              className="btn danger"
+              type="submit"
+            >
+              삭제
+            </ConfirmButton>
           </form>
         </div>
       </div>

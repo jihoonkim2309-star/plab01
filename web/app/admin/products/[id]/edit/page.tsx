@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ProductForm from "../../ProductForm";
 import { updateProduct, deleteProduct } from "../../actions";
+import ConfirmButton from "../../../ConfirmButton";
 
 export default async function EditProductPage({
   params,
@@ -32,7 +33,13 @@ export default async function EditProductPage({
         </div>
         <div className="toolbar">
           <form action={deleteProduct.bind(null, id)}>
-            <button className="btn danger">삭제</button>
+            <ConfirmButton
+              message={`'${p.name ?? "상품"}'을(를) 삭제할까요? 연결된 수강·청구 데이터에 영향을 줄 수 있습니다.`}
+              className="btn danger"
+              type="submit"
+            >
+              삭제
+            </ConfirmButton>
           </form>
         </div>
       </div>

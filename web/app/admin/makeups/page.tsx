@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createMakeup, setMakeupStatus, deleteMakeup } from "./actions";
+import ConfirmButton from "../ConfirmButton";
 
 type M = {
   id: string;
@@ -81,12 +82,14 @@ export default async function MakeupsPage() {
                         </form>
                       )}
                       <form action={deleteMakeup.bind(null, m.id)}>
-                        <button
+                        <ConfirmButton
+                          message="이 보강 일정을 삭제할까요?"
                           className="btn danger"
                           style={{ minHeight: 30, padding: "4px 10px" }}
+                          type="submit"
                         >
                           삭제
-                        </button>
+                        </ConfirmButton>
                       </form>
                     </div>
                   </td>

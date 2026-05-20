@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createHoliday, deleteHoliday } from "./actions";
+import ConfirmButton from "../ConfirmButton";
 
 type H = {
   id: string;
@@ -66,12 +67,14 @@ export default async function HolidaysPage() {
                   </td>
                   <td>
                     <form action={deleteHoliday.bind(null, h.id)}>
-                      <button
+                      <ConfirmButton
+                        message={`${h.holiday_date} 휴강을 삭제할까요?`}
                         className="btn danger"
                         style={{ minHeight: 30, padding: "4px 10px" }}
+                        type="submit"
                       >
                         삭제
-                      </button>
+                      </ConfirmButton>
                     </form>
                   </td>
                 </tr>

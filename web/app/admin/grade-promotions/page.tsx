@@ -6,6 +6,7 @@ import {
   updatePromotionDetail,
   deleteGradePromotion,
 } from "./actions";
+import ConfirmButton from "../ConfirmButton";
 
 type GP = {
   id: string;
@@ -251,9 +252,14 @@ export default async function GradePromotionsPage({
                     <form
                       action={deleteGradePromotion.bind(null, selected.id)}
                     >
-                      <button className="btn danger" style={{ width: "100%" }}>
+                      <ConfirmButton
+                        message="이 진학 승급 건을 삭제할까요?"
+                        className="btn danger"
+                        style={{ width: "100%" }}
+                        type="submit"
+                      >
                         삭제
-                      </button>
+                      </ConfirmButton>
                     </form>
                   </div>
                   {selected.processed_at && (

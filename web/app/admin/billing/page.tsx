@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCenterPg } from "@/lib/portone";
 import CheckRowToggle from "../CheckRowToggle";
+import ConfirmButton from "../ConfirmButton";
 import PayButton from "./PayButton";
 import { generateInvoices, bulkInvoiceStatus, deleteInvoice } from "./actions";
 
@@ -165,13 +166,15 @@ export default async function BillingPage({
                         channelKey={pg.channelKey}
                       />
                     )}
-                    <form action={deleteInvoice.bind(null, i.id, period)}>
-                      <button
+                    <form action={deleteInvoice.bind(null, i.id, period)} className="no-row-toggle">
+                      <ConfirmButton
+                        message={`'${i.students?.name ?? "학생"}'의 청구서를 삭제할까요?`}
                         className="btn danger"
                         style={{ minHeight: 30, padding: "4px 10px" }}
+                        type="submit"
                       >
                         삭제
-                      </button>
+                      </ConfirmButton>
                     </form>
                   </div>
                 </td>

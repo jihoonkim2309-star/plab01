@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import MonthNav from "../MonthNav";
+import ConfirmButton from "../ConfirmButton";
 import {
   deleteReport,
   generateReportsForMonth,
@@ -309,9 +310,13 @@ export default async function ReportsPage({
                   <form action={deleteReport}>
                     <input type="hidden" name="id" value={selected.id} />
                     <input type="hidden" name="ym" value={target} />
-                    <button className="btn" type="submit">
+                    <ConfirmButton
+                      message={`'${selected.students?.name ?? "학생"}'의 ${selected.report_month} 리포트를 삭제할까요?`}
+                      className="btn danger"
+                      type="submit"
+                    >
                       삭제
-                    </button>
+                    </ConfirmButton>
                   </form>
                 </div>
               </div>

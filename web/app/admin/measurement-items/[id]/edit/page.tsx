@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { deleteItem, updateItem } from "../../actions";
 import ItemForm from "../../ItemForm";
+import ConfirmButton from "../../../ConfirmButton";
 
 export default async function EditMeasurementItemPage({
   params,
@@ -32,9 +33,13 @@ export default async function EditMeasurementItemPage({
             목록
           </Link>
           <form action={remove}>
-            <button className="btn" type="submit">
+            <ConfirmButton
+              message={`'${item.name ?? "항목"}'을(를) 삭제할까요? 측정값이 함께 사라질 수 있습니다.`}
+              className="btn danger"
+              type="submit"
+            >
               삭제
-            </button>
+            </ConfirmButton>
           </form>
         </div>
       </div>

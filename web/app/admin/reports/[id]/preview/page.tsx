@@ -260,10 +260,9 @@ export default async function ReportPreviewPage({
                                 src={it.iconUrl}
                                 alt=""
                                 style={{
-                                  width: 20,
-                                  height: 20,
+                                  width: 22,
+                                  height: 22,
                                   objectFit: "contain",
-                                  filter: "brightness(0) invert(1)",
                                 }}
                               />
                             ) : iconId ? (

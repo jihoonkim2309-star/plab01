@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ClassForm from "../../ClassForm";
 import { updateClass, deleteClass } from "../../actions";
+import ConfirmButton from "../../../ConfirmButton";
 
 export default async function EditClassPage({
   params,
@@ -38,7 +39,13 @@ export default async function EditClassPage({
         </div>
         <div className="toolbar">
           <form action={deleteClass.bind(null, id)}>
-            <button className="btn danger">삭제</button>
+            <ConfirmButton
+              message={`'${c.name ?? "클래스"}'을(를) 삭제할까요? 연결된 수강 데이터에 영향을 줄 수 있습니다.`}
+              className="btn danger"
+              type="submit"
+            >
+              삭제
+            </ConfirmButton>
           </form>
         </div>
       </div>

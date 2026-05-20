@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import MonthNav from "../MonthNav";
+import ConfirmButton from "../ConfirmButton";
 import {
   approveMeasurement,
   deleteMeasurement,
@@ -389,9 +390,13 @@ export default async function MeasurementsPage({
                         <form action={deleteMeasurement}>
                           <input type="hidden" name="id" value={m.id} />
                           <input type="hidden" name="ym" value={target} />
-                          <button className="btn" type="submit">
+                          <ConfirmButton
+                            message={`'${selected.name}'의 ${target} 측정값을 삭제할까요? 입력값이 모두 사라집니다.`}
+                            className="btn danger"
+                            type="submit"
+                          >
                             삭제
-                          </button>
+                          </ConfirmButton>
                         </form>
                       )}
                     </div>

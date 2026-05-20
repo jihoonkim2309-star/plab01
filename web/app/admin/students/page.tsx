@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { deleteStudent } from "./actions";
+import ConfirmButton from "../ConfirmButton";
 
 const STATUS_BADGE: Record<string, string> = {
   활성: "green",
@@ -173,7 +174,13 @@ export default async function StudentsPage({
                   수정
                 </Link>
                 <form action={deleteStudent.bind(null, selected.id)}>
-                  <button className="btn danger">삭제</button>
+                  <ConfirmButton
+                    message={`'${selected.name ?? "학생"}'을(를) 삭제할까요? 되돌릴 수 없습니다.`}
+                    className="btn danger"
+                    type="submit"
+                  >
+                    삭제
+                  </ConfirmButton>
                 </form>
               </div>
             )}
