@@ -48,7 +48,6 @@ export default function MonthNav({
         title={isToday ? "오늘" : "이번달로 이동"}
       >
         {label}
-        {!isToday && <span className="month-nav-today-hint">오늘</span>}
       </Link>
       <Link className="month-nav-arrow" href={url(nextYm)} aria-label="다음달">
         ›
