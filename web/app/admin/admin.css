@@ -478,7 +478,7 @@
 
 .student-form-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.55fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.55fr);
   gap: 14px;
   align-items: start;
   margin-top: 16px;
@@ -986,9 +986,10 @@
   .member-layout,
   .approval-layout,
   .member-summary,
-  .student-form-layout,
   .three-col,
   .two-col { grid-template-columns: 1fr 1fr; }
+  /* 학생 폼은 5:5 균분 대신 풀스택 — 메인 패널이 좁아져 폼 그리드 2콜이 겹쳐 보이는 문제 해결 */
+  .student-form-layout { grid-template-columns: 1fr; }
   .workspace-strip { align-items: flex-start; flex-direction: column; }
   .approval-actions { align-items: stretch; flex-direction: column; }
   .approval-actions .filters { width: 100%; }
