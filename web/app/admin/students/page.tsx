@@ -33,27 +33,23 @@ export default async function StudentsPage({
   const { student: selectedId } = await searchParams;
   const supabase = await createClient();
 
-  const { data: students, error } = await supabase
-    .from("students")
-    .select(
-      "id, name, gender, school, grade, status, class_name, shuttle_use, photo_url",
-    )
-    .order("created_at", { ascending: false });
-
+  // 목록과 선택된 학생 상세를 병렬로 조회 (직렬 → 병렬, 왕복 시간 절반)
+  const [listRes, selectedRes] = await Promise.all([
+    supabase
+      .from("students")
+      .select(
+        "id, name, gender, school, grade, status, class_name, shuttle_use, photo_url",
+      )
+      .order("created_at", { ascending: false }),
+    selectedId
+      ? supabase.from("students").select("*").eq("id", selectedId).single()
+      : Promise.resolve({ data: null }),
+  ]);
+  const { data: students, error } = listRes;
   const list = students ?? [];
   const active = list.filter((s) => s.status === "활성").length;
   const shuttle = list.filter((s) => s.shuttle_use === "이용").length;
-
-  const selected =
-    selectedId && list.some((s) => s.id === selectedId)
-      ? (
-          await supabase
-            .from("students")
-            .select("*")
-            .eq("id", selectedId)
-            .single()
-        ).data
-      : null;
+  const selected = selectedRes.data;
 
   return (
     <>
