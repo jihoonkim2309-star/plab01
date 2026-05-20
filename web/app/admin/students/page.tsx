@@ -1,17 +1,12 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import {
-  deleteStudent,
-  bulkSetStudentStatus,
-  bulkDeleteStudents,
-} from "./actions";
+import { deleteStudent } from "./actions";
 import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import FilterSelect from "../FilterSelect";
 import SearchInput from "../SearchInput";
 import SortHeader from "../SortHeader";
-import CheckRowToggle from "../CheckRowToggle";
 
 const STATUS_BADGE: Record<string, string> = {
   활성: "green",
@@ -241,152 +236,109 @@ export default async function StudentsPage({
             </div>
           )}
 
-          <form>
-            <div
-              className="toolbar"
-              style={{
-                padding: "8px 16px",
-                gap: 6,
-                flexWrap: "wrap",
-                borderBottom: "1px solid var(--line)",
-              }}
-            >
-              <span className="muted" style={{ fontSize: 12 }}>
-                선택 일괄:
-              </span>
-              {["활성", "상담중", "대기", "휴면"].map((st) => (
-                <button
-                  key={st}
-                  className="btn"
-                  formAction={bulkSetStudentStatus}
-                  name="status"
-                  value={st}
-                  type="submit"
+          <table className="member-table">
+            <thead>
+              <tr>
+                <th>
+                  <SortHeader
+                    sortKey="name"
+                    label="이름"
+                    current={sort}
+                    dir={dir}
+                  />
+                </th>
+                <th>
+                  <SortHeader
+                    sortKey="school"
+                    label="학교/학년"
+                    current={sort}
+                    dir={dir}
+                  />
+                </th>
+                <th>
+                  <SortHeader
+                    sortKey="class_name"
+                    label="클래스"
+                    current={sort}
+                    dir={dir}
+                  />
+                </th>
+                <th>
+                  <SortHeader
+                    sortKey="shuttle_use"
+                    label="셔틀"
+                    current={sort}
+                    dir={dir}
+                  />
+                </th>
+                <th>
+                  <SortHeader
+                    sortKey="status"
+                    label="상태"
+                    current={sort}
+                    dir={dir}
+                  />
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((s) => (
+                <tr
+                  key={s.id}
+                  className={`row-link-host ${s.id === selectedId ? "selected" : ""}`}
                 >
-                  {st}으로
-                </button>
-              ))}
-              <div style={{ flex: 1 }} />
-              <ConfirmButton
-                message="선택한 학생들을 삭제할까요? 되돌릴 수 없습니다."
-                formAction={bulkDeleteStudents}
-                className="btn danger"
-                type="submit"
-              >
-                선택 삭제
-              </ConfirmButton>
-            </div>
-            <CheckRowToggle>
-              <table className="member-table">
-                <thead>
-                  <tr>
-                    <th className="check-cell"></th>
-                    <th>
-                      <SortHeader
-                        sortKey="name"
-                        label="이름"
-                        current={sort}
-                        dir={dir}
-                      />
-                    </th>
-                    <th>
-                      <SortHeader
-                        sortKey="school"
-                        label="학교/학년"
-                        current={sort}
-                        dir={dir}
-                      />
-                    </th>
-                    <th>
-                      <SortHeader
-                        sortKey="class_name"
-                        label="클래스"
-                        current={sort}
-                        dir={dir}
-                      />
-                    </th>
-                    <th>
-                      <SortHeader
-                        sortKey="shuttle_use"
-                        label="셔틀"
-                        current={sort}
-                        dir={dir}
-                      />
-                    </th>
-                    <th>
-                      <SortHeader
-                        sortKey="status"
-                        label="상태"
-                        current={sort}
-                        dir={dir}
-                      />
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {list.map((s) => (
-                    <tr
-                      key={s.id}
-                      className={`row-link-host ${s.id === selectedId ? "selected" : ""}`}
+                  <td>
+                    <Link
+                      href={`/admin/students?student=${s.id}`}
+                      className="row-link-stretch"
+                      style={{ fontWeight: 900, color: "var(--text)" }}
                     >
-                      <td className="check-cell">
-                        <input type="checkbox" name="ids" value={s.id} />
-                      </td>
-                      <td>
-                        <Link
-                          href={`/admin/students?student=${s.id}`}
-                          className="row-link-stretch"
-                          style={{ fontWeight: 900, color: "var(--text)" }}
-                        >
-                          {s.name}
-                        </Link>
-                      </td>
-                      <td className="muted">
-                        {[s.school, s.grade].filter(Boolean).join(" ") || "-"}
-                      </td>
-                      <td className="muted">
-                        {s.class_id && s.class_name ? (
-                          <Link
-                            href={`/admin/classes/${s.class_id}/edit`}
-                            className="no-row-toggle"
-                            style={{ color: "var(--text)" }}
-                          >
-                            {s.class_name}
-                          </Link>
-                        ) : (
-                          (s.class_name ?? "-")
-                        )}
-                      </td>
-                      <td>
-                        {s.shuttle_use === "이용" ? (
-                          <span className="badge green">이용</span>
-                        ) : (
-                          <span className="badge gray">미이용</span>
-                        )}
-                      </td>
-                      <td>
-                        <span
-                          className={`badge ${STATUS_BADGE[s.status] ?? "gray"}`}
-                        >
-                          {s.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {list.length === 0 && (
-                    <tr>
-                      <td colSpan={6}>
-                        <div className="empty-state">
-                          <strong>등록된 학생이 없습니다</strong>
-                          <p>우측 상단 “학생 등록”으로 첫 학생을 추가하세요.</p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </CheckRowToggle>
-          </form>
+                      {s.name}
+                    </Link>
+                  </td>
+                  <td className="muted">
+                    {[s.school, s.grade].filter(Boolean).join(" ") || "-"}
+                  </td>
+                  <td className="muted">
+                    {s.class_id && s.class_name ? (
+                      <Link
+                        href={`/admin/classes/${s.class_id}/edit`}
+                        style={{ color: "var(--text)" }}
+                      >
+                        {s.class_name}
+                      </Link>
+                    ) : (
+                      (s.class_name ?? "-")
+                    )}
+                  </td>
+                  <td>
+                    {s.shuttle_use === "이용" ? (
+                      <span className="badge green">이용</span>
+                    ) : (
+                      <span className="badge gray">미이용</span>
+                    )}
+                  </td>
+                  <td>
+                    <span
+                      className={`badge ${STATUS_BADGE[s.status] ?? "gray"}`}
+                    >
+                      {s.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {list.length === 0 && (
+                <tr>
+                  <td colSpan={5}>
+                    <div className="empty-state">
+                      <strong>등록된 학생이 없습니다</strong>
+                      <p>우측 상단 “학생 등록”으로 첫 학생을 추가하세요.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
         <div className="panel">
