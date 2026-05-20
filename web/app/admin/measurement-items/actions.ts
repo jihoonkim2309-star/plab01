@@ -116,6 +116,50 @@ export async function removeItemIcon(id: string) {
   revalidatePath("/admin/measurement-items");
 }
 
+// 같은 카테고리 안에서 sort_order 위/아래 이웃과 swap.
+// 카테고리 안에서 sort_order 가 unique 하다고 가정 (시드 10/20/30… 간격).
+async function swapWithNeighbor(id: string, direction: "up" | "down") {
+  const { supabase } = await requireCenter();
+  const { data: cur } = await supabase
+    .from("measurement_items")
+    .select("id, category, sort_order")
+    .eq("id", id)
+    .single();
+  if (!cur) return;
+  const q = supabase
+    .from("measurement_items")
+    .select("id, sort_order")
+    .eq("category", cur.category);
+  const { data: neighbor } =
+    direction === "up"
+      ? await q
+          .lt("sort_order", cur.sort_order)
+          .order("sort_order", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : await q
+          .gt("sort_order", cur.sort_order)
+          .order("sort_order", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+  if (!neighbor) return; // 경계 (위쪽/아래쪽 끝)
+  await supabase
+    .from("measurement_items")
+    .update({ sort_order: neighbor.sort_order })
+    .eq("id", cur.id);
+  await supabase
+    .from("measurement_items")
+    .update({ sort_order: cur.sort_order })
+    .eq("id", neighbor.id);
+  revalidatePath("/admin/measurement-items");
+}
+export async function moveItemUp(id: string) {
+  await swapWithNeighbor(id, "up");
+}
+export async function moveItemDown(id: string) {
+  await swapWithNeighbor(id, "down");
+}
+
 // 명시적 "기본 아이콘으로 복귀" (icon_hidden=false, icon_url 유지).
 export async function restoreItemIcon(id: string) {
   const { supabase } = await requireCenter();

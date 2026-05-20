@@ -397,6 +397,21 @@ export default async function ReportPreviewPage({
                     표준 평균 (50점 기준선)
                   </span>
                 </div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: "var(--neutral-text-secondary)",
+                    padding: "0 16px 10px",
+                    lineHeight: 1.55,
+                    textAlign: "center",
+                  }}
+                >
+                  파워 = 제자리 멀리뛰기 + 수직 점프 평균 · 스피드 = 20m
+                  달리기 + 반응속도 · 민첩성 = 스텝 테스트 + 반응속도 + 20m
+                  달리기 · 균형성 = 골격근량 + 수직 점프 · 협응성 = 라켓
+                  컨트롤 + 정확도 + 스텝 테스트. 각 항목을 0–100 점으로
+                  정규화한 후 평균.
+                </div>
               </div>
             </section>
           )}

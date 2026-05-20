@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { seedItems } from "./actions";
+import { seedItems, moveItemUp, moveItemDown } from "./actions";
 import ItemIcon, { IconLibrary } from "./ItemIcon";
 
 const CAT_BADGE: Record<string, string> = {
@@ -13,18 +13,39 @@ const CAT_BADGE: Record<string, string> = {
   밸런스: "gray",
 };
 
-export default async function MeasurementItemsPage() {
+export default async function MeasurementItemsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ showInactive?: string }>;
+}) {
+  const { showInactive } = await searchParams;
+  const includeInactive = showInactive === "1";
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let q = supabase
     .from("measurement_items")
     .select(
       "id, category, name, unit, value_kind, sort_order, active, icon, icon_url, icon_hidden",
     )
     .order("sort_order", { ascending: true });
+  if (!includeInactive) q = q.eq("active", true);
+  const { data, error } = await q;
   const list = data ?? [];
 
   const byCat = (c: string) =>
     list.filter((i) => i.category === c && i.active).length;
+
+  // 같은 카테고리 안에서 첫/마지막 항목 표시 (위/아래 버튼 비활성 판정용).
+  // 비활성 포함 모드에선 active 와 무관하게 정렬 그대로.
+  const groupSiblings = new Map<string, { first: string; last: string }>();
+  for (const cat of new Set(list.map((i) => i.category))) {
+    const inCat = list.filter((i) => i.category === cat);
+    if (inCat.length) {
+      groupSiblings.set(cat, {
+        first: inCat[0].id,
+        last: inCat[inCat.length - 1].id,
+      });
+    }
+  }
 
   return (
     <>
@@ -37,7 +58,17 @@ export default async function MeasurementItemsPage() {
           </p>
         </div>
         <div className="toolbar">
-          {list.length === 0 && (
+          <Link
+            className={`btn${includeInactive ? " toggle-active" : ""}`}
+            href={
+              includeInactive
+                ? "/admin/measurement-items"
+                : "/admin/measurement-items?showInactive=1"
+            }
+          >
+            비활성 포함
+          </Link>
+          {list.length === 0 && !includeInactive && (
             <form action={seedItems}>
               <button className="btn" type="submit">
                 프로토타입 항목 시드
@@ -106,7 +137,7 @@ export default async function MeasurementItemsPage() {
                     {i.category}
                   </span>
                 </td>
-                <td style={{ textAlign: "center" }}>
+                <td>
                   <ItemIcon
                     name={i.name}
                     category={i.category}
@@ -134,13 +165,44 @@ export default async function MeasurementItemsPage() {
                   )}
                 </td>
                 <td>
-                  <Link
-                    className="btn"
-                    style={{ minHeight: 30, padding: "4px 10px" }}
-                    href={`/admin/measurement-items/${i.id}/edit`}
+                  <div
+                    style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}
+                    className="no-row-toggle"
                   >
-                    수정
-                  </Link>
+                    <form action={moveItemUp.bind(null, i.id)}>
+                      <button
+                        type="submit"
+                        className="btn"
+                        style={{ minHeight: 30, padding: "4px 8px" }}
+                        disabled={
+                          groupSiblings.get(i.category)?.first === i.id
+                        }
+                        title="위로 이동 (같은 카테고리 내)"
+                      >
+                        ↑
+                      </button>
+                    </form>
+                    <form action={moveItemDown.bind(null, i.id)}>
+                      <button
+                        type="submit"
+                        className="btn"
+                        style={{ minHeight: 30, padding: "4px 8px" }}
+                        disabled={
+                          groupSiblings.get(i.category)?.last === i.id
+                        }
+                        title="아래로 이동 (같은 카테고리 내)"
+                      >
+                        ↓
+                      </button>
+                    </form>
+                    <Link
+                      className="btn"
+                      style={{ minHeight: 30, padding: "4px 10px" }}
+                      href={`/admin/measurement-items/${i.id}/edit`}
+                    >
+                      수정
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}
