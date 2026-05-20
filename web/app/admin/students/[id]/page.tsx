@@ -11,6 +11,9 @@ const BASIC: [string, string][] = [
   ["학년", "grade"],
   ["주 종목", "sport"],
   ["레벨", "level"],
+  ["학생 연락처", "phone"],
+  ["주소", "address"],
+  ["등록일", "created_at"],
 ];
 
 const ENROLL: [string, string][] = [
@@ -27,6 +30,15 @@ const STATUS_BADGE: Record<string, string> = {
   휴면: "gray",
 };
 
+function fmtFieldValue(key: string, val: unknown): string {
+  if (val == null || val === "") return "-";
+  if (key === "created_at" || key === "updated_at") {
+    const s = String(val);
+    return s.length >= 10 ? s.slice(0, 10) : s;
+  }
+  return String(val);
+}
+
 export default async function StudentDetailPage({
   params,
 }: {
@@ -34,13 +46,25 @@ export default async function StudentDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: s } = await supabase
-    .from("students")
-    .select("*")
-    .eq("id", id)
-    .single();
-
+  const [studentRes, linkedRes] = await Promise.all([
+    supabase.from("students").select("*").eq("id", id).single(),
+    supabase
+      .from("parent_student_links")
+      .select("status, parent:users(id, name, email, phone)")
+      .eq("student_id", id),
+  ]);
+  const s = studentRes.data;
   if (!s) notFound();
+
+  const linkedParents = (linkedRes.data ?? []) as unknown as {
+    status: string;
+    parent: {
+      id: string;
+      name: string | null;
+      email: string | null;
+      phone: string | null;
+    } | null;
+  }[];
 
   const InfoBlock = ({
     title,
@@ -55,7 +79,7 @@ export default async function StudentDetailPage({
         {rows.map(([label, key]) => (
           <div className="info-row" key={key}>
             <span>{label}</span>
-            <strong>{s[key] ?? "-"}</strong>
+            <strong>{fmtFieldValue(key, s[key])}</strong>
           </div>
         ))}
       </div>
@@ -123,6 +147,67 @@ export default async function StudentDetailPage({
             </div>
             <InfoBlock title="기본 정보" rows={BASIC} />
             <InfoBlock title="수강 / 셔틀" rows={ENROLL} />
+
+            <div className="detail-block">
+              <p className="detail-title">보호자 연락처 (어드민 입력)</p>
+              <div className="info-list">
+                <div className="info-row">
+                  <span>보호자 1</span>
+                  <strong>
+                    {s.parent1_name || s.parent1_phone
+                      ? `${s.parent1_name ?? ""} ${s.parent1_phone ?? ""}`.trim()
+                      : "-"}
+                  </strong>
+                </div>
+                <div className="info-row">
+                  <span>보호자 2</span>
+                  <strong>
+                    {s.parent2_name || s.parent2_phone
+                      ? `${s.parent2_name ?? ""} ${s.parent2_phone ?? ""}`.trim()
+                      : "-"}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="detail-block">
+              <p className="detail-title">
+                연결된 학부모 계정{" "}
+                <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                  (포털 가입 + 승인됨)
+                </span>
+              </p>
+              {linkedParents.length === 0 ? (
+                <div className="muted" style={{ fontSize: 13 }}>
+                  아직 연결된 학부모 계정 없음
+                </div>
+              ) : (
+                <div className="info-list">
+                  {linkedParents.map((lp, i) => (
+                    <div className="info-row" key={lp.parent?.id ?? i}>
+                      <span>
+                        {lp.parent?.name ?? "(이름없음)"}
+                        <span
+                          className={`badge ${lp.status === "linked" ? "green" : lp.status === "pending" ? "orange" : "gray"}`}
+                          style={{ marginLeft: 6 }}
+                        >
+                          {lp.status === "linked"
+                            ? "연결됨"
+                            : lp.status === "pending"
+                              ? "승인대기"
+                              : lp.status}
+                        </span>
+                      </span>
+                      <strong>
+                        {[lp.parent?.phone, lp.parent?.email]
+                          .filter(Boolean)
+                          .join(" · ") || "-"}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

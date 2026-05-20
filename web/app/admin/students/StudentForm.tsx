@@ -160,8 +160,20 @@ export default function StudentForm({
                   options={GRADE_OPTIONS}
                   placeholder="미선택"
                 />
-                <Field label="학생 연락처" placeholder="선택 입력 (다음 슬라이스)" />
-                <Field label="주소" placeholder="도로명 주소 (다음 슬라이스)" span2 />
+                <Field
+                  label="학생 연락처"
+                  name="phone"
+                  value={s.phone}
+                  type="tel"
+                  placeholder="예: 010-1234-5678"
+                />
+                <Field
+                  label="주소"
+                  name="address"
+                  value={s.address}
+                  placeholder="도로명 주소"
+                  span2
+                />
                 <Select
                   label="주 종목"
                   name="sport"
@@ -180,7 +192,22 @@ export default function StudentForm({
                   value={s.status}
                   options={["활성", "상담중", "대기", "휴면"]}
                 />
-                <Field label="등록일" type="date" />
+                {s.created_at && (
+                  <div className="field">
+                    <label>등록일</label>
+                    <div
+                      className="muted"
+                      style={{
+                        padding: "9px 12px",
+                        background: "var(--bg)",
+                        border: "1px solid var(--line)",
+                        borderRadius: 8,
+                      }}
+                    >
+                      {(s.created_at as string).slice(0, 10)}
+                    </div>
+                  </div>
+                )}
                 <Textarea label="건강/주의사항" name="caution" value={s.caution} />
                 <Textarea label="관리 메모" name="memo" value={s.memo} />
               </div>
@@ -250,6 +277,48 @@ export default function StudentForm({
                 photoUrl={(s.photo_url as string) ?? null}
                 initial={(s.name as string)?.charAt(0) ?? "?"}
               />
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-head">
+              <p className="panel-title">보호자 연락처</p>
+              <span className="badge blue">참조용</span>
+            </div>
+            <div className="panel-body">
+              <div className="form-grid">
+                <Field
+                  label="보호자 1 이름"
+                  name="parent1_name"
+                  value={s.parent1_name}
+                  placeholder="예: 김순희 (모)"
+                />
+                <Field
+                  label="보호자 1 연락처"
+                  name="parent1_phone"
+                  value={s.parent1_phone}
+                  type="tel"
+                  placeholder="010-0000-0000"
+                />
+                <Field
+                  label="보호자 2 이름"
+                  name="parent2_name"
+                  value={s.parent2_name}
+                  placeholder="(선택)"
+                />
+                <Field
+                  label="보호자 2 연락처"
+                  name="parent2_phone"
+                  value={s.parent2_phone}
+                  type="tel"
+                  placeholder="(선택)"
+                />
+              </div>
+              <p className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+                어드민 입력용 참조 연락처. 학부모가 포털로 직접 가입하면
+                별도의 학부모 계정이 생성되며, 그 계정 정보는 "학부모 계정
+                관리" 에서 보입니다.
+              </p>
             </div>
           </div>
 

@@ -472,6 +472,18 @@ end $$;
 
 -- ---------- 13. 학생 사진 (Supabase Storage) --------------------------
 alter table public.students add column if not exists photo_url text;
+-- 학생 본인 연락처·주소
+alter table public.students add column if not exists phone   text;
+alter table public.students add column if not exists address text;
+-- 어드민이 등록 시 입력하는 보호자 연락처 (참조용)
+-- 학부모 본인이 포털로 가입하면 그 사람 정보는 users 테이블에 들어가고
+-- parent_student_links 로 학생과 연결됨 — 별개로 관리.
+alter table public.students add column if not exists parent1_name  text;
+alter table public.students add column if not exists parent1_phone text;
+alter table public.students add column if not exists parent2_name  text;
+alter table public.students add column if not exists parent2_phone text;
+-- users 에 phone (학부모·코치 등 모든 역할 공용)
+alter table public.users add column if not exists phone text;
 
 -- 공개 읽기 버킷 (식별용 사진). 재실행 안전.
 insert into storage.buckets (id, name, public)

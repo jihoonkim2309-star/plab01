@@ -20,6 +20,14 @@ const FIELDS = [
   "route",
   "caution",
   "memo",
+  // 신규 — 학생 본인 연락처·주소
+  "phone",
+  "address",
+  // 보호자 참조 연락처 (어드민 입력용; 포털 가입 학부모는 parent_student_links 로 별도 연결)
+  "parent1_name",
+  "parent1_phone",
+  "parent2_name",
+  "parent2_phone",
 ] as const;
 
 function readForm(formData: FormData) {
