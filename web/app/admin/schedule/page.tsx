@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import MonthNav from "../MonthNav";
 
 const KOR = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -72,15 +73,7 @@ export default async function SchedulePage({
           <p className="subtext">클래스 요일/시간 기반 · 휴강·보강 반영</p>
         </div>
         <div className="toolbar">
-          <Link className="btn" href={`/admin/schedule?ym=${shift(y, m, -1)}`}>
-            ← 이전달
-          </Link>
-          <span className="btn" style={{ pointerEvents: "none" }}>
-            {y}년 {m}월
-          </span>
-          <Link className="btn" href={`/admin/schedule?ym=${shift(y, m, 1)}`}>
-            다음달 →
-          </Link>
+          <MonthNav ym={monthStr} baseUrl="/admin/schedule" />
         </div>
       </div>
 

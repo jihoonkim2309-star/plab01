@@ -749,6 +749,50 @@
 .account-table tr.selected td,
 .class-table tr.selected td { background: var(--brand-soft); }
 
+/* 공통 월 네비 컨트롤 (MonthNav.tsx) */
+.month-nav {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  background: #fff;
+  height: 36px;
+  font-weight: 700;
+}
+.month-nav > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  font-size: 14px;
+  color: var(--text);
+  text-decoration: none;
+  border-right: 1px solid var(--line);
+  transition: background 0.12s, color 0.12s;
+}
+.month-nav > a:last-child { border-right: none; }
+.month-nav > a:hover { background: #E1F5EE; color: #0F6E56; }
+.month-nav-arrow {
+  width: 36px;
+  padding: 0 !important;
+  font-size: 20px;
+  line-height: 1;
+}
+.month-nav-label {
+  min-width: 120px;
+  background: #fafaf7;
+  gap: 8px;
+}
+.month-nav-today-hint {
+  font-size: 10px;
+  color: #6E6B62;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #f0eee5;
+}
+
 /* 전역 로딩 오버레이 (라우트 전환·폼 제출 시) */
 .loading-overlay {
   position: fixed;

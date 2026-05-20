@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import MonthNav from "../MonthNav";
 import {
   deleteReport,
   generateReportsForMonth,
@@ -70,12 +71,6 @@ export default async function ReportsPage({
         .single()
     : { data: null };
 
-  // 월 네비
-  const [yy, mm] = target.split("-").map(Number);
-  const prev = new Date(yy, mm - 2, 1);
-  const next = new Date(yy, mm, 1);
-  const prevYm = `${prev.getFullYear()}-${pad(prev.getMonth() + 1)}`;
-  const nextYm = `${next.getFullYear()}-${pad(next.getMonth() + 1)}`;
   const navUrl = (p: { ym?: string; rid?: string | null }) => {
     const qs = new URLSearchParams();
     if (p.ym) qs.set("ym", p.ym);
@@ -94,12 +89,7 @@ export default async function ReportsPage({
           </p>
         </div>
         <div className="toolbar">
-          <Link className="btn" href={navUrl({ ym: prevYm })}>
-            ← {prevYm}
-          </Link>
-          <Link className="btn" href={navUrl({ ym: nextYm })}>
-            {nextYm} →
-          </Link>
+          <MonthNav ym={target} baseUrl="/admin/reports" />
           <form action={generateReportsForMonth}>
             <input type="hidden" name="ym" value={target} />
             <button

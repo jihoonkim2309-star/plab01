@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import MonthNav from "../MonthNav";
 import {
   approveMeasurement,
   deleteMeasurement,
@@ -96,12 +97,6 @@ export default async function MeasurementsPage({
     groups.set(it.category, arr);
   }
 
-  // 월 네비
-  const [y, mo] = target.split("-").map(Number);
-  const prev = new Date(y, mo - 2, 1);
-  const next = new Date(y, mo, 1);
-  const prevYm = `${prev.getFullYear()}-${pad(prev.getMonth() + 1)}`;
-  const nextYm = `${next.getFullYear()}-${pad(next.getMonth() + 1)}`;
   const navUrl = (p: { ym?: string; sid?: string | null }) => {
     const qs = new URLSearchParams();
     if (p.ym) qs.set("ym", p.ym);
@@ -119,12 +114,11 @@ export default async function MeasurementsPage({
           </p>
         </div>
         <div className="toolbar">
-          <Link className="btn" href={navUrl({ ym: prevYm, sid })}>
-            ← {prevYm}
-          </Link>
-          <Link className="btn" href={navUrl({ ym: nextYm, sid })}>
-            {nextYm} →
-          </Link>
+          <MonthNav
+            ym={target}
+            baseUrl="/admin/measurements"
+            extra={{ sid }}
+          />
           {isAdmin && (
             <form action={seedDemoMeasurements}>
               <input type="hidden" name="ym" value={target} />
