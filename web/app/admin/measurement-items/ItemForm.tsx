@@ -26,7 +26,16 @@ const ICON_SUGGESTIONS = [
   "🔗",
 ];
 
-const CATEGORIES = ["신체", "바디비율", "체력", "배드민턴", "밸런스"];
+const CATEGORIES = [
+  "신체",
+  "바디사이즈",
+  "바디비율",
+  "기초체력",
+  "배드민턴",
+  // 아래는 구버전 호환용 (신규 등록 시 사용 안 함, 기존 데이터 수정시 보이도록)
+  "체력",
+  "밸런스",
+];
 
 export default function ItemForm({
   item,

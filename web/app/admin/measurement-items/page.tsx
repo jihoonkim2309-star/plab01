@@ -4,7 +4,9 @@ import { seedItems } from "./actions";
 
 const CAT_BADGE: Record<string, string> = {
   신체: "blue",
+  바디사이즈: "blue",
   바디비율: "blue",
+  기초체력: "green",
   체력: "green",
   배드민턴: "orange",
   밸런스: "gray",

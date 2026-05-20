@@ -8,7 +8,6 @@ import {
   unpublishReport,
   updateReport,
 } from "./actions";
-import { REPORT_TYPES } from "./types";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function thisMonth() {
@@ -22,34 +21,23 @@ const STATUS_BADGE: Record<string, string> = {
   발행완료: "green",
 };
 
-const TYPE_BADGE: Record<string, string> = {
-  신체성장: "blue",
-  체력측정: "green",
-  배드민턴측정: "orange",
-  기록: "gray",
-};
-
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ym?: string; type?: string; rid?: string }>;
+  searchParams: Promise<{ ym?: string; rid?: string }>;
 }) {
-  const { ym, type, rid } = await searchParams;
+  const { ym, rid } = await searchParams;
   const target = ym && /^\d{4}-\d{2}$/.test(ym) ? ym : thisMonth();
   const supabase = await createClient();
 
-  // 목록 쿼리
-  let q = supabase
+  // 목록 쿼리 (월간 통합 리포트만)
+  const { data: rows } = await supabase
     .from("reports")
     .select(
       "id, student_id, report_month, report_type, status, public_to_parent, published_at, students(name)",
     )
     .eq("report_month", target)
     .order("created_at", { ascending: false });
-  if (type && (REPORT_TYPES as readonly string[]).includes(type)) {
-    q = q.eq("report_type", type);
-  }
-  const { data: rows } = await q;
   const list = (rows ?? []) as unknown as {
     id: string;
     student_id: string;
@@ -89,10 +77,9 @@ export default async function ReportsPage({
   const next = new Date(yy, mm, 1);
   const prevYm = `${prev.getFullYear()}-${pad(prev.getMonth() + 1)}`;
   const nextYm = `${next.getFullYear()}-${pad(next.getMonth() + 1)}`;
-  const navUrl = (p: { ym?: string; type?: string | null; rid?: string | null }) => {
+  const navUrl = (p: { ym?: string; rid?: string | null }) => {
     const qs = new URLSearchParams();
     if (p.ym) qs.set("ym", p.ym);
-    if (p.type) qs.set("type", p.type);
     if (p.rid) qs.set("rid", p.rid);
     return `/admin/reports${qs.toString() ? `?${qs}` : ""}`;
   };
@@ -103,15 +90,15 @@ export default async function ReportsPage({
         <div>
           <h1>리포트 관리</h1>
           <p className="subtext">
-            {target} · 승인 완료 측정 {approvedCount}건 → 학생당 4종 리포트 생성
-            가능
+            {target} · 승인 완료 측정 {approvedCount}건 → 학생당 월간 통합 리포트
+            1개 생성/갱신
           </p>
         </div>
         <div className="toolbar">
-          <Link className="btn" href={navUrl({ ym: prevYm, type })}>
+          <Link className="btn" href={navUrl({ ym: prevYm })}>
             ← {prevYm}
           </Link>
-          <Link className="btn" href={navUrl({ ym: nextYm, type })}>
+          <Link className="btn" href={navUrl({ ym: nextYm })}>
             {nextYm} →
           </Link>
           <form action={generateReportsForMonth}>
@@ -146,24 +133,6 @@ export default async function ReportsPage({
         </div>
       </div>
 
-      <div className="toolbar" style={{ marginBottom: 8 }}>
-        <Link
-          className={`btn${!type ? " toggle-active" : ""}`}
-          href={navUrl({ ym: target })}
-        >
-          전체 유형
-        </Link>
-        {REPORT_TYPES.map((t) => (
-          <Link
-            key={t}
-            className={`btn${type === t ? " toggle-active" : ""}`}
-            href={navUrl({ ym: target, type: t })}
-          >
-            {t}
-          </Link>
-        ))}
-      </div>
-
       <div className="grid account-layout">
         {/* 좌: 리포트 목록 */}
         <div className="panel elevated">
@@ -174,7 +143,6 @@ export default async function ReportsPage({
             <thead>
               <tr>
                 <th>학생</th>
-                <th>유형</th>
                 <th>상태</th>
                 <th>공개</th>
               </tr>
@@ -187,16 +155,11 @@ export default async function ReportsPage({
                 >
                   <td>
                     <Link
-                      href={navUrl({ ym: target, type, rid: r.id })}
+                      href={navUrl({ ym: target, rid: r.id })}
                       style={{ textDecoration: "none", color: "inherit" }}
                     >
                       <strong>{r.students?.name ?? "-"}</strong>
                     </Link>
-                  </td>
-                  <td>
-                    <span className={`badge ${TYPE_BADGE[r.report_type] ?? "gray"}`}>
-                      {r.report_type}
-                    </span>
                   </td>
                   <td>
                     <span
@@ -216,7 +179,7 @@ export default async function ReportsPage({
               ))}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={4}>
+                  <td colSpan={3}>
                     <div className="empty-state">
                       <strong>리포트가 없습니다</strong>
                       <p>

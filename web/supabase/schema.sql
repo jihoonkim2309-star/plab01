@@ -662,49 +662,66 @@ begin
     raise exception 'permission denied: not center admin';
   end if;
 
+  -- 14.8a 구버전 → 신버전 마이그레이션 (재실행 안전)
+  -- 카테고리 5개: 신체·바디사이즈·바디비율·기초체력·배드민턴
+  -- 측정값(measurement_values)은 item_id로 묶여있어 rename해도 보존됨
+  update public.measurement_items set name='팔-키'
+   where center_id=cid and name='팔-키 비율';
+  update public.measurement_items set category='바디사이즈'
+   where center_id=cid and name in ('어깨너비','허리둘레');
+  update public.measurement_items set category='기초체력'
+   where center_id=cid and category='체력' and name in ('제자리 멀리뛰기','20m 달리기');
+  update public.measurement_items set category='배드민턴'
+   where center_id=cid and category='체력' and name='스텝 테스트';
+  update public.measurement_items set category='배드민턴', name='정확도'
+   where center_id=cid and name='정확도 테스트';
+  update public.measurement_items set name='반응속도'
+   where center_id=cid and name='풋워크 스피드';
+  update public.measurement_items set name='라켓 컨트롤'
+   where center_id=cid and name='랠리 지속';
+  -- 더 이상 사용 안 하는 항목 비활성화
+  update public.measurement_items set active=false
+   where center_id=cid
+     and (category='밸런스' or name='서비스 정확도' or category='체력');
+
+  -- 14.8b 신버전 항목 시드 (재실행 안전)
   for v in
     select * from (values
-      ('신체',     '키',             '📏', 'cm',   'number',  10),
-      ('신체',     '몸무게',         '⚖️', 'kg',   'number',  20),
-      ('신체',     '골격근량',       '💪', 'kg',   'number',  30),
-      ('신체',     '체지방률',       '🔥', '%',    'number',  40),
-      ('바디비율', '어깨너비',       '🤸', 'cm',   'number',  110),
-      ('바디비율', '허리둘레',       '📐', 'cm',   'number',  120),
-      ('바디비율', '팔-키 비율',     '📐', '%',    'number',  130),
-      ('바디비율', '상하체 비율',    '📊', '비율', 'number',  140),
-      ('체력',     '제자리 멀리뛰기','🦘', 'cm',   'number',  210),
-      ('체력',     '20m 달리기',     '🏃', 'sec',  'number',  220),
-      ('체력',     '스텝 테스트',    '👟', '회',   'number',  230),
-      ('체력',     '정확도 테스트',  '🎯', '%',    'number',  240),
-      ('배드민턴', '서비스 정확도',  '🎯', '%',    'number',  310),
-      ('배드민턴', '풋워크 스피드',  '👟', 'sec',  'number',  320),
-      ('배드민턴', '랠리 지속',      '🏸', '회',   'number',  330),
-      ('밸런스',   '파워',           '⚡', '점',   'number',  410),
-      ('밸런스',   '스피드',         '🏃', '점',   'number',  420),
-      ('밸런스',   '민첩성',         '🤸', '점',   'number',  430),
-      ('밸런스',   '균형성',         '⚖️', '점',   'number',  440),
-      ('밸런스',   '협응성',         '🔗', '점',   'number',  450)
+      ('신체',     '키',              '📏','cm',   'number', 10),
+      ('신체',     '몸무게',          '⚖️','kg',   'number', 20),
+      ('신체',     '골격근량',        '💪','kg',   'number', 30),
+      ('신체',     '체지방률',        '🔥','%',    'number', 40),
+      ('바디사이즈','어깨너비',       '🤸','cm',   'number', 110),
+      ('바디사이즈','허리둘레',       '📏','cm',   'number', 120),
+      ('바디사이즈','골반둘레',       '📐','cm',   'number', 130),
+      ('바디사이즈','팔길이',         '📐','cm',   'number', 140),
+      ('바디사이즈','다리길이',       '📐','cm',   'number', 150),
+      ('바디비율', '얼굴-어깨',       '📊','%',    'number', 210),
+      ('바디비율', '얼굴-키',         '📊','%',    'number', 220),
+      ('바디비율', '팔-키',           '📊','%',    'number', 230),
+      ('바디비율', '상하체 비율',     '📊','비율', 'number', 240),
+      ('기초체력', '제자리 멀리뛰기', '🦘','cm',   'number', 310),
+      ('기초체력', '수직 점프',       '⚡','cm',   'number', 320),
+      ('기초체력', '20m 달리기',      '🏃','sec',  'number', 330),
+      ('배드민턴', '스텝 테스트',     '👟','회',   'number', 410),
+      ('배드민턴', '반응속도',        '⏱','sec',  'number', 420),
+      ('배드민턴', '라켓 컨트롤',     '🏸','회',   'number', 430),
+      ('배드민턴', '정확도',          '🎯','%',    'number', 440)
     ) as t(category, name, icon, unit, value_kind, sort_order)
   loop
-    insert into public.measurement_items (center_id, category, name, icon, unit, value_kind, sort_order)
-    values (cid, v.category, v.name, v.icon, v.unit, v.value_kind, v.sort_order)
-    on conflict (center_id, name) do nothing;
+    insert into public.measurement_items
+      (center_id, category, name, icon, unit, value_kind, sort_order, active)
+    values
+      (cid, v.category, v.name, v.icon, v.unit, v.value_kind, v.sort_order, true)
+    on conflict (center_id, name) do update
+      set category   = excluded.category,
+          unit       = excluded.unit,
+          value_kind = excluded.value_kind,
+          sort_order = excluded.sort_order,
+          active     = true,
+          icon       = coalesce(public.measurement_items.icon, excluded.icon);
     if found then v_count := v_count + 1; end if;
   end loop;
-
-  -- 기존 행의 빈 아이콘 백필 (사용자가 설정한 아이콘은 유지)
-  update public.measurement_items mi
-     set icon = src.icon
-    from (values
-      ('키','📏'),('몸무게','⚖️'),('골격근량','💪'),('체지방률','🔥'),
-      ('어깨너비','🤸'),('허리둘레','📐'),('팔-키 비율','📐'),('상하체 비율','📊'),
-      ('제자리 멀리뛰기','🦘'),('20m 달리기','🏃'),('스텝 테스트','👟'),('정확도 테스트','🎯'),
-      ('서비스 정확도','🎯'),('풋워크 스피드','👟'),('랠리 지속','🏸'),
-      ('파워','⚡'),('스피드','🏃'),('민첩성','🤸'),('균형성','⚖️'),('협응성','🔗')
-    ) as src(name, icon)
-   where mi.center_id = cid
-     and mi.name = src.name
-     and mi.icon is null;
 
   return v_count;
 end $$;

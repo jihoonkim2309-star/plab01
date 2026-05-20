@@ -3,18 +3,31 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCenter } from "@/lib/center";
-import { REPORT_TYPES, TYPE_CATEGORIES, type ReportType } from "./types";
+import {
+  REPORT_CATEGORIES,
+  CATEGORY_TITLES,
+  REPORT_TYPES,
+  type ReportType,
+} from "./types";
 
 type Supa = Awaited<ReturnType<typeof requireCenter>>["supabase"];
 
-type SnapshotItem = {
+type TrendCell = number | string | null;
+export type SnapshotTrendItem = {
   name: string;
   unit: string | null;
-  value: number | string | null;
+  category: string;
   icon: string | null;
+  values: [TrendCell, TrendCell, TrendCell, TrendCell]; // -3, -2, -1, 0
+  change_abs: number | null;
+  change_pct: number | null;
 };
-type SnapshotSection = { title: string; items: SnapshotItem[] };
-type Snapshot = {
+export type SnapshotSection = {
+  category: string;
+  title: string;
+  items: SnapshotTrendItem[];
+};
+export type Snapshot = {
   student: {
     id: string;
     name: string | null;
@@ -24,83 +37,140 @@ type Snapshot = {
     grade: string | null;
   };
   measurement_month: string;
-  report_type: ReportType;
+  months: [string, string, string, string]; // YYYY-MM
+  month_dates: [string, string, string, string]; // YYYY.MM.DD (표시용)
   sections: SnapshotSection[];
 };
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+function prevMonths(ym: string): [string, string, string, string] {
+  const [y, m] = ym.split("-").map(Number);
+  const list: string[] = [];
+  for (let i = -3; i <= 0; i++) {
+    const d = new Date(y, m - 1 + i, 1);
+    list.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}`);
+  }
+  return list as [string, string, string, string];
+}
 
 async function buildSnapshot(
   supabase: Supa,
   studentId: string,
   ym: string,
-  type: ReportType,
 ): Promise<{ snapshot: Snapshot; measurementId: string | null }> {
+  const months = prevMonths(ym);
+
   const { data: student } = await supabase
     .from("students")
     .select("id, name, gender, birth, school, grade")
     .eq("id", studentId)
     .single();
 
-  const { data: m } = await supabase
+  // 4개월치 measurement 가져오기
+  const { data: ms } = await supabase
     .from("measurements")
-    .select("id")
+    .select("id, measurement_month, measured_at")
     .eq("student_id", studentId)
-    .eq("measurement_month", ym)
-    .maybeSingle();
+    .in("measurement_month", months);
+  const msByMonth = new Map<
+    string,
+    { id: string; measurement_month: string; measured_at: string | null }
+  >((ms ?? []).map((m) => [m.measurement_month, m]));
+  const currentM = msByMonth.get(ym) ?? null;
 
+  // 활성 항목 가져오기
   const { data: items } = await supabase
     .from("measurement_items")
-    .select("id, category, name, unit, sort_order, active, icon")
+    .select("id, category, name, unit, icon, sort_order, active")
     .eq("active", true)
+    .in("category", REPORT_CATEGORIES)
     .order("sort_order", { ascending: true });
 
-  const values = m
-    ? (
-        await supabase
-          .from("measurement_values")
-          .select("item_id, value_num, value_text")
-          .eq("measurement_id", m.id)
-      ).data ?? []
-    : [];
-  const valById = new Map(values.map((v) => [v.item_id, v]));
+  // 4개월치 값 가져오기 (있는 measurement만)
+  const mids = (ms ?? []).map((m) => m.id);
+  const { data: vals } = mids.length
+    ? await supabase
+        .from("measurement_values")
+        .select("measurement_id, item_id, value_num, value_text")
+        .in("measurement_id", mids)
+    : { data: [] };
 
-  const cats = TYPE_CATEGORIES[type];
-  const sections: SnapshotSection[] = [];
-  for (const cat of cats) {
-    const itemsInCat = (items ?? []).filter((i) => i.category === cat);
-    if (itemsInCat.length === 0) continue;
-    sections.push({
-      title: cat,
-      items: itemsInCat.map((i) => {
-        const v = valById.get(i.id);
-        const value =
-          v?.value_num != null ? v.value_num : (v?.value_text ?? null);
-        return {
-          name: i.name,
-          unit: i.unit ?? null,
-          value,
-          icon: i.icon ?? null,
-        };
-      }),
-    });
+  // index by (month_idx, item_id)
+  const valByMonthItem = new Map<string, TrendCell>();
+  for (const v of vals ?? []) {
+    const monthEntry = (ms ?? []).find((m) => m.id === v.measurement_id);
+    if (!monthEntry) continue;
+    const idx = months.indexOf(monthEntry.measurement_month);
+    if (idx < 0) continue;
+    const cell: TrendCell = v.value_num != null ? Number(v.value_num) : (v.value_text ?? null);
+    valByMonthItem.set(`${idx}|${v.item_id}`, cell);
   }
 
-  const snapshot: Snapshot = {
-    student: student ?? {
-      id: studentId,
-      name: null,
-      gender: null,
-      birth: null,
-      school: null,
-      grade: null,
+  // 표시용 날짜 (YYYY.MM.DD): measured_at 있으면 사용, 없으면 YYYY.MM.01
+  const monthDates = months.map((m) => {
+    const me = msByMonth.get(m);
+    if (me?.measured_at) {
+      return me.measured_at.slice(0, 10).replace(/-/g, ".");
+    }
+    return `${m.replace("-", ".")}.--`;
+  }) as [string, string, string, string];
+
+  // 섹션 빌드
+  const sections: SnapshotSection[] = REPORT_CATEGORIES.map((cat) => {
+    const itemsInCat = (items ?? []).filter((i) => i.category === cat);
+    return {
+      category: cat,
+      title: CATEGORY_TITLES[cat] ?? cat,
+      items: itemsInCat.map((it) => {
+        const v0 = valByMonthItem.get(`3|${it.id}`) ?? null;
+        const v1 = valByMonthItem.get(`2|${it.id}`) ?? null;
+        const v2 = valByMonthItem.get(`1|${it.id}`) ?? null;
+        const v3 = valByMonthItem.get(`0|${it.id}`) ?? null;
+        // change: 현재 - (가장 오래된 가용값)
+        const baseline =
+          [v3, v2, v1].find((x): x is number => typeof x === "number") ?? null;
+        const cur = typeof v0 === "number" ? v0 : null;
+        let change_abs: number | null = null;
+        let change_pct: number | null = null;
+        if (cur != null && baseline != null && baseline !== 0) {
+          change_abs = +(cur - baseline).toFixed(2);
+          change_pct = +(((cur - baseline) / baseline) * 100).toFixed(1);
+        }
+        return {
+          name: it.name,
+          unit: it.unit ?? null,
+          category: it.category,
+          icon: it.icon ?? null,
+          values: [v3, v2, v1, v0] as [TrendCell, TrendCell, TrendCell, TrendCell],
+          change_abs,
+          change_pct,
+        };
+      }),
+    };
+  }).filter((s) => s.items.length > 0);
+
+  return {
+    snapshot: {
+      student: student ?? {
+        id: studentId,
+        name: null,
+        gender: null,
+        birth: null,
+        school: null,
+        grade: null,
+      },
+      measurement_month: ym,
+      months,
+      month_dates: monthDates,
+      sections,
     },
-    measurement_month: ym,
-    report_type: type,
-    sections,
+    measurementId: currentM?.id ?? null,
   };
-  return { snapshot, measurementId: m?.id ?? null };
 }
 
-// 그 달 측정 승인완료 학생에 대해 누락된 (학생×유형) 리포트 행을 일괄 생성
+// 그 달 측정 승인완료 학생당 "월간" 리포트 1개 생성/갱신.
+// 구버전 4종 리포트(신체성장/기록/체력측정/배드민턴측정)는 삭제(발행완료는 보존).
 export async function generateReportsForMonth(formData: FormData) {
   const { supabase, centerId } = await requireCenter();
   const ym = String(formData.get("ym") ?? "");
@@ -109,6 +179,15 @@ export async function generateReportsForMonth(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // 구버전 리포트 정리 (발행완료가 아닌 것만)
+  await supabase
+    .from("reports")
+    .delete()
+    .eq("center_id", centerId)
+    .eq("report_month", ym)
+    .in("report_type", ["신체성장", "기록", "체력측정", "배드민턴측정"])
+    .neq("status", "발행완료");
 
   const { data: approved } = await supabase
     .from("measurements")
@@ -121,51 +200,55 @@ export async function generateReportsForMonth(formData: FormData) {
     throw new Error("이 달에 승인 완료된 측정이 없습니다.");
   }
 
+  // 기존 "월간" 리포트
   const { data: existing } = await supabase
     .from("reports")
-    .select("student_id, report_type")
+    .select("id, student_id")
     .eq("center_id", centerId)
-    .eq("report_month", ym);
-  const have = new Set(
-    (existing ?? []).map((r) => `${r.student_id}|${r.report_type}`),
+    .eq("report_month", ym)
+    .eq("report_type", "월간");
+  const haveByStudent = new Map(
+    (existing ?? []).map((r) => [r.student_id, r.id]),
   );
 
-  let inserted = 0;
+  let processed = 0;
   for (const m of approved) {
-    for (const type of REPORT_TYPES) {
-      if (have.has(`${m.student_id}|${type}`)) continue;
-      const { snapshot } = await buildSnapshot(
-        supabase,
-        m.student_id,
-        ym,
-        type,
-      );
+    const { snapshot } = await buildSnapshot(supabase, m.student_id, ym);
+    const existingId = haveByStudent.get(m.student_id);
+    if (existingId) {
+      // 갱신 (스냅샷만, 코멘트·발행상태는 유지)
+      const { error } = await supabase
+        .from("reports")
+        .update({ snapshot, measurement_id: m.id, status: "생성완료" })
+        .eq("id", existingId);
+      if (error) throw new Error("리포트 갱신 실패: " + error.message);
+    } else {
       const { error } = await supabase.from("reports").insert({
         center_id: centerId,
         student_id: m.student_id,
         measurement_id: m.id,
         report_month: ym,
-        report_type: type,
+        report_type: "월간",
         status: "생성완료",
         snapshot,
         generated_by: user?.id ?? null,
       });
       if (error) throw new Error("리포트 생성 실패: " + error.message);
-      inserted += 1;
     }
+    processed += 1;
   }
-  void inserted;
+  void processed;
   revalidatePath("/admin/reports");
 }
 
-// 단일 리포트 snapshot 재생성 (최신 측정값 반영)
+// 단일 리포트 snapshot 재생성 (최신 측정값 + 3개월 추이 반영)
 export async function regenerateSnapshot(formData: FormData) {
   const { supabase } = await requireCenter();
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("id 필수");
   const { data: r } = await supabase
     .from("reports")
-    .select("student_id, report_month, report_type")
+    .select("student_id, report_month")
     .eq("id", id)
     .single();
   if (!r) throw new Error("리포트 없음");
@@ -173,7 +256,6 @@ export async function regenerateSnapshot(formData: FormData) {
     supabase,
     r.student_id,
     r.report_month,
-    r.report_type as ReportType,
   );
   const { error } = await supabase
     .from("reports")
@@ -187,7 +269,6 @@ export async function regenerateSnapshot(formData: FormData) {
   revalidatePath("/admin/reports");
 }
 
-// 코멘트/공개 옵션 저장
 export async function updateReport(formData: FormData) {
   const { supabase } = await requireCenter();
   const id = String(formData.get("id") ?? "");
@@ -249,3 +330,4 @@ export async function deleteReport(formData: FormData) {
   revalidatePath("/admin/reports");
   redirect(`/admin/reports${ym ? `?ym=${ym}` : ""}`);
 }
+
