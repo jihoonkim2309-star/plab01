@@ -254,7 +254,19 @@ export default async function ReportPreviewPage({
                       <tr key={it.name}>
                         <td className="cell-label">
                           <span className="icon-badge">
-                            {iconId ? (
+                            {it.iconUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={it.iconUrl}
+                                alt=""
+                                style={{
+                                  width: 20,
+                                  height: 20,
+                                  objectFit: "contain",
+                                  filter: "brightness(0) invert(1)",
+                                }}
+                              />
+                            ) : iconId ? (
                               <svg width="20" height="20" viewBox="0 0 28 28"><use href={`#${iconId}`} /></svg>
                             ) : null}
                           </span>
@@ -462,7 +474,15 @@ function SmallSection({
             return (
               <tr key={it.name}>
                 <td className="cell-label">
-                  {iconId ? (
+                  {it.iconUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={it.iconUrl}
+                      alt=""
+                      className={cls}
+                      style={{ width: w, height: h, objectFit: "contain" }}
+                    />
+                  ) : iconId ? (
                     <svg width={w} height={h} viewBox={vb} className={cls}>
                       <use href={`#${iconId}`} />
                     </svg>

@@ -16,11 +16,24 @@ function ItemIcon({
   name,
   category,
   fallback,
+  iconUrl,
 }: {
   name: string;
   category: string;
   fallback: string | null;
+  iconUrl: string | null;
 }) {
+  // 1순위: 업로드한 파일
+  if (iconUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={iconUrl}
+        alt={name}
+        style={{ width: 32, height: 32, objectFit: "contain" }}
+      />
+    );
+  }
   const id = ICON_ID[name];
   if (!id) {
     return fallback ? (
@@ -70,7 +83,9 @@ export default async function MeasurementItemsPage() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("measurement_items")
-    .select("id, category, name, unit, value_kind, sort_order, active, icon")
+    .select(
+      "id, category, name, unit, value_kind, sort_order, active, icon, icon_url",
+    )
     .order("sort_order", { ascending: true });
   const list = data ?? [];
 
@@ -163,6 +178,7 @@ export default async function MeasurementItemsPage() {
                     name={i.name}
                     category={i.category}
                     fallback={i.icon ?? null}
+                    iconUrl={i.icon_url ?? null}
                   />
                 </td>
                 <td>

@@ -12,6 +12,7 @@ export type SnapshotTrendItem = {
   unit: string | null;
   category: string;
   icon: string | null;
+  iconUrl: string | null;
   values: [TrendCell, TrendCell, TrendCell, TrendCell]; // -3, -2, -1, 0
   change_abs: number | null;
   change_pct: number | null;
@@ -128,7 +129,7 @@ export async function buildSnapshot(
 
   const { data: items } = await supabase
     .from("measurement_items")
-    .select("id, category, name, unit, icon, sort_order, active")
+    .select("id, category, name, unit, icon, icon_url, sort_order, active")
     .eq("active", true)
     .in("category", REPORT_CATEGORIES)
     .order("sort_order", { ascending: true });
@@ -184,6 +185,7 @@ export async function buildSnapshot(
           unit: it.unit ?? null,
           category: it.category,
           icon: it.icon ?? null,
+          iconUrl: it.icon_url ?? null,
           values: [v3, v2, v1, v0] as [TrendCell, TrendCell, TrendCell, TrendCell],
           change_abs,
           change_pct,

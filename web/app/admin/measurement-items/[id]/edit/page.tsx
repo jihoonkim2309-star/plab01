@@ -13,7 +13,7 @@ export default async function EditMeasurementItemPage({
   const supabase = await createClient();
   const { data: item } = await supabase
     .from("measurement_items")
-    .select("id, category, name, unit, value_kind, sort_order, active")
+    .select("id, category, name, unit, value_kind, sort_order, active, icon, icon_url")
     .eq("id", id)
     .single();
   if (!item) notFound();

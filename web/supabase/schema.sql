@@ -527,6 +527,25 @@ create table if not exists public.measurement_items (
 );
 -- 기존 행 보강 (재실행 안전)
 alter table public.measurement_items add column if not exists icon text;
+alter table public.measurement_items add column if not exists icon_url text;  -- 업로드한 SVG/이미지 공개 URL
+
+-- 측정 항목 아이콘 업로드 버킷 (공개 읽기, 인증 사용자가 쓰기)
+insert into storage.buckets (id, name, public)
+values ('measurement-item-icons', 'measurement-item-icons', true)
+on conflict (id) do nothing;
+
+drop policy if exists mii_read   on storage.objects;
+create policy mii_read   on storage.objects
+  for select using (bucket_id = 'measurement-item-icons');
+drop policy if exists mii_write  on storage.objects;
+create policy mii_write  on storage.objects
+  for insert to authenticated with check (bucket_id = 'measurement-item-icons');
+drop policy if exists mii_update on storage.objects;
+create policy mii_update on storage.objects
+  for update to authenticated using (bucket_id = 'measurement-item-icons');
+drop policy if exists mii_delete on storage.objects;
+create policy mii_delete on storage.objects
+  for delete to authenticated using (bucket_id = 'measurement-item-icons');
 
 -- 14.2 학생×월 측정 컨테이너
 create table if not exists public.measurements (
