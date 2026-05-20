@@ -197,7 +197,9 @@ export async function generateReportsForMonth(formData: FormData) {
     .eq("status", "승인완료");
 
   if (!approved || approved.length === 0) {
-    throw new Error("이 달에 승인 완료된 측정이 없습니다.");
+    // 승인된 측정 없음 → 조용히 종료 (UI에 0건 표시되고 버튼도 비활성)
+    revalidatePath("/admin/reports");
+    return;
   }
 
   // 기존 "월간" 리포트

@@ -103,7 +103,16 @@ export default async function ReportsPage({
           </Link>
           <form action={generateReportsForMonth}>
             <input type="hidden" name="ym" value={target} />
-            <button className="btn primary" type="submit">
+            <button
+              className="btn primary"
+              type="submit"
+              disabled={approvedCount === 0}
+              title={
+                approvedCount === 0
+                  ? "이 달엔 승인 완료된 측정이 없습니다. '측정 데이터 관리'에서 먼저 채우세요."
+                  : ""
+              }
+            >
               일괄 생성/누락 보충
             </button>
           </form>
