@@ -19,13 +19,42 @@ export default function GlobalLoading() {
     function onSubmit(e: SubmitEvent) {
       const form = e.target as HTMLFormElement | null;
       if (!form) return;
-      // 새 탭/다운로드/no-loading 표시 폼은 제외
       if (form.target === "_blank") return;
       if (form.dataset.noLoading === "true") return;
       setShow(true);
     }
+    function onClick(e: MouseEvent) {
+      if (e.defaultPrevented) return;
+      // 일반 좌클릭만 (수정자키 누른 클릭/중간 클릭은 새 탭이므로 제외)
+      if (e.button !== 0) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const t = e.target as Element | null;
+      const a = t?.closest?.("a") as HTMLAnchorElement | null;
+      if (!a || !a.href) return;
+      if (a.target === "_blank") return;
+      if (a.hasAttribute("download")) return;
+      if (a.dataset.noLoading === "true") return;
+      try {
+        const url = new URL(a.href, window.location.href);
+        if (url.origin !== window.location.origin) return;
+        // 같은 URL이면 네비게이션이 안 일어나므로 표시 안 함 (영구 멈춤 방지)
+        if (
+          url.pathname === window.location.pathname &&
+          url.search === window.location.search &&
+          url.hash === window.location.hash
+        )
+          return;
+        setShow(true);
+      } catch {
+        /* invalid href, 무시 */
+      }
+    }
     document.addEventListener("submit", onSubmit, true);
-    return () => document.removeEventListener("submit", onSubmit, true);
+    document.addEventListener("click", onClick, true);
+    return () => {
+      document.removeEventListener("submit", onSubmit, true);
+      document.removeEventListener("click", onClick, true);
+    };
   }, []);
 
   // 너무 오래 걸리면 사용자가 다른 동작도 못 하니 30초 후 자동 해제 (안전장치)
