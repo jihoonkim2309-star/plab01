@@ -153,7 +153,9 @@ export default function IconControl({
             아이콘 삭제
           </button>
         )}
-        {effectiveHidden && hasSvgMapping && (
+        {/* "기본 아이콘 복귀" 는 DB 가 이미 hidden 인데 staged 변경이 없을 때만.
+            staged 변경 상태에선 "변경 취소" 가 같은 역할을 하므로 중복 회피. */}
+        {!isDirty && initialIconHidden && hasSvgMapping && (
           <button type="button" className="btn" onClick={onClickRestore}>
             기본 아이콘 복귀
           </button>
