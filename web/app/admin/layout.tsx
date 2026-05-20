@@ -1,7 +1,9 @@
 import "./admin.css";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Sidebar from "./Sidebar";
+import GlobalLoading from "./GlobalLoading";
 import { signOut } from "./actions";
 
 export default async function AdminLayout({
@@ -27,6 +29,9 @@ export default async function AdminLayout({
 
   return (
     <div className="admin-shell app">
+      <Suspense fallback={null}>
+        <GlobalLoading />
+      </Suspense>
       <Sidebar />
       <div className="drawer-backdrop" />
 
