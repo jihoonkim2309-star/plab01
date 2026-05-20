@@ -31,11 +31,14 @@ export default function PhotoUpload({
     };
   }, [previewUrl]);
 
+  // 촬영 버튼 노출 조건: 주 입력장치가 터치인 경우만 (모바일·태블릿).
+  // navigator.maxTouchPoints > 0 는 트랙패드 있는 터치 노트북도 true 라 거름 — 데스크탑에서는 capture 속성이 무시돼 사진 변경과 중복 동작이 됨.
   useEffect(() => {
-    const isTouch =
-      window.matchMedia?.("(pointer: coarse)").matches ||
-      navigator.maxTouchPoints > 0;
-    setCoarse(!!isTouch);
+    const mql = window.matchMedia("(pointer: coarse)");
+    const update = () => setCoarse(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
   }, []);
 
   const hasNewFile = !!previewUrl;
