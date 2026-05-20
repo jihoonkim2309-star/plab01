@@ -156,6 +156,10 @@ export default async function ReportPreviewPage({
         .data-table--sm td.cell-current { font-size: 12px; border-left: 1px solid var(--brand-green); border-right: 1px solid var(--brand-green); }
         .data-table td.cell-positive { color: var(--brand-green); font-weight: 500; }
         .data-table td.cell-negative { color: var(--accent-red); font-weight: 500; }
+        /* sub-pixel(0.5px) 테두리가 last-row에서 잘리는 브라우저 케이스 보강 */
+        .data-table tbody tr:last-child td { border-bottom: 1px solid var(--neutral-border); }
+        .data-table tbody tr:last-child td.cell-current { border-bottom: 1.5px solid var(--brand-green); }
+        .data-table--sm tbody tr:last-child td.cell-current { border-bottom: 1px solid var(--brand-green); }
 
         .icon-badge { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--brand-green); margin-right: 8px; vertical-align: -10px; }
         .icon-inline { vertical-align: -9px; margin-right: 4px; }
