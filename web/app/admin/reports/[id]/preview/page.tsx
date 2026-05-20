@@ -6,6 +6,7 @@ type SnapshotItem = {
   name: string;
   unit: string | null;
   value: number | string | null;
+  icon: string | null;
 };
 type Snapshot = {
   student: {
@@ -140,7 +141,8 @@ export default async function ReportPreviewPage({
                 <table>
                   <thead>
                     <tr>
-                      <th style={{ width: "55%" }}>항목</th>
+                      <th style={{ width: 40 }}></th>
+                      <th style={{ width: "50%" }}>항목</th>
                       <th>측정값</th>
                       <th style={{ width: 80 }}>단위</th>
                     </tr>
@@ -148,6 +150,9 @@ export default async function ReportPreviewPage({
                   <tbody>
                     {sec.items.map((it) => (
                       <tr key={it.name}>
+                        <td style={{ fontSize: 18, textAlign: "center" }}>
+                          {it.icon ?? ""}
+                        </td>
                         <td>{it.name}</td>
                         <td>
                           <strong>{it.value ?? "-"}</strong>

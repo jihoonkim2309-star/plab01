@@ -175,6 +175,124 @@ export async function reopenMeasurement(formData: FormData) {
   revalidatePath("/admin/measurements");
 }
 
+// 데모: 그 달의 모든 활성 학생에 대해 measurement(승인완료) + 항목별 더미값 채움.
+// 어드민 전용. 이미 있으면 값 덮어쓰고 상태 승인완료로 강제.
+const DEMO_VALUES: Record<string, number> = {
+  키: 135,
+  몸무게: 32,
+  골격근량: 14.8,
+  체지방률: 18.2,
+  어깨너비: 36.2,
+  허리둘레: 62,
+  "팔-키 비율": 38.5,
+  "상하체 비율": 1.11,
+  "제자리 멀리뛰기": 168,
+  "20m 달리기": 3.65,
+  "스텝 테스트": 78,
+  "정확도 테스트": 78,
+  "서비스 정확도": 75,
+  "풋워크 스피드": 4.2,
+  "랠리 지속": 12,
+  파워: 78,
+  스피드: 72,
+  민첩성: 84,
+  균형성: 69,
+  협응성: 81,
+};
+
+function studentOffset(id: string) {
+  // -5..+4 deterministic
+  const hex = id.replace(/-/g, "").slice(-2);
+  const n = parseInt(hex, 16);
+  return Number.isNaN(n) ? 0 : (n % 10) - 5;
+}
+
+export async function seedDemoMeasurements(formData: FormData) {
+  const { supabase, centerId } = await requireCenter();
+  const ym = String(formData.get("ym") ?? "");
+  if (!ym) throw new Error("측정월 필수");
+
+  const [{ data: students }, { data: items }] = await Promise.all([
+    supabase
+      .from("students")
+      .select("id, name")
+      .eq("center_id", centerId)
+      .eq("status", "활성"),
+    supabase
+      .from("measurement_items")
+      .select("id, name, value_kind, active")
+      .eq("center_id", centerId),
+  ]);
+
+  const activeItems = (items ?? []).filter(
+    (i) => i.active && i.value_kind === "number" && DEMO_VALUES[i.name] != null,
+  );
+  if (!students || students.length === 0) {
+    throw new Error("학생이 없습니다. 먼저 학생을 등록(또는 시드)하세요.");
+  }
+  if (activeItems.length === 0) {
+    throw new Error(
+      "측정 항목이 없습니다. 먼저 측정 항목 관리에서 시드(또는 등록)하세요.",
+    );
+  }
+
+  const now = new Date().toISOString();
+  for (const s of students) {
+    let mid: string;
+    const { data: existing } = await supabase
+      .from("measurements")
+      .select("id")
+      .eq("student_id", s.id)
+      .eq("measurement_month", ym)
+      .maybeSingle();
+    if (existing) {
+      mid = existing.id;
+      await supabase
+        .from("measurements")
+        .update({
+          status: "승인완료",
+          measured_at: now,
+          reviewed_at: now,
+          reject_reason: null,
+        })
+        .eq("id", mid);
+    } else {
+      const ins = await supabase
+        .from("measurements")
+        .insert({
+          center_id: centerId,
+          student_id: s.id,
+          measurement_month: ym,
+          status: "승인완료",
+          measured_at: now,
+          reviewed_at: now,
+          notes: "[DEMO] 자동 생성",
+        })
+        .select("id")
+        .single();
+      if (ins.error) throw new Error("측정 생성 실패: " + ins.error.message);
+      mid = ins.data.id;
+    }
+
+    const off = studentOffset(s.id);
+    const rows = activeItems.map((it) => {
+      const base = DEMO_VALUES[it.name];
+      const v = +(base * (1 + off * 0.02)).toFixed(2); // ±10%
+      return {
+        measurement_id: mid,
+        item_id: it.id,
+        value_num: v,
+        value_text: null,
+      };
+    });
+    const { error } = await supabase
+      .from("measurement_values")
+      .upsert(rows, { onConflict: "measurement_id,item_id" });
+    if (error) throw new Error("값 저장 실패: " + error.message);
+  }
+  revalidatePath("/admin/measurements");
+}
+
 export async function deleteMeasurement(formData: FormData) {
   const { supabase } = await requireCenter();
   const id = String(formData.get("id") ?? "");

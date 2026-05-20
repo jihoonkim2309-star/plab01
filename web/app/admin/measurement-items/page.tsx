@@ -14,7 +14,7 @@ export default async function MeasurementItemsPage() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("measurement_items")
-    .select("id, category, name, unit, value_kind, sort_order, active")
+    .select("id, category, name, unit, value_kind, sort_order, active, icon")
     .order("sort_order", { ascending: true });
   const list = data ?? [];
 
@@ -83,6 +83,7 @@ export default async function MeasurementItemsPage() {
           <thead>
             <tr>
               <th>카테고리</th>
+              <th>아이콘</th>
               <th>항목명</th>
               <th>단위</th>
               <th>형식</th>
@@ -98,6 +99,9 @@ export default async function MeasurementItemsPage() {
                   <span className={`badge ${CAT_BADGE[i.category] ?? "gray"}`}>
                     {i.category}
                   </span>
+                </td>
+                <td style={{ fontSize: 20, textAlign: "center" }}>
+                  {i.icon ?? <span className="muted">-</span>}
                 </td>
                 <td>
                   <strong>{i.name}</strong>
@@ -125,7 +129,7 @@ export default async function MeasurementItemsPage() {
             ))}
             {list.length === 0 && (
               <tr>
-                <td colSpan={7}>
+                <td colSpan={8}>
                   <div className="empty-state">
                     <strong>등록된 항목이 없습니다</strong>
                     <p>

@@ -4,7 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCenter } from "@/lib/center";
 
-const FIELDS = ["category", "name", "unit", "value_kind", "sort_order"] as const;
+const FIELDS = [
+  "category",
+  "name",
+  "unit",
+  "value_kind",
+  "sort_order",
+  "icon",
+] as const;
 
 function readForm(formData: FormData) {
   const row: Record<string, string | number | boolean | null> = {};

@@ -521,9 +521,12 @@ create table if not exists public.measurement_items (
   value_kind  text not null default 'number',  -- number|text
   sort_order  integer not null default 0,
   active      boolean not null default true,
+  icon        text,                            -- 리포트에 표시될 아이콘(이모지 권장: 📏 💪 🎯)
   created_at  timestamptz not null default now(),
   unique (center_id, name)
 );
+-- 기존 행 보강 (재실행 안전)
+alter table public.measurement_items add column if not exists icon text;
 
 -- 14.2 학생×월 측정 컨테이너
 create table if not exists public.measurements (
@@ -661,33 +664,48 @@ begin
 
   for v in
     select * from (values
-      ('신체',     '키',             'cm',   'number',  10),
-      ('신체',     '몸무게',         'kg',   'number',  20),
-      ('신체',     '골격근량',       'kg',   'number',  30),
-      ('신체',     '체지방률',       '%',    'number',  40),
-      ('바디비율', '어깨너비',       'cm',   'number',  110),
-      ('바디비율', '허리둘레',       'cm',   'number',  120),
-      ('바디비율', '팔-키 비율',     '%',    'number',  130),
-      ('바디비율', '상하체 비율',    '비율', 'number',  140),
-      ('체력',     '제자리 멀리뛰기','cm',   'number',  210),
-      ('체력',     '20m 달리기',     'sec',  'number',  220),
-      ('체력',     '스텝 테스트',    '회',   'number',  230),
-      ('체력',     '정확도 테스트',  '%',    'number',  240),
-      ('배드민턴', '서비스 정확도',  '%',    'number',  310),
-      ('배드민턴', '풋워크 스피드',  'sec',  'number',  320),
-      ('배드민턴', '랠리 지속',      '회',   'number',  330),
-      ('밸런스',   '파워',           '점',   'number',  410),
-      ('밸런스',   '스피드',         '점',   'number',  420),
-      ('밸런스',   '민첩성',         '점',   'number',  430),
-      ('밸런스',   '균형성',         '점',   'number',  440),
-      ('밸런스',   '협응성',         '점',   'number',  450)
-    ) as t(category, name, unit, value_kind, sort_order)
+      ('신체',     '키',             '📏', 'cm',   'number',  10),
+      ('신체',     '몸무게',         '⚖️', 'kg',   'number',  20),
+      ('신체',     '골격근량',       '💪', 'kg',   'number',  30),
+      ('신체',     '체지방률',       '🔥', '%',    'number',  40),
+      ('바디비율', '어깨너비',       '🤸', 'cm',   'number',  110),
+      ('바디비율', '허리둘레',       '📐', 'cm',   'number',  120),
+      ('바디비율', '팔-키 비율',     '📐', '%',    'number',  130),
+      ('바디비율', '상하체 비율',    '📊', '비율', 'number',  140),
+      ('체력',     '제자리 멀리뛰기','🦘', 'cm',   'number',  210),
+      ('체력',     '20m 달리기',     '🏃', 'sec',  'number',  220),
+      ('체력',     '스텝 테스트',    '👟', '회',   'number',  230),
+      ('체력',     '정확도 테스트',  '🎯', '%',    'number',  240),
+      ('배드민턴', '서비스 정확도',  '🎯', '%',    'number',  310),
+      ('배드민턴', '풋워크 스피드',  '👟', 'sec',  'number',  320),
+      ('배드민턴', '랠리 지속',      '🏸', '회',   'number',  330),
+      ('밸런스',   '파워',           '⚡', '점',   'number',  410),
+      ('밸런스',   '스피드',         '🏃', '점',   'number',  420),
+      ('밸런스',   '민첩성',         '🤸', '점',   'number',  430),
+      ('밸런스',   '균형성',         '⚖️', '점',   'number',  440),
+      ('밸런스',   '협응성',         '🔗', '점',   'number',  450)
+    ) as t(category, name, icon, unit, value_kind, sort_order)
   loop
-    insert into public.measurement_items (center_id, category, name, unit, value_kind, sort_order)
-    values (cid, v.category, v.name, v.unit, v.value_kind, v.sort_order)
+    insert into public.measurement_items (center_id, category, name, icon, unit, value_kind, sort_order)
+    values (cid, v.category, v.name, v.icon, v.unit, v.value_kind, v.sort_order)
     on conflict (center_id, name) do nothing;
     if found then v_count := v_count + 1; end if;
   end loop;
+
+  -- 기존 행의 빈 아이콘 백필 (사용자가 설정한 아이콘은 유지)
+  update public.measurement_items mi
+     set icon = src.icon
+    from (values
+      ('키','📏'),('몸무게','⚖️'),('골격근량','💪'),('체지방률','🔥'),
+      ('어깨너비','🤸'),('허리둘레','📐'),('팔-키 비율','📐'),('상하체 비율','📊'),
+      ('제자리 멀리뛰기','🦘'),('20m 달리기','🏃'),('스텝 테스트','👟'),('정확도 테스트','🎯'),
+      ('서비스 정확도','🎯'),('풋워크 스피드','👟'),('랠리 지속','🏸'),
+      ('파워','⚡'),('스피드','🏃'),('민첩성','🤸'),('균형성','⚖️'),('협응성','🔗')
+    ) as src(name, icon)
+   where mi.center_id = cid
+     and mi.name = src.name
+     and mi.icon is null;
+
   return v_count;
 end $$;
 

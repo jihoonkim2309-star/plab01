@@ -6,7 +6,25 @@ type Item = {
   value_kind?: string | null;
   sort_order?: number | null;
   active?: boolean | null;
+  icon?: string | null;
 };
+
+const ICON_SUGGESTIONS = [
+  "📏",
+  "⚖️",
+  "💪",
+  "🔥",
+  "🤸",
+  "📐",
+  "📊",
+  "🦘",
+  "🏃",
+  "👟",
+  "🎯",
+  "🏸",
+  "⚡",
+  "🔗",
+];
 
 const CATEGORIES = ["신체", "바디비율", "체력", "배드민턴", "밸런스"];
 
@@ -57,6 +75,27 @@ export default function ItemForm({
           type="number"
           defaultValue={item?.sort_order ?? 0}
         />
+      </div>
+      <div className="field span-2">
+        <label>아이콘 (리포트에 표시)</label>
+        <input
+          name="icon"
+          defaultValue={item?.icon ?? ""}
+          placeholder="📏 같은 이모지 하나 또는 비워두기"
+          maxLength={4}
+          style={{ width: 120, fontSize: 20 }}
+        />
+        <div
+          className="muted"
+          style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}
+        >
+          <span style={{ fontSize: 12 }}>추천:</span>
+          {ICON_SUGGESTIONS.map((e) => (
+            <span key={e} style={{ fontSize: 18 }}>
+              {e}
+            </span>
+          ))}
+        </div>
       </div>
       <div className="field">
         <label>활성</label>

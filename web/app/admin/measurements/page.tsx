@@ -6,6 +6,7 @@ import {
   rejectMeasurement,
   reopenMeasurement,
   saveMeasurement,
+  seedDemoMeasurements,
   submitMeasurement,
 } from "./actions";
 
@@ -124,6 +125,14 @@ export default async function MeasurementsPage({
           <Link className="btn" href={navUrl({ ym: nextYm, sid })}>
             {nextYm} →
           </Link>
+          {isAdmin && (
+            <form action={seedDemoMeasurements}>
+              <input type="hidden" name="ym" value={target} />
+              <button className="btn" type="submit" title="모든 활성 학생에 더미 측정값 + 승인완료">
+                데모 측정 데이터 채우기
+              </button>
+            </form>
+          )}
         </div>
       </div>
 

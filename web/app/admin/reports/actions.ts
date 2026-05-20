@@ -11,6 +11,7 @@ type SnapshotItem = {
   name: string;
   unit: string | null;
   value: number | string | null;
+  icon: string | null;
 };
 type SnapshotSection = { title: string; items: SnapshotItem[] };
 type Snapshot = {
@@ -48,7 +49,7 @@ async function buildSnapshot(
 
   const { data: items } = await supabase
     .from("measurement_items")
-    .select("id, category, name, unit, sort_order, active")
+    .select("id, category, name, unit, sort_order, active, icon")
     .eq("active", true)
     .order("sort_order", { ascending: true });
 
@@ -73,7 +74,12 @@ async function buildSnapshot(
         const v = valById.get(i.id);
         const value =
           v?.value_num != null ? v.value_num : (v?.value_text ?? null);
-        return { name: i.name, unit: i.unit ?? null, value };
+        return {
+          name: i.name,
+          unit: i.unit ?? null,
+          value,
+          icon: i.icon ?? null,
+        };
       }),
     });
   }
