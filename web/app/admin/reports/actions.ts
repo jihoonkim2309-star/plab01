@@ -27,6 +27,14 @@ export type SnapshotSection = {
   title: string;
   items: SnapshotTrendItem[];
 };
+export type BalanceScores = {
+  파워: number;
+  스피드: number;
+  민첩성: number;
+  균형성: number;
+  협응성: number;
+};
+
 export type Snapshot = {
   student: {
     id: string;
@@ -40,7 +48,55 @@ export type Snapshot = {
   months: [string, string, string, string]; // YYYY-MM
   month_dates: [string, string, string, string]; // YYYY.MM.DD (표시용)
   sections: SnapshotSection[];
+  balance: BalanceScores;
 };
+
+// 항목별 원값을 0-100 점수로 정규화. 연령대별 기준은 데이터 확보 전 임시 평균치 사용.
+const HIGHER_BETTER: Record<string, { min: number; max: number }> = {
+  "제자리 멀리뛰기": { min: 100, max: 220 }, // cm
+  "수직 점프": { min: 20, max: 55 }, // cm
+  "스텝 테스트": { min: 30, max: 90 }, // 회
+  "라켓 컨트롤": { min: 10, max: 60 }, // 회
+  정확도: { min: 40, max: 100 }, // %
+  골격근량: { min: 10, max: 30 }, // kg (아동 기준)
+};
+const LOWER_BETTER: Record<string, { good: number; bad: number }> = {
+  "20m 달리기": { good: 3.0, bad: 5.0 }, // sec
+  반응속도: { good: 0.3, bad: 0.85 }, // sec
+};
+function scoreItem(name: string, value: number): number | null {
+  const h = HIGHER_BETTER[name];
+  if (h)
+    return Math.max(
+      0,
+      Math.min(100, Math.round(((value - h.min) / (h.max - h.min)) * 100)),
+    );
+  const l = LOWER_BETTER[name];
+  if (l)
+    return Math.max(
+      0,
+      Math.min(100, Math.round(((l.bad - value) / (l.bad - l.good)) * 100)),
+    );
+  return null;
+}
+function avgOfScores(...scores: (number | null)[]): number {
+  const valid = scores.filter((x): x is number => x != null);
+  if (valid.length === 0) return 0;
+  return Math.round(valid.reduce((a, b) => a + b, 0) / valid.length);
+}
+function computeBalance(currentByName: Record<string, number>): BalanceScores {
+  const s = (name: string) => {
+    const v = currentByName[name];
+    return v != null ? scoreItem(name, v) : null;
+  };
+  return {
+    파워: avgOfScores(s("제자리 멀리뛰기"), s("수직 점프")),
+    스피드: avgOfScores(s("20m 달리기"), s("반응속도")),
+    민첩성: avgOfScores(s("스텝 테스트"), s("반응속도"), s("20m 달리기")),
+    균형성: avgOfScores(s("골격근량"), s("수직 점프")),
+    협응성: avgOfScores(s("라켓 컨트롤"), s("정확도"), s("스텝 테스트")),
+  };
+}
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -150,6 +206,14 @@ async function buildSnapshot(
     };
   }).filter((s) => s.items.length > 0);
 
+  // 현재 달 항목별 값 (이름→숫자) → 밸런스 5축 점수 계산
+  const currentByName: Record<string, number> = {};
+  for (const it of items ?? []) {
+    const cell = valByMonthItem.get(`3|${it.id}`);
+    if (typeof cell === "number") currentByName[it.name] = cell;
+  }
+  const balance = computeBalance(currentByName);
+
   return {
     snapshot: {
       student: student ?? {
@@ -164,6 +228,7 @@ async function buildSnapshot(
       months,
       month_dates: monthDates,
       sections,
+      balance,
     },
     measurementId: currentM?.id ?? null,
   };

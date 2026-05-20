@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import PrintButton from "./PrintButton";
 import IconLibrary, { ICON_ID } from "./IconLibrary";
+import RadarChart, { type BalanceScores } from "./RadarChart";
 
 type TrendCell = number | string | null;
 type SnapshotTrendItem = {
@@ -31,6 +32,7 @@ type Snapshot = {
   months: [string, string, string, string];
   month_dates: [string, string, string, string];
   sections: SnapshotSection[];
+  balance?: BalanceScores | null;
 };
 
 function ageFromBirth(b: string | null) {
@@ -337,6 +339,68 @@ export default async function ReportPreviewPage({
                 />
               )}
             </div>
+          )}
+
+          {/* Section 6: 신체 능력 밸런스 분석 (5축 레이더, 자동 환산) */}
+          {snap?.balance && (
+            <section className="section">
+              <div className="section__header">
+                <h2 className="section__title section__title--main">
+                  6. 신체 능력 밸런스 분석
+                </h2>
+                <span className="section__unit section__unit--main">
+                  단위: 점 / 100점 만점 · 측정 항목에서 자동 환산
+                </span>
+              </div>
+              <div
+                style={{
+                  background: "#fff",
+                  border: "0.5px solid var(--neutral-border)",
+                  borderRadius: 6,
+                  padding: "12px 0 4px",
+                }}
+              >
+                <RadarChart scores={snap.balance} size={420} />
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: 18,
+                    fontSize: 11,
+                    color: "var(--neutral-text-secondary)",
+                    paddingBottom: 8,
+                  }}
+                >
+                  <span>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        width: 10,
+                        height: 10,
+                        background: "#0F6E56",
+                        borderRadius: "50%",
+                        marginRight: 6,
+                        verticalAlign: -1,
+                      }}
+                    />
+                    이번 측정
+                  </span>
+                  <span>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        width: 18,
+                        height: 1,
+                        background: "#6E6B62",
+                        marginRight: 6,
+                        verticalAlign: 3,
+                      }}
+                    />
+                    표준 평균 (50점 기준선)
+                  </span>
+                </div>
+              </div>
+            </section>
           )}
 
           {/* Comments */}
