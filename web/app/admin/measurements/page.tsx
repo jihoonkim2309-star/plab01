@@ -33,31 +33,37 @@ export default async function MeasurementsPage({
   const target = ym && /^\d{4}-\d{2}$/.test(ym) ? ym : thisMonth();
   const supabase = await createClient();
 
-  // 어드민/코치 권한 + 자기 role 확인 (UI 분기용)
+  // 미들웨어가 이미 JWT 검증했으므로 로컬 세션만 읽고 → 나머지 조회 병렬
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: me } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", user?.id ?? "")
-    .single();
-  const isAdmin = me?.role === "admin";
+    data: { session },
+  } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
 
-  // 학생 전체(같은 센터, 활성)
-  const { data: students } = await supabase
-    .from("students")
-    .select("id, name, school, grade, gender, birth")
-    .eq("status", "활성")
-    .order("name", { ascending: true });
-
-  // 그 달의 measurements
-  const { data: ms } = await supabase
-    .from("measurements")
-    .select(
-      "id, student_id, status, measured_at, reviewed_at, reject_reason, notes",
-    )
-    .eq("measurement_month", target);
+  // role 조회 + 학생 목록 + 그 달 measurements + 활성 항목 → 한 번에 병렬
+  const [meRes, studentsRes, msRes, itemsRes] = await Promise.all([
+    userId
+      ? supabase.from("users").select("role").eq("id", userId).single()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("students")
+      .select("id, name, school, grade, gender, birth")
+      .eq("status", "활성")
+      .order("name", { ascending: true }),
+    supabase
+      .from("measurements")
+      .select(
+        "id, student_id, status, measured_at, reviewed_at, reject_reason, notes",
+      )
+      .eq("measurement_month", target),
+    supabase
+      .from("measurement_items")
+      .select("id, category, name, unit, value_kind, sort_order, active")
+      .eq("active", true)
+      .order("sort_order", { ascending: true }),
+  ]);
+  const isAdmin = meRes.data?.role === "admin";
+  const students = studentsRes.data;
+  const ms = msRes.data;
 
   const mByStudent = new Map(
     (ms ?? []).map((m) => [m.student_id, m]),
@@ -71,14 +77,10 @@ export default async function MeasurementsPage({
   const selected = sid ? list.find((s) => s.id === sid) ?? null : null;
   const m = selected ? mByStudent.get(selected.id) ?? null : null;
 
-  const { data: items } = selected
-    ? await supabase
-        .from("measurement_items")
-        .select("id, category, name, unit, value_kind, sort_order, active")
-        .eq("active", true)
-        .order("sort_order", { ascending: true })
-    : { data: [] };
+  // items 는 위 병렬 배치에서 미리 가져와 둠 — selected 가 없으면 그냥 안 그림
+  const items = selected ? (itemsRes.data ?? []) : [];
 
+  // values 는 measurement_id 가 정해진 뒤에야 조회 가능 → 마지막 단일 쿼리
   const { data: values } = m
     ? await supabase
         .from("measurement_values")
