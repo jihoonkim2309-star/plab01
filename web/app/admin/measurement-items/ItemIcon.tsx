@@ -32,54 +32,62 @@ export default function ItemIcon({
   iconHidden?: boolean;
   size?: number;
 }) {
+  // 모든 분기를 동일한 size×size 박스로 감싸서 정렬·간격 일관 (셀 정렬과 무관하게 같은 크기).
+  const frame = (children: React.ReactNode, extra?: React.CSSProperties) => (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: size,
+        height: size,
+        verticalAlign: "middle",
+        ...(extra ?? {}),
+      }}
+    >
+      {children}
+    </span>
+  );
+
   // 어드민이 명시적으로 가린 항목 → 아이콘 없음
-  if (iconHidden) return <span className="muted">-</span>;
+  if (iconHidden) return frame(<span className="muted">-</span>);
   // 1순위: 업로드한 파일
   if (iconUrl) {
-    return (
+    return frame(
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={iconUrl}
         alt={name}
-        style={{ width: size, height: size, objectFit: "contain" }}
-      />
+        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+      />,
     );
   }
   const id = ICON_ID[name];
   if (!id) {
-    return fallback ? (
-      <span style={{ fontSize: Math.round(size * 0.6) }}>{fallback}</span>
-    ) : (
-      <span className="muted">-</span>
+    return frame(
+      fallback ? (
+        <span style={{ fontSize: Math.round(size * 0.6) }}>{fallback}</span>
+      ) : (
+        <span className="muted">-</span>
+      ),
     );
   }
   const vb = viewBoxFor(id);
   if (category === "신체") {
-    return (
-      <span
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: size,
-          height: size,
-          borderRadius: "50%",
-          background: "#0F6E56",
-        }}
+    return frame(
+      <svg
+        width={Math.round(size * 0.625)}
+        height={Math.round(size * 0.625)}
+        viewBox={vb}
       >
-        <svg
-          width={Math.round(size * 0.625)}
-          height={Math.round(size * 0.625)}
-          viewBox={vb}
-        >
-          <use href={`#${id}`} />
-        </svg>
-      </span>
+        <use href={`#${id}`} />
+      </svg>,
+      { borderRadius: "50%", background: "#0F6E56" },
     );
   }
-  return (
+  return frame(
     <svg width={size} height={size} viewBox={vb}>
       <use href={`#${id}`} />
-    </svg>
+    </svg>,
   );
 }

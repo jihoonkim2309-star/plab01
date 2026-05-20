@@ -33,7 +33,7 @@ export default async function MeasurementItemsPage() {
         <div>
           <h1>측정 항목 관리</h1>
           <p className="subtext">
-            리포트에 들어갈 측정 항목 마스터 · 카테고리·단위·정렬·활성 관리
+            리포트에 들어갈 측정 항목 마스터 · 카테고리·단위·활성·아이콘 관리
           </p>
         </div>
         <div className="toolbar">
@@ -94,7 +94,6 @@ export default async function MeasurementItemsPage() {
               <th>항목명</th>
               <th>단위</th>
               <th>형식</th>
-              <th>정렬</th>
               <th>상태</th>
               <th></th>
             </tr>
@@ -127,7 +126,6 @@ export default async function MeasurementItemsPage() {
                 </td>
                 <td className="muted">{i.unit ?? "-"}</td>
                 <td className="muted">{i.value_kind}</td>
-                <td className="muted">{i.sort_order}</td>
                 <td>
                   {i.active ? (
                     <span className="badge green">활성</span>
@@ -148,7 +146,7 @@ export default async function MeasurementItemsPage() {
             ))}
             {list.length === 0 && (
               <tr>
-                <td colSpan={8}>
+                <td colSpan={7}>
                   <div className="empty-state">
                     <strong>등록된 항목이 없습니다</strong>
                     <p>
