@@ -60,9 +60,9 @@ export const NAV: NavGroup[] = [
   {
     label: "리포트",
     items: [
-      { label: "리포트 관리", slug: "report-list", href: p("report-list"), icon: "▣" },
-      { label: "측정 데이터 관리", slug: "report-data", href: p("report-data"), sub: true },
-      { label: "측정 항목 관리", slug: "report-template", href: p("report-template"), sub: true },
+      { label: "리포트 관리", slug: "report-list", href: "/admin/reports", icon: "▣", ready: true },
+      { label: "측정 데이터 관리", slug: "report-data", href: "/admin/measurements", sub: true, ready: true },
+      { label: "측정 항목 관리", slug: "report-template", href: "/admin/measurement-items", sub: true, ready: true },
       { label: "영상 데이터 관리", slug: "video-feedback", href: p("video-feedback"), sub: true },
     ],
   },

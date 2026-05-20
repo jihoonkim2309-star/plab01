@@ -22,3 +22,31 @@ export async function requireCenter() {
   }
   return { supabase, centerId: profile.center_id as string };
 }
+
+// 어드민 또는 코치 권한. 측정 입력처럼 코치도 가능한 액션용.
+export async function requireStaff() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("center_id, role")
+    .eq("id", user.id)
+    .single();
+
+  if (
+    !profile?.center_id ||
+    (profile.role !== "admin" && profile.role !== "coach")
+  ) {
+    throw new Error("어드민 또는 코치 권한이 필요합니다.");
+  }
+  return {
+    supabase,
+    centerId: profile.center_id as string,
+    role: profile.role as "admin" | "coach",
+    userId: user.id,
+  };
+}

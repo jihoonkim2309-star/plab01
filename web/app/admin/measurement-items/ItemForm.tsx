@@ -1,0 +1,79 @@
+type Item = {
+  id?: string;
+  category?: string | null;
+  name?: string | null;
+  unit?: string | null;
+  value_kind?: string | null;
+  sort_order?: number | null;
+  active?: boolean | null;
+};
+
+const CATEGORIES = ["신체", "바디비율", "체력", "배드민턴", "밸런스"];
+
+export default function ItemForm({
+  item,
+  action,
+  submitLabel,
+}: {
+  item?: Item;
+  action: (formData: FormData) => void;
+  submitLabel: string;
+}) {
+  return (
+    <form action={action} className="form-grid">
+      <div className="field">
+        <label>카테고리</label>
+        <select name="category" defaultValue={item?.category ?? "신체"}>
+          {CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="field">
+        <label>항목명</label>
+        <input name="name" defaultValue={item?.name ?? ""} required />
+      </div>
+      <div className="field">
+        <label>단위</label>
+        <input
+          name="unit"
+          defaultValue={item?.unit ?? ""}
+          placeholder="cm / kg / % / sec / 점"
+        />
+      </div>
+      <div className="field">
+        <label>값 형식</label>
+        <select name="value_kind" defaultValue={item?.value_kind ?? "number"}>
+          <option value="number">숫자</option>
+          <option value="text">텍스트</option>
+        </select>
+      </div>
+      <div className="field">
+        <label>정렬 순서</label>
+        <input
+          name="sort_order"
+          type="number"
+          defaultValue={item?.sort_order ?? 0}
+        />
+      </div>
+      <div className="field">
+        <label>활성</label>
+        <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <input
+            name="active"
+            type="checkbox"
+            defaultChecked={item?.active ?? true}
+          />
+          <span className="muted">체크 해제 시 측정 폼에 안 나타남</span>
+        </label>
+      </div>
+      <div className="span-2 toolbar" style={{ justifyContent: "flex-start" }}>
+        <button className="btn primary" type="submit">
+          {submitLabel}
+        </button>
+      </div>
+    </form>
+  );
+}

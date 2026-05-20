@@ -1,0 +1,362 @@
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import {
+  deleteReport,
+  generateReportsForMonth,
+  publishReport,
+  regenerateSnapshot,
+  unpublishReport,
+  updateReport,
+} from "./actions";
+import { REPORT_TYPES } from "./types";
+
+const pad = (n: number) => String(n).padStart(2, "0");
+function thisMonth() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+}
+
+const STATUS_BADGE: Record<string, string> = {
+  생성대기: "gray",
+  생성완료: "blue",
+  발행완료: "green",
+};
+
+const TYPE_BADGE: Record<string, string> = {
+  신체성장: "blue",
+  체력측정: "green",
+  배드민턴측정: "orange",
+  기록: "gray",
+};
+
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ym?: string; type?: string; rid?: string }>;
+}) {
+  const { ym, type, rid } = await searchParams;
+  const target = ym && /^\d{4}-\d{2}$/.test(ym) ? ym : thisMonth();
+  const supabase = await createClient();
+
+  // 목록 쿼리
+  let q = supabase
+    .from("reports")
+    .select(
+      "id, student_id, report_month, report_type, status, public_to_parent, published_at, students(name)",
+    )
+    .eq("report_month", target)
+    .order("created_at", { ascending: false });
+  if (type && (REPORT_TYPES as readonly string[]).includes(type)) {
+    q = q.eq("report_type", type);
+  }
+  const { data: rows } = await q;
+  const list = (rows ?? []) as unknown as {
+    id: string;
+    student_id: string;
+    report_month: string;
+    report_type: string;
+    status: string;
+    public_to_parent: boolean;
+    published_at: string | null;
+    students: { name: string } | null;
+  }[];
+
+  const cnt = (s: string) => list.filter((r) => r.status === s).length;
+
+  // 승인 완료 측정 수
+  const { data: approvedMs } = await supabase
+    .from("measurements")
+    .select("id", { count: "exact", head: false })
+    .eq("measurement_month", target)
+    .eq("status", "승인완료");
+  const approvedCount = approvedMs?.length ?? 0;
+
+  // 우측 디테일
+  const selected = rid ? list.find((r) => r.id === rid) ?? null : null;
+  const { data: rDetail } = selected
+    ? await supabase
+        .from("reports")
+        .select(
+          "id, snapshot, coach_comment, admin_comment, public_to_parent, published_at",
+        )
+        .eq("id", selected.id)
+        .single()
+    : { data: null };
+
+  // 월 네비
+  const [yy, mm] = target.split("-").map(Number);
+  const prev = new Date(yy, mm - 2, 1);
+  const next = new Date(yy, mm, 1);
+  const prevYm = `${prev.getFullYear()}-${pad(prev.getMonth() + 1)}`;
+  const nextYm = `${next.getFullYear()}-${pad(next.getMonth() + 1)}`;
+  const navUrl = (p: { ym?: string; type?: string | null; rid?: string | null }) => {
+    const qs = new URLSearchParams();
+    if (p.ym) qs.set("ym", p.ym);
+    if (p.type) qs.set("type", p.type);
+    if (p.rid) qs.set("rid", p.rid);
+    return `/admin/reports${qs.toString() ? `?${qs}` : ""}`;
+  };
+
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1>리포트 관리</h1>
+          <p className="subtext">
+            {target} · 승인 완료 측정 {approvedCount}건 → 학생당 4종 리포트 생성
+            가능
+          </p>
+        </div>
+        <div className="toolbar">
+          <Link className="btn" href={navUrl({ ym: prevYm, type })}>
+            ← {prevYm}
+          </Link>
+          <Link className="btn" href={navUrl({ ym: nextYm, type })}>
+            {nextYm} →
+          </Link>
+          <form action={generateReportsForMonth}>
+            <input type="hidden" name="ym" value={target} />
+            <button className="btn primary" type="submit">
+              일괄 생성/누락 보충
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div className="member-summary">
+        <div className="summary-card">
+          <span>전체 리포트</span>
+          <strong>{list.length}</strong>
+        </div>
+        <div className="summary-card">
+          <span>생성완료</span>
+          <strong>{cnt("생성완료")}</strong>
+        </div>
+        <div className="summary-card">
+          <span>발행완료</span>
+          <strong>{cnt("발행완료")}</strong>
+        </div>
+        <div className="summary-card">
+          <span>학부모 공개</span>
+          <strong>{list.filter((r) => r.public_to_parent).length}</strong>
+        </div>
+        <div className="summary-card">
+          <span>승인된 측정</span>
+          <strong>{approvedCount}</strong>
+        </div>
+      </div>
+
+      <div className="toolbar" style={{ marginBottom: 8 }}>
+        <Link
+          className={`btn${!type ? " toggle-active" : ""}`}
+          href={navUrl({ ym: target })}
+        >
+          전체 유형
+        </Link>
+        {REPORT_TYPES.map((t) => (
+          <Link
+            key={t}
+            className={`btn${type === t ? " toggle-active" : ""}`}
+            href={navUrl({ ym: target, type: t })}
+          >
+            {t}
+          </Link>
+        ))}
+      </div>
+
+      <div className="grid account-layout">
+        {/* 좌: 리포트 목록 */}
+        <div className="panel elevated">
+          <div className="panel-head">
+            <p className="panel-title">리포트 목록</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>학생</th>
+                <th>유형</th>
+                <th>상태</th>
+                <th>공개</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((r) => (
+                <tr
+                  key={r.id}
+                  className={selected?.id === r.id ? "selected" : ""}
+                >
+                  <td>
+                    <Link
+                      href={navUrl({ ym: target, type, rid: r.id })}
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      <strong>{r.students?.name ?? "-"}</strong>
+                    </Link>
+                  </td>
+                  <td>
+                    <span className={`badge ${TYPE_BADGE[r.report_type] ?? "gray"}`}>
+                      {r.report_type}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      className={`badge ${STATUS_BADGE[r.status] ?? "gray"}`}
+                    >
+                      {r.status}
+                    </span>
+                  </td>
+                  <td>
+                    {r.public_to_parent ? (
+                      <span className="badge green">공개</span>
+                    ) : (
+                      <span className="badge gray">비공개</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {list.length === 0 && (
+                <tr>
+                  <td colSpan={4}>
+                    <div className="empty-state">
+                      <strong>리포트가 없습니다</strong>
+                      <p>
+                        승인 완료된 측정이 있으면 위의{" "}
+                        <b>일괄 생성/누락 보충</b> 버튼으로 한 번에 생성할 수
+                        있습니다.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* 우: 디테일 */}
+        <div className="panel elevated">
+          {!selected || !rDetail ? (
+            <>
+              <div className="panel-head">
+                <p className="panel-title">리포트 상세</p>
+              </div>
+              <div className="panel-body">
+                <div className="empty-state">
+                  <strong>리포트를 선택하세요</strong>
+                  <p>좌측에서 리포트를 선택하면 코멘트·미리보기·발행을 처리할 수 있습니다.</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="panel-head">
+                <p className="panel-title">
+                  {selected.students?.name} · {selected.report_type} ·{" "}
+                  {selected.report_month}
+                </p>
+                <span
+                  className={`badge ${STATUS_BADGE[selected.status] ?? "gray"}`}
+                >
+                  {selected.status}
+                </span>
+              </div>
+              <div className="panel-body">
+                {/* 미리보기·재생성 */}
+                <div
+                  className="toolbar"
+                  style={{ justifyContent: "flex-start", marginBottom: 12 }}
+                >
+                  <Link
+                    className="btn"
+                    href={`/admin/reports/${selected.id}/preview`}
+                    target="_blank"
+                  >
+                    PDF 미리보기 (새 창)
+                  </Link>
+                  <form action={regenerateSnapshot}>
+                    <input type="hidden" name="id" value={selected.id} />
+                    <button className="btn" type="submit">
+                      측정값 재반영
+                    </button>
+                  </form>
+                </div>
+
+                {/* 코멘트/공개 */}
+                <form action={updateReport} className="form-grid">
+                  <input type="hidden" name="id" value={selected.id} />
+                  <div className="field span-2">
+                    <label>코치 코멘트</label>
+                    <textarea
+                      name="coach_comment"
+                      defaultValue={rDetail.coach_comment ?? ""}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="field span-2">
+                    <label>관리자 코멘트</label>
+                    <textarea
+                      name="admin_comment"
+                      defaultValue={rDetail.admin_comment ?? ""}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="field span-2">
+                    <label>학부모 공개</label>
+                    <label
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    >
+                      <input
+                        name="public_to_parent"
+                        type="checkbox"
+                        defaultChecked={rDetail.public_to_parent}
+                      />
+                      <span className="muted">
+                        체크 시 학부모 앱·링크에 노출 (발행 시 자동 체크됨)
+                      </span>
+                    </label>
+                  </div>
+                  <div
+                    className="span-2 toolbar"
+                    style={{ justifyContent: "flex-start" }}
+                  >
+                    <button className="btn primary" type="submit">
+                      코멘트 저장
+                    </button>
+                  </div>
+                </form>
+
+                {/* 발행 액션 */}
+                <div
+                  className="toolbar"
+                  style={{ justifyContent: "flex-start", marginTop: 12 }}
+                >
+                  {selected.status !== "발행완료" ? (
+                    <form action={publishReport}>
+                      <input type="hidden" name="id" value={selected.id} />
+                      <button className="btn primary" type="submit">
+                        발행
+                      </button>
+                    </form>
+                  ) : (
+                    <form action={unpublishReport}>
+                      <input type="hidden" name="id" value={selected.id} />
+                      <button className="btn" type="submit">
+                        발행 취소
+                      </button>
+                    </form>
+                  )}
+                  <form action={deleteReport}>
+                    <input type="hidden" name="id" value={selected.id} />
+                    <input type="hidden" name="ym" value={target} />
+                    <button className="btn" type="submit">
+                      삭제
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
