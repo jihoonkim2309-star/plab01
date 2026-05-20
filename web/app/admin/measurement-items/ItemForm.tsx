@@ -58,8 +58,8 @@ export default function ItemForm({
           ))}
         </select>
       </div>
-      <div className="field">
-        <label>항목명</label>
+      <div className="field" data-error="항목명을 입력해 주세요">
+        <label>항목명 *</label>
         <input name="name" defaultValue={item?.name ?? ""} required />
       </div>
       <div className="field">

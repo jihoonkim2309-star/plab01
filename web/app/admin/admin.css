@@ -615,6 +615,36 @@
   min-height: 38px;
 }
 .field textarea { min-height: 86px; resize: vertical; }
+/* HTML5 :user-invalid → 사용자가 한 번이라도 건드린 뒤 비어있을 때만 빨간 강조.
+   .field 에 data-error="..." 를 주면 그 문구가 인라인으로 표시됨. */
+.field:has(input:user-invalid) label,
+.field:has(select:user-invalid) label,
+.field:has(textarea:user-invalid) label { color: #b42318; }
+
+.field input:user-invalid,
+.field select:user-invalid,
+.field textarea:user-invalid {
+  border-color: #d76b6b !important;
+  background: #fdecec !important;
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.08);
+}
+
+.field:has(input:user-invalid)::after,
+.field:has(select:user-invalid)::after,
+.field:has(textarea:user-invalid)::after {
+  content: "이 항목은 필수입니다";
+  display: block;
+  color: #b42318;
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+.field[data-error]:has(input:user-invalid)::after,
+.field[data-error]:has(select:user-invalid)::after,
+.field[data-error]:has(textarea:user-invalid)::after {
+  content: attr(data-error);
+}
+
 .field.has-error label { color: #b42318; }
 .field.has-error input,
 .field.has-error select,

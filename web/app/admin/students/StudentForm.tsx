@@ -16,6 +16,7 @@ function Field({
   span2 = false,
   placeholder,
   required = false,
+  errorText,
 }: {
   label: string;
   name?: string;
@@ -24,11 +25,15 @@ function Field({
   span2?: boolean;
   placeholder?: string;
   required?: boolean;
+  errorText?: string;
 }) {
   const dateProps =
     type === "date" ? { min: "1900-01-01", max: "2100-12-31" } : {};
   return (
-    <div className={`field${span2 ? " span-2" : ""}`}>
+    <div
+      className={`field${span2 ? " span-2" : ""}`}
+      data-error={errorText}
+    >
       <label>{label}</label>
       <input
         name={name}
@@ -139,7 +144,7 @@ export default function StudentForm({
             </div>
             <div className="panel-body">
               <div className="form-grid">
-                <Field label="학생명 *" name="name" value={s.name} placeholder="학생명 입력" required />
+                <Field label="학생명 *" name="name" value={s.name} placeholder="학생명 입력" required errorText="학생명을 입력해 주세요" />
                 <Field label="생년월일" name="birth" value={s.birth} type="date" />
                 <Select
                   label="성별"

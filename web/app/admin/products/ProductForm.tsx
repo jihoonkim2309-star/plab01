@@ -23,12 +23,13 @@ export default function ProductForm({
         </div>
         <div className="panel-body">
           <div className="form-grid">
-            <div className="field">
+            <div className="field" data-error="상품명을 입력해 주세요">
               <label>상품명 *</label>
               <input
                 name="name"
                 defaultValue={v("name")}
                 placeholder="예: 주 2회 정규반"
+                required
               />
             </div>
             <div className="field">

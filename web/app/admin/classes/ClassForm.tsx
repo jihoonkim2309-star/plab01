@@ -27,9 +27,9 @@ export default function ClassForm({
         </div>
         <div className="panel-body">
           <div className="form-grid">
-            <div className="field">
+            <div className="field" data-error="클래스명을 입력해 주세요">
               <label>클래스명 *</label>
-              <input name="name" defaultValue={v("name")} />
+              <input name="name" defaultValue={v("name")} required />
             </div>
             <div className="field">
               <label>주 종목</label>
