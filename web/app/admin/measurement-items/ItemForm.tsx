@@ -1,5 +1,6 @@
 import FilePicker from "../FilePicker";
 import ConfirmButton from "../ConfirmButton";
+import ItemIcon, { IconLibrary, ICON_ID } from "./ItemIcon";
 import { removeItemIcon } from "./actions";
 
 type Item = {
@@ -35,8 +36,24 @@ export default function ItemForm({
   submitLabel: string;
 }) {
   const iconUrl = item?.icon_url ?? null;
+  const hasSvgMapping = item?.name ? !!ICON_ID[item.name] : false;
+  const iconSource: "upload" | "svg" | "emoji" | "none" = iconUrl
+    ? "upload"
+    : hasSvgMapping
+      ? "svg"
+      : item?.icon
+        ? "emoji"
+        : "none";
+  const iconSourceHint = {
+    upload: "업로드된 아이콘이 사용됩니다. 새 파일을 선택하면 덮어쓰기.",
+    svg: "항목명 기준 기본 SVG 아이콘이 사용됩니다. 파일을 업로드해서 교체할 수 있습니다.",
+    emoji: "이모지가 사용됩니다. 파일을 업로드하면 그 파일로 대체됩니다.",
+    none: "아이콘이 없습니다. 파일을 업로드해 주세요.",
+  }[iconSource];
   return (
     <form action={action} className="form-grid" encType="multipart/form-data">
+      {/* SVG <use> 참조용 심볼 라이브러리 마운트 */}
+      <IconLibrary />
       <div className="field">
         <label>카테고리</label>
         <select name="category" defaultValue={item?.category ?? "신체"}>
@@ -85,45 +102,30 @@ export default function ItemForm({
             flexWrap: "wrap",
           }}
         >
-          {iconUrl ? (
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 56,
-                height: 56,
-                borderRadius: 8,
-                border: "1px solid var(--line)",
-                background: "#fff",
-                overflow: "hidden",
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={iconUrl}
-                alt="현재 아이콘"
-                style={{ maxWidth: "100%", maxHeight: "100%" }}
-              />
-            </div>
-          ) : (
-            <div
-              className="muted"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 56,
-                height: 56,
-                borderRadius: 8,
-                border: "1px dashed var(--line)",
-                background: "#fafaf7",
-                fontSize: 11,
-              }}
-            >
-              없음
-            </div>
-          )}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 56,
+              height: 56,
+              borderRadius: 8,
+              border: iconUrl
+                ? "1px solid var(--line)"
+                : "1px dashed var(--line)",
+              background: "#fff",
+              overflow: "hidden",
+            }}
+            title={iconUrl ? "업로드된 아이콘" : "기본 SVG 또는 없음"}
+          >
+            <ItemIcon
+              name={item?.name ?? ""}
+              category={item?.category ?? ""}
+              fallback={item?.icon ?? null}
+              iconUrl={iconUrl}
+              size={44}
+            />
+          </div>
           <FilePicker
             name="icon_file"
             accept="image/svg+xml,image/png,image/jpeg,image/webp"
@@ -132,6 +134,8 @@ export default function ItemForm({
           />
         </div>
         <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+          {iconSourceHint}
+          <br />
           권장: 정사각형 64×64 이상의 SVG(또는 투명 PNG). 신체 카테고리는 녹색
           배지 위에 표시되니 어두운 외곽선 SVG가 잘 보입니다.
         </div>

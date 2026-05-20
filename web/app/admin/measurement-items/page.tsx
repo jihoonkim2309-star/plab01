@@ -1,73 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { seedItems } from "./actions";
-import IconLibrary, {
-  ICON_ID,
-} from "@/app/admin/reports/[id]/preview/IconLibrary";
-
-function viewBoxFor(id: string) {
-  if (id === "ic4-longjump" || id === "ic4-run") return "0 0 32 24";
-  if (id === "ic4-verticaljump") return "0 0 28 30";
-  if (id.startsWith("ic1-") || id.startsWith("ic5-")) return "0 0 28 28";
-  return "0 0 32 32";
-}
-
-function ItemIcon({
-  name,
-  category,
-  fallback,
-  iconUrl,
-}: {
-  name: string;
-  category: string;
-  fallback: string | null;
-  iconUrl: string | null;
-}) {
-  // 1순위: 업로드한 파일
-  if (iconUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={iconUrl}
-        alt={name}
-        style={{ width: 32, height: 32, objectFit: "contain" }}
-      />
-    );
-  }
-  const id = ICON_ID[name];
-  if (!id) {
-    return fallback ? (
-      <span style={{ fontSize: 20 }}>{fallback}</span>
-    ) : (
-      <span className="muted">-</span>
-    );
-  }
-  const vb = viewBoxFor(id);
-  if (category === "신체") {
-    return (
-      <span
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: 32,
-          height: 32,
-          borderRadius: "50%",
-          background: "#0F6E56",
-        }}
-      >
-        <svg width="20" height="20" viewBox={vb}>
-          <use href={`#${id}`} />
-        </svg>
-      </span>
-    );
-  }
-  return (
-    <svg width="32" height="32" viewBox={vb}>
-      <use href={`#${id}`} />
-    </svg>
-  );
-}
+import ItemIcon, { IconLibrary } from "./ItemIcon";
 
 const CAT_BADGE: Record<string, string> = {
   신체: "blue",
