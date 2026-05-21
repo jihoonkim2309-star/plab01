@@ -2,15 +2,53 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { nextGrade, promoMeta } from "@/lib/promotion";
 import { bulkCreateGradePromotions } from "../actions";
+import FilterBar from "../../FilterBar";
+import FilterSelect from "../../FilterSelect";
+import SearchInput from "../../SearchInput";
 
-export default async function BulkNewPage() {
+const GRADE_OPTIONS = [
+  "5세", "6세", "7세",
+  "초1", "초2", "초3", "초4", "초5", "초6",
+  "중1", "중2", "중3",
+];
+
+export default async function BulkNewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ grade?: string; q?: string; year?: string }>;
+}) {
+  const { grade: gradeFilter, q, year } = await searchParams;
   const supabase = await createClient();
-  const { data: students } = await supabase
+
+  // 현재 연도 기준 +2년까지 학년도 옵션 생성 (default = 현재 학년도)
+  const Y = new Date().getFullYear();
+  const yearOptions = [`${Y}학년도`, `${Y + 1}학년도`, `${Y + 2}학년도`];
+  const selectedYear = year ?? `${Y}학년도`;
+
+  let studentQuery = supabase
     .from("students")
     .select("id, name, school, grade")
     .order("name");
+  if (gradeFilter) studentQuery = studentQuery.eq("grade", gradeFilter);
+  if (q) studentQuery = studentQuery.or(`name.ilike.%${q}%,school.ilike.%${q}%`);
 
-  const list = students ?? [];
+  // 같은 학년도에 이미 승급 건이 있는 학생 표시용
+  const [studRes, promoRes] = await Promise.all([
+    studentQuery,
+    supabase
+      .from("grade_promotions")
+      .select("student_id, status")
+      .eq("school_year", selectedYear),
+  ]);
+
+  const list = studRes.data ?? [];
+  const existingByStudent = new Map<string, string>();
+  for (const p of promoRes.data ?? []) {
+    const rec = p as { student_id: string; status: string };
+    existingByStudent.set(rec.student_id, rec.status);
+  }
+
+  const hasFilter = !!(gradeFilter || q);
 
   return (
     <>
@@ -28,14 +66,45 @@ export default async function BulkNewPage() {
       <form action={bulkCreateGradePromotions}>
         <div className="panel elevated">
           <div className="panel-head">
-            <p className="panel-title">대상 학생 선택</p>
+            <p className="panel-title">
+              대상 학생 선택{" "}
+              <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                {hasFilter ? `검색결과 ${list.length}명` : `${list.length}명`}
+              </span>
+            </p>
             <div className="toolbar">
-              <select name="school_year" defaultValue="2026학년도">
-                <option>2026학년도</option>
-                <option>2027학년도</option>
+              <select name="school_year" defaultValue={selectedYear}>
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
               </select>
-              <button className="btn primary">선택 학생 일괄 생성</button>
+              <button className="btn primary" type="submit">선택 학생 일괄 생성</button>
             </div>
+          </div>
+          <div className="panel-body" style={{ paddingBottom: 0 }}>
+            <FilterBar>
+              <FilterSelect
+                param="grade"
+                current={gradeFilter}
+                placeholder="학년 전체"
+                ariaLabel="학년 필터"
+                options={GRADE_OPTIONS.map((g) => ({ value: g, label: g }))}
+              />
+              <FilterSelect
+                param="year"
+                current={year}
+                placeholder={`${Y}학년도 (기본)`}
+                ariaLabel="대상 학년도"
+                options={yearOptions.map((y) => ({ value: y, label: y }))}
+              />
+              <div style={{ flex: 1 }} />
+              <SearchInput param="q" current={q} placeholder="학생·학교 검색" />
+              {hasFilter && (
+                <Link className="btn" href="/admin/grade-promotions/new">
+                  초기화
+                </Link>
+              )}
+            </FilterBar>
           </div>
           <table>
             <thead>
@@ -45,12 +114,14 @@ export default async function BulkNewPage() {
                 <th>현재 학교/학년</th>
                 <th>승급 후(자동)</th>
                 <th>유형</th>
+                <th>{selectedYear} 기존</th>
               </tr>
             </thead>
             <tbody>
               {list.map((s) => {
                 const to = nextGrade(s.grade);
                 const meta = promoMeta(to);
+                const existing = existingByStudent.get(s.id);
                 return (
                   <tr key={s.id}>
                     <td className="check-cell">
@@ -58,7 +129,7 @@ export default async function BulkNewPage() {
                         type="checkbox"
                         name="student_ids"
                         value={s.id}
-                        defaultChecked={!!to}
+                        defaultChecked={!!to && !existing}
                         disabled={!to}
                       />
                     </td>
@@ -87,15 +158,33 @@ export default async function BulkNewPage() {
                         "-"
                       )}
                     </td>
+                    <td>
+                      {existing ? (
+                        <span className="badge orange">
+                          기존: {existing}
+                        </span>
+                      ) : (
+                        <span className="muted">-</span>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={5}>
+                  <td colSpan={6}>
                     <div className="empty-state">
-                      <strong>학생이 없습니다</strong>
-                      <p>회원 관리에서 학생을 먼저 등록하세요.</p>
+                      {hasFilter ? (
+                        <>
+                          <strong>검색 결과가 없습니다</strong>
+                          <p>필터·검색어를 조정해 보세요.</p>
+                        </>
+                      ) : (
+                        <>
+                          <strong>학생이 없습니다</strong>
+                          <p>회원 관리에서 학생을 먼저 등록하세요.</p>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -104,9 +193,11 @@ export default async function BulkNewPage() {
           </table>
         </div>
         <p className="muted" style={{ marginTop: 10 }}>
-          학교 변경 유형(초등 입학·초등→중등·중등→고등)은 “학부모 입력 요청”
+          학교 변경 유형(초등 입학·초등→중등·중등→고등)은 "학부모 입력 요청"
           상태로 생성됩니다. 학부모 앱 단계 전까지는 상세에서 관리자가 새 학교를
-          대행 입력할 수 있습니다.
+          대행 입력할 수 있습니다. "{selectedYear} 기존" 컬럼에 표시된 학생은 같은
+          학년도에 이미 승급 건이 있어 자동 체크 해제됩니다 — 필요하면 직접 체크해 추가
+          생성 가능.
         </p>
       </form>
     </>

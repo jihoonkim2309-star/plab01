@@ -7,6 +7,10 @@ import {
   deleteGradePromotion,
 } from "./actions";
 import ConfirmButton from "../ConfirmButton";
+import FilterBar from "../FilterBar";
+import StatusChips from "../StatusChips";
+import FilterSelect from "../FilterSelect";
+import SearchInput from "../SearchInput";
 
 type GP = {
   id: string;
@@ -19,6 +23,7 @@ type GP = {
   to_school: string | null;
   needs_parent_input: boolean;
   processed_at: string | null;
+  created_at: string | null;
   student_id: string;
   students: { name: string; school: string | null } | null;
 };
@@ -30,24 +35,60 @@ const SB: Record<string, string> = {
   보류: "gray",
 };
 
+const STATUS_OPTIONS = ["진학 확인 필요", "학부모 입력 요청", "승인 완료", "보류"];
+
 export default async function GradePromotionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sel?: string }>;
+  searchParams: Promise<{ sel?: string; status?: string; year?: string; q?: string }>;
 }) {
-  const { sel } = await searchParams;
+  const { sel, status, year, q } = await searchParams;
   const supabase = await createClient();
 
-  const { data } = await supabase
+  // 필터 무관 카운트 + 학년도 옵션을 위해 전체 한 번 + 필터 적용 목록 한 번
+  let listQuery = supabase
     .from("grade_promotions")
     .select(
-      "id, school_year, from_grade, to_grade, promo_type, status, note, to_school, needs_parent_input, processed_at, student_id, students(name, school)",
+      "id, school_year, from_grade, to_grade, promo_type, status, note, to_school, needs_parent_input, processed_at, created_at, student_id, students(name, school)",
     )
     .order("created_at", { ascending: false });
+  if (status) listQuery = listQuery.eq("status", status);
+  if (year) listQuery = listQuery.eq("school_year", year);
 
-  const list = (data ?? []) as unknown as GP[];
-  const c = (s: string) => list.filter((g) => g.status === s).length;
+  const [listRes, allRes] = await Promise.all([
+    listQuery,
+    supabase
+      .from("grade_promotions")
+      .select("status, school_year"),
+  ]);
+
+  let raw = (listRes.data ?? []) as unknown as GP[];
+
+  // 학생명·학교 검색은 join 결과로 클라이언트(서버) 측 필터
+  if (q) {
+    const needle = q.toLowerCase();
+    raw = raw.filter((g) => {
+      const n = (g.students?.name ?? "").toLowerCase();
+      const s = (g.students?.school ?? "").toLowerCase();
+      return n.includes(needle) || s.includes(needle);
+    });
+  }
+
+  const list = raw;
+  const all = (allRes.data ?? []) as { status: string; school_year: string | null }[];
+  const totals = {
+    total: all.length,
+    confirm: all.filter((g) => g.status === "진학 확인 필요").length,
+    parentInput: all.filter((g) => g.status === "학부모 입력 요청").length,
+    done: all.filter((g) => g.status === "승인 완료").length,
+    hold: all.filter((g) => g.status === "보류").length,
+  };
+  const yearSet = new Set<string>();
+  for (const g of all) if (g.school_year) yearSet.add(g.school_year);
+  const yearOptions = [...yearSet].sort().reverse();
+
   const selected = sel ? list.find((g) => g.id === sel) ?? null : null;
+  const hasFilter = !!(status || year || q);
 
   return (
     <>
@@ -66,35 +107,75 @@ export default async function GradePromotionsPage({
       </div>
 
       <div className="member-summary">
-        <div className="summary-card"><span>승급 대상</span><strong>{list.length}</strong></div>
-        <div className="summary-card"><span>진학 확인</span><strong>{c("진학 확인 필요")}</strong></div>
-        <div className="summary-card"><span>학부모 입력</span><strong>{c("학부모 입력 요청")}</strong></div>
-        <div className="summary-card"><span>승인 완료</span><strong>{c("승인 완료")}</strong></div>
-        <div className="summary-card"><span>보류</span><strong>{c("보류")}</strong></div>
+        <div className="summary-card"><span>승급 대상</span><strong>{totals.total}</strong></div>
+        <div className="summary-card"><span>진학 확인</span><strong>{totals.confirm}</strong></div>
+        <div className="summary-card"><span>학부모 입력</span><strong>{totals.parentInput}</strong></div>
+        <div className="summary-card"><span>승인 완료</span><strong>{totals.done}</strong></div>
+        <div className="summary-card"><span>보류</span><strong>{totals.hold}</strong></div>
       </div>
 
       <div className="grid account-layout">
         <form action={bulkSetStatus} className="panel elevated">
           <div className="panel-head">
-            <p className="panel-title">승급 대상 목록</p>
+            <p className="panel-title">
+              승급 대상 목록{" "}
+              <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                {hasFilter
+                  ? `검색결과 ${list.length}건 / 전체 ${totals.total}`
+                  : `${list.length}건`}
+              </span>
+            </p>
             <div className="toolbar">
-              <button className="btn primary" name="status" value="승인 완료">
+              <ConfirmButton
+                message="선택한 승급 건을 승인 완료로 처리할까요?\n해당 학생들의 학년(학교변경 시 학교)이 실제 반영됩니다."
+                className="btn primary"
+                type="submit"
+                name="status"
+                value="승인 완료"
+              >
                 선택 승인 완료
-              </button>
-              <button className="btn warn" name="status" value="보류">
+              </ConfirmButton>
+              <button className="btn warn" name="status" value="보류" type="submit">
                 선택 보류
               </button>
             </div>
+          </div>
+          <div className="panel-body" style={{ paddingBottom: 0 }}>
+            <FilterBar>
+              <StatusChips
+                param="status"
+                current={status}
+                options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+              />
+              {yearOptions.length > 0 && (
+                <FilterSelect
+                  param="year"
+                  current={year}
+                  placeholder="학년도 전체"
+                  ariaLabel="학년도 필터"
+                  options={yearOptions.map((y) => ({ value: y, label: y }))}
+                />
+              )}
+              <div style={{ flex: 1 }} />
+              <SearchInput param="q" current={q} placeholder="학생·학교 검색" />
+              {hasFilter && (
+                <Link className="btn" href="/admin/grade-promotions">
+                  초기화
+                </Link>
+              )}
+            </FilterBar>
           </div>
           <table>
             <thead>
               <tr>
                 <th className="check-cell"></th>
                 <th>학생</th>
+                <th>학년도</th>
                 <th>현재</th>
                 <th>승급 후</th>
                 <th>유형</th>
                 <th>상태</th>
+                <th>생성</th>
               </tr>
             </thead>
             <tbody>
@@ -116,6 +197,7 @@ export default async function GradePromotionsPage({
                     </Link>
                     <div className="muted">{g.students?.school ?? ""}</div>
                   </td>
+                  <td className="muted">{g.school_year ?? "-"}</td>
                   <td className="muted">{g.from_grade ?? "-"}</td>
                   <td className="muted">
                     {g.to_grade ?? "-"}
@@ -131,14 +213,26 @@ export default async function GradePromotionsPage({
                       {g.status}
                     </span>
                   </td>
+                  <td className="muted">
+                    {g.created_at ? g.created_at.slice(0, 10) : "-"}
+                  </td>
                 </tr>
               ))}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={8}>
                     <div className="empty-state">
-                      <strong>승급 대상이 없습니다</strong>
-                      <p>“승급 대상 일괄 생성”으로 대상을 만드세요.</p>
+                      {hasFilter ? (
+                        <>
+                          <strong>검색 결과가 없습니다</strong>
+                          <p>필터·검색어를 조정해 보세요.</p>
+                        </>
+                      ) : (
+                        <>
+                          <strong>승급 대상이 없습니다</strong>
+                          <p>"승급 대상 일괄 생성"으로 대상을 만드세요.</p>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -165,7 +259,16 @@ export default async function GradePromotionsPage({
             ) : (
               <>
                 <div className="detail-block" style={{ marginTop: 0 }}>
-                  <p className="detail-title">{selected.students?.name}</p>
+                  <p className="detail-title">
+                    {selected.students?.name}{" "}
+                    <Link
+                      href={`/admin/students/${selected.student_id}`}
+                      className="muted"
+                      style={{ fontSize: 12, fontWeight: 400, marginLeft: 6 }}
+                    >
+                      학생 상세 →
+                    </Link>
+                  </p>
                   <div className="info-list">
                     <div className="info-row">
                       <span>현재 학교/학년</span>
@@ -183,6 +286,12 @@ export default async function GradePromotionsPage({
                       <span>학년도</span>
                       <strong>{selected.school_year ?? "-"}</strong>
                     </div>
+                    {selected.created_at && (
+                      <div className="info-row">
+                        <span>생성일</span>
+                        <strong>{selected.created_at.slice(0, 10)}</strong>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -226,27 +335,39 @@ export default async function GradePromotionsPage({
                 <div className="detail-block">
                   <p className="detail-title">상태 처리</p>
                   <div className="action-grid">
-                    {["진학 확인 필요", "학부모 입력 요청", "승인 완료", "보류"].map(
-                      (st) => (
+                    {STATUS_OPTIONS.map((st) => {
+                      const isApprove = st === "승인 완료";
+                      const btn = (
+                        <button
+                          className={`btn${st === "승인 완료" ? " primary" : st === "보류" ? " warn" : ""}`}
+                          style={{ width: "100%" }}
+                          disabled={selected.status === st}
+                          type="submit"
+                        >
+                          {st}
+                          {st === "승인 완료" ? " (반영)" : ""}
+                        </button>
+                      );
+                      return (
                         <form
                           key={st}
-                          action={setGradePromotionStatus.bind(
-                            null,
-                            selected.id,
-                            st,
-                          )}
+                          action={setGradePromotionStatus.bind(null, selected.id, st)}
                         >
-                          <button
-                            className={`btn${st === "승인 완료" ? " primary" : st === "보류" ? " warn" : ""}`}
-                            style={{ width: "100%" }}
-                            disabled={selected.status === st}
-                          >
-                            {st}
-                            {st === "승인 완료" ? " (반영)" : ""}
-                          </button>
+                          {isApprove && selected.status !== st ? (
+                            <ConfirmButton
+                              message={`'${selected.students?.name ?? "학생"}' 의 학년을 ${selected.to_grade ?? ""}${selected.to_school ? `, 학교를 ${selected.to_school}` : ""}로 반영합니다. 진행할까요?`}
+                              className="btn primary"
+                              style={{ width: "100%" }}
+                              type="submit"
+                            >
+                              승인 완료 (반영)
+                            </ConfirmButton>
+                          ) : (
+                            btn
+                          )}
                         </form>
-                      ),
-                    )}
+                      );
+                    })}
                   </div>
                   <div style={{ marginTop: 10 }}>
                     <form
