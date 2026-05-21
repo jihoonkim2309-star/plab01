@@ -126,14 +126,14 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* 중앙 일러스트 — 사각형이라 mask 로 가장자리 페이드 */}
+        {/* 중앙 일러스트 — 세로 비율 (A4) 이라 ellipse mask 로 자연스럽게 페이드 */}
         <div
           className="relative z-10"
           style={{
             WebkitMaskImage:
-              "radial-gradient(ellipse at center, black 55%, transparent 90%)",
+              "radial-gradient(ellipse 70% 60% at center, black 50%, transparent 95%)",
             maskImage:
-              "radial-gradient(ellipse at center, black 55%, transparent 90%)",
+              "radial-gradient(ellipse 70% 60% at center, black 50%, transparent 95%)",
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -141,7 +141,7 @@ export default function LoginPage() {
             src="/login-hero.svg"
             alt=""
             aria-hidden
-            className="w-[440px] h-auto"
+            className="h-[560px] w-auto"
           />
         </div>
       </div>
