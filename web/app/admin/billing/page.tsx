@@ -25,9 +25,14 @@ const SB: Record<string, string> = {
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ym?: string; created?: string; seeded?: string }>;
+  searchParams: Promise<{
+    ym?: string;
+    created?: string;
+    seeded?: string;
+    seed_error?: string;
+  }>;
 }) {
-  const { ym, created, seeded } = await searchParams;
+  const { ym, created, seeded, seed_error } = await searchParams;
   const period = curMonth(ym);
   const supabase = await createClient();
 
@@ -102,6 +107,21 @@ export default async function BillingPage({
           }}
         >
           더미 결제정보 {seeded}건 채움. 행을 클릭해 상세에서 카드 정보 확인하세요.
+        </div>
+      )}
+
+      {seed_error && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--red-soft)",
+            borderColor: "#f0bdbd",
+            color: "var(--red)",
+            padding: "12px 16px",
+          }}
+        >
+          <strong>더미 시드 실패</strong>
+          <div style={{ marginTop: 4 }}>{seed_error}</div>
         </div>
       )}
 
