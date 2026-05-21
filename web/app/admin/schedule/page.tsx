@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import MonthNav from "../MonthNav";
+import FilterBar from "../FilterBar";
+import FilterSelect from "../FilterSelect";
 
 const KOR = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -15,17 +16,13 @@ function ymParts(ym?: string) {
   return { y, m };
 }
 const pad = (n: number) => String(n).padStart(2, "0");
-const shift = (y: number, m: number, d: number) => {
-  const t = new Date(y, m - 1 + d, 1);
-  return `${t.getFullYear()}-${pad(t.getMonth() + 1)}`;
-};
 
 export default async function SchedulePage({
   searchParams,
 }: {
-  searchParams: Promise<{ ym?: string }>;
+  searchParams: Promise<{ ym?: string; class_id?: string }>;
 }) {
-  const { ym } = await searchParams;
+  const { ym, class_id } = await searchParams;
   const { y, m } = ymParts(ym);
   const monthStr = `${y}-${pad(m)}`;
   const first = new Date(y, m - 1, 1);
@@ -33,10 +30,17 @@ export default async function SchedulePage({
   const lead = first.getDay(); // 앞쪽 빈 칸 수
 
   const supabase = await createClient();
-  const { data: classes } = await supabase
+  let classQuery = supabase
     .from("classes")
     .select("id, name, days_of_week, start_time, end_time, place, status")
     .in("status", ["운영", "모집중"]);
+  if (class_id) classQuery = classQuery.eq("id", class_id);
+
+  const { data: allClasses } = await supabase
+    .from("classes")
+    .select("id, name")
+    .order("name");
+  const { data: classes } = await classQuery;
   const { data: holidays } = await supabase
     .from("holidays")
     .select("holiday_date, reason, class_id")
@@ -44,18 +48,19 @@ export default async function SchedulePage({
     .lte("holiday_date", `${monthStr}-${pad(daysInMonth)}`);
   const { data: makeups } = await supabase
     .from("makeups")
-    .select("makeup_date, reason, status, classes(name)")
+    .select("makeup_date, reason, status, class_id, classes(name)")
     .gte("makeup_date", `${monthStr}-01`)
     .lte("makeup_date", `${monthStr}-${pad(daysInMonth)}`);
 
   const cls = classes ?? [];
-  const hol = holidays ?? [];
-  const mk = (makeups ?? []) as unknown as {
+  const hol = (holidays ?? []).filter((h) => !class_id || h.class_id === class_id || !h.class_id);
+  const mk = ((makeups ?? []) as unknown as {
     makeup_date: string;
     reason: string | null;
     status: string;
+    class_id: string | null;
     classes: { name: string } | null;
-  }[];
+  }[]).filter((x) => !class_id || x.class_id === class_id);
 
   // 6주 x 7일 그리드
   const cells: { date: string | null; dow: number }[] = [];
@@ -78,6 +83,21 @@ export default async function SchedulePage({
       </div>
 
       <div className="panel">
+        <div className="panel-body" style={{ paddingBottom: 0 }}>
+          <FilterBar>
+            <FilterSelect
+              param="class_id"
+              current={class_id}
+              placeholder="클래스 전체"
+              ariaLabel="클래스 필터"
+              options={(allClasses ?? []).map((c) => ({
+                value: c.id,
+                label: c.name,
+              }))}
+            />
+            <div style={{ flex: 1 }} />
+          </FilterBar>
+        </div>
         <div className="panel-body">
           <div className="calendar">
             {KOR.map((k) => (
@@ -86,12 +106,9 @@ export default async function SchedulePage({
               </div>
             ))}
             {cells.map((cell, i) => {
-              if (!cell.date)
-                return <div className="day outside" key={i} />;
+              if (!cell.date) return <div className="day outside" key={i} />;
               const dow = KOR[cell.dow];
-              const dayHolidays = hol.filter(
-                (h) => h.holiday_date === cell.date,
-              );
+              const dayHolidays = hol.filter((h) => h.holiday_date === cell.date);
               const fullHoliday = dayHolidays.find((h) => !h.class_id);
               const holidayClassIds = new Set(
                 dayHolidays.filter((h) => h.class_id).map((h) => h.class_id),
@@ -102,14 +119,9 @@ export default async function SchedulePage({
                   .map((s: string) => s.trim())
                   .includes(dow),
               );
-              const dayMakeups = mk.filter(
-                (x) => x.makeup_date === cell.date,
-              );
+              const dayMakeups = mk.filter((x) => x.makeup_date === cell.date);
               return (
-                <div
-                  className={`day${fullHoliday ? " is-holiday" : ""}`}
-                  key={i}
-                >
+                <div className={`day${fullHoliday ? " is-holiday" : ""}`} key={i}>
                   <div className="date">{Number(cell.date.slice(8))}</div>
                   {fullHoliday && (
                     <span className="event red">
@@ -121,10 +133,7 @@ export default async function SchedulePage({
                     todays.map((c) => {
                       const off = holidayClassIds.has(c.id);
                       return (
-                        <span
-                          className={`event${off ? " red" : ""}`}
-                          key={c.id}
-                        >
+                        <span className={`event${off ? " red" : ""}`} key={c.id}>
                           <strong>
                             {c.name}
                             {off ? " (휴강)" : ""}
