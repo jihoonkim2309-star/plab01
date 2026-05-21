@@ -1051,26 +1051,48 @@
 }
 
 /* =====================================================================
-   결제 영수증 (POS 매출조회 스타일).
-   .receipt-paper 만 인쇄에 보이도록 @media print 룰 사용.
+   결제 영수증 (POS 매출조회 스타일) — 모달.
+   [영수증 보기] 버튼 클릭 시 backdrop + 영수증 모달 노출.
+   인쇄 시 영수증만 출력되도록 @media print 에서 visibility 트릭 + position fixed.
    ===================================================================== */
-.receipt-host {
+.receipt-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
   align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: auto;
 }
 
-.receipt-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+.receipt-modal {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 380px;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  max-height: calc(100vh - 48px);
+}
+
+.receipt-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
 }
 
 .receipt-paper {
   width: 100%;
   max-width: 320px;
+  margin: 0 auto;
   background: #fff;
   color: #1a1a1a;
   border: 1px solid var(--line);
@@ -1081,9 +1103,10 @@
   line-height: 1.55;
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.04),
-    /* 영수증 톱니 그림자 효과 */
-    0 -3px 0 -1px var(--bg);
+    0 -3px 0 -1px #f3f6f5;
   position: relative;
+  overflow: auto;
+  flex: 1;
 }
 
 .receipt-paper::before,
@@ -1094,7 +1117,7 @@
   right: -1px;
   height: 8px;
   background:
-    radial-gradient(circle at 4px 0, transparent 3px, var(--panel) 3.5px)
+    radial-gradient(circle at 4px 0, transparent 3px, #fff 3.5px)
     repeat-x;
   background-size: 8px 8px;
 }
@@ -1164,15 +1187,29 @@
   margin-top: 4px;
 }
 
-/* 인쇄용 — 영수증만 보이게 */
+/* 인쇄용 — 영수증만 보이게 (모달 안에서도 작동) */
 @media print {
-  /* 페이지 자체 여백 최소화 */
   @page { margin: 8mm; }
 
   body * { visibility: hidden; }
   .receipt-paper, .receipt-paper * { visibility: visible; }
+
+  /* 모달 backdrop/모달 컨테이너 자체는 보이지 않게 (배경 어둠 제거) */
+  .receipt-modal-backdrop {
+    position: static;
+    background: transparent;
+    padding: 0;
+    overflow: visible;
+  }
+  .receipt-modal {
+    box-shadow: none;
+    padding: 0;
+    max-height: none;
+  }
+
+  /* 영수증을 페이지 좌상단에 고정 — position:fixed 로 모달의 flex 가운데정렬을 무시 */
   .receipt-paper {
-    position: absolute;
+    position: fixed;
     left: 0;
     top: 0;
     width: 80mm;
@@ -1180,7 +1217,9 @@
     border: none;
     box-shadow: none;
     padding: 0;
+    overflow: visible;
   }
   .receipt-paper::before, .receipt-paper::after { display: none; }
+
   .no-print { display: none !important; }
 }
