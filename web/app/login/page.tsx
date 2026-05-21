@@ -81,14 +81,14 @@ export default function LoginPage() {
 
         {/* 일러스트 + 카드를 하나의 비율 고정 컨테이너로 묶어 함께 스케일 */}
         <div className="relative z-10 flex items-center justify-center w-full h-full">
-          {/* 후광 + 일러스트 + 카드 묶음 — Vuexy 비율 매칭.
-              height = min(65vh, 50vw)
-              · 작은(960×1100): min(721, 480) = 480 ≈ Vuexy 480
-              · 큰(2144×1108): min(720, 1072) = 720 ≈ Vuexy 700 */}
+          {/* 후광 + 일러스트 + 카드 묶음.
+              height = min(85vh, 50vw)
+              · 작은(960×1100): min(942, 480) = 480 (vw 제약, 작은 화면 사이즈 유지)
+              · 큰(2144×1108): min(942, 1072) = 942 (vh 제약, 65→85 로 30% 키움) */}
           <div
             className="relative"
             style={{
-              height: "min(65vh, 50vw)",
+              height: "min(85vh, 50vw)",
               aspectRatio: "595 / 842",
             }}
           >
@@ -128,7 +128,7 @@ export default function LoginPage() {
                 top: "18%",
                 left: "-8%",
                 transform:
-                  "scale(calc(min(65vh, 50vw) / 600px))",
+                  "scale(calc(min(85vh, 50vw) / 600px))",
                 transformOrigin: "top left",
               }}
             >
@@ -159,7 +159,7 @@ export default function LoginPage() {
                 top: "45%",
                 right: "-8%",
                 transform:
-                  "scale(calc(min(65vh, 50vw) / 600px))",
+                  "scale(calc(min(85vh, 50vw) / 600px))",
                 transformOrigin: "top right",
               }}
             >
