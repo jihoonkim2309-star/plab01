@@ -115,46 +115,60 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* 카드 1 — 좌상 (일러스트 컨테이너 안, 잘리지 않게) */}
+            {/* 카드 1 — 좌상, 일러스트와 동일 비율로 스케일 (transform scale) */}
             <div
-              className="absolute z-20 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[170px]"
-              style={{ top: "8%", left: "-6%" }}
+              className="absolute z-20"
+              style={{
+                top: "8%",
+                left: "-6%",
+                transform: "scale(min(1, calc(82vh / 720px)))",
+                transformOrigin: "top left",
+              }}
             >
-              <div className="text-zinc-500 text-xs font-semibold">이번 달 수강생</div>
-              <div className="text-zinc-400 text-[10px] mt-0.5">Active Members</div>
-              <div className="mt-3 flex items-end justify-between">
-                <div className="text-2xl font-extrabold text-zinc-900 tracking-tight">247명</div>
-                <div className="text-xs font-bold text-[#28c76f]">+12%</div>
+              <div className="bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]">
+                <div className="text-zinc-500 text-xs font-semibold">이번 달 수강생</div>
+                <div className="text-zinc-400 text-[10px] mt-0.5">Active Members</div>
+                <div className="mt-3 flex items-end justify-between">
+                  <div className="text-2xl font-extrabold text-zinc-900 tracking-tight">247명</div>
+                  <div className="text-xs font-bold text-[#28c76f]">+12%</div>
+                </div>
+                <svg className="mt-2 w-full" viewBox="0 0 100 24" height="24">
+                  <path
+                    d="M 0 18 L 12 15 L 24 17 L 36 11 L 48 13 L 60 7 L 72 10 L 84 5 L 100 4"
+                    stroke="#1e794e"
+                    strokeWidth="2"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="100" cy="4" r="3" fill="#1e794e" />
+                </svg>
               </div>
-              <svg className="mt-2 w-full" viewBox="0 0 100 24" height="24">
-                <path
-                  d="M 0 18 L 12 15 L 24 17 L 36 11 L 48 13 L 60 7 L 72 10 L 84 5 L 100 4"
-                  stroke="#1e794e"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-                <circle cx="100" cy="4" r="3" fill="#1e794e" />
-              </svg>
             </div>
 
-            {/* 카드 2 — 우중 (일러스트 컨테이너 안, 잘리지 않게) */}
+            {/* 카드 2 — 우중, 일러스트와 동일 비율로 스케일 */}
             <div
-              className="absolute z-20 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[170px]"
-              style={{ top: "45%", right: "-6%" }}
+              className="absolute z-20"
+              style={{
+                top: "45%",
+                right: "-6%",
+                transform: "scale(min(1, calc(82vh / 720px)))",
+                transformOrigin: "top right",
+              }}
             >
-              <div className="text-zinc-500 text-xs font-semibold">이번 달 수납</div>
-              <div className="text-zinc-400 text-[10px] mt-0.5">Monthly Revenue</div>
-              <div className="mt-3 flex items-end justify-between">
-                <div className="text-xl font-extrabold text-zinc-900 tracking-tight">₩ 4.2M</div>
-                <div className="text-xs font-bold text-[#28c76f]">+8%</div>
-              </div>
-              <div className="mt-2 flex items-end gap-1 h-6">
-                <div className="flex-1 rounded-sm bg-[#28c76f]/30" style={{ height: "40%" }} />
-                <div className="flex-1 rounded-sm bg-[#28c76f]/50" style={{ height: "60%" }} />
-                <div className="flex-1 rounded-sm bg-[#28c76f]/70" style={{ height: "50%" }} />
-                <div className="flex-1 rounded-sm bg-[#28c76f]" style={{ height: "85%" }} />
-                <div className="flex-1 rounded-sm bg-[#1e794e]" style={{ height: "100%" }} />
+              <div className="bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]">
+                <div className="text-zinc-500 text-xs font-semibold">이번 달 수납</div>
+                <div className="text-zinc-400 text-[10px] mt-0.5">Monthly Revenue</div>
+                <div className="mt-3 flex items-end justify-between">
+                  <div className="text-xl font-extrabold text-zinc-900 tracking-tight">₩ 4.2M</div>
+                  <div className="text-xs font-bold text-[#28c76f]">+8%</div>
+                </div>
+                <div className="mt-2 flex items-end gap-1 h-6">
+                  <div className="flex-1 rounded-sm bg-[#28c76f]/30" style={{ height: "40%" }} />
+                  <div className="flex-1 rounded-sm bg-[#28c76f]/50" style={{ height: "60%" }} />
+                  <div className="flex-1 rounded-sm bg-[#28c76f]/70" style={{ height: "50%" }} />
+                  <div className="flex-1 rounded-sm bg-[#28c76f]" style={{ height: "85%" }} />
+                  <div className="flex-1 rounded-sm bg-[#1e794e]" style={{ height: "100%" }} />
+                </div>
               </div>
             </div>
           </div>
