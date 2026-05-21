@@ -25,7 +25,7 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      window.location.assign("/prototype.html");
+      window.location.assign("/admin");
     } else {
       const { error } = await supabase.auth.signUp({
         email,
@@ -46,80 +46,156 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-100 px-4">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow p-8">
-        <div className="flex justify-center mb-5">
-          <span className="inline-flex items-center bg-[#1e794e] rounded-lg px-4 py-2 shadow-sm">
+    <div className="min-h-screen flex bg-zinc-50">
+      {/* Left visual — md 이상에서 노출 */}
+      <div className="hidden md:flex md:w-3/5 lg:w-1/2 relative overflow-hidden items-center justify-center"
+        style={{ background: "linear-gradient(135deg, #155a39 0%, #1e794e 50%, #2a9162 100%)" }}>
+        {/* 데코 블롭들 */}
+        <div className="absolute top-[-80px] left-[-80px] w-[420px] h-[420px] rounded-full"
+          style={{ background: "rgba(255,255,255,0.10)", filter: "blur(60px)" }} />
+        <div className="absolute bottom-[-100px] right-[-80px] w-[480px] h-[480px] rounded-full"
+          style={{ background: "rgba(255,255,255,0.10)", filter: "blur(70px)" }} />
+        <div className="absolute top-1/3 right-1/4 w-[200px] h-[200px] rounded-full"
+          style={{ background: "rgba(40,199,111,0.18)", filter: "blur(40px)" }} />
+
+        {/* 중앙 콘텐츠 */}
+        <div className="relative z-10 text-center max-w-md px-10">
+          <div className="inline-flex items-center bg-white/15 backdrop-blur-md rounded-2xl px-8 py-5 mb-7 shadow-2xl ring-1 ring-white/20">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/planb-logo.svg"
               alt="PlanB"
-              className="h-5"
+              className="h-7"
               style={{ filter: "brightness(0) invert(1)" }}
             />
-          </span>
-        </div>
-        <h1 className="text-xl font-bold text-zinc-900 text-center">플랜비 본점 · 어드민</h1>
-        <p className="mt-1 text-sm text-zinc-500 text-center">
-          {mode === "signin" ? "관리자 로그인" : "관리자 계정 만들기"}
-        </p>
+          </div>
+          <h2 className="text-3xl font-extrabold text-white mb-4 tracking-tight leading-tight">
+            체계적인 학원 운영의 시작
+          </h2>
+          <p className="text-white/85 text-base leading-relaxed">
+            회원 · 결제 · 수업 · 리포트까지<br />
+            한 화면에서 관리하세요.
+          </p>
 
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
-          {mode === "signup" && (
+          {/* 작은 카드 데코 */}
+          <div className="mt-10 grid grid-cols-2 gap-3 max-w-xs mx-auto">
+            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-left ring-1 ring-white/20">
+              <div className="text-white/70 text-xs font-bold uppercase tracking-wider">회원</div>
+              <div className="text-white font-extrabold text-xl mt-1">관리</div>
+            </div>
+            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-left ring-1 ring-white/20">
+              <div className="text-white/70 text-xs font-bold uppercase tracking-wider">결제</div>
+              <div className="text-white font-extrabold text-xl mt-1">자동화</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right form */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          {/* 모바일 전용 로고 */}
+          <div className="md:hidden flex justify-center mb-6">
+            <span className="inline-flex items-center bg-[#1e794e] rounded-lg px-5 py-2.5 shadow-md">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/planb-logo.svg"
+                alt="PlanB"
+                className="h-5"
+                style={{ filter: "brightness(0) invert(1)" }}
+              />
+            </span>
+          </div>
+
+          <h1 className="text-2xl font-extrabold text-zinc-900 tracking-tight">
+            환영합니다 <span>👋</span>
+          </h1>
+          <p className="mt-2 text-sm text-zinc-500">
+            {mode === "signin"
+              ? "관리자 계정으로 로그인해 주세요."
+              : "관리자 계정을 만들어 시작하세요."}
+          </p>
+
+          <form onSubmit={onSubmit} className="mt-8 space-y-4">
+            {mode === "signup" && (
+              <div>
+                <label className="block text-xs font-semibold text-zinc-700 mb-1.5">이름</label>
+                <input
+                  className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="홍길동"
+                  required
+                />
+              </div>
+            )}
             <div>
-              <label className="block text-sm font-medium text-zinc-700">이름</label>
+              <label className="block text-xs font-semibold text-zinc-700 mb-1.5">이메일</label>
               <input
-                className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                type="email"
+                className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="email@example.com"
                 required
               />
             </div>
-          )}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700">이메일</label>
-            <input
-              type="email"
-              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-700">비밀번호</label>
-            <input
-              type="password"
-              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={6}
-              required
-            />
-          </div>
+            <div>
+              <label className="block text-xs font-semibold text-zinc-700 mb-1.5">비밀번호</label>
+              <input
+                type="password"
+                className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••"
+                minLength={6}
+                required
+              />
+            </div>
 
-          {msg && <p className="text-sm text-rose-600">{msg}</p>}
+            {msg && (
+              <div className="text-sm rounded-md p-3 bg-rose-50 text-rose-700 border border-rose-200">
+                {msg}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-md py-2.5 text-sm font-bold text-white shadow-md disabled:opacity-50 transition hover:brightness-105 active:translate-y-px"
+              style={{
+                background: "linear-gradient(135deg, #1e794e 0%, #2a9162 100%)",
+                boxShadow: "0 4px 12px rgba(30, 121, 78, 0.32)",
+              }}
+            >
+              {loading
+                ? "처리 중..."
+                : mode === "signin"
+                  ? "로그인"
+                  : "회원가입"}
+            </button>
+          </form>
 
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-zinc-900 text-white py-2 text-sm font-medium disabled:opacity-50"
+            onClick={() => {
+              setMode(mode === "signin" ? "signup" : "signin");
+              setMsg(null);
+            }}
+            className="mt-6 w-full text-sm text-zinc-500 hover:text-[#1e794e] transition"
           >
-            {loading ? "처리 중..." : mode === "signin" ? "로그인" : "회원가입"}
+            {mode === "signin" ? (
+              <>
+                관리자 계정이 없으신가요?{" "}
+                <span className="font-semibold text-[#1e794e]">회원가입</span>
+              </>
+            ) : (
+              <>
+                이미 계정이 있으신가요?{" "}
+                <span className="font-semibold text-[#1e794e]">로그인</span>
+              </>
+            )}
           </button>
-        </form>
-
-        <button
-          onClick={() => {
-            setMode(mode === "signin" ? "signup" : "signin");
-            setMsg(null);
-          }}
-          className="mt-4 w-full text-sm text-zinc-500 hover:text-zinc-800"
-        >
-          {mode === "signin"
-            ? "관리자 계정이 없으신가요? 회원가입"
-            : "이미 계정이 있으신가요? 로그인"}
-        </button>
+        </div>
       </div>
     </div>
   );
