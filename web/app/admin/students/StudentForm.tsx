@@ -54,6 +54,7 @@ function Select({
   options,
   placeholder,
   span2 = false,
+  required = false,
 }: {
   label: string;
   name?: string;
@@ -61,6 +62,7 @@ function Select({
   options: string[];
   placeholder?: string;
   span2?: boolean;
+  required?: boolean;
 }) {
   return (
     <div className={`field${span2 ? " span-2" : ""}`}>
@@ -68,6 +70,7 @@ function Select({
       <select
         name={name}
         defaultValue={value ?? (placeholder !== undefined ? "" : options[0])}
+        required={required}
       >
         {placeholder !== undefined && <option value="">{placeholder}</option>}
         {options.map((o) => (
@@ -145,52 +148,65 @@ export default function StudentForm({
             <div className="panel-body">
               <div className="form-grid">
                 <Field label="학생명 *" name="name" value={s.name} placeholder="학생명 입력" required errorText="학생명을 입력해 주세요" />
-                <Field label="생년월일" name="birth" value={s.birth} type="date" />
+                <Field label="생년월일 *" name="birth" value={s.birth} type="date" required errorText="생년월일을 입력해 주세요" />
                 <Select
-                  label="성별"
+                  label="성별 *"
                   name="gender"
-                  value={s.gender}
-                  options={["남", "여", "미입력"]}
+                  value={s.gender === "미입력" ? null : s.gender}
+                  options={["남", "여"]}
+                  placeholder="선택"
+                  required
                 />
-                <Field label="학교" name="school" value={s.school} placeholder="예: 송도초등학교" />
+                <Field label="학교 *" name="school" value={s.school} placeholder="예: 송도초등학교" required errorText="학교를 입력해 주세요" />
                 <Select
-                  label="학년"
+                  label="학년 *"
                   name="grade"
                   value={s.grade}
                   options={GRADE_OPTIONS}
-                  placeholder="미선택"
+                  placeholder="선택"
+                  required
                 />
                 <Field
-                  label="학생 연락처"
+                  label="학생 연락처 *"
                   name="phone"
                   value={s.phone}
                   type="tel"
                   placeholder="예: 010-1234-5678"
+                  required
+                  errorText="학생 연락처를 입력해 주세요"
                 />
                 <Field
-                  label="주소"
+                  label="주소 *"
                   name="address"
                   value={s.address}
                   placeholder="도로명 주소"
                   span2
+                  required
+                  errorText="주소를 입력해 주세요"
                 />
                 <Select
-                  label="주 종목"
+                  label="주 종목 *"
                   name="sport"
                   value={s.sport}
                   options={["배드민턴", "기초체력", "복합반"]}
+                  placeholder="선택"
+                  required
                 />
                 <Select
-                  label="레벨"
+                  label="레벨 *"
                   name="level"
                   value={s.level}
                   options={["입문", "초급", "중급", "선수반"]}
+                  placeholder="선택"
+                  required
                 />
                 <Select
-                  label="회원 상태"
+                  label="회원 상태 *"
                   name="status"
                   value={s.status}
                   options={["활성", "상담중", "대기", "휴면"]}
+                  placeholder="선택"
+                  required
                 />
                 {s.created_at && (
                   <div className="field">
@@ -283,22 +299,26 @@ export default function StudentForm({
           <div className="panel">
             <div className="panel-head">
               <p className="panel-title">보호자 연락처</p>
-              <span className="badge blue">참조용</span>
+              <span className="badge blue">보호자 1 필수</span>
             </div>
             <div className="panel-body">
               <div className="form-grid">
                 <Field
-                  label="보호자 1 이름"
+                  label="보호자 1 이름 *"
                   name="parent1_name"
                   value={s.parent1_name}
                   placeholder="예: 김순희 (모)"
+                  required
+                  errorText="보호자 1 이름을 입력해 주세요"
                 />
                 <Field
-                  label="보호자 1 연락처"
+                  label="보호자 1 연락처 *"
                   name="parent1_phone"
                   value={s.parent1_phone}
                   type="tel"
                   placeholder="010-0000-0000"
+                  required
+                  errorText="보호자 1 연락처를 입력해 주세요"
                 />
                 <Field
                   label="보호자 2 이름"
@@ -315,9 +335,9 @@ export default function StudentForm({
                 />
               </div>
               <p className="muted" style={{ marginTop: 8, fontSize: 12 }}>
-                어드민 입력용 참조 연락처. 학부모가 포털로 직접 가입하면
-                별도의 학부모 계정이 생성되며, 그 계정 정보는 "학부모 계정
-                관리" 에서 보입니다.
+                보호자 1 은 필수, 보호자 2 는 선택. 어드민 입력용 참조 연락처이며,
+                학부모가 포털로 직접 가입하면 별도의 학부모 계정이 생성되어
+                "학부모 계정 관리" 에서 보입니다.
               </p>
             </div>
           </div>

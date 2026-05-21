@@ -39,6 +39,31 @@ function readForm(formData: FormData) {
   return row;
 }
 
+// 학생 기본정보·보호자 1 필수 검증. 클라이언트 HTML required 우회 케이스 대비.
+const REQUIRED_LABELS: [string, string][] = [
+  ["name", "학생명"],
+  ["birth", "생년월일"],
+  ["gender", "성별"],
+  ["school", "학교"],
+  ["grade", "학년"],
+  ["sport", "주 종목"],
+  ["level", "레벨"],
+  ["status", "회원 상태"],
+  ["phone", "학생 연락처"],
+  ["address", "주소"],
+  ["parent1_name", "보호자 1 이름"],
+  ["parent1_phone", "보호자 1 연락처"],
+];
+
+function validateRequired(row: Record<string, string | null>) {
+  const missing = REQUIRED_LABELS
+    .filter(([k]) => !row[k])
+    .map(([, label]) => label);
+  if (missing.length > 0) {
+    throw new Error(`필수 항목을 입력해 주세요: ${missing.join(", ")}`);
+  }
+}
+
 // 선택한 클래스/상품의 이름을 비정규화 컬럼(class_name/product)에 저장 (목록·상세 표시용).
 async function denormalize(
   supabase: SupabaseClient,
@@ -103,8 +128,9 @@ async function applyPhotoChanges(
 
 export async function createStudent(formData: FormData) {
   const { supabase, centerId } = await requireCenter();
-  const row = await denormalize(supabase, readForm(formData));
-  if (!row.name) throw new Error("학생명은 필수입니다.");
+  const formRow = readForm(formData);
+  validateRequired(formRow);
+  const row = await denormalize(supabase, formRow);
 
   const { data: created, error } = await supabase
     .from("students")
@@ -121,8 +147,9 @@ export async function createStudent(formData: FormData) {
 
 export async function updateStudent(id: string, formData: FormData) {
   const { supabase } = await requireCenter();
-  const row = await denormalize(supabase, readForm(formData));
-  if (!row.name) throw new Error("학생명은 필수입니다.");
+  const formRow = readForm(formData);
+  validateRequired(formRow);
+  const row = await denormalize(supabase, formRow);
 
   const { error } = await supabase.from("students").update(row).eq("id", id);
   if (error) throw new Error("수정 실패: " + error.message);
