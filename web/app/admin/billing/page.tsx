@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getCenterPg } from "@/lib/portone";
 import CheckRowToggle from "../CheckRowToggle";
-import {
-  generateInvoices,
-  bulkInvoiceStatus,
-  seedDummyPayments,
-} from "./actions";
+import ConfirmButton from "../ConfirmButton";
+import PayButton from "./PayButton";
+import { generateInvoices, bulkInvoiceStatus, deleteInvoice } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function curMonth(ym?: string) {
@@ -25,14 +24,9 @@ const SB: Record<string, string> = {
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    ym?: string;
-    created?: string;
-    seeded?: string;
-    seed_error?: string;
-  }>;
+  searchParams: Promise<{ ym?: string; created?: string }>;
 }) {
-  const { ym, created, seeded, seed_error } = await searchParams;
+  const { ym, created } = await searchParams;
   const period = curMonth(ym);
   const supabase = await createClient();
 
@@ -51,6 +45,19 @@ export default async function BillingPage({
     students: { name: string } | null;
   }[];
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: prof } = await supabase
+    .from("users")
+    .select("center_id")
+    .eq("id", user?.id ?? "")
+    .single();
+  const pg = await getCenterPg(
+    supabase,
+    (prof as { center_id: string } | null)?.center_id ?? "",
+  );
+
   const sum = (f: (s: string) => boolean) =>
     list.filter((i) => f(i.status)).reduce((a, b) => a + Number(b.amount), 0);
   const cnt = (s: string) => list.filter((i) => i.status === s).length;
@@ -61,20 +68,11 @@ export default async function BillingPage({
         <div>
           <h1>청구 관리</h1>
           <p className="subtext">
-            {period} 청구서 — 확정 수강건으로 생성, 입금 확인 후 결제완료 처리.
-            행 클릭 → 상세(영수증·환불 등) 페이지.
+            {period} 청구서 — 확정 수강건으로 생성. 결제 결과·영수증·환불은{" "}
+            <Link href="/admin/payment-status">결제 상태</Link>에서 확인.
           </p>
         </div>
         <div className="toolbar">
-          <form action={seedDummyPayments}>
-            <button
-              className="btn"
-              type="submit"
-              title="결제완료인데 카드 정보 없는 청구서에 더미 영수증 정보 채워주기 (테스트 전용)"
-            >
-              더미 결제정보 채우기
-            </button>
-          </form>
           <form action={generateInvoices}>
             <input type="hidden" name="period" value={period} />
             <button className="btn primary" type="submit">{period} 청구서 생성</button>
@@ -93,35 +91,6 @@ export default async function BillingPage({
           }}
         >
           청구서 {created}건 생성됨.
-        </div>
-      )}
-
-      {seeded && (
-        <div
-          className="panel"
-          style={{
-            background: "var(--blue-soft)",
-            borderColor: "#b8d0ee",
-            color: "var(--blue)",
-            padding: "12px 16px",
-          }}
-        >
-          더미 결제정보 {seeded}건 채움. 행을 클릭해 상세에서 카드 정보 확인하세요.
-        </div>
-      )}
-
-      {seed_error && (
-        <div
-          className="panel"
-          style={{
-            background: "var(--red-soft)",
-            borderColor: "#f0bdbd",
-            color: "var(--red)",
-            padding: "12px 16px",
-          }}
-        >
-          <strong>더미 시드 실패</strong>
-          <div style={{ marginTop: 4 }}>{seed_error}</div>
         </div>
       )}
 
@@ -152,9 +121,6 @@ export default async function BillingPage({
             <button className="btn warn" name="status" value="실패" type="submit">
               선택 실패
             </button>
-            <button className="btn" name="status" value="환불" type="submit">
-              선택 환불
-            </button>
           </div>
         </div>
         <CheckRowToggle>
@@ -166,21 +132,22 @@ export default async function BillingPage({
                 <th>금액</th>
                 <th>발생</th>
                 <th>납기일</th>
-                <th>결제일</th>
                 <th>상태</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {list.map((i) => (
-                <tr key={i.id} className="row-link-host">
+                <tr key={i.id}>
                   <td className="check-cell">
                     <input type="checkbox" name="ids" value={i.id} />
                   </td>
                   <td>
                     <Link
-                      href={`/admin/billing/${i.id}`}
-                      className="row-link-stretch"
+                      href={`/admin/payment-status?inv=${i.id}`}
                       style={{ fontWeight: 900, color: "var(--text)" }}
+                      title="결제 상태에서 상세 보기"
+                      className="no-row-toggle"
                     >
                       {i.students?.name ?? "-"}
                     </Link>
@@ -188,13 +155,33 @@ export default async function BillingPage({
                   <td>{Number(i.amount).toLocaleString()}원</td>
                   <td className="muted">{i.source}</td>
                   <td className="muted">{i.due_date ?? "-"}</td>
-                  <td className="muted">
-                    {i.paid_at ? i.paid_at.slice(0, 10) : "-"}
-                  </td>
                   <td>
                     <span className={`badge ${SB[i.status] ?? "gray"}`}>
                       {i.status}
                     </span>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }} className="no-row-toggle">
+                      {(i.status === "청구" || i.status === "실패") && (
+                        <PayButton
+                          invoiceId={i.id}
+                          amount={Number(i.amount)}
+                          orderName={`${period} 수강료 · ${i.students?.name ?? ""}`}
+                          storeId={pg.storeId}
+                          channelKey={pg.channelKey}
+                        />
+                      )}
+                      <form action={deleteInvoice.bind(null, i.id, period)}>
+                        <ConfirmButton
+                          message={`'${i.students?.name ?? "학생"}'의 청구서를 삭제할까요?`}
+                          className="btn danger"
+                          style={{ minHeight: 30, padding: "4px 10px" }}
+                          type="submit"
+                        >
+                          삭제
+                        </ConfirmButton>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -218,6 +205,7 @@ export default async function BillingPage({
 
       <p className="muted" style={{ marginTop: 10 }}>
         <Link href="/admin/renewals">← 다음 달 수강 확인</Link> ·{" "}
+        <Link href="/admin/payment-status">결제 상태 →</Link> ·{" "}
         <Link href="/admin/overdue">미납 관리 →</Link>
       </p>
     </>
