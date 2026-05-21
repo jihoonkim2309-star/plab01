@@ -35,7 +35,6 @@ type Invoice = {
   issued_at: string | null;
   method: string | null;
   pg_tx_id: string | null;
-  notes: string | null;
   center_id: string;
   students: { id: string; name: string | null } | null;
 };
@@ -81,7 +80,7 @@ export default async function InvoiceDetailPage({
     supabase
       .from("invoices")
       .select(
-        "id, period, amount, status, source, due_date, paid_at, issued_at, method, pg_tx_id, notes, center_id, students(id, name)",
+        "id, period, amount, status, source, due_date, paid_at, issued_at, method, pg_tx_id, center_id, students(id, name)",
       )
       .eq("id", id)
       .single(),
