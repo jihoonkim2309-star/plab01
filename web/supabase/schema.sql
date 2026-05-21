@@ -88,12 +88,33 @@ returns user_role language sql stable security definer set search_path = public 
 $$;
 
 -- ---------- 7. 신규 auth 가입 시 users 행 자동 생성 ----------------------
+-- ⚠️ [테스트 모드] 가입 시 첫 번째 센터의 admin 으로 자동 등록 + 이메일 자동 확인.
+-- 실서비스 전환 시: role 자동 부여 / email_confirmed_at 자동 처리 부분 제거.
+-- 학부모/학생/코치 등 비-admin 가입 흐름이 생기면 가입 form 의 hint(role 메타데이터) 로 분기 필요.
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_center_id uuid;
 begin
-  insert into public.users (id, email, name)
-  values (new.id, new.email, coalesce(new.raw_user_meta_data->>'name', new.email))
-  on conflict (id) do nothing;
+  select id into v_center_id from public.centers order by created_at limit 1;
+
+  insert into public.users (id, email, name, role, center_id)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'name', new.email),
+    'admin',
+    v_center_id
+  )
+  on conflict (id) do update
+    set role      = coalesce(public.users.role, excluded.role),
+        center_id = coalesce(public.users.center_id, excluded.center_id);
+
+  -- 이메일 자동 확인 (테스트 단계 — 확인 메일 없이 즉시 로그인 가능)
+  update auth.users
+     set email_confirmed_at = coalesce(email_confirmed_at, now())
+   where id = new.id;
+
   return new;
 end $$;
 
