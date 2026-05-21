@@ -82,12 +82,12 @@ export default function LoginPage() {
         {/* 일러스트 + 카드를 하나의 비율 고정 컨테이너로 묶어 함께 스케일 */}
         <div className="relative z-10 flex items-center justify-center w-full h-full">
           {/* 후광 + 일러스트 + 카드 묶음.
-              height = min(80vh, 78vw, 720px) — 가로/세로 모두 작아질 때 비례 축소.
-              78vw 는 panel 폭(58~60vw) 안에 들어가도록. */}
+              height = min(56vh, 55vw) — 30% 축소 + 720px 절대 cap 제거.
+              가로/세로 viewport 따라 양방향으로 비례 스케일 (커질 때도 함께 커짐). */}
           <div
             className="relative"
             style={{
-              height: "min(80vh, 78vw, 720px)",
+              height: "min(56vh, 55vw)",
               aspectRatio: "595 / 842",
             }}
           >
@@ -127,7 +127,7 @@ export default function LoginPage() {
                 top: "18%",
                 left: "5%",
                 transform:
-                  "scale(min(1, calc(min(80vh, 78vw) / 720px)))",
+                  "scale(calc(min(56vh, 55vw) / 504px))",
                 transformOrigin: "top left",
               }}
             >
@@ -158,7 +158,7 @@ export default function LoginPage() {
                 top: "42%",
                 right: "0%",
                 transform:
-                  "scale(min(1, calc(min(80vh, 78vw) / 720px)))",
+                  "scale(calc(min(56vh, 55vw) / 504px))",
                 transformOrigin: "top right",
               }}
             >
