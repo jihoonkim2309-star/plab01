@@ -120,12 +120,12 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* 카드 1 — 좌상, 일러스트와 동일 비율로 스케일 (transform scale) */}
+            {/* 카드 1 — 좌상, 캐릭터 어깨 옆 (Vuexy Profit 비율) */}
             <div
               className="absolute z-20"
               style={{
-                top: "8%",
-                left: "-6%",
+                top: "18%",
+                left: "5%",
                 transform:
                   "scale(min(1, calc(min(80vh, 78vw) / 720px)))",
                 transformOrigin: "top left",
@@ -151,12 +151,12 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* 카드 2 — 우중, 일러스트와 동일 비율로 스케일 */}
+            {/* 카드 2 — 우중, 캐릭터 몸통 옆 (Vuexy Order 비율) */}
             <div
               className="absolute z-20"
               style={{
-                top: "45%",
-                right: "-6%",
+                top: "42%",
+                right: "0%",
                 transform:
                   "scale(min(1, calc(min(80vh, 78vw) / 720px)))",
                 transformOrigin: "top right",
