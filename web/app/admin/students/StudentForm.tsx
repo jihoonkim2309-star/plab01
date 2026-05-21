@@ -185,22 +185,6 @@ export default function StudentForm({
                   errorText="주소를 입력해 주세요"
                 />
                 <Select
-                  label="주 종목 *"
-                  name="sport"
-                  value={s.sport}
-                  options={["배드민턴", "기초체력", "복합반"]}
-                  placeholder="선택"
-                  required
-                />
-                <Select
-                  label="레벨 *"
-                  name="level"
-                  value={s.level}
-                  options={["입문", "초급", "중급", "선수반"]}
-                  placeholder="선택"
-                  required
-                />
-                <Select
                   label="회원 상태 *"
                   name="status"
                   value={s.status}

@@ -9,8 +9,6 @@ const BASIC: [string, string][] = [
   ["생년월일", "birth"],
   ["학교", "school"],
   ["학년", "grade"],
-  ["주 종목", "sport"],
-  ["레벨", "level"],
   ["학생 연락처", "phone"],
   ["주소", "address"],
   ["등록일", "created_at"],
