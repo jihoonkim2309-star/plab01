@@ -48,8 +48,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-100 px-4">
       <div className="w-full max-w-sm bg-white rounded-xl shadow p-8">
-        <h1 className="text-xl font-bold text-zinc-900">플랜비 본점 · 어드민</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <div className="flex justify-center mb-5">
+          <span className="inline-flex items-center bg-[#1e794e] rounded-lg px-4 py-2 shadow-sm">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/planb-logo.svg" alt="PlanB" className="h-5" />
+          </span>
+        </div>
+        <h1 className="text-xl font-bold text-zinc-900 text-center">플랜비 본점 · 어드민</h1>
+        <p className="mt-1 text-sm text-zinc-500 text-center">
           {mode === "signin" ? "관리자 로그인" : "관리자 계정 만들기"}
         </p>
 

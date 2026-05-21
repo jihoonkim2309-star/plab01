@@ -33,13 +33,11 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <Link className="brand" href="/admin" aria-label="Dashboard로 이동">
-        <div className="brand-mark">P</div>
-        <div>
-          <div className="brand-title">
-            Plan<span className="grow">B</span> Grow
-          </div>
-          <div className="brand-sub">Admin Console</div>
+        <div className="brand-logo">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/planb-logo.svg" alt="PlanB" />
         </div>
+        <div className="brand-sub">Admin Console</div>
       </Link>
 
       <nav className="nav">

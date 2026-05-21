@@ -9,7 +9,8 @@
   --line-strong: #cdd8d4;
   --text: #111514;
   --muted: #64716d;
-  --brand: #0b7b45;
+  /* 브랜드 그린 — planb-logo.svg 의 B 글자 색에 정합 */
+  --brand: #1e794e;
   --brand-soft: #e8f6ef;
   --blue: #1f6feb;
   --blue-soft: #e7f0ff;
@@ -65,9 +66,10 @@
 
 .brand {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 24px 14px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px 24px 16px;
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
   cursor: pointer;
@@ -79,30 +81,28 @@
 
 .brand:hover { background: #f7faf8; }
 
-.brand-mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
+/* PlanB SVG 로고 — 흰 글자(Plan) + 초록 글자(B) 를 위해 그린 pill 위에 얹음 */
+.brand-logo {
   background: var(--brand);
-  color: #ffffff;
-  font-weight: 800;
+  padding: 7px 14px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(30, 121, 78, 0.18);
 }
 
-.brand-title {
-  font-weight: 800;
-  font-size: 20px;
-  line-height: 1.1;
-  color: #0b0f0d;
+.brand-logo img {
+  height: 20px;
+  width: auto;
+  display: block;
 }
-
-.brand-title .grow { color: var(--brand); }
 
 .brand-sub {
   color: #7a8782;
-  font-size: 12px;
-  margin-top: 2px;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 .nav {
