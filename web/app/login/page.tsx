@@ -49,12 +49,10 @@ export default function LoginPage() {
     <div className="min-h-screen flex bg-zinc-50">
       {/* Left visual — Vuexy 패턴: 플로팅 카드 + 중앙 일러스트 */}
       <div className="hidden md:flex md:w-3/5 lg:w-[58%] relative overflow-hidden items-center justify-center bg-[#f6faf8]">
-        {/* 좌상단 작은 로고 — 원본 SVG 색상 그대로 (어두운 그린 pill 로 B 대비) */}
+        {/* 좌상단 작은 로고 — SVG 그대로, 박스 없음 */}
         <div className="absolute top-7 left-9 z-20">
-          <span className="inline-flex items-center bg-[#134c30] rounded-lg px-3 py-1.5 shadow-sm">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/planb-logo.svg" alt="PlanB" className="h-4" />
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/planb-logo.svg" alt="PlanB" className="h-6" />
         </div>
 
         {/* 바닥 곡선 데코 (Vuexy 의 그 wave) */}
@@ -181,12 +179,10 @@ export default function LoginPage() {
       {/* Right form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
-          {/* 모바일 전용 로고 — 원본 SVG 색상 그대로 */}
+          {/* 모바일 전용 로고 — SVG 그대로, 박스 없음 */}
           <div className="md:hidden flex justify-center mb-7">
-            <span className="inline-flex items-center bg-[#134c30] rounded-lg px-5 py-2.5 shadow-md">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/planb-logo.svg" alt="PlanB" className="h-5" />
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/planb-logo.svg" alt="PlanB" className="h-7" />
           </div>
 
           <h1 className="text-2xl font-extrabold text-zinc-900 tracking-tight">
