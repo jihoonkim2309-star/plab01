@@ -47,43 +47,98 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex bg-zinc-50">
-      {/* Left visual — md 이상에서 노출 (좁은 비주얼 영역) */}
-      <div
-        className="hidden md:flex md:w-2/5 lg:w-1/3 relative overflow-hidden items-center justify-center"
-        style={{ background: "linear-gradient(135deg, #155a39 0%, #1e794e 100%)" }}
-      >
-        {/* 부드러운 데코 블롭 (은은하게) */}
-        <div
-          className="absolute top-[-100px] left-[-100px] w-[360px] h-[360px] rounded-full"
-          style={{ background: "rgba(255,255,255,0.08)", filter: "blur(60px)" }}
-        />
-        <div
-          className="absolute bottom-[-100px] right-[-100px] w-[360px] h-[360px] rounded-full"
-          style={{ background: "rgba(255,255,255,0.08)", filter: "blur(60px)" }}
-        />
-
-        {/* 큰 로고 + 한 줄 슬로건 */}
-        <div className="relative z-10 text-center px-10">
-          <div className="mb-8">
+      {/* Left visual — Vuexy 패턴: 플로팅 카드 + 중앙 일러스트 */}
+      <div className="hidden md:flex md:w-3/5 lg:w-[58%] relative overflow-hidden items-center justify-center bg-[#f6faf8]">
+        {/* 좌상단 작은 로고 */}
+        <div className="absolute top-7 left-9 z-20">
+          <span className="inline-flex items-center bg-[#1e794e] rounded-lg px-3 py-1.5 shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/planb-logo.svg"
               alt="PlanB"
-              className="h-10 mx-auto"
+              className="h-4"
               style={{ filter: "brightness(0) invert(1)" }}
             />
+          </span>
+        </div>
+
+        {/* 바닥 곡선 데코 (Vuexy 의 그 wave) */}
+        <svg
+          className="absolute bottom-0 left-0 w-full"
+          viewBox="0 0 800 120"
+          preserveAspectRatio="none"
+          style={{ height: 120 }}
+        >
+          <path
+            d="M0,40 Q200,0 400,30 T800,20 L800,120 L0,120 Z"
+            fill="rgba(40,199,111,0.06)"
+          />
+          <path
+            d="M0,70 Q200,40 400,60 T800,55 L800,120 L0,120 Z"
+            fill="rgba(40,199,111,0.04)"
+          />
+        </svg>
+
+        {/* 부드러운 배경 원 */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] rounded-full border border-zinc-200 opacity-50" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[330px] h-[330px] rounded-full bg-zinc-100/60" />
+
+        {/* 플로팅 카드 1 — 좌측 ("이번 달 수강생") */}
+        <div className="absolute top-[24%] left-[14%] z-10 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]">
+          <div className="text-zinc-500 text-xs font-semibold">이번 달 수강생</div>
+          <div className="text-zinc-400 text-[10px] mt-0.5">Active Members</div>
+          <div className="mt-3 flex items-end justify-between">
+            <div className="text-2xl font-extrabold text-zinc-900 tracking-tight">247명</div>
+            <div className="text-xs font-bold text-[#28c76f]">+12%</div>
           </div>
-          <p className="text-white/90 text-lg font-semibold tracking-tight">
-            학원 운영, 한 화면에서.
-          </p>
+          {/* 미니 sparkline */}
+          <svg className="mt-2 w-full" viewBox="0 0 100 24" height="24">
+            <path
+              d="M 0 18 L 12 15 L 24 17 L 36 11 L 48 13 L 60 7 L 72 10 L 84 5 L 100 4"
+              stroke="#1e794e"
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+            />
+            <circle cx="100" cy="4" r="3" fill="#1e794e" />
+          </svg>
+        </div>
+
+        {/* 플로팅 카드 2 — 우측 ("이번 달 수납") */}
+        <div className="absolute bottom-[22%] right-[12%] z-10 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]">
+          <div className="text-zinc-500 text-xs font-semibold">이번 달 수납</div>
+          <div className="text-zinc-400 text-[10px] mt-0.5">Monthly Revenue</div>
+          <div className="mt-3 flex items-end justify-between">
+            <div className="text-xl font-extrabold text-zinc-900 tracking-tight">₩ 4.2M</div>
+            <div className="text-xs font-bold text-[#28c76f]">+8%</div>
+          </div>
+          {/* 미니 바 차트 */}
+          <div className="mt-2 flex items-end gap-1 h-6">
+            <div className="flex-1 rounded-sm bg-[#28c76f]/30" style={{ height: "40%" }} />
+            <div className="flex-1 rounded-sm bg-[#28c76f]/50" style={{ height: "60%" }} />
+            <div className="flex-1 rounded-sm bg-[#28c76f]/70" style={{ height: "50%" }} />
+            <div className="flex-1 rounded-sm bg-[#28c76f]" style={{ height: "85%" }} />
+            <div className="flex-1 rounded-sm bg-[#1e794e]" style={{ height: "100%" }} />
+          </div>
+        </div>
+
+        {/* 중앙 일러스트 */}
+        <div className="relative z-10">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/login-hero.svg"
+            alt=""
+            aria-hidden
+            className="w-[400px] h-auto"
+          />
         </div>
       </div>
 
-      {/* Right form (더 넓은 영역) */}
+      {/* Right form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-sm">
           {/* 모바일 전용 로고 */}
-          <div className="md:hidden flex justify-center mb-6">
+          <div className="md:hidden flex justify-center mb-7">
             <span className="inline-flex items-center bg-[#1e794e] rounded-lg px-5 py-2.5 shadow-md">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -95,16 +150,16 @@ export default function LoginPage() {
             </span>
           </div>
 
-          <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">
+          <h1 className="text-2xl font-extrabold text-zinc-900 tracking-tight">
             환영합니다 <span>👋</span>
           </h1>
-          <p className="mt-2 text-zinc-500">
+          <p className="mt-2 text-sm text-zinc-500">
             {mode === "signin"
               ? "관리자 계정으로 로그인해 주세요."
               : "관리자 계정을 만들어 시작하세요."}
           </p>
 
-          <form onSubmit={onSubmit} className="mt-8 space-y-5">
+          <form onSubmit={onSubmit} className="mt-8 space-y-4">
             {mode === "signup" && (
               <div>
                 <label className="block text-xs font-semibold text-zinc-700 mb-1.5">이름</label>

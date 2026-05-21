@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" width="400" height="480">
+  <defs>
+    <linearGradient id="bodyG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#28c76f"/>
+      <stop offset="100%" stop-color="#1e794e"/>
+    </linearGradient>
+    <linearGradient id="shirtG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3ddc88"/>
+      <stop offset="100%" stop-color="#1e794e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 배경 원 (코트 느낌) -->
+  <circle cx="200" cy="280" r="180" fill="rgba(40,199,111,0.07)"/>
+  <circle cx="200" cy="280" r="180" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-dasharray="4 8"/>
+
+  <!-- 셔틀콕 (좌상단, 날아가는 모습) -->
+  <g transform="translate(60 80) rotate(-25)">
+    <ellipse cx="0" cy="14" rx="10" ry="9" fill="#fff" stroke="#1e794e" stroke-width="2"/>
+    <path d="M -8 6 L -22 -10 M 0 2 L -4 -22 M 8 6 L 22 -10 M -4 5 L -14 -18 M 4 5 L 14 -18" stroke="#1e794e" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <circle cx="0" cy="14" r="3" fill="#1e794e"/>
+  </g>
+
+  <!-- 라켓 (오른손, 위로 든 자세) -->
+  <g transform="translate(295 110) rotate(35)">
+    <ellipse cx="0" cy="0" rx="26" ry="34" fill="#fff" stroke="#1e794e" stroke-width="4"/>
+    <!-- 라켓 줄 (그물) -->
+    <g stroke="#1e794e" stroke-width="0.6" opacity="0.5">
+      <line x1="-22" y1="-16" x2="22" y2="-16"/>
+      <line x1="-22" y1="-8" x2="22" y2="-8"/>
+      <line x1="-22" y1="0" x2="22" y2="0"/>
+      <line x1="-22" y1="8" x2="22" y2="8"/>
+      <line x1="-22" y1="16" x2="22" y2="16"/>
+      <line x1="-14" y1="-30" x2="-14" y2="30"/>
+      <line x1="-7" y1="-32" x2="-7" y2="32"/>
+      <line x1="0" y1="-34" x2="0" y2="34"/>
+      <line x1="7" y1="-32" x2="7" y2="32"/>
+      <line x1="14" y1="-30" x2="14" y2="30"/>
+    </g>
+    <rect x="-4" y="32" width="8" height="60" rx="4" fill="#1e794e"/>
+    <rect x="-5" y="84" width="10" height="14" rx="3" fill="#155939"/>
+  </g>
+
+  <!-- 어린이 캐릭터 (정면, 라켓 든 모습) -->
+  <g transform="translate(200 0)">
+    <!-- 머리 -->
+    <circle cx="0" cy="160" r="32" fill="#fdd8b3"/>
+    <!-- 머리카락 -->
+    <path d="M -32 158 Q -30 132 0 128 Q 30 132 32 158 Q 30 140 18 134 Q 10 130 0 130 Q -10 130 -18 134 Q -30 140 -32 158 Z" fill="#3a2419"/>
+    <!-- 눈 -->
+    <circle cx="-9" cy="160" r="2.5" fill="#1a1a1a"/>
+    <circle cx="9" cy="160" r="2.5" fill="#1a1a1a"/>
+    <!-- 입 (살짝 미소) -->
+    <path d="M -6 173 Q 0 178 6 173" stroke="#1a1a1a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+
+    <!-- 목 -->
+    <rect x="-7" y="188" width="14" height="10" fill="#fdd8b3"/>
+
+    <!-- 상의 (티셔츠) -->
+    <path d="M -45 200 Q -50 230 -48 280 L 48 280 Q 50 230 45 200 Q 35 195 20 198 Q 0 204 -20 198 Q -35 195 -45 200 Z" fill="url(#shirtG)"/>
+    <!-- 옷 라인 -->
+    <path d="M -38 240 L 38 240" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
+
+    <!-- 왼팔 (몸 옆) -->
+    <path d="M -42 210 Q -55 240 -52 275" stroke="#fdd8b3" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <!-- 오른팔 (라켓 든 쪽, 위로) -->
+    <path d="M 42 210 Q 65 175 92 130" stroke="#fdd8b3" stroke-width="14" fill="none" stroke-linecap="round"/>
+
+    <!-- 반바지 -->
+    <path d="M -42 280 L -40 350 L -10 355 L -2 295 L 2 295 L 10 355 L 40 350 L 42 280 Z" fill="#2a2a35"/>
+
+    <!-- 다리 -->
+    <rect x="-26" y="350" width="14" height="60" rx="3" fill="#fdd8b3"/>
+    <rect x="12" y="350" width="14" height="60" rx="3" fill="#fdd8b3"/>
+
+    <!-- 운동화 -->
+    <ellipse cx="-19" cy="416" rx="16" ry="7" fill="#fff" stroke="#1e794e" stroke-width="2"/>
+    <ellipse cx="19" cy="416" rx="16" ry="7" fill="#fff" stroke="#1e794e" stroke-width="2"/>
+    <line x1="-30" y1="416" x2="-8" y2="416" stroke="#1e794e" stroke-width="2"/>
+    <line x1="8" y1="416" x2="30" y2="416" stroke="#1e794e" stroke-width="2"/>
+  </g>
+
+  <!-- 바닥 그림자 -->
+  <ellipse cx="200" cy="430" rx="80" ry="6" fill="rgba(0,0,0,0.1)"/>
+
+  <!-- 활기 표시 (작은 점들) -->
+  <circle cx="335" cy="200" r="3" fill="rgba(255,255,255,0.6)"/>
+  <circle cx="350" cy="240" r="2" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="55" cy="220" r="3" fill="rgba(255,255,255,0.6)"/>
+  <circle cx="40" cy="260" r="2" fill="rgba(255,255,255,0.5)"/>
+</svg>
