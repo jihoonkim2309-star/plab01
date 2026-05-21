@@ -51,7 +51,12 @@ export default function LoginPage() {
         <div className="flex justify-center mb-5">
           <span className="inline-flex items-center bg-[#1e794e] rounded-lg px-4 py-2 shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/planb-logo.svg" alt="PlanB" className="h-5" />
+            <img
+              src="/planb-logo.svg"
+              alt="PlanB"
+              className="h-5"
+              style={{ filter: "brightness(0) invert(1)" }}
+            />
           </span>
         </div>
         <h1 className="text-xl font-bold text-zinc-900 text-center">플랜비 본점 · 어드민</h1>

@@ -117,6 +117,9 @@
   height: 20px;
   width: auto;
   display: block;
+  /* SVG 의 B 가 그린(#1e794e) 으로 채워져 있어 같은 그린 pill 위에선 사라짐 →
+     filter 로 전체 흰색 강제. Plan(원래 흰) + B(원래 그린) 모두 일관된 흰색으로 표시. */
+  filter: brightness(0) invert(1);
 }
 
 .brand-sub {
