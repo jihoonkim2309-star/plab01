@@ -103,9 +103,10 @@
 
 .brand:hover { background: #f7faf8; }
 
-/* PlanB SVG 로고 — 흰 글자(Plan) + 초록 글자(B) 를 위해 그린 pill 위에 얹음 */
+/* PlanB SVG 로고 — 원본 색상(흰 Plan + 그린 B) 그대로 사용.
+   pill 배경을 SVG 의 B 색(#1e794e) 보다 어둡게 해서 B 가 lighter accent 로 보이게. */
 .brand-logo {
-  background: var(--brand);
+  background: #134c30;
   padding: 7px 14px;
   border-radius: 8px;
   display: inline-flex;
@@ -117,9 +118,6 @@
   height: 20px;
   width: auto;
   display: block;
-  /* SVG 의 B 가 그린(#1e794e) 으로 채워져 있어 같은 그린 pill 위에선 사라짐 →
-     filter 로 전체 흰색 강제. Plan(원래 흰) + B(원래 그린) 모두 일관된 흰색으로 표시. */
-  filter: brightness(0) invert(1);
 }
 
 .brand-sub {
