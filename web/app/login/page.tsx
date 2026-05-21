@@ -47,53 +47,41 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex bg-zinc-50">
-      {/* Left visual — md 이상에서 노출 */}
-      <div className="hidden md:flex md:w-3/5 lg:w-1/2 relative overflow-hidden items-center justify-center"
-        style={{ background: "linear-gradient(135deg, #155a39 0%, #1e794e 50%, #2a9162 100%)" }}>
-        {/* 데코 블롭들 */}
-        <div className="absolute top-[-80px] left-[-80px] w-[420px] h-[420px] rounded-full"
-          style={{ background: "rgba(255,255,255,0.10)", filter: "blur(60px)" }} />
-        <div className="absolute bottom-[-100px] right-[-80px] w-[480px] h-[480px] rounded-full"
-          style={{ background: "rgba(255,255,255,0.10)", filter: "blur(70px)" }} />
-        <div className="absolute top-1/3 right-1/4 w-[200px] h-[200px] rounded-full"
-          style={{ background: "rgba(40,199,111,0.18)", filter: "blur(40px)" }} />
+      {/* Left visual — md 이상에서 노출 (좁은 비주얼 영역) */}
+      <div
+        className="hidden md:flex md:w-2/5 lg:w-1/3 relative overflow-hidden items-center justify-center"
+        style={{ background: "linear-gradient(135deg, #155a39 0%, #1e794e 100%)" }}
+      >
+        {/* 부드러운 데코 블롭 (은은하게) */}
+        <div
+          className="absolute top-[-100px] left-[-100px] w-[360px] h-[360px] rounded-full"
+          style={{ background: "rgba(255,255,255,0.08)", filter: "blur(60px)" }}
+        />
+        <div
+          className="absolute bottom-[-100px] right-[-100px] w-[360px] h-[360px] rounded-full"
+          style={{ background: "rgba(255,255,255,0.08)", filter: "blur(60px)" }}
+        />
 
-        {/* 중앙 콘텐츠 */}
-        <div className="relative z-10 text-center max-w-md px-10">
-          <div className="inline-flex items-center bg-white/15 backdrop-blur-md rounded-2xl px-8 py-5 mb-7 shadow-2xl ring-1 ring-white/20">
+        {/* 큰 로고 + 한 줄 슬로건 */}
+        <div className="relative z-10 text-center px-10">
+          <div className="mb-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/planb-logo.svg"
               alt="PlanB"
-              className="h-7"
+              className="h-10 mx-auto"
               style={{ filter: "brightness(0) invert(1)" }}
             />
           </div>
-          <h2 className="text-3xl font-extrabold text-white mb-4 tracking-tight leading-tight">
-            체계적인 학원 운영의 시작
-          </h2>
-          <p className="text-white/85 text-base leading-relaxed">
-            회원 · 결제 · 수업 · 리포트까지<br />
-            한 화면에서 관리하세요.
+          <p className="text-white/90 text-lg font-semibold tracking-tight">
+            학원 운영, 한 화면에서.
           </p>
-
-          {/* 작은 카드 데코 */}
-          <div className="mt-10 grid grid-cols-2 gap-3 max-w-xs mx-auto">
-            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-left ring-1 ring-white/20">
-              <div className="text-white/70 text-xs font-bold uppercase tracking-wider">회원</div>
-              <div className="text-white font-extrabold text-xl mt-1">관리</div>
-            </div>
-            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-left ring-1 ring-white/20">
-              <div className="text-white/70 text-xs font-bold uppercase tracking-wider">결제</div>
-              <div className="text-white font-extrabold text-xl mt-1">자동화</div>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Right form */}
+      {/* Right form (더 넓은 영역) */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-md">
           {/* 모바일 전용 로고 */}
           <div className="md:hidden flex justify-center mb-6">
             <span className="inline-flex items-center bg-[#1e794e] rounded-lg px-5 py-2.5 shadow-md">
@@ -107,16 +95,16 @@ export default function LoginPage() {
             </span>
           </div>
 
-          <h1 className="text-2xl font-extrabold text-zinc-900 tracking-tight">
+          <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">
             환영합니다 <span>👋</span>
           </h1>
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-zinc-500">
             {mode === "signin"
               ? "관리자 계정으로 로그인해 주세요."
               : "관리자 계정을 만들어 시작하세요."}
           </p>
 
-          <form onSubmit={onSubmit} className="mt-8 space-y-4">
+          <form onSubmit={onSubmit} className="mt-8 space-y-5">
             {mode === "signup" && (
               <div>
                 <label className="block text-xs font-semibold text-zinc-700 mb-1.5">이름</label>
