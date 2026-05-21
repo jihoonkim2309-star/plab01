@@ -261,6 +261,15 @@ export default async function GradePromotionsPage({
                 <div className="detail-block" style={{ marginTop: 0 }}>
                   <p className="detail-title">
                     {selected.students?.name}{" "}
+                    {selected.needs_parent_input ? (
+                      <span className="badge blue" style={{ marginLeft: 6 }}>
+                        학교 변경
+                      </span>
+                    ) : (
+                      <span className="badge gray" style={{ marginLeft: 6 }}>
+                        일반 승급
+                      </span>
+                    )}
                     <Link
                       href={`/admin/students/${selected.student_id}`}
                       className="muted"
@@ -335,7 +344,18 @@ export default async function GradePromotionsPage({
                 <div className="detail-block">
                   <p className="detail-title">상태 처리</p>
                   <div className="action-grid">
-                    {STATUS_OPTIONS.map((st) => {
+                    {STATUS_OPTIONS.filter((st) => {
+                      // "학부모 입력 요청" 은 학교 변경 케이스에만 의미 있음.
+                      // 일반 승급(needs_parent_input=false) 에는 숨김. 단 이미 그 상태로 잘못 들어가 있는 경우는 표시해서 다른 상태로 빠져나갈 수 있게.
+                      if (
+                        st === "학부모 입력 요청" &&
+                        !selected.needs_parent_input &&
+                        selected.status !== "학부모 입력 요청"
+                      ) {
+                        return false;
+                      }
+                      return true;
+                    }).map((st) => {
                       const isApprove = st === "승인 완료";
                       const btn = (
                         <button
@@ -369,6 +389,11 @@ export default async function GradePromotionsPage({
                       );
                     })}
                   </div>
+                  {!selected.needs_parent_input && selected.status !== "학부모 입력 요청" && (
+                    <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+                      학년만 바뀌는 일반 승급이라 학부모 입력은 필요 없습니다. "승인 완료" 로 학년 반영하면 됩니다.
+                    </div>
+                  )}
                   <div style={{ marginTop: 10 }}>
                     <form
                       action={deleteGradePromotion.bind(null, selected.id)}
