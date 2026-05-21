@@ -1049,3 +1049,138 @@
   .profile-hero .avatar { margin: 0 auto; }
   .action-grid { grid-template-columns: 1fr; }
 }
+
+/* =====================================================================
+   결제 영수증 (POS 매출조회 스타일).
+   .receipt-paper 만 인쇄에 보이도록 @media print 룰 사용.
+   ===================================================================== */
+.receipt-host {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.receipt-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+}
+
+.receipt-paper {
+  width: 100%;
+  max-width: 320px;
+  background: #fff;
+  color: #1a1a1a;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 18px 16px;
+  font-family: "Courier New", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    /* 영수증 톱니 그림자 효과 */
+    0 -3px 0 -1px var(--bg);
+  position: relative;
+}
+
+.receipt-paper::before,
+.receipt-paper::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  height: 8px;
+  background:
+    radial-gradient(circle at 4px 0, transparent 3px, var(--panel) 3.5px)
+    repeat-x;
+  background-size: 8px 8px;
+}
+.receipt-paper::before { top: -7px; }
+.receipt-paper::after  { bottom: -7px; transform: rotate(180deg); }
+
+.receipt-head {
+  text-align: center;
+}
+.receipt-brand {
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.receipt-meta {
+  font-size: 11px;
+  color: #555;
+}
+
+.receipt-divider {
+  border-top: 1px dashed #bbb;
+  margin: 10px 0;
+}
+.receipt-divider.double {
+  border-top: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
+  height: 3px;
+  margin: 12px 0;
+}
+
+.receipt-info,
+.receipt-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.receipt-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+.receipt-line > span:first-child { color: #555; }
+
+.receipt-items {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.receipt-items th {
+  font-weight: 700;
+  padding: 2px 0;
+  border-bottom: 1px dashed #bbb;
+  color: #555;
+  font-size: 11px;
+}
+.receipt-items td {
+  padding: 3px 0;
+}
+
+.receipt-footer {
+  text-align: center;
+  font-weight: 700;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* 인쇄용 — 영수증만 보이게 */
+@media print {
+  /* 페이지 자체 여백 최소화 */
+  @page { margin: 8mm; }
+
+  body * { visibility: hidden; }
+  .receipt-paper, .receipt-paper * { visibility: visible; }
+  .receipt-paper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    max-width: 80mm;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+  .receipt-paper::before, .receipt-paper::after { display: none; }
+  .no-print { display: none !important; }
+}

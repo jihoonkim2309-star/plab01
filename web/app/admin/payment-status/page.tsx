@@ -5,6 +5,7 @@ import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
+import PaymentReceipt from "./PaymentReceipt";
 import {
   setPaymentStatus,
   setInvoiceStatusInDetail,
@@ -102,7 +103,7 @@ export default async function PaymentStatusPage({
     .limit(300);
   if (s) listQuery = listQuery.eq("status", s);
 
-  const [listRes, totalsRes, detailRes, paymentsRes, itemsRes] =
+  const [listRes, totalsRes, detailRes, paymentsRes, itemsRes, centerRes] =
     await Promise.all([
       listQuery,
       supabase.from("invoices").select("status, amount"),
@@ -130,7 +131,18 @@ export default async function PaymentStatusPage({
             .select("id, label, amount")
             .eq("invoice_id", inv)
         : Promise.resolve({ data: [] }),
+      // 영수증 헤더에 표시할 센터 정보 (한 번만 조회)
+      supabase
+        .from("centers")
+        .select("name, address, contact_phone")
+        .limit(1)
+        .single(),
     ]);
+  const center = (centerRes.data ?? null) as unknown as {
+    name: string | null;
+    address: string | null;
+    contact_phone: string | null;
+  } | null;
 
   let rawList = (listRes.data ?? []) as unknown as ListRow[];
   if (q) {
@@ -495,6 +507,37 @@ export default async function PaymentStatusPage({
                         )}
                     </div>
                   )}
+                </div>
+
+                <div className="detail-block">
+                  <p className="detail-title">영수증</p>
+                  <PaymentReceipt
+                    center={{
+                      name: center?.name ?? null,
+                      address: center?.address ?? null,
+                      phone: center?.contact_phone ?? null,
+                    }}
+                    studentName={detail.students?.name ?? "-"}
+                    invoicePeriod={detail.period}
+                    invoiceAmount={Number(detail.amount)}
+                    invoiceId={detail.id}
+                    items={items}
+                    payment={
+                      successPayment
+                        ? {
+                            provider: successPayment.provider,
+                            method: successPayment.method,
+                            card_name: successPayment.card_name,
+                            card_number_masked: successPayment.card_number_masked,
+                            installment_months: successPayment.installment_months,
+                            approval_no: successPayment.approval_no,
+                            pg_tx_id: successPayment.pg_tx_id,
+                            paid_at: successPayment.paid_at,
+                          }
+                        : null
+                    }
+                    isPaid={detail.status === "결제완료"}
+                  />
                 </div>
 
                 <div className="detail-block">
