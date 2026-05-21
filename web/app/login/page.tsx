@@ -79,19 +79,24 @@ export default function LoginPage() {
           />
         </svg>
 
-        {/* 부드러운 배경 원 */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] rounded-full border border-zinc-200 opacity-50" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[330px] h-[330px] rounded-full bg-zinc-100/60" />
+        {/* 후광 — 일러스트 뒤 부드러운 그린 글로우 */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(40,199,111,0.18) 0%, rgba(40,199,111,0.06) 40%, transparent 70%)",
+            filter: "blur(20px)",
+          }}
+        />
 
-        {/* 플로팅 카드 1 — 좌측 ("이번 달 수강생") */}
-        <div className="absolute top-[24%] left-[14%] z-10 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]">
+        {/* 플로팅 카드 1 — 좌상 ("이번 달 수강생") */}
+        <div className="absolute top-[18%] left-[10%] z-20 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]">
           <div className="text-zinc-500 text-xs font-semibold">이번 달 수강생</div>
           <div className="text-zinc-400 text-[10px] mt-0.5">Active Members</div>
           <div className="mt-3 flex items-end justify-between">
             <div className="text-2xl font-extrabold text-zinc-900 tracking-tight">247명</div>
             <div className="text-xs font-bold text-[#28c76f]">+12%</div>
           </div>
-          {/* 미니 sparkline */}
           <svg className="mt-2 w-full" viewBox="0 0 100 24" height="24">
             <path
               d="M 0 18 L 12 15 L 24 17 L 36 11 L 48 13 L 60 7 L 72 10 L 84 5 L 100 4"
@@ -104,15 +109,14 @@ export default function LoginPage() {
           </svg>
         </div>
 
-        {/* 플로팅 카드 2 — 우측 ("이번 달 수납") */}
-        <div className="absolute bottom-[22%] right-[12%] z-10 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]">
+        {/* 플로팅 카드 2 — 우하 ("이번 달 수납") */}
+        <div className="absolute bottom-[18%] right-[8%] z-20 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]">
           <div className="text-zinc-500 text-xs font-semibold">이번 달 수납</div>
           <div className="text-zinc-400 text-[10px] mt-0.5">Monthly Revenue</div>
           <div className="mt-3 flex items-end justify-between">
             <div className="text-xl font-extrabold text-zinc-900 tracking-tight">₩ 4.2M</div>
             <div className="text-xs font-bold text-[#28c76f]">+8%</div>
           </div>
-          {/* 미니 바 차트 */}
           <div className="mt-2 flex items-end gap-1 h-6">
             <div className="flex-1 rounded-sm bg-[#28c76f]/30" style={{ height: "40%" }} />
             <div className="flex-1 rounded-sm bg-[#28c76f]/50" style={{ height: "60%" }} />
@@ -122,14 +126,22 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* 중앙 일러스트 */}
-        <div className="relative z-10">
+        {/* 중앙 일러스트 — 사각형이라 mask 로 가장자리 페이드 */}
+        <div
+          className="relative z-10"
+          style={{
+            WebkitMaskImage:
+              "radial-gradient(ellipse at center, black 55%, transparent 90%)",
+            maskImage:
+              "radial-gradient(ellipse at center, black 55%, transparent 90%)",
+          }}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/login-hero.svg"
             alt=""
             aria-hidden
-            className="w-[400px] h-auto"
+            className="w-[440px] h-auto"
           />
         </div>
       </div>
