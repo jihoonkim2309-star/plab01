@@ -42,18 +42,34 @@ export default async function AdminLayout({
 
       <main className="main">
         <header className="topbar">
-          <select className="center-select" aria-label="센터 선택" defaultValue="플랜비 본점">
-            <option>플랜비 본점</option>
-          </select>
-          <input className="search" placeholder="학생명, 학부모명, 청구번호 검색" />
-          <div className="profile">
-            <div className="avatar">{initial}</div>
-            <span>{profile?.name ?? userEmail}</span>
-            <form action={signOut}>
-              <button className="btn" style={{ minHeight: 34 }}>
-                로그아웃
-              </button>
-            </form>
+          <div className="topbar-search">
+            <span className="icon" aria-hidden>🔍</span>
+            <input
+              type="search"
+              placeholder="학생·학부모·청구번호 검색"
+              aria-label="검색"
+            />
+            <span className="kbd" aria-hidden>Ctrl K</span>
+          </div>
+
+          <div className="topbar-actions">
+            <button type="button" className="icon-button" aria-label="알림">
+              🔔
+              <span className="dot" aria-hidden />
+            </button>
+
+            <div className="profile">
+              <div className="avatar" aria-hidden>{initial}</div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span className="name">{profile?.name ?? userEmail}</span>
+                <span className="name-sub">{profile?.role ?? "관리자"}</span>
+              </div>
+              <form action={signOut}>
+                <button className="btn outline sm" type="submit" style={{ marginLeft: 8 }}>
+                  로그아웃
+                </button>
+              </form>
+            </div>
           </div>
         </header>
 
@@ -62,12 +78,10 @@ export default async function AdminLayout({
             <strong>플랜비 본점</strong>
             <span>/</span>
             <span>Phase 1 운영 콘솔</span>
-            <span>/</span>
-            <span>2026년 5월 운영월</span>
           </div>
           <div className="system-state">
             <span className="badge green">DB 정상</span>
-            <span className="badge blue">Slice 1 가동</span>
+            <span className="badge brand">Slice 1 가동</span>
           </div>
         </div>
 
