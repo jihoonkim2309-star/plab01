@@ -121,18 +121,18 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* 카드 1 — 좌상, 캐릭터 어깨 옆 (Vuexy Profit 비율) */}
+            {/* 카드 1 — 좌상, 캐릭터 왼쪽 옆 (네거티브 오프셋으로 캐릭터 밖) */}
             <div
               className="absolute z-20"
               style={{
                 top: "18%",
-                left: "5%",
+                left: "-8%",
                 transform:
                   "scale(calc(min(65vh, 50vw) / 600px))",
                 transformOrigin: "top left",
               }}
             >
-              <div className="bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]">
+              <div className="bg-white rounded-2xl px-4 py-4 shadow-xl ring-1 ring-zinc-100 w-[160px]">
                 <div className="text-zinc-500 text-xs font-semibold">이번 달 수강생</div>
                 <div className="text-zinc-400 text-[10px] mt-0.5">Active Members</div>
                 <div className="mt-3 flex items-end justify-between">
@@ -152,18 +152,18 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* 카드 2 — 우중, 캐릭터 몸통 옆 (Vuexy Order 비율) */}
+            {/* 카드 2 — 우중, 캐릭터 오른쪽 옆 (네거티브 오프셋으로 캐릭터 밖) */}
             <div
               className="absolute z-20"
               style={{
-                top: "42%",
-                right: "0%",
+                top: "45%",
+                right: "-8%",
                 transform:
                   "scale(calc(min(65vh, 50vw) / 600px))",
                 transformOrigin: "top right",
               }}
             >
-              <div className="bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]">
+              <div className="bg-white rounded-2xl px-4 py-4 shadow-xl ring-1 ring-zinc-100 w-[160px]">
                 <div className="text-zinc-500 text-xs font-semibold">이번 달 수납</div>
                 <div className="text-zinc-400 text-[10px] mt-0.5">Monthly Revenue</div>
                 <div className="mt-3 flex items-end justify-between">
