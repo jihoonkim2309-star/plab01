@@ -115,10 +115,10 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* 카드 1 — 좌상 (Vuexy Profit 위치: 일러스트 상단 좌측 살짝 바깥) */}
+            {/* 카드 1 — 좌상 (일러스트 컨테이너 안, 잘리지 않게) */}
             <div
-              className="absolute z-20 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]"
-              style={{ top: "18%", left: "-22%" }}
+              className="absolute z-20 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[170px]"
+              style={{ top: "8%", left: "-6%" }}
             >
               <div className="text-zinc-500 text-xs font-semibold">이번 달 수강생</div>
               <div className="text-zinc-400 text-[10px] mt-0.5">Active Members</div>
@@ -138,10 +138,10 @@ export default function LoginPage() {
               </svg>
             </div>
 
-            {/* 카드 2 — 우중 (Vuexy Order 위치: 일러스트 중간 우측 살짝 바깥) */}
+            {/* 카드 2 — 우중 (일러스트 컨테이너 안, 잘리지 않게) */}
             <div
-              className="absolute z-20 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]"
-              style={{ top: "42%", right: "-22%" }}
+              className="absolute z-20 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[170px]"
+              style={{ top: "45%", right: "-6%" }}
             >
               <div className="text-zinc-500 text-xs font-semibold">이번 달 수납</div>
               <div className="text-zinc-400 text-[10px] mt-0.5">Monthly Revenue</div>
