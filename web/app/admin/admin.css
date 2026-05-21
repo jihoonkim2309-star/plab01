@@ -947,17 +947,88 @@
 .detail-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 
 .field { display: flex; flex-direction: column; gap: 6px; }
-.field label { color: var(--muted); font-size: 12px; font-weight: 800; }
+.field label {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
 .field input,
 .field select,
 .field textarea {
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 9px 12px;
   background: #fff;
   min-height: 38px;
+  font-size: 13px;
+  color: var(--text);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
 }
+.field input:hover:not(:focus),
+.field select:hover:not(:focus),
+.field textarea:hover:not(:focus) {
+  border-color: var(--line-strong);
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(30, 121, 78, 0.12);
+}
+.field input::placeholder,
+.field textarea::placeholder { color: #a8b1ad; }
 .field textarea { min-height: 86px; resize: vertical; }
+
+/* select 화살표 컬러 */
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7873'><path d='M5.25 7.5l4.75 4.75 4.75-4.75'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px 16px;
+  padding-right: 32px;
+}
+
+/* checkbox / radio — 브랜드 그린 강조 */
+.admin-shell input[type="checkbox"],
+.admin-shell input[type="radio"] {
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+/* 스위치 토글 (체크박스 베이스) — .switch class 로 변환 */
+.switch {
+  --switch-h: 22px;
+  --switch-w: 38px;
+  appearance: none;
+  -webkit-appearance: none;
+  width: var(--switch-w);
+  height: var(--switch-h);
+  background: var(--line-strong);
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  transition: background 160ms ease;
+  flex-shrink: 0;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(var(--switch-h) - 4px);
+  height: calc(var(--switch-h) - 4px);
+  background: #fff;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  transition: left 160ms ease;
+}
+.switch:checked { background: var(--brand); }
+.switch:checked::after { left: calc(var(--switch-w) - var(--switch-h) + 2px); }
+.switch:disabled { opacity: 0.45; cursor: not-allowed; }
 /* HTML5 :user-invalid → 사용자가 한 번이라도 건드린 뒤 비어있을 때만 빨간 강조.
    .field 에 data-error="..." 를 주면 그 문구가 인라인으로 표시됨. */
 .field:has(input:user-invalid) label,
