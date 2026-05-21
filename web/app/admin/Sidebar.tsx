@@ -53,9 +53,11 @@ export default function Sidebar() {
                 className={[
                   item.sub ? "sub" : "",
                   isActive(pathname, item.href) ? "active" : "",
+                  item.reviewed ? "" : "wip",
                 ]
                   .filter(Boolean)
                   .join(" ")}
+                title={item.reviewed ? undefined : "수정중 (sweep 미완료)"}
               >
                 {!item.sub && <span className="ico">{item.icon ?? "•"}</span>}
                 {item.label}

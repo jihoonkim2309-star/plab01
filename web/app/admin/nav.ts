@@ -8,6 +8,8 @@ export type NavItem = {
   icon?: string; // 상위 메뉴만
   sub?: boolean;
   ready?: boolean;
+  // 어드민 sweep 진행 상태. true=검토 완료(초록). 미지정=수정중(빨강) — 팀원 안내용.
+  reviewed?: boolean;
 };
 
 export type NavGroup = {
@@ -27,8 +29,8 @@ export const NAV: NavGroup[] = [
   {
     label: "회원",
     items: [
-      { label: "회원 목록/상세", slug: "members", href: "/admin/students", icon: "☉", ready: true },
-      { label: "학생 등록", slug: "student-create", href: "/admin/students/new", sub: true, ready: true },
+      { label: "회원 목록/상세", slug: "members", href: "/admin/students", icon: "☉", ready: true, reviewed: true },
+      { label: "학생 등록", slug: "student-create", href: "/admin/students/new", sub: true, ready: true, reviewed: true },
       { label: "진학/학년 승급 관리", slug: "grade-promotion", href: "/admin/grade-promotions", sub: true, ready: true },
       { label: "학부모 계정 관리", slug: "parent-accounts", href: "/admin/parent-accounts", sub: true, ready: true },
       { label: "자녀 연결 승인", slug: "parent-link", href: "/admin/parent-links", sub: true, ready: true },

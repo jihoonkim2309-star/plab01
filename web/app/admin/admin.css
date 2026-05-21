@@ -165,6 +165,13 @@
   color: var(--brand);
 }
 
+/* 수정중(sweep 미완료) 메뉴 — 팀원 안내용 빨간색. hover/active 시에도 빨간 톤 유지. */
+.nav a.wip { color: var(--red); }
+.nav a.wip .ico { color: var(--red); }
+.nav a.wip:hover { background: var(--red-soft); color: var(--red); }
+.nav a.wip.active { background: var(--red-soft); color: var(--red); }
+.nav a.wip.active::before { background: var(--red); }
+
 .nav a.active::before {
   content: "";
   position: absolute;
