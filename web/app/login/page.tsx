@@ -79,78 +79,83 @@ export default function LoginPage() {
           />
         </svg>
 
-        {/* 일러스트 + 카드를 하나의 컨테이너로 묶어 Vuexy 패턴 매칭 */}
+        {/* 일러스트 + 카드를 하나의 비율 고정 컨테이너로 묶어 함께 스케일 */}
         <div className="relative z-10 flex items-center justify-center w-full h-full">
-          {/* 후광 — 일러스트 뒤 부드러운 그린 글로우 */}
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] aspect-square rounded-full"
-            style={{
-              background:
-                "radial-gradient(circle, rgba(40,199,111,0.18) 0%, rgba(40,199,111,0.06) 40%, transparent 70%)",
-              filter: "blur(20px)",
-            }}
-          />
-
-          {/* 중앙 일러스트 — 뷰포트 기반 반응형 */}
+          {/* 후광 + 일러스트 + 카드 묶음 — 일러스트 높이 기반 컨테이너 */}
           <div
             className="relative"
-            style={{
-              WebkitMaskImage:
-                "radial-gradient(ellipse 70% 60% at center, black 55%, transparent 95%)",
-              maskImage:
-                "radial-gradient(ellipse 70% 60% at center, black 55%, transparent 95%)",
-            }}
+            style={{ height: "min(82vh, 720px)", aspectRatio: "595 / 842" }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/login-hero.svg"
-              alt=""
-              aria-hidden
-              className="w-auto"
-              style={{ height: "min(82vh, 720px)" }}
+            {/* 후광 — 일러스트 뒤 부드러운 그린 글로우 */}
+            <div
+              className="absolute inset-0 -m-[30%] rounded-full"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(40,199,111,0.18) 0%, rgba(40,199,111,0.06) 40%, transparent 70%)",
+                filter: "blur(20px)",
+              }}
             />
-          </div>
 
-          {/* 플로팅 카드 1 — 좌상 ("이번 달 수강생") — Vuexy Profit 위치에 매칭 */}
-          <div
-            className="absolute z-20 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]"
-            style={{ top: "26%", left: "12%" }}
-          >
-            <div className="text-zinc-500 text-xs font-semibold">이번 달 수강생</div>
-            <div className="text-zinc-400 text-[10px] mt-0.5">Active Members</div>
-            <div className="mt-3 flex items-end justify-between">
-              <div className="text-2xl font-extrabold text-zinc-900 tracking-tight">247명</div>
-              <div className="text-xs font-bold text-[#28c76f]">+12%</div>
-            </div>
-            <svg className="mt-2 w-full" viewBox="0 0 100 24" height="24">
-              <path
-                d="M 0 18 L 12 15 L 24 17 L 36 11 L 48 13 L 60 7 L 72 10 L 84 5 L 100 4"
-                stroke="#1e794e"
-                strokeWidth="2"
-                fill="none"
-                strokeLinecap="round"
+            {/* 일러스트 — 마스크로 가장자리 페이드 */}
+            <div
+              className="absolute inset-0"
+              style={{
+                WebkitMaskImage:
+                  "radial-gradient(ellipse 70% 60% at center, black 55%, transparent 95%)",
+                maskImage:
+                  "radial-gradient(ellipse 70% 60% at center, black 55%, transparent 95%)",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/login-hero.svg"
+                alt=""
+                aria-hidden
+                className="w-full h-full object-contain"
               />
-              <circle cx="100" cy="4" r="3" fill="#1e794e" />
-            </svg>
-          </div>
-
-          {/* 플로팅 카드 2 — 우하 ("이번 달 수납") — Vuexy Order 위치에 매칭 (중앙-우측, 일러스트 옆) */}
-          <div
-            className="absolute z-20 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]"
-            style={{ top: "48%", right: "12%" }}
-          >
-            <div className="text-zinc-500 text-xs font-semibold">이번 달 수납</div>
-            <div className="text-zinc-400 text-[10px] mt-0.5">Monthly Revenue</div>
-            <div className="mt-3 flex items-end justify-between">
-              <div className="text-xl font-extrabold text-zinc-900 tracking-tight">₩ 4.2M</div>
-              <div className="text-xs font-bold text-[#28c76f]">+8%</div>
             </div>
-            <div className="mt-2 flex items-end gap-1 h-6">
-              <div className="flex-1 rounded-sm bg-[#28c76f]/30" style={{ height: "40%" }} />
-              <div className="flex-1 rounded-sm bg-[#28c76f]/50" style={{ height: "60%" }} />
-              <div className="flex-1 rounded-sm bg-[#28c76f]/70" style={{ height: "50%" }} />
-              <div className="flex-1 rounded-sm bg-[#28c76f]" style={{ height: "85%" }} />
-              <div className="flex-1 rounded-sm bg-[#1e794e]" style={{ height: "100%" }} />
+
+            {/* 카드 1 — 좌상 (Vuexy Profit 위치: 일러스트 상단 좌측 살짝 바깥) */}
+            <div
+              className="absolute z-20 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]"
+              style={{ top: "18%", left: "-22%" }}
+            >
+              <div className="text-zinc-500 text-xs font-semibold">이번 달 수강생</div>
+              <div className="text-zinc-400 text-[10px] mt-0.5">Active Members</div>
+              <div className="mt-3 flex items-end justify-between">
+                <div className="text-2xl font-extrabold text-zinc-900 tracking-tight">247명</div>
+                <div className="text-xs font-bold text-[#28c76f]">+12%</div>
+              </div>
+              <svg className="mt-2 w-full" viewBox="0 0 100 24" height="24">
+                <path
+                  d="M 0 18 L 12 15 L 24 17 L 36 11 L 48 13 L 60 7 L 72 10 L 84 5 L 100 4"
+                  stroke="#1e794e"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+                <circle cx="100" cy="4" r="3" fill="#1e794e" />
+              </svg>
+            </div>
+
+            {/* 카드 2 — 우중 (Vuexy Order 위치: 일러스트 중간 우측 살짝 바깥) */}
+            <div
+              className="absolute z-20 bg-white rounded-2xl px-5 py-4 shadow-xl ring-1 ring-zinc-100 w-[180px]"
+              style={{ top: "42%", right: "-22%" }}
+            >
+              <div className="text-zinc-500 text-xs font-semibold">이번 달 수납</div>
+              <div className="text-zinc-400 text-[10px] mt-0.5">Monthly Revenue</div>
+              <div className="mt-3 flex items-end justify-between">
+                <div className="text-xl font-extrabold text-zinc-900 tracking-tight">₩ 4.2M</div>
+                <div className="text-xs font-bold text-[#28c76f]">+8%</div>
+              </div>
+              <div className="mt-2 flex items-end gap-1 h-6">
+                <div className="flex-1 rounded-sm bg-[#28c76f]/30" style={{ height: "40%" }} />
+                <div className="flex-1 rounded-sm bg-[#28c76f]/50" style={{ height: "60%" }} />
+                <div className="flex-1 rounded-sm bg-[#28c76f]/70" style={{ height: "50%" }} />
+                <div className="flex-1 rounded-sm bg-[#28c76f]" style={{ height: "85%" }} />
+                <div className="flex-1 rounded-sm bg-[#1e794e]" style={{ height: "100%" }} />
+              </div>
             </div>
           </div>
         </div>
