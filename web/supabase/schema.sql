@@ -759,6 +759,81 @@ begin
 end $$;
 
 -- =====================================================================
+--  15. payments 카드 정보 확장 (POS 매출조회 스타일 상세에 필요)
+-- =====================================================================
+alter table public.payments add column if not exists method               text;
+alter table public.payments add column if not exists card_name            text;
+alter table public.payments add column if not exists card_number_masked   text;
+alter table public.payments add column if not exists installment_months   integer;
+alter table public.payments add column if not exists approval_no          text;
+alter table public.payments add column if not exists raw                  jsonb;
+
+-- =====================================================================
+--  15.1 더미 결제 정보 시드 — 결제완료 invoice 인데 payments 가 없거나 부족한 경우
+--  카드사·마스크된 번호·승인번호 등 더미 채워주기 (테스트 모드 전용).
+--  사용: select public.seed_dummy_payments('<center_id>');
+-- =====================================================================
+create or replace function public.seed_dummy_payments(cid uuid)
+returns integer language plpgsql security definer set search_path = public as $$
+declare
+  v_count integer := 0;
+  v record;
+  v_card text;
+  v_masked text;
+  v_approval text;
+  v_install integer;
+  v_now timestamptz := now();
+begin
+  if auth.uid() is not null and not public.is_center_admin(cid) then
+    raise exception 'permission denied: not center admin';
+  end if;
+
+  -- 결제완료 인데 payment 레코드 자체가 없거나 카드정보가 비어있는 invoice 들
+  for v in
+    select i.id, i.center_id, i.amount, i.paid_at
+      from public.invoices i
+      left join public.payments p
+        on p.invoice_id = i.id and p.status = '성공'
+       and p.card_name is not null
+     where i.center_id = cid
+       and i.status = '결제완료'
+       and p.id is null
+  loop
+    -- 학생 ID 해시로 결정적인 더미값 만들기 (재실행해도 동일)
+    v_card := (array['신한카드','삼성카드','국민카드','현대카드','롯데카드','BC카드','우리카드','농협카드'])
+              [1 + (abs(hashtext(v.id::text)) % 8)];
+    v_masked := lpad((abs(hashtext(v.id::text || 'a')) % 9000 + 1000)::text, 4, '0')
+              || '-****-****-'
+              || lpad((abs(hashtext(v.id::text || 'b')) % 9000 + 1000)::text, 4, '0');
+    v_approval := lpad((abs(hashtext(v.id::text || 'c')) % 90000000 + 10000000)::text, 8, '0');
+    v_install := case when v.amount >= 200000 then ((abs(hashtext(v.id::text || 'd')) % 5) + 1) * 0 else 0 end;
+    if v.amount >= 200000 and (abs(hashtext(v.id::text)) % 3) = 0 then
+      v_install := 3;  -- 큰 금액 일부는 할부
+    end if;
+
+    insert into public.payments
+      (center_id, invoice_id, amount, status, provider, pg_tx_id,
+       method, card_name, card_number_masked, installment_months, approval_no,
+       receipt_url, paid_at, raw)
+    values
+      (v.center_id, v.id, v.amount, '성공', 'portone-dummy',
+       'dummy-' || substr(v.id::text, 1, 8) || '-' || extract(epoch from v_now)::bigint,
+       'card', v_card, v_masked, v_install, v_approval,
+       'https://example.com/receipt/dummy-' || substr(v.id::text, 1, 8),
+       coalesce(v.paid_at, v_now),
+       jsonb_build_object(
+         'dummy', true,
+         'card', jsonb_build_object('name', v_card, 'number', v_masked),
+         'installment_months', v_install,
+         'approval_no', v_approval
+       ));
+    v_count := v_count + 1;
+  end loop;
+
+  return v_count;
+end $$;
+
+-- =====================================================================
 --  부트스트랩 (최초 1회) — 아래 주석을 해제해서 실행하세요.
 --  1) 먼저 앱에서 어드민 계정으로 회원가입(또는 Supabase Auth에서 유저 생성)
 --  2) 그 후 아래를 실행해 센터 1개 생성 + 그 계정을 admin으로 승격

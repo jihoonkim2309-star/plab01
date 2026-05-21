@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       provider: "portone",
       pg_tx_id: paymentId,
       failed_reason: `status=${pay.status} amount=${pay.amount}`,
+      raw: pay.raw as object,
     });
     return NextResponse.json(
       { error: `미결제 (status=${pay.status})` },
@@ -47,12 +48,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const nowIso = new Date().toISOString();
+
   await supabase
     .from("invoices")
     .update({
       status: "결제완료",
-      paid_at: new Date().toISOString(),
-      method: "card",
+      paid_at: pay.paidAt ?? nowIso,
+      method: pay.method ?? "card",
       pg_tx_id: paymentId,
     })
     .eq("id", inv.id);
@@ -64,7 +67,14 @@ export async function POST(request: NextRequest) {
     status: "성공",
     provider: "portone",
     pg_tx_id: paymentId,
-    paid_at: new Date().toISOString(),
+    method: pay.method,
+    card_name: pay.cardName,
+    card_number_masked: pay.cardNumberMasked,
+    installment_months: pay.installmentMonths,
+    approval_no: pay.approvalNo,
+    receipt_url: pay.receiptUrl,
+    paid_at: pay.paidAt ?? nowIso,
+    raw: pay.raw as object,
   });
 
   return NextResponse.json({ ok: true });

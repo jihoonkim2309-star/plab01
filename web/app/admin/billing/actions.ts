@@ -104,3 +104,48 @@ export async function deleteInvoice(id: string, period: string) {
   revalidatePath("/admin/billing");
   redirect(`/admin/billing?ym=${period}`);
 }
+
+// 상세 페이지용: 단건 상태 변경. 변경 후 상세 페이지로 복귀.
+export async function setInvoiceStatusDetail(id: string, status: string) {
+  const { supabase } = await requireCenter();
+  if (!["대기", "청구", "결제완료", "실패", "환불"].includes(status))
+    throw new Error("잘못된 상태입니다.");
+
+  const patch: Record<string, string | null> = { status };
+  patch.paid_at = status === "결제완료" ? new Date().toISOString() : null;
+
+  const { error } = await supabase.from("invoices").update(patch).eq("id", id);
+  if (error) throw new Error("처리 실패: " + error.message);
+
+  revalidatePath("/admin/billing");
+  revalidatePath(`/admin/billing/${id}`);
+  redirect(`/admin/billing/${id}`);
+}
+
+// 상세 페이지용: 삭제 후 목록으로 복귀.
+export async function deleteInvoiceDetail(id: string) {
+  const { supabase } = await requireCenter();
+  const { data: inv } = await supabase
+    .from("invoices")
+    .select("period")
+    .eq("id", id)
+    .single();
+  const period = (inv as { period: string } | null)?.period ?? "";
+
+  const { error } = await supabase.from("invoices").delete().eq("id", id);
+  if (error) throw new Error("삭제 실패: " + error.message);
+  revalidatePath("/admin/billing");
+  redirect(period ? `/admin/billing?ym=${period}` : "/admin/billing");
+}
+
+// 더미 결제 정보 시드: 결제완료 invoice 인데 payments 가 없거나 카드 정보가 비어있는 경우 채워줌.
+// 테스트 모드 전용 — 실제 PortOne 결제는 verify route 에서 자동 기록됨.
+export async function seedDummyPayments() {
+  const { supabase, centerId } = await requireCenter();
+  const { data, error } = await supabase.rpc("seed_dummy_payments", {
+    cid: centerId,
+  });
+  if (error) throw new Error("더미 시드 실패: " + error.message);
+  revalidatePath("/admin/billing");
+  redirect(`/admin/billing?seeded=${data ?? 0}`);
+}
