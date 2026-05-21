@@ -1,31 +1,51 @@
 /* =====================================================================
-   plab01 Admin 디자인 시스템 — index.html 프로토타입에서 이식.
+   plab01 Admin 디자인 시스템 — Vuexy-inspired, PlanB 그린 톤.
    전역 충돌 방지를 위해 bare 셀렉터는 .admin-shell 하위로 스코프.
    ===================================================================== */
+
+/* Pretendard — 한국어 친화 geometric sans (Vuexy 의 Public Sans 와 유사한 톤) */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
+
 :root {
-  --bg: #f3f6f5;
-  --panel: #ffffff;
-  --line: #e3e8e6;
-  --line-strong: #cdd8d4;
-  --text: #111514;
-  --muted: #64716d;
-  /* 브랜드 그린 — planb-logo.svg 의 B 글자 색에 정합 */
+  /* 표면 / 텍스트 */
+  --bg: #f4f8f6;          /* 배경 — 연한 민트 그레이 */
+  --panel: #ffffff;       /* 카드 */
+  --line: #e3eae6;        /* 보더 */
+  --line-strong: #cdd8d4; /* 강한 보더 */
+  --text: #2f3b37;        /* 본문 */
+  --muted: #6b7873;       /* 보조 */
+
+  /* 브랜드 그린 (planb-logo.svg B 글자 색) */
   --brand: #1e794e;
-  --brand-soft: #e8f6ef;
+  --brand-soft: #e0f0e8;
+
+  /* 시맨틱 컬러 (Vuexy 팔레트 적응) */
   --blue: #1f6feb;
   --blue-soft: #e7f0ff;
-  --green: #14804a;
-  --green-soft: #e7f5ee;
-  --orange: #b76e00;
-  --orange-soft: #fff4df;
-  --red: #c6362e;
-  --red-soft: #fdebea;
+  --green: #28c76f;         /* success — brand 와 구분되는 밝은 그린 */
+  --green-soft: #ddf6e8;
+  --orange: #ff9f43;        /* warning */
+  --orange-soft: #ffead0;
+  --red: #ea5455;           /* danger */
+  --red-soft: #fce4e4;
+  --cyan: #00cfe8;          /* info (신규) */
+  --cyan-soft: #d0f4f9;
   --gray-soft: #eef1f4;
-  --shadow: 0 2px 10px rgba(13, 33, 25, 0.05);
-  --shadow-strong: 0 16px 36px rgba(13, 33, 25, 0.09);
-  /* 프로토타입 버그 수정: 미정의 변수 보정 */
-  --border: #e3e8e6;
-  --ink: #111514;
+
+  /* 디자인 시스템 토큰 */
+  --radius-sm: 4px;
+  --radius: 6px;            /* 카드·버튼 기본 */
+  --radius-lg: 10px;        /* 큰 카드 */
+  --radius-pill: 999px;
+  --shadow-xs: 0 1px 2px rgba(31, 51, 43, 0.04);
+  --shadow: 0 2px 6px rgba(31, 51, 43, 0.06);
+  --shadow-strong: 0 8px 24px rgba(31, 51, 43, 0.12);
+  --topbar-height: 64px;
+  --sidebar-width: 260px;
+
+  /* 호환 (기존 코드) */
+  --border: #e3eae6;
+  --ink: #2f3b37;
 }
 
 .admin-shell * { box-sizing: border-box; }
@@ -34,9 +54,11 @@
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: Arial, "Noto Sans KR", sans-serif;
+  font-family: "Pretendard Variable", Pretendard, -apple-system, "Noto Sans KR", "Segoe UI", Roboto, Arial, sans-serif;
   font-size: 14px;
-  letter-spacing: 0;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
 }
 
 .admin-shell button,
@@ -159,41 +181,37 @@
 
 .nav a.sub .ico { display: none; }
 
-.nav a:hover,
-.nav a.active {
+.nav a:hover {
   background: var(--brand-soft);
   color: var(--brand);
 }
 
-/* 수정중(sweep 미완료) 메뉴 — 팀원 안내용 빨간색. hover/active 시에도 빨간 톤 유지. */
-.nav a.wip { color: var(--red); }
-.nav a.wip .ico { color: var(--red); }
-.nav a.wip:hover { background: var(--red-soft); color: var(--red); }
-.nav a.wip.active { background: var(--red-soft); color: var(--red); }
-.nav a.wip.active::before { background: var(--red); }
-
-.nav a.active::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 9px;
-  bottom: 9px;
-  width: 3px;
-  border-radius: 8px;
-  background: var(--brand);
+/* Vuexy 스타일 — 활성 시 전폭 그라데이션 채움 + 흰 텍스트 + 부드러운 그림자 */
+.nav a.active {
+  background: linear-gradient(118deg, var(--brand) 0%, #2a9162 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(30, 121, 78, 0.32);
 }
-
-.nav a.sub.active::before {
-  left: 24px;
-  top: 8px;
-  bottom: 8px;
-}
+.nav a.active .ico { color: #ffffff; }
 
 .nav .ico {
   width: 20px;
   text-align: center;
   color: var(--brand);
+  transition: color 140ms ease;
 }
+
+/* 수정중(sweep 미완료) 메뉴 — 빨간 톤. */
+.nav a.wip { color: var(--red); }
+.nav a.wip .ico { color: var(--red); }
+.nav a.wip:hover { background: var(--red-soft); color: var(--red); }
+.nav a.wip:hover .ico { color: var(--red); }
+.nav a.wip.active {
+  background: linear-gradient(118deg, var(--red) 0%, #f06d6e 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(234, 84, 85, 0.32);
+}
+.nav a.wip.active .ico { color: #ffffff; }
 
 .sidebar-footer {
   margin-top: auto;
