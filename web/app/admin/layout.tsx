@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import Sidebar from "./Sidebar";
 import GlobalLoading from "./GlobalLoading";
 import SuppressInvalidTooltip from "./SuppressInvalidTooltip";
-import { signOut } from "./actions";
+import ProfileMenu from "./ProfileMenu";
 
 export default async function AdminLayout({
   children,
@@ -28,8 +28,24 @@ export default async function AdminLayout({
     .eq("id", userId)
     .single();
 
+  const { data: center } = profile?.center_id
+    ? await supabase
+        .from("centers")
+        .select("name")
+        .eq("id", profile.center_id)
+        .single()
+    : { data: null };
+
   const needsBootstrap = !profile?.role || !profile?.center_id;
   const initial = (profile?.name ?? userEmail ?? "A").charAt(0).toUpperCase();
+  const displayName = profile?.name ?? userEmail ?? "";
+  const displayRole =
+    profile?.role === "admin"
+      ? "관리자"
+      : profile?.role === "coach"
+        ? "코치"
+        : (profile?.role ?? "사용자");
+  const centerName = center?.name ?? "플랜비 본점";
 
   return (
     <div className="admin-shell app">
@@ -42,14 +58,10 @@ export default async function AdminLayout({
 
       <main className="main">
         <header className="topbar">
-          <div className="topbar-search">
-            <span className="icon" aria-hidden>🔍</span>
-            <input
-              type="search"
-              placeholder="학생·학부모·청구번호 검색"
-              aria-label="검색"
-            />
-            <span className="kbd" aria-hidden>Ctrl K</span>
+          <div className="topbar-crumb">
+            <strong>{centerName}</strong>
+            <span className="sep" aria-hidden>/</span>
+            <span className="muted">Phase 1 운영 콘솔</span>
           </div>
 
           <div className="topbar-actions">
@@ -58,32 +70,14 @@ export default async function AdminLayout({
               <span className="dot" aria-hidden />
             </button>
 
-            <div className="profile">
-              <div className="avatar" aria-hidden>{initial}</div>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span className="name">{profile?.name ?? userEmail}</span>
-                <span className="name-sub">{profile?.role ?? "관리자"}</span>
-              </div>
-              <form action={signOut}>
-                <button className="btn outline sm" type="submit" style={{ marginLeft: 8 }}>
-                  로그아웃
-                </button>
-              </form>
-            </div>
+            <ProfileMenu
+              initial={initial}
+              name={displayName}
+              role={displayRole}
+              isAdmin={profile?.role === "admin"}
+            />
           </div>
         </header>
-
-        <div className="workspace-strip">
-          <div className="crumb">
-            <strong>플랜비 본점</strong>
-            <span>/</span>
-            <span>Phase 1 운영 콘솔</span>
-          </div>
-          <div className="system-state">
-            <span className="badge green">DB 정상</span>
-            <span className="badge brand">Slice 1 가동</span>
-          </div>
-        </div>
 
         <section className="content">
           {needsBootstrap && (
