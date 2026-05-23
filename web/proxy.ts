@@ -40,7 +40,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
   if (isLogin && user) {
-    return NextResponse.redirect(new URL("/prototype.html", request.url));
+    return NextResponse.redirect(new URL("/admin", request.url));
   }
 
   return response;
