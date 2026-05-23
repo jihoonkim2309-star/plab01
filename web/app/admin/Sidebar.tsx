@@ -24,11 +24,23 @@ function isActive(pathname: string, href: string) {
     return pathname.startsWith("/admin/measurements");
   if (href === "/admin/measurement-items")
     return pathname.startsWith("/admin/measurement-items");
+  if (href === "/admin/centers") return pathname.startsWith("/admin/centers");
+  if (href === "/admin/admin-approvals")
+    return pathname.startsWith("/admin/admin-approvals");
   return pathname === href;
 }
 
-export default function Sidebar() {
+export default function Sidebar({
+  role,
+}: {
+  role: "super_admin" | "admin" | "coach" | "parent" | "student" | "driver" | null;
+}) {
   const pathname = usePathname();
+
+  const visibleNav = NAV.filter((g) => {
+    if (!g.onlyRoles) return true;
+    return role ? g.onlyRoles.includes(role as never) : false;
+  });
 
   return (
     <aside className="sidebar">
@@ -41,7 +53,7 @@ export default function Sidebar() {
       </Link>
 
       <nav className="nav">
-        {NAV.map((group, gi) => (
+        {visibleNav.map((group, gi) => (
           <div className="nav-group" key={gi}>
             {group.label && <div className="nav-label">{group.label}</div>}
             {group.items.map((item) => (

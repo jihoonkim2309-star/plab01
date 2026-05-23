@@ -15,6 +15,8 @@ export type NavItem = {
 export type NavGroup = {
   label?: string;
   items: NavItem[];
+  // 이 그룹은 지정 역할에만 노출. 미지정 = 모두 노출.
+  onlyRoles?: ("super_admin" | "admin" | "coach")[];
 };
 
 // 준비중 페이지는 /admin/p/<slug> 제네릭 라우트로
@@ -24,6 +26,14 @@ export const NAV: NavGroup[] = [
   {
     items: [
       { label: "Dashboard", slug: "dashboard", href: "/admin", icon: "⌂", ready: true },
+    ],
+  },
+  {
+    label: "프랜차이즈",
+    onlyRoles: ["super_admin"],
+    items: [
+      { label: "지점 관리", slug: "centers", href: "/admin/centers", icon: "⌘", ready: true, reviewed: true },
+      { label: "어드민 가입 승인", slug: "admin-approvals", href: "/admin/admin-approvals", sub: true, ready: true, reviewed: true },
     ],
   },
   {
@@ -93,6 +103,7 @@ export const NAV: NavGroup[] = [
       { label: "알림/로그", slug: "logs", href: "/admin/notifications", icon: "≡", ready: true, reviewed: true },
       { label: "알림 발송 로그", slug: "notification-log", href: "/admin/notifications", sub: true, ready: true, reviewed: true },
       { label: "감사 로그", slug: "audit-log", href: "/admin/audit-logs", sub: true, ready: true, reviewed: true },
+      { label: "어드민 가입 승인", slug: "admin-approvals-admin", href: "/admin/admin-approvals", sub: true, ready: true, reviewed: true },
       { label: "설정", slug: "settings", href: "/admin/settings", icon: "⚙", ready: true, reviewed: true },
     ],
   },

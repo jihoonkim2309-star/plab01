@@ -303,6 +303,98 @@
   z-index: 30;
 }
 
+/* 지점 전환 드롭다운 (super_admin 전용) */
+.center-switcher {
+  position: relative;
+  margin-right: 4px;
+}
+.center-switcher-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.center-switcher-trigger:hover {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+.center-switcher-trigger .cs-icon {
+  color: var(--brand);
+  font-size: 13px;
+}
+.center-switcher-trigger .cs-caret {
+  color: var(--muted);
+  font-size: 10px;
+}
+.center-switcher-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 240px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.12));
+  padding: 8px;
+  z-index: 50;
+}
+.cs-head {
+  padding: 6px 8px 10px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+.cs-head strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.cs-head .muted {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.cs-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.cs-item:hover {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+.cs-item-active {
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 700;
+}
+.cs-check { color: var(--brand); font-weight: 800; }
+.cs-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 /* 프로필 드롭다운 (Vuexy 스타일) */
 .profile-menu {
   position: relative;

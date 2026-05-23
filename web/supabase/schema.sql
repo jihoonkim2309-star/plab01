@@ -9,6 +9,9 @@ do $$ begin
   create type user_role as enum ('admin','coach','parent','student','driver');
 exception when duplicate_object then null; end $$;
 
+-- super_admin: 모든 센터 통합 관리 + 어드민 가입 승인 권한. 후행 추가 (enum 확장).
+alter type user_role add value if not exists 'super_admin';
+
 do $$ begin
   create type link_status as enum ('pending','linked','rejected');
 exception when duplicate_object then null; end $$;
@@ -88,27 +91,33 @@ returns user_role language sql stable security definer set search_path = public 
 $$;
 
 -- ---------- 7. 신규 auth 가입 시 users 행 자동 생성 ----------------------
--- ⚠️ [테스트 모드] 가입 시 첫 번째 센터의 admin 으로 자동 등록 + 이메일 자동 확인.
--- 실서비스 전환 시: role 자동 부여 / email_confirmed_at 자동 처리 부분 제거.
--- 학부모/학생/코치 등 비-admin 가입 흐름이 생기면 가입 form 의 hint(role 메타데이터) 로 분기 필요.
+-- 가입자는 role=null + center_id=null 의 "승인 대기" 상태로 들어온다.
+-- 이름/연락처는 가입 폼이 raw_user_meta_data 에 넣어 보낸 값을 그대로 저장.
+-- 슈퍼 어드민이 /admin/admin-approvals 에서 센터를 지정하며 role='admin' 으로 승격.
+-- 이메일 자동 확인은 테스트 단계 한정 — 슈퍼 어드민 수동 승인이 추가 게이트라 유지.
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare
-  v_center_id uuid;
+  v_apply uuid;
 begin
-  select id into v_center_id from public.centers order by created_at limit 1;
+  begin
+    v_apply := nullif(new.raw_user_meta_data->>'applying_center_id', '')::uuid;
+  exception when others then
+    v_apply := null;
+  end;
 
-  insert into public.users (id, email, name, role, center_id)
+  insert into public.users (id, email, name, phone, applying_center_id)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'name', new.email),
-    'admin',
-    v_center_id
+    new.raw_user_meta_data->>'phone',
+    v_apply
   )
   on conflict (id) do update
-    set role      = coalesce(public.users.role, excluded.role),
-        center_id = coalesce(public.users.center_id, excluded.center_id);
+    set name               = coalesce(public.users.name,  excluded.name),
+        phone              = coalesce(public.users.phone, excluded.phone),
+        applying_center_id = coalesce(public.users.applying_center_id, excluded.applying_center_id);
 
   -- 이메일 자동 확인 (테스트 단계 — 확인 메일 없이 즉시 로그인 가능)
   update auth.users
@@ -123,6 +132,20 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- ---------- 7b. 슈퍼어드민 헬퍼 + 가입 신청 지점 컬럼 -------------------
+-- super_admin: 전역 관리자. 모든 센터 조회/수정 + 어드민 가입 승인 + 신규 지점 생성.
+create or replace function public.is_super_admin()
+returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce(
+    (select role::text = 'super_admin' from public.users where id = auth.uid()),
+    false
+  )
+$$;
+
+-- 가입 시 신청한 지점 (대기 상태 동안만 의미. 승인되면 center_id 로 옮겨감).
+alter table public.users add column if not exists applying_center_id uuid
+  references public.centers(id) on delete set null;
+
 -- ---------- 8. RLS 활성화 ----------------------------------------------
 alter table public.centers               enable row level security;
 alter table public.users                 enable row level security;
@@ -130,44 +153,70 @@ alter table public.students              enable row level security;
 alter table public.parent_student_links  enable row level security;
 alter table public.student_account_links enable row level security;
 
--- centers: 같은 센터 소속이면 조회, 어드민이면 수정 가능
+-- centers: 같은 센터 소속이면 조회. super_admin 은 모두. admin 은 자기 센터 수정.
 drop policy if exists centers_select on public.centers;
 create policy centers_select on public.centers
-  for select using (id = public.current_center_id());
+  for select using (id = public.current_center_id() or public.is_super_admin());
 
 drop policy if exists centers_admin_write on public.centers;
 create policy centers_admin_write on public.centers
-  for update using (id = public.current_center_id() and public.current_role() = 'admin');
+  for update using (
+    public.is_super_admin()
+    or (id = public.current_center_id() and public.current_role() = 'admin')
+  );
 
--- users: 본인 행은 항상 조회/수정. 어드민은 같은 센터 사용자 조회.
+drop policy if exists centers_super_insert on public.centers;
+create policy centers_super_insert on public.centers
+  for insert with check (public.is_super_admin());
+
+drop policy if exists centers_super_delete on public.centers;
+create policy centers_super_delete on public.centers
+  for delete using (public.is_super_admin());
+
+-- users: 본인 OR super_admin OR 같은 센터 admin OR 자기 센터로 신청한 pending 사용자(승인 대기 목록).
 drop policy if exists users_self on public.users;
 create policy users_self on public.users
-  for select using (id = auth.uid() or
-    (center_id = public.current_center_id() and public.current_role() = 'admin'));
+  for select using (
+    id = auth.uid()
+    or public.is_super_admin()
+    or (center_id = public.current_center_id() and public.current_role() = 'admin')
+    or (applying_center_id = public.current_center_id() and public.current_role() = 'admin')
+  );
 
+-- 본인 OR super_admin OR (해당 사용자가 자기 센터 신청자/소속이고 본인은 그 센터 admin)
 drop policy if exists users_self_update on public.users;
 create policy users_self_update on public.users
-  for update using (id = auth.uid());
+  for update using (
+    id = auth.uid()
+    or public.is_super_admin()
+    or (
+      public.current_role() = 'admin'
+      and (
+        center_id = public.current_center_id()
+        or applying_center_id = public.current_center_id()
+      )
+    )
+  );
 
--- students: 같은 센터의 어드민이 전체 CRUD
+-- students: 같은 센터의 어드민(또는 super_admin)이 전체 CRUD
 drop policy if exists students_admin_all on public.students;
 create policy students_admin_all on public.students
   for all
-  using  (center_id = public.current_center_id() and public.current_role() = 'admin')
-  with check (center_id = public.current_center_id() and public.current_role() = 'admin');
+  using  (public.is_center_admin(center_id))
+  with check (public.is_center_admin(center_id));
 
 -- parent_student_links / student_account_links: 같은 센터 어드민이 관리
 drop policy if exists psl_admin_all on public.parent_student_links;
 create policy psl_admin_all on public.parent_student_links
   for all
-  using  (center_id = public.current_center_id() and public.current_role() = 'admin')
-  with check (center_id = public.current_center_id() and public.current_role() = 'admin');
+  using  (public.is_center_admin(center_id))
+  with check (public.is_center_admin(center_id));
 
 drop policy if exists sal_admin_all on public.student_account_links;
 create policy sal_admin_all on public.student_account_links
   for all
-  using  (center_id = public.current_center_id() and public.current_role() = 'admin')
-  with check (center_id = public.current_center_id() and public.current_role() = 'admin');
+  using  (public.is_center_admin(center_id))
+  with check (public.is_center_admin(center_id));
 
 -- ---------- 9. updated_at 자동 갱신 ------------------------------------
 create or replace function public.touch_updated_at()
@@ -214,10 +263,11 @@ create trigger classes_touch before update on public.classes
 --  모든 테이블 center_id + RLS(같은 센터 어드민만). 재실행 안전.
 -- =====================================================================
 
--- 공용: 해당 center 의 어드민인가?
+-- 공용: 해당 center 의 어드민인가? (super_admin 은 모든 센터 통과)
 create or replace function public.is_center_admin(cid uuid)
 returns boolean language sql stable as $$
-  select cid = public.current_center_id() and public.current_role() = 'admin'
+  select public.is_super_admin()
+      or (cid = public.current_center_id() and public.current_role() = 'admin')
 $$;
 
 -- centers 설정 컬럼 보강
@@ -537,12 +587,21 @@ create policy student_photos_delete on storage.objects
 --  RLS: 어드민 전권 + 코치는 측정 read/write 가능. 승인/발행은 코드에서 admin만.
 -- =====================================================================
 
--- 공용: 해당 center 의 어드민 또는 코치(=staff)인가?
+-- 공용: 해당 center 의 어드민 또는 코치(=staff)인가? (super_admin 통과)
 create or replace function public.is_center_staff(cid uuid)
 returns boolean language sql stable as $$
-  select cid = public.current_center_id()
-     and public.current_role() in ('admin','coach')
+  select public.is_super_admin()
+      or (cid = public.current_center_id()
+          and public.current_role() in ('admin','coach'))
 $$;
+
+-- 가입 폼용 지점 목록 RPC (anon 호출 가능 — 이름·id 만 노출).
+create or replace function public.list_centers_for_signup()
+returns table(id uuid, name text)
+language sql security definer set search_path = public as $$
+  select id, name from public.centers order by name;
+$$;
+grant execute on function public.list_centers_for_signup() to anon, authenticated;
 
 -- 14.1 측정 항목 마스터
 create table if not exists public.measurement_items (

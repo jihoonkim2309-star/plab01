@@ -1,11 +1,15 @@
 import "./admin.css";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Sidebar from "./Sidebar";
 import GlobalLoading from "./GlobalLoading";
 import SuppressInvalidTooltip from "./SuppressInvalidTooltip";
 import ProfileMenu from "./ProfileMenu";
+import CenterSwitcher from "./CenterSwitcher";
+import { ACTIVE_CENTER_COOKIE } from "@/lib/center";
+import PendingApproval from "./PendingApproval";
 
 export default async function AdminLayout({
   children,
@@ -13,8 +17,6 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  // proxy.ts 미들웨어가 매 요청에서 이미 getUser()로 JWT 검증을 하므로
-  // 레이아웃에선 로컬 쿠키 세션만 읽어 네트워크 왕복 1회 절감.
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -24,28 +26,70 @@ export default async function AdminLayout({
 
   const { data: profile } = await supabase
     .from("users")
-    .select("name, role, center_id")
+    .select("name, role, center_id, applying_center_id")
     .eq("id", userId)
     .single();
 
-  const { data: center } = profile?.center_id
+  const role = profile?.role ?? null;
+  const isSuper = role === "super_admin";
+  const isAdmin = role === "admin";
+  const isStaff = isSuper || isAdmin || role === "coach";
+
+  // 가입 후 승인 대기: role 이 null 인 일반 가입자.
+  if (!role) {
+    const { data: applyingCenter } = profile?.applying_center_id
+      ? await supabase
+          .from("centers")
+          .select("name")
+          .eq("id", profile.applying_center_id)
+          .single()
+      : { data: null };
+
+    return (
+      <PendingApproval
+        name={profile?.name ?? userEmail ?? ""}
+        email={userEmail ?? ""}
+        applyingCenterName={applyingCenter?.name ?? null}
+      />
+    );
+  }
+
+  // 활성 지점 (super_admin 만 의미. 일반 admin/coach 는 본인 center_id).
+  const jar = await cookies();
+  const activeCenterId =
+    (isSuper ? jar.get(ACTIVE_CENTER_COOKIE)?.value : profile?.center_id) ??
+    profile?.center_id ??
+    null;
+
+  const { data: activeCenter } = activeCenterId
     ? await supabase
         .from("centers")
         .select("name")
-        .eq("id", profile.center_id)
+        .eq("id", activeCenterId)
         .single()
     : { data: null };
 
-  const needsBootstrap = !profile?.role || !profile?.center_id;
+  // 슈퍼어드민 전환 드롭다운용 — 모든 지점 (RLS 통과)
+  const centersForSwitcher = isSuper
+    ? ((
+        await supabase
+          .from("centers")
+          .select("id, name")
+          .order("name", { ascending: true })
+      ).data ?? [])
+    : [];
+
   const initial = (profile?.name ?? userEmail ?? "A").charAt(0).toUpperCase();
   const displayName = profile?.name ?? userEmail ?? "";
   const displayRole =
-    profile?.role === "admin"
-      ? "관리자"
-      : profile?.role === "coach"
-        ? "코치"
-        : (profile?.role ?? "사용자");
-  const centerName = center?.name ?? "플랜비 본점";
+    role === "super_admin"
+      ? "슈퍼 어드민"
+      : role === "admin"
+        ? "관리자"
+        : role === "coach"
+          ? "코치"
+          : (role ?? "사용자");
+  const centerName = activeCenter?.name ?? "지점 미선택";
 
   return (
     <div className="admin-shell app">
@@ -53,7 +97,7 @@ export default async function AdminLayout({
         <GlobalLoading />
       </Suspense>
       <SuppressInvalidTooltip />
-      <Sidebar />
+      <Sidebar role={role} />
       <div className="drawer-backdrop" />
 
       <main className="main">
@@ -65,6 +109,12 @@ export default async function AdminLayout({
           </div>
 
           <div className="topbar-actions">
+            {isSuper && (
+              <CenterSwitcher
+                centers={centersForSwitcher}
+                activeCenterId={activeCenterId}
+              />
+            )}
             <button type="button" className="icon-button" aria-label="알림">
               🔔
               <span className="dot" aria-hidden />
@@ -74,13 +124,13 @@ export default async function AdminLayout({
               initial={initial}
               name={displayName}
               role={displayRole}
-              isAdmin={profile?.role === "admin"}
+              isAdmin={isAdmin || isSuper}
             />
           </div>
         </header>
 
         <section className="content">
-          {needsBootstrap && (
+          {isStaff && !activeCenterId && isSuper && (
             <div
               className="panel"
               style={{
@@ -90,9 +140,8 @@ export default async function AdminLayout({
                 padding: "12px 16px",
               }}
             >
-              아직 이 계정에 <b>센터/권한</b>이 지정되지 않았습니다. Supabase SQL
-              Editor에서 부트스트랩 SQL을 실행해 센터를 만들고 이 계정을{" "}
-              <b>admin</b>으로 승격하세요. (현재 이메일: <b>{userEmail}</b>)
+              활성 지점이 설정되지 않았습니다. 우측 상단 <b>지점 선택</b>에서
+              지점을 골라 주세요.
             </div>
           )}
           {children}

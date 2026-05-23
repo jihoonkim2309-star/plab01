@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -10,8 +10,21 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [applyingCenter, setApplyingCenter] = useState("");
+  const [centers, setCenters] = useState<{ id: string; name: string }[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // 가입 모드 진입 시 지점 목록 로드 (anon RPC).
+  useEffect(() => {
+    if (mode !== "signup" || centers.length > 0) return;
+    supabase.rpc("list_centers_for_signup").then(({ data, error }) => {
+      if (!error && Array.isArray(data)) {
+        setCenters(data as { id: string; name: string }[]);
+      }
+    });
+  }, [mode, centers.length, supabase]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,7 +43,13 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name } },
+        options: {
+          data: {
+            name,
+            phone,
+            applying_center_id: applyingCenter || null,
+          },
+        },
       });
       if (error) {
         setMsg("회원가입 실패: " + error.message);
@@ -38,7 +57,7 @@ export default function LoginPage() {
         return;
       }
       setMsg(
-        "가입 완료. 이메일 인증이 켜져 있으면 메일함을 확인하세요. 인증이 꺼져 있으면 바로 로그인됩니다.",
+        "가입 신청이 접수되었습니다. 슈퍼 어드민의 승인 후 어드민 화면에 접근할 수 있습니다.",
       );
       setMode("signin");
       setLoading(false);
@@ -196,16 +215,49 @@ export default function LoginPage() {
 
           <form onSubmit={onSubmit} className="mt-8 space-y-4">
             {mode === "signup" && (
-              <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1.5">이름</label>
-                <input
-                  className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="홍길동"
-                  required
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-700 mb-1.5">이름</label>
+                  <input
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="홍길동"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-700 mb-1.5">연락처</label>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="010-0000-0000"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-700 mb-1.5">신청 지점</label>
+                  <select
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                    value={applyingCenter}
+                    onChange={(e) => setApplyingCenter(e.target.value)}
+                    required
+                  >
+                    <option value="">지점을 선택하세요</option>
+                    {centers.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-zinc-500 mt-1">
+                    승인은 슈퍼 어드민 또는 해당 지점장이 처리합니다.
+                  </p>
+                </div>
+              </>
             )}
             <div>
               <label className="block text-xs font-semibold text-zinc-700 mb-1.5">이메일</label>
