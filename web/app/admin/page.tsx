@@ -47,24 +47,45 @@ export default async function AdminDashboard() {
 
   // 슈퍼어드민 + 활성 지점 미설정 → 지점 선택 빈상태 화면
   if (isSuper && !cid) {
-    const [centersRes, studentsRes, usersRes] = await Promise.all([
+    const monthStart = `${new Date().getFullYear()}-${pad(new Date().getMonth() + 1)}-01`;
+    const [centersRes, studentsRes, usersRes, paymentsRes] = await Promise.all([
       supabase
         .from("centers")
         .select("id, name, address, contact_phone")
         .order("name", { ascending: true }),
-      supabase.from("students").select("center_id, status"),
+      supabase.from("students").select("center_id, status, created_at"),
       supabase.from("users").select("center_id, role").in("role", ["admin", "coach"]),
+      supabase
+        .from("payments")
+        .select("center_id, amount, paid_at")
+        .eq("status", "성공")
+        .gte("paid_at", `${monthStart}T00:00:00`),
     ]);
     const centers = centersRes.data ?? [];
     const counts: Record<
       string,
-      { students: number; admins: number; coaches: number }
+      {
+        students: number;
+        newStudents: number;
+        admins: number;
+        coaches: number;
+        revenue: number;
+      }
     > = {};
-    for (const c of centers) counts[c.id] = { students: 0, admins: 0, coaches: 0 };
+    for (const c of centers)
+      counts[c.id] = {
+        students: 0,
+        newStudents: 0,
+        admins: 0,
+        coaches: 0,
+        revenue: 0,
+      };
     for (const s of studentsRes.data ?? []) {
-      if (!s.center_id || s.status !== "활성") continue;
+      if (!s.center_id) continue;
       const e = counts[s.center_id];
-      if (e) e.students += 1;
+      if (!e) continue;
+      if (s.status === "활성") e.students += 1;
+      if (s.created_at && s.created_at >= monthStart) e.newStudents += 1;
     }
     for (const u of usersRes.data ?? []) {
       if (!u.center_id) continue;
@@ -72,6 +93,11 @@ export default async function AdminDashboard() {
       if (!e) continue;
       if (u.role === "admin") e.admins += 1;
       else if (u.role === "coach") e.coaches += 1;
+    }
+    for (const p of paymentsRes.data ?? []) {
+      if (!p.center_id) continue;
+      const e = counts[p.center_id];
+      if (e) e.revenue += Number(p.amount ?? 0);
     }
     return (
       <SelectCenterDashboard

@@ -1750,7 +1750,16 @@
 }
 
 @media (max-width: 760px) {
-  .topbar { height: auto; align-items: stretch; flex-wrap: wrap; padding: 12px; }
+  /* topbar 외곽선 = content padding(14px) 과 정확히 일치하도록 통일 */
+  .topbar {
+    height: auto;
+    align-items: stretch;
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    margin: 10px 14px 6px;
+    width: calc(100% - 28px);
+    max-width: none;
+  }
   .content { padding: 14px; }
   .page-head { flex-direction: column; }
   .toolbar { justify-content: flex-start; }
@@ -2260,7 +2269,7 @@
 .scc-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 10px 8px;
   padding: 12px 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);

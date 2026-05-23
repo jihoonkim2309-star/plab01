@@ -39,6 +39,9 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
+      // 슈퍼어드민이 로그인할 때마다 지점 미선택 상태로 시작.
+      // (일반 admin/coach 는 user.center_id 가 자동 fallback 되어 영향 없음.)
+      document.cookie = "active_center=; max-age=0; path=/";
       window.location.assign("/admin");
     } else {
       const { error } = await supabase.auth.signUp({

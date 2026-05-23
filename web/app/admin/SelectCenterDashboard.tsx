@@ -8,7 +8,22 @@ type Center = {
   contact_phone: string | null;
 };
 
-type Counts = Record<string, { students: number; admins: number; coaches: number }>;
+type Counts = Record<
+  string,
+  {
+    students: number;
+    newStudents: number;
+    admins: number;
+    coaches: number;
+    revenue: number;
+  }
+>;
+
+const fmtKRW = (n: number) => {
+  if (n >= 10000000) return `${Math.round(n / 1000000)}M`;
+  if (n >= 10000) return `${Math.round(n / 10000)}만`;
+  return n.toLocaleString();
+};
 
 export default function SelectCenterDashboard({
   centers,
@@ -60,7 +75,13 @@ export default function SelectCenterDashboard({
       ) : (
         <div className="select-center-grid">
           {centers.map((c) => {
-            const ct = counts[c.id] ?? { students: 0, admins: 0, coaches: 0 };
+            const ct = counts[c.id] ?? {
+              students: 0,
+              newStudents: 0,
+              admins: 0,
+              coaches: 0,
+              revenue: 0,
+            };
             return (
               <form action={setActiveCenter} key={c.id} className="select-center-card-form">
                 <input type="hidden" name="center_id" value={c.id} />
@@ -76,8 +97,16 @@ export default function SelectCenterDashboard({
                   </div>
                   <div className="scc-stats">
                     <div>
-                      <span>학생</span>
+                      <span>총 회원</span>
                       <strong>{ct.students}</strong>
+                    </div>
+                    <div>
+                      <span>이달 신규</span>
+                      <strong>{ct.newStudents}</strong>
+                    </div>
+                    <div>
+                      <span>당월 매출</span>
+                      <strong>{fmtKRW(ct.revenue)}</strong>
                     </div>
                     <div>
                       <span>지점장</span>
