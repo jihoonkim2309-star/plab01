@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import FilterBar from "../FilterBar";
+import FilterSelect from "../FilterSelect";
+import SearchInput from "../SearchInput";
 import { seedItems, moveItemUp, moveItemDown } from "./actions";
 import ItemIcon, { IconLibrary } from "./ItemIcon";
 
@@ -16,26 +19,38 @@ const CAT_BADGE: Record<string, string> = {
 export default async function MeasurementItemsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ showInactive?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; category?: string }>;
 }) {
-  const { showInactive } = await searchParams;
-  const includeInactive = showInactive === "1";
+  const { q, status, category } = await searchParams;
   const supabase = await createClient();
-  let q = supabase
+
+  // status 의미: 없음=활성만(기본), "inactive"=비활성만, "all"=전체
+  let listQuery = supabase
     .from("measurement_items")
     .select(
       "id, category, name, unit, value_kind, sort_order, active, icon, icon_url, icon_hidden",
     )
     .order("sort_order", { ascending: true });
-  if (!includeInactive) q = q.eq("active", true);
-  const { data, error } = await q;
-  const list = data ?? [];
+  if (status === "inactive") listQuery = listQuery.eq("active", false);
+  else if (status !== "all") listQuery = listQuery.eq("active", true);
+  if (category) listQuery = listQuery.eq("category", category);
+  if (q) listQuery = listQuery.ilike("name", `%${q}%`);
+
+  const [listRes, allRes] = await Promise.all([
+    listQuery,
+    supabase
+      .from("measurement_items")
+      .select("category, active"),
+  ]);
+
+  const list = listRes.data ?? [];
+  const all = (allRes.data ?? []) as { category: string; active: boolean }[];
+  const error = listRes.error;
 
   const byCat = (c: string) =>
-    list.filter((i) => i.category === c && i.active).length;
+    all.filter((i) => i.category === c && i.active).length;
 
   // 같은 카테고리 안에서 첫/마지막 항목 표시 (위/아래 버튼 비활성 판정용).
-  // 비활성 포함 모드에선 active 와 무관하게 정렬 그대로.
   const groupSiblings = new Map<string, { first: string; last: string }>();
   for (const cat of new Set(list.map((i) => i.category))) {
     const inCat = list.filter((i) => i.category === cat);
@@ -46,6 +61,19 @@ export default async function MeasurementItemsPage({
       });
     }
   }
+
+  const totalActive = all.filter((i) => i.active).length;
+  const hasFilter = !!(q || status || category);
+
+  const statusUrl = (val: "active" | "inactive" | "all") => {
+    const qs = new URLSearchParams();
+    if (val !== "active") qs.set("status", val);
+    if (q) qs.set("q", q);
+    if (category) qs.set("category", category);
+    const s = qs.toString();
+    return `/admin/measurement-items${s ? `?${s}` : ""}`;
+  };
+  const cur = (status as "active" | "inactive" | "all" | undefined) ?? "active";
 
   return (
     <>
@@ -58,17 +86,7 @@ export default async function MeasurementItemsPage({
           </p>
         </div>
         <div className="toolbar">
-          <Link
-            className={`btn${includeInactive ? " toggle-active" : ""}`}
-            href={
-              includeInactive
-                ? "/admin/measurement-items"
-                : "/admin/measurement-items?showInactive=1"
-            }
-          >
-            비활성 포함
-          </Link>
-          {list.length === 0 && !includeInactive && (
+          {all.length === 0 && (
             <form action={seedItems}>
               <button className="btn" type="submit">
                 프로토타입 항목 시드
@@ -84,7 +102,7 @@ export default async function MeasurementItemsPage({
       <div className="member-summary">
         <div className="summary-card">
           <span>전체 (활성)</span>
-          <strong>{list.filter((i) => i.active).length}</strong>
+          <strong>{totalActive}</strong>
         </div>
         <div className="summary-card">
           <span>신체</span>
@@ -110,8 +128,61 @@ export default async function MeasurementItemsPage({
 
       <div className="panel elevated">
         <div className="panel-head">
-          <p className="panel-title">항목 목록</p>
+          <p className="panel-title">
+            항목 목록{" "}
+            <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+              {hasFilter
+                ? `검색결과 ${list.length}건 / 전체 ${totalActive}(활성)`
+                : `${list.length}건`}
+            </span>
+          </p>
         </div>
+
+        <div className="panel-body" style={{ paddingBottom: 0 }}>
+          <FilterBar>
+            <div className="filter-chips" role="group">
+              <Link
+                className={`btn${cur === "active" ? " toggle-active" : ""}`}
+                href={statusUrl("active")}
+              >
+                활성
+              </Link>
+              <Link
+                className={`btn${cur === "inactive" ? " toggle-active" : ""}`}
+                href={statusUrl("inactive")}
+              >
+                비활성
+              </Link>
+              <Link
+                className={`btn${cur === "all" ? " toggle-active" : ""}`}
+                href={statusUrl("all")}
+              >
+                전체
+              </Link>
+            </div>
+            <FilterSelect
+              param="category"
+              current={category}
+              placeholder="카테고리 전체"
+              ariaLabel="카테고리 필터"
+              options={[
+                { value: "신체", label: "신체" },
+                { value: "바디사이즈", label: "바디사이즈" },
+                { value: "바디비율", label: "바디비율" },
+                { value: "기초체력", label: "기초체력" },
+                { value: "배드민턴", label: "배드민턴" },
+              ]}
+            />
+            <div style={{ flex: 1 }} />
+            <SearchInput param="q" current={q} placeholder="항목명 검색" />
+            {hasFilter && (
+              <Link className="btn" href="/admin/measurement-items">
+                초기화
+              </Link>
+            )}
+          </FilterBar>
+        </div>
+
         {error && (
           <div className="panel-body">
             <div className="field-error-text">{error.message}</div>
@@ -210,11 +281,20 @@ export default async function MeasurementItemsPage({
               <tr>
                 <td colSpan={7}>
                   <div className="empty-state">
-                    <strong>등록된 항목이 없습니다</strong>
-                    <p>
-                      위의 “프로토타입 항목 시드” 로 20개 기본 항목을 한 번에
-                      등록하거나, “항목 생성” 으로 직접 추가하세요.
-                    </p>
+                    {hasFilter ? (
+                      <>
+                        <strong>검색 결과가 없습니다</strong>
+                        <p>필터·검색어를 조정해 보세요.</p>
+                      </>
+                    ) : (
+                      <>
+                        <strong>등록된 항목이 없습니다</strong>
+                        <p>
+                          위의 “프로토타입 항목 시드” 로 20개 기본 항목을 한 번에
+                          등록하거나, “항목 생성” 으로 직접 추가하세요.
+                        </p>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>

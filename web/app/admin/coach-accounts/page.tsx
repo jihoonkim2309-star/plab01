@@ -1,20 +1,33 @@
 import { createClient } from "@/lib/supabase/server";
 import AccountsView, { type AccountRow } from "../AccountsView";
 
-export default async function CoachAccountsPage() {
+export default async function CoachAccountsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const supabase = await createClient();
-  const { data } = await supabase
+
+  let listQuery = supabase
     .from("users")
-    .select("id, name, email, created_at")
+    .select("id, name, email, phone, created_at")
     .eq("role", "coach")
     .order("created_at", { ascending: false });
+  if (q) {
+    listQuery = listQuery.or(
+      `name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`,
+    );
+  }
 
-  const { data: classes } = await supabase
-    .from("classes")
-    .select("name, coach_id");
+  const [listRes, allRes, classesRes] = await Promise.all([
+    listQuery,
+    supabase.from("users").select("id").eq("role", "coach"),
+    supabase.from("classes").select("name, coach_id"),
+  ]);
 
   const byCoach = new Map<string, string[]>();
-  for (const c of classes ?? []) {
+  for (const c of classesRes.data ?? []) {
     if (c.coach_id) {
       const arr = byCoach.get(c.coach_id) ?? [];
       arr.push(c.name as string);
@@ -22,13 +35,18 @@ export default async function CoachAccountsPage() {
     }
   }
 
-  const rows: AccountRow[] = (data ?? []).map((u) => ({
+  const rows: AccountRow[] = (listRes.data ?? []).map((u) => ({
     id: u.id,
     name: u.name,
     email: u.email,
+    phone: (u as { phone: string | null }).phone,
     createdAt: u.created_at,
     extra: byCoach.get(u.id)?.join(", ") ?? "배정 없음",
   }));
+
+  const totalCoaches = (allRes.data ?? []).length;
+  const assignedCoaches = new Set(byCoach.keys()).size;
+  const unassignedCoaches = totalCoaches - assignedCoaches;
 
   return (
     <AccountsView
@@ -36,6 +54,16 @@ export default async function CoachAccountsPage() {
       subtitle="코치 계정 및 담당 클래스 (클래스 배정은 클래스 관리에서)"
       extraLabel="담당 클래스"
       rows={rows}
+      q={q}
+      showPhone
+      resetHref="/admin/coach-accounts"
+      totals={{
+        total: totalCoaches,
+        extraCounts: [
+          { label: "담당 있음", value: assignedCoaches },
+          { label: "배정 없음", value: unassignedCoaches },
+        ],
+      }}
     />
   );
 }

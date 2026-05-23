@@ -2,6 +2,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import MonthNav from "../MonthNav";
 import ConfirmButton from "../ConfirmButton";
+import FilterBar from "../FilterBar";
+import StatusChips from "../StatusChips";
+import SearchInput from "../SearchInput";
 import {
   approveMeasurement,
   deleteMeasurement,
@@ -28,9 +31,14 @@ const STATUS_BADGE: Record<string, string> = {
 export default async function MeasurementsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ym?: string; sid?: string }>;
+  searchParams: Promise<{
+    ym?: string;
+    sid?: string;
+    q?: string;
+    status?: string;
+  }>;
 }) {
-  const { ym, sid } = await searchParams;
+  const { ym, sid, q, status } = await searchParams;
   const target = ym && /^\d{4}-\d{2}$/.test(ym) ? ym : thisMonth();
   const supabase = await createClient();
 
@@ -70,12 +78,33 @@ export default async function MeasurementsPage({
     (ms ?? []).map((m) => [m.student_id, m]),
   );
 
-  const list = students ?? [];
+  const allStudents = students ?? [];
+  // 필터 무관 totals (요약카드용)
   const cnt = (s: string) =>
-    list.filter((st) => (mByStudent.get(st.id)?.status ?? "대기") === s).length;
+    allStudents.filter(
+      (st) => (mByStudent.get(st.id)?.status ?? "대기") === s,
+    ).length;
 
-  // 우측 디테일
-  const selected = sid ? list.find((s) => s.id === sid) ?? null : null;
+  // 좌측 학생 목록에 검색·상태 필터 적용
+  const needle = q?.toLowerCase() ?? "";
+  const list = allStudents.filter((st) => {
+    if (status) {
+      const cur = mByStudent.get(st.id)?.status ?? "대기";
+      if (cur !== status) return false;
+    }
+    if (needle) {
+      const name = (st.name ?? "").toLowerCase();
+      const school = (st.school ?? "").toLowerCase();
+      if (!name.includes(needle) && !school.includes(needle)) return false;
+    }
+    return true;
+  });
+  const hasFilter = !!(q || status);
+
+  // 우측 디테일 — 필터에 가려져도 sid 가 있으면 학생 정보는 표시
+  const selected = sid
+    ? allStudents.find((s) => s.id === sid) ?? null
+    : null;
   const m = selected ? mByStudent.get(selected.id) ?? null : null;
 
   // items 는 위 병렬 배치에서 미리 가져와 둠 — selected 가 없으면 그냥 안 그림
@@ -100,10 +129,19 @@ export default async function MeasurementsPage({
     groups.set(it.category, arr);
   }
 
-  const navUrl = (p: { ym?: string; sid?: string | null }) => {
+  // sid 전환 시 ym + 현재 q/status 보존, 초기화 링크에서는 호출자가 q/status 비활성으로 호출
+  const navUrl = (p: {
+    ym?: string;
+    sid?: string | null;
+    keepFilter?: boolean;
+  }) => {
     const qs = new URLSearchParams();
     if (p.ym) qs.set("ym", p.ym);
     if (p.sid) qs.set("sid", p.sid);
+    if (p.keepFilter) {
+      if (q) qs.set("q", q);
+      if (status) qs.set("status", status);
+    }
     return `/admin/measurements${qs.toString() ? `?${qs}` : ""}`;
   };
 
@@ -136,7 +174,7 @@ export default async function MeasurementsPage({
       <div className="member-summary">
         <div className="summary-card">
           <span>대상 학생</span>
-          <strong>{list.length}</strong>
+          <strong>{allStudents.length}</strong>
         </div>
         <div className="summary-card">
           <span>대기</span>
@@ -160,7 +198,38 @@ export default async function MeasurementsPage({
         {/* 좌: 학생 목록 */}
         <div className="panel elevated">
           <div className="panel-head">
-            <p className="panel-title">학생 ({target})</p>
+            <p className="panel-title">
+              학생 ({target}){" "}
+              <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                {hasFilter
+                  ? `검색결과 ${list.length}건 / 전체 ${allStudents.length}`
+                  : `${list.length}건`}
+              </span>
+            </p>
+          </div>
+          <div className="panel-body" style={{ paddingBottom: 0 }}>
+            <FilterBar>
+              <StatusChips
+                param="status"
+                current={status}
+                options={[
+                  { value: "대기", label: "대기" },
+                  { value: "입력완료", label: "입력완료" },
+                  { value: "승인완료", label: "승인완료" },
+                  { value: "반려", label: "반려" },
+                ]}
+              />
+              <div style={{ flex: 1 }} />
+              <SearchInput param="q" current={q} placeholder="학생·학교 검색" />
+              {hasFilter && (
+                <Link
+                  className="btn"
+                  href={navUrl({ ym: target, sid: sid ?? null })}
+                >
+                  초기화
+                </Link>
+              )}
+            </FilterBar>
           </div>
           <table>
             <thead>
@@ -180,7 +249,11 @@ export default async function MeasurementsPage({
                   >
                     <td>
                       <Link
-                        href={navUrl({ ym: target, sid: s.id })}
+                        href={navUrl({
+                          ym: target,
+                          sid: s.id,
+                          keepFilter: true,
+                        })}
                         className="row-link-stretch"
                         style={{ color: "inherit" }}
                       >
@@ -205,8 +278,17 @@ export default async function MeasurementsPage({
                 <tr>
                   <td colSpan={3}>
                     <div className="empty-state">
-                      <strong>학생이 없습니다</strong>
-                      <p>학생 등록 후 측정을 입력할 수 있습니다.</p>
+                      {hasFilter ? (
+                        <>
+                          <strong>검색 결과가 없습니다</strong>
+                          <p>필터·검색어를 조정해 보세요.</p>
+                        </>
+                      ) : (
+                        <>
+                          <strong>학생이 없습니다</strong>
+                          <p>학생 등록 후 측정을 입력할 수 있습니다.</p>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -233,7 +315,13 @@ export default async function MeasurementsPage({
             <>
               <div className="panel-head">
                 <p className="panel-title">
-                  {selected.name} · {target}
+                  <Link
+                    href={`/admin/students?student=${selected.id}`}
+                    style={{ color: "var(--text)" }}
+                  >
+                    {selected.name}
+                  </Link>{" "}
+                  · {target}
                 </p>
                 <span
                   className={`badge ${STATUS_BADGE[m?.status ?? "대기"] ?? "gray"}`}

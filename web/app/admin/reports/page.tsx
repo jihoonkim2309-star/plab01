@@ -2,6 +2,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import MonthNav from "../MonthNav";
 import ConfirmButton from "../ConfirmButton";
+import FilterBar from "../FilterBar";
+import StatusChips from "../StatusChips";
+import SearchInput from "../SearchInput";
 import {
   deleteReport,
   generateReportsForMonth,
@@ -25,9 +28,15 @@ const STATUS_BADGE: Record<string, string> = {
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ym?: string; rid?: string }>;
+  searchParams: Promise<{
+    ym?: string;
+    rid?: string;
+    q?: string;
+    status?: string;
+    publicTo?: string;
+  }>;
 }) {
-  const { ym, rid } = await searchParams;
+  const { ym, rid, q, status, publicTo } = await searchParams;
   const target = ym && /^\d{4}-\d{2}$/.test(ym) ? ym : thisMonth();
   const supabase = await createClient();
 
@@ -56,7 +65,7 @@ export default async function ReportsPage({
           .single()
       : Promise.resolve({ data: null }),
   ]);
-  const list = (listRes.data ?? []) as unknown as {
+  const allList = (listRes.data ?? []) as unknown as {
     id: string;
     student_id: string;
     report_month: string;
@@ -67,15 +76,39 @@ export default async function ReportsPage({
     students: { name: string } | null;
   }[];
 
-  const cnt = (s: string) => list.filter((r) => r.status === s).length;
+  // 필터 무관 totals
+  const cnt = (s: string) => allList.filter((r) => r.status === s).length;
   const approvedCount = approvedRes.data?.length ?? 0;
-  const selected = rid ? list.find((r) => r.id === rid) ?? null : null;
+
+  // 필터 적용 리스트 (학생명 검색·상태·공개여부)
+  const needle = q?.toLowerCase() ?? "";
+  const list = allList.filter((r) => {
+    if (status && r.status !== status) return false;
+    if (publicTo === "public" && !r.public_to_parent) return false;
+    if (publicTo === "private" && r.public_to_parent) return false;
+    if (needle && !(r.students?.name ?? "").toLowerCase().includes(needle))
+      return false;
+    return true;
+  });
+  const hasFilter = !!(q || status || publicTo);
+
+  // 선택된 리포트는 필터에 가려져도 detail 은 표시
+  const selected = rid ? allList.find((r) => r.id === rid) ?? null : null;
   const rDetail = detailRes.data;
 
-  const navUrl = (p: { ym?: string; rid?: string | null }) => {
+  const navUrl = (p: {
+    ym?: string;
+    rid?: string | null;
+    keepFilter?: boolean;
+  }) => {
     const qs = new URLSearchParams();
     if (p.ym) qs.set("ym", p.ym);
     if (p.rid) qs.set("rid", p.rid);
+    if (p.keepFilter) {
+      if (q) qs.set("q", q);
+      if (status) qs.set("status", status);
+      if (publicTo) qs.set("publicTo", publicTo);
+    }
     return `/admin/reports${qs.toString() ? `?${qs}` : ""}`;
   };
 
@@ -112,7 +145,7 @@ export default async function ReportsPage({
       <div className="member-summary">
         <div className="summary-card">
           <span>전체 리포트</span>
-          <strong>{list.length}</strong>
+          <strong>{allList.length}</strong>
         </div>
         <div className="summary-card">
           <span>생성완료</span>
@@ -124,7 +157,7 @@ export default async function ReportsPage({
         </div>
         <div className="summary-card">
           <span>학부모 공개</span>
-          <strong>{list.filter((r) => r.public_to_parent).length}</strong>
+          <strong>{allList.filter((r) => r.public_to_parent).length}</strong>
         </div>
         <div className="summary-card">
           <span>승인된 측정</span>
@@ -136,7 +169,45 @@ export default async function ReportsPage({
         {/* 좌: 리포트 목록 */}
         <div className="panel elevated">
           <div className="panel-head">
-            <p className="panel-title">리포트 목록</p>
+            <p className="panel-title">
+              리포트 목록{" "}
+              <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                {hasFilter
+                  ? `검색결과 ${list.length}건 / 전체 ${allList.length}`
+                  : `${list.length}건`}
+              </span>
+            </p>
+          </div>
+          <div className="panel-body" style={{ paddingBottom: 0 }}>
+            <FilterBar>
+              <StatusChips
+                param="status"
+                current={status}
+                options={[
+                  { value: "생성완료", label: "생성완료" },
+                  { value: "발행완료", label: "발행완료" },
+                ]}
+              />
+              <StatusChips
+                param="publicTo"
+                current={publicTo}
+                allLabel="공개무관"
+                options={[
+                  { value: "public", label: "공개" },
+                  { value: "private", label: "비공개" },
+                ]}
+              />
+              <div style={{ flex: 1 }} />
+              <SearchInput param="q" current={q} placeholder="학생명 검색" />
+              {hasFilter && (
+                <Link
+                  className="btn"
+                  href={navUrl({ ym: target, rid: rid ?? null })}
+                >
+                  초기화
+                </Link>
+              )}
+            </FilterBar>
           </div>
           <table>
             <thead>
@@ -154,7 +225,11 @@ export default async function ReportsPage({
                 >
                   <td>
                     <Link
-                      href={navUrl({ ym: target, rid: r.id })}
+                      href={navUrl({
+                        ym: target,
+                        rid: r.id,
+                        keepFilter: true,
+                      })}
                       className="row-link-stretch"
                       style={{ color: "inherit" }}
                     >
@@ -181,12 +256,21 @@ export default async function ReportsPage({
                 <tr>
                   <td colSpan={3}>
                     <div className="empty-state">
-                      <strong>리포트가 없습니다</strong>
-                      <p>
-                        승인 완료된 측정이 있으면 위의{" "}
-                        <b>일괄 생성/누락 보충</b> 버튼으로 한 번에 생성할 수
-                        있습니다.
-                      </p>
+                      {hasFilter ? (
+                        <>
+                          <strong>검색 결과가 없습니다</strong>
+                          <p>필터·검색어를 조정해 보세요.</p>
+                        </>
+                      ) : (
+                        <>
+                          <strong>리포트가 없습니다</strong>
+                          <p>
+                            승인 완료된 측정이 있으면 위의{" "}
+                            <b>일괄 생성/누락 보충</b> 버튼으로 한 번에 생성할
+                            수 있습니다.
+                          </p>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -213,8 +297,13 @@ export default async function ReportsPage({
             <>
               <div className="panel-head">
                 <p className="panel-title">
-                  {selected.students?.name} · {selected.report_type} ·{" "}
-                  {selected.report_month}
+                  <Link
+                    href={`/admin/students?student=${selected.student_id}`}
+                    style={{ color: "var(--text)" }}
+                  >
+                    {selected.students?.name ?? "-"}
+                  </Link>{" "}
+                  · {selected.report_type} · {selected.report_month}
                 </p>
                 <span
                   className={`badge ${STATUS_BADGE[selected.status] ?? "gray"}`}
