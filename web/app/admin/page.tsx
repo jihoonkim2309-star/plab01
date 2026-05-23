@@ -315,8 +315,8 @@ export default async function AdminDashboard() {
         <KpiCard icon="⏳" label="처리 대기" value={`${pendingTotal}건`} hint="액션 필요" tone="orange" href="/admin/parent-links" />
       </div>
 
-      {/* ROW 3: 오늘의 클래스 + 처리 대기 */}
-      <div className="dashboard-row dashboard-row-2col">
+      {/* ROW 3: 오늘 클래스 + 처리 대기 + 회원 분포 (3-col) */}
+      <div className="dashboard-row dashboard-row-3col">
         <div className="panel">
           <div className="panel-head">
             <p className="panel-title">오늘의 클래스</p>
@@ -426,10 +426,7 @@ export default async function AdminDashboard() {
             />
           </div>
         </div>
-      </div>
 
-      {/* ROW 4: 회원 분포 + 7일 수납 */}
-      <div className="dashboard-row dashboard-row-2col">
         <div className="panel">
           <div className="panel-head">
             <p className="panel-title">회원 상태 분포</p>
@@ -446,6 +443,10 @@ export default async function AdminDashboard() {
             />
           </div>
         </div>
+      </div>
+
+      {/* ROW 4: 7일 수납 + 최근 가입 + 최근 결제 (3-col) */}
+      <div className="dashboard-row dashboard-row-3col">
         <div className="panel">
           <div className="panel-head">
             <p className="panel-title">최근 7일 수납 추이</p>
@@ -457,10 +458,7 @@ export default async function AdminDashboard() {
             <RevenueAreaChart data={days} />
           </div>
         </div>
-      </div>
 
-      {/* ROW 5: 최근 가입 + 최근 결제 */}
-      <div className="dashboard-row dashboard-row-2col">
         <div className="panel">
           <div className="panel-head">
             <p className="panel-title">최근 가입 학생</p>
@@ -552,7 +550,7 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      {/* ROW 6: 다가오는 휴강·보강 + 최근 알림 */}
+      {/* ROW 5: 다가오는 휴강·보강 + 최근 알림 */}
       <div className="dashboard-row dashboard-row-2col">
         <div className="panel">
           <div className="panel-head">
