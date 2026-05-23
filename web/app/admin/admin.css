@@ -125,27 +125,27 @@
   line-height: 1;
 }
 
-/* 사이드바 워크스페이스 셀렉터 (로고 아래) — 슬림 한 줄 chip
-   brand(64px) 와 시각적 무게 맞춤. */
+/* 워크스페이스 셀렉터 (탑바 좌측) — 슬림 한 줄 chip */
 .sidebar-workspace {
   position: relative;
-  margin: 6px 12px 8px;
   flex-shrink: 0;
+  min-width: 0;
+  max-width: 260px;
 }
 .sidebar-workspace-trigger,
 .sidebar-workspace-static {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
   height: 36px;
-  padding: 0 10px;
+  padding: 0 12px;
   border: 1px solid var(--line);
   background: #fbfdfc;
   border-radius: 8px;
   color: var(--text);
   text-align: left;
   font-size: 13px;
+  min-width: 0;
 }
 .sidebar-workspace-trigger {
   cursor: pointer;

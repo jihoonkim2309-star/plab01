@@ -7,6 +7,7 @@ import Sidebar from "./Sidebar";
 import GlobalLoading from "./GlobalLoading";
 import SuppressInvalidTooltip from "./SuppressInvalidTooltip";
 import ProfileMenu from "./ProfileMenu";
+import SidebarWorkspace from "./SidebarWorkspace";
 import { ACTIVE_CENTER_COOKIE } from "@/lib/center";
 import PendingApproval from "./PendingApproval";
 
@@ -91,17 +92,18 @@ export default async function AdminLayout({
         <GlobalLoading />
       </Suspense>
       <SuppressInvalidTooltip />
-      <Sidebar
-        role={role}
-        isSuper={isSuper}
-        centers={centersForSwitcher}
-        activeCenterId={activeCenterId}
-        activeCenterName={activeCenterName}
-      />
+      <Sidebar role={role} />
       <div className="drawer-backdrop" />
 
       <main className="main">
         <header className="topbar">
+          <SidebarWorkspace
+            isSuper={isSuper}
+            centers={centersForSwitcher}
+            activeCenterId={activeCenterId}
+            activeCenterName={activeCenterName}
+          />
+
           <div className="topbar-actions">
             <button type="button" className="icon-button" aria-label="알림">
               🔔
@@ -128,7 +130,7 @@ export default async function AdminLayout({
                 padding: "12px 16px",
               }}
             >
-              활성 지점이 설정되지 않았습니다. 좌측 사이드바 상단의{" "}
+              활성 지점이 설정되지 않았습니다. 상단 좌측{" "}
               <b>지점 선택</b>에서 지점을 골라 주세요.
             </div>
           )}

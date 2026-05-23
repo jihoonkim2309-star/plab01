@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV } from "./nav";
-import SidebarWorkspace from "./SidebarWorkspace";
 
 function isActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === "/admin";
@@ -33,16 +32,8 @@ function isActive(pathname: string, href: string) {
 
 export default function Sidebar({
   role,
-  isSuper,
-  centers,
-  activeCenterId,
-  activeCenterName,
 }: {
   role: "super_admin" | "admin" | "coach" | "parent" | "student" | "driver" | null;
-  isSuper: boolean;
-  centers: { id: string; name: string }[];
-  activeCenterId: string | null;
-  activeCenterName: string;
 }) {
   const pathname = usePathname();
 
@@ -59,13 +50,6 @@ export default function Sidebar({
           <img src="/planb-logo.svg" alt="PlanB" />
         </div>
       </Link>
-
-      <SidebarWorkspace
-        isSuper={isSuper}
-        centers={centers}
-        activeCenterId={activeCenterId}
-        activeCenterName={activeCenterName}
-      />
 
       <nav className="nav">
         {visibleNav.map((group, gi) => (
