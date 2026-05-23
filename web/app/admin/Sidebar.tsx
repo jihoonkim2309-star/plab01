@@ -54,12 +54,12 @@ export default function Sidebar({
   });
 
   // 그룹별 펼침 상태. 키 = group.label.
-  // 기본: 활성 페이지가 속한 그룹만 펼침. 나머지는 접힘.
+  // 기본: 모든 그룹 펼침 (사용자가 직접 접을 수 있음).
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     for (const g of NAV) {
       if (g.label && isCollapsible(g)) {
-        init[g.label] = false;
+        init[g.label] = true;
       }
     }
     return init;
