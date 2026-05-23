@@ -1782,12 +1782,21 @@
 .dashboard-row.dashboard-hero {
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
 }
-/* auto-fit + minmax: 좁아지면 자동 wrap (카드 텍스트 줄바꿈 방지) */
-.dashboard-row.dashboard-row-2col {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
-}
+/* 2-col / 3-col: flex wrap + grow — 좁아져서 wrap 되면 마지막 아이템이
+   남은 빈 공간을 자동으로 채움 (CSS Grid 의 auto-fit 은 빈 칸 발생). */
+.dashboard-row.dashboard-row-2col,
 .dashboard-row.dashboard-row-3col {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.dashboard-row.dashboard-row-2col > * {
+  flex: 1 1 460px;
+  min-width: 0;
+}
+.dashboard-row.dashboard-row-3col > * {
+  flex: 1 1 380px;
+  min-width: 0;
 }
 
 .welcome-card {
