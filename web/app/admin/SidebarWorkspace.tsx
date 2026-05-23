@@ -32,22 +32,20 @@ export default function SidebarWorkspace({
     };
   }, []);
 
-  // 일반 admin/coach: 전환 불가 — 정적 라벨로 표시.
+  // 일반 admin/coach: 전환 불가 — 슬림 정적 라벨로 표시.
   if (!isSuper) {
     return (
-      <div className="sidebar-workspace sidebar-workspace-static">
+      <div
+        className="sidebar-workspace sidebar-workspace-static"
+        title={`현재 지점: ${activeCenterName}`}
+      >
         <span className="sw-icon" aria-hidden>◇</span>
-        <div className="sw-meta">
-          <span className="sw-label">현재 지점</span>
-          <span className="sw-name" title={activeCenterName}>
-            {activeCenterName}
-          </span>
-        </div>
+        <span className="sw-name">{activeCenterName}</span>
       </div>
     );
   }
 
-  // super_admin: 클릭 시 지점 전환 드롭다운
+  // super_admin: 클릭 시 지점 전환 드롭다운 (한 줄 슬림 chip)
   return (
     <div className="sidebar-workspace" ref={ref}>
       <button
@@ -56,14 +54,10 @@ export default function SidebarWorkspace({
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
+        title="슈퍼 어드민 · 지점 전환"
       >
         <span className="sw-icon" aria-hidden>◇</span>
-        <div className="sw-meta">
-          <span className="sw-label">슈퍼 어드민 · 지점 전환</span>
-          <span className="sw-name" title={activeCenterName}>
-            {activeCenterName}
-          </span>
-        </div>
+        <span className="sw-name">{activeCenterName}</span>
         <span className="sw-caret" aria-hidden>▾</span>
       </button>
       {open && (
