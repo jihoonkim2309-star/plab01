@@ -230,7 +230,8 @@
 }
 
 /* Vuexy 스타일: 둥근 카드로 떠 있는 느낌 + 본문 영역과 분리.
-   max-width 안에서 중앙 정렬 — 큰 모니터에서 좌우 여백 생성. */
+   탑바 카드와 본문 영역의 좌우 외곽선이 정확히 일치하도록
+   동일한 max-width + padding 사용. */
 .topbar {
   height: var(--topbar-height);
   background: var(--panel);
@@ -238,10 +239,11 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 0 18px;
+  padding: 0 24px;
   margin: 12px auto 6px;
-  width: calc(100% - 28px);
-  max-width: 1440px;
+  width: calc(100% - 48px); /* 좌우 24px 여백 = content padding 과 일치 */
+  box-sizing: border-box;
+  max-width: 1392px; /* content max-width(1440) - 좌우 padding(24*2) */
   position: sticky;
   top: 12px;
   z-index: 5;
