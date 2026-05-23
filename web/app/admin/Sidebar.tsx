@@ -49,7 +49,6 @@ export default function Sidebar({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/planb-logo.svg" alt="PlanB" />
         </div>
-        <div className="brand-sub">Admin Console</div>
       </Link>
 
       <nav className="nav">
