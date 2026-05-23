@@ -99,25 +99,30 @@ create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare
   v_apply uuid;
+  v_role  text;
 begin
   begin
     v_apply := nullif(new.raw_user_meta_data->>'applying_center_id', '')::uuid;
   exception when others then
     v_apply := null;
   end;
+  v_role := nullif(new.raw_user_meta_data->>'applying_role', '');
+  if v_role not in ('admin','coach','driver') then v_role := null; end if;
 
-  insert into public.users (id, email, name, phone, applying_center_id)
+  insert into public.users (id, email, name, phone, applying_center_id, applying_role)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'name', new.email),
     new.raw_user_meta_data->>'phone',
-    v_apply
+    v_apply,
+    v_role
   )
   on conflict (id) do update
     set name               = coalesce(public.users.name,  excluded.name),
         phone              = coalesce(public.users.phone, excluded.phone),
-        applying_center_id = coalesce(public.users.applying_center_id, excluded.applying_center_id);
+        applying_center_id = coalesce(public.users.applying_center_id, excluded.applying_center_id),
+        applying_role      = coalesce(public.users.applying_role,      excluded.applying_role);
 
   -- 이메일 자동 확인 (테스트 단계 — 확인 메일 없이 즉시 로그인 가능)
   update auth.users
@@ -145,6 +150,10 @@ $$;
 -- 가입 시 신청한 지점 (대기 상태 동안만 의미. 승인되면 center_id 로 옮겨감).
 alter table public.users add column if not exists applying_center_id uuid
   references public.centers(id) on delete set null;
+
+-- 가입 시 신청한 역할 (admin|coach|driver). 슈퍼어드민/지점장이 승인 시 그 역할 부여.
+alter table public.users add column if not exists applying_role text
+  check (applying_role in ('admin','coach','driver'));
 
 -- ---------- 8. RLS 활성화 ----------------------------------------------
 alter table public.centers               enable row level security;

@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [applyingCenter, setApplyingCenter] = useState("");
+  const [applyingRole, setApplyingRole] = useState<"admin" | "coach" | "driver" | "">("");
   const [centers, setCenters] = useState<{ id: string; name: string }[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,6 +49,7 @@ export default function LoginPage() {
             name,
             phone,
             applying_center_id: applyingCenter || null,
+            applying_role: applyingRole || null,
           },
         },
       });
@@ -253,8 +255,24 @@ export default function LoginPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-700 mb-1.5">신청 역할</label>
+                  <select
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm text-zinc-900 bg-white focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                    value={applyingRole}
+                    onChange={(e) =>
+                      setApplyingRole(e.target.value as "admin" | "coach" | "driver" | "")
+                    }
+                    required
+                  >
+                    <option value="">역할을 선택하세요</option>
+                    <option value="admin">지점장 (관리자)</option>
+                    <option value="coach">코치</option>
+                    <option value="driver">기사</option>
+                  </select>
                   <p className="text-[11px] text-zinc-500 mt-1">
-                    승인은 슈퍼 어드민 또는 해당 지점장이 처리합니다.
+                    지점장 신청은 슈퍼 어드민이, 코치·기사 신청은 해당 지점장이 승인합니다.
                   </p>
                 </div>
               </>
