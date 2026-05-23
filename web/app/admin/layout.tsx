@@ -61,14 +61,6 @@ export default async function AdminLayout({
     profile?.center_id ??
     null;
 
-  const { data: activeCenter } = activeCenterId
-    ? await supabase
-        .from("centers")
-        .select("name")
-        .eq("id", activeCenterId)
-        .single()
-    : { data: null };
-
   // 슈퍼어드민 전환 드롭다운용 — 모든 지점 (RLS 통과)
   const centersForSwitcher = isSuper
     ? ((
@@ -89,7 +81,6 @@ export default async function AdminLayout({
         : role === "coach"
           ? "코치"
           : (role ?? "사용자");
-  const centerName = activeCenter?.name ?? "지점 미선택";
 
   return (
     <div className="admin-shell app">
@@ -102,12 +93,6 @@ export default async function AdminLayout({
 
       <main className="main">
         <header className="topbar">
-          <div className="topbar-crumb">
-            <strong>{centerName}</strong>
-            <span className="sep" aria-hidden>/</span>
-            <span className="muted">Phase 1 운영 콘솔</span>
-          </div>
-
           <div className="topbar-actions">
             {isSuper && (
               <CenterSwitcher
