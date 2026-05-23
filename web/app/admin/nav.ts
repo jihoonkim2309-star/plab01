@@ -81,19 +81,19 @@ export const NAV: NavGroup[] = [
   {
     label: "상담",
     items: [
-      { label: "문의/채팅", slug: "support", href: "/admin/support", icon: "✉", ready: true },
-      { label: "문의 티켓", slug: "inquiry-ticket", href: "/admin/support", sub: true, ready: true },
-      { label: "1:1 채팅 상담", slug: "chat-counsel", href: "/admin/support", sub: true, ready: true },
-      { label: "상담 이력", slug: "support-history", href: "/admin/support?s=완료", sub: true, ready: true },
+      { label: "문의/채팅", slug: "support", href: "/admin/support", icon: "✉", ready: true, reviewed: true },
+      { label: "문의 티켓", slug: "inquiry-ticket", href: "/admin/support", sub: true, ready: true, reviewed: true },
+      { label: "1:1 채팅 상담", slug: "chat-counsel", href: "/admin/support", sub: true, ready: true, reviewed: true },
+      { label: "상담 이력", slug: "support-history", href: "/admin/support?s=완료", sub: true, ready: true, reviewed: true },
     ],
   },
   {
     label: "시스템",
     items: [
-      { label: "알림/로그", slug: "logs", href: "/admin/notifications", icon: "≡", ready: true },
-      { label: "알림 발송 로그", slug: "notification-log", href: "/admin/notifications", sub: true, ready: true },
-      { label: "감사 로그", slug: "audit-log", href: "/admin/audit-logs", sub: true, ready: true },
-      { label: "설정", slug: "settings", href: "/admin/settings", icon: "⚙", ready: true },
+      { label: "알림/로그", slug: "logs", href: "/admin/notifications", icon: "≡", ready: true, reviewed: true },
+      { label: "알림 발송 로그", slug: "notification-log", href: "/admin/notifications", sub: true, ready: true, reviewed: true },
+      { label: "감사 로그", slug: "audit-log", href: "/admin/audit-logs", sub: true, ready: true, reviewed: true },
+      { label: "설정", slug: "settings", href: "/admin/settings", icon: "⚙", ready: true, reviewed: true },
     ],
   },
 ];

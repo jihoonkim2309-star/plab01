@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   createInquiry,
@@ -6,6 +7,10 @@ import {
   deleteInquiry,
 } from "./actions";
 import ConfirmButton from "../ConfirmButton";
+import FilterBar from "../FilterBar";
+import StatusChips from "../StatusChips";
+import FilterSelect from "../FilterSelect";
+import SearchInput from "../SearchInput";
 
 const SB: Record<string, string> = {
   접수: "orange",
@@ -16,18 +21,37 @@ const SB: Record<string, string> = {
 export default async function SupportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sel?: string; s?: string }>;
+  searchParams: Promise<{
+    sel?: string;
+    s?: string;
+    q?: string;
+    channel?: string;
+  }>;
 }) {
-  const { sel, s } = await searchParams;
+  const { sel, s, q, channel } = await searchParams;
   const supabase = await createClient();
 
-  let q = supabase
+  let listQuery = supabase
     .from("inquiries")
-    .select("id, requester_name, contact, channel, subject, body, status, created_at")
+    .select(
+      "id, requester_name, contact, channel, subject, body, status, created_at",
+    )
     .order("created_at", { ascending: false });
-  if (s && ["접수", "처리중", "완료"].includes(s)) q = q.eq("status", s);
-  const { data } = await q;
-  const list = (data ?? []) as {
+  if (s && ["접수", "처리중", "완료"].includes(s))
+    listQuery = listQuery.eq("status", s);
+  if (channel) listQuery = listQuery.eq("channel", channel);
+  if (q) {
+    listQuery = listQuery.or(
+      `subject.ilike.%${q}%,requester_name.ilike.%${q}%,body.ilike.%${q}%`,
+    );
+  }
+
+  const [listRes, allRes] = await Promise.all([
+    listQuery,
+    supabase.from("inquiries").select("status"),
+  ]);
+
+  const list = (listRes.data ?? []) as {
     id: string;
     requester_name: string | null;
     contact: string | null;
@@ -37,8 +61,18 @@ export default async function SupportPage({
     status: string;
     created_at: string;
   }[];
+  const all = (allRes.data ?? []) as { status: string }[];
 
-  const selected = sel ? list.find((i) => i.id === sel) ?? null : null;
+  // 선택은 필터 외에서도 유지
+  const selected = sel
+    ? (await supabase
+        .from("inquiries")
+        .select(
+          "id, requester_name, contact, channel, subject, body, status, created_at",
+        )
+        .eq("id", sel)
+        .maybeSingle()).data ?? null
+    : null;
   let messages: { id: string; sender: string; body: string; created_at: string }[] =
     [];
   if (selected) {
@@ -50,7 +84,19 @@ export default async function SupportPage({
     messages = msgs ?? [];
   }
 
-  const cnt = (x: string) => list.filter((i) => i.status === x).length;
+  const cnt = (x: string) => all.filter((i) => i.status === x).length;
+  const hasFilter = !!(q || s || channel);
+
+  // sel 보존 + filter 유지를 위한 row link
+  const rowHref = (id: string) => {
+    const qs = new URLSearchParams();
+    qs.set("sel", id);
+    if (s) qs.set("s", s);
+    if (channel) qs.set("channel", channel);
+    if (q) qs.set("q", q);
+    return `/admin/support?${qs}`;
+  };
+  const resetHref = sel ? `/admin/support?sel=${sel}` : "/admin/support";
 
   return (
     <>
@@ -59,36 +105,65 @@ export default async function SupportPage({
           <h1>문의/채팅 상담</h1>
           <p className="subtext">문의 접수 · 1:1 답변 · 처리 이력</p>
         </div>
-        <div className="toolbar">
-          <a className="btn" href="/admin/support">
-            전체
-          </a>
-          {["접수", "처리중", "완료"].map((x) => (
-            <a
-              key={x}
-              className={`btn${s === x ? " toggle-active" : ""}`}
-              href={`/admin/support?s=${encodeURIComponent(x)}`}
-            >
-              {x}
-            </a>
-          ))}
-        </div>
       </div>
 
       <div className="member-summary">
-        <div className="summary-card"><span>전체 문의</span><strong>{list.length}</strong></div>
+        <div className="summary-card"><span>전체 문의</span><strong>{all.length}</strong></div>
         <div className="summary-card"><span>접수</span><strong>{cnt("접수")}</strong></div>
         <div className="summary-card"><span>처리중</span><strong>{cnt("처리중")}</strong></div>
         <div className="summary-card"><span>완료</span><strong>{cnt("완료")}</strong></div>
         <div className="summary-card"><span>처리율</span><strong>
-          {list.length ? Math.round((cnt("완료") / list.length) * 100) : 0}%
+          {all.length ? Math.round((cnt("완료") / all.length) * 100) : 0}%
         </strong></div>
       </div>
 
       <div className="grid account-layout">
         <div className="panel elevated">
           <div className="panel-head">
-            <p className="panel-title">문의 목록</p>
+            <p className="panel-title">
+              문의 목록{" "}
+              <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                {hasFilter
+                  ? `검색결과 ${list.length}건 / 전체 ${all.length}`
+                  : `${list.length}건`}
+              </span>
+            </p>
+          </div>
+          <div className="panel-body" style={{ paddingBottom: 0 }}>
+            <FilterBar>
+              <StatusChips
+                param="s"
+                current={s}
+                options={[
+                  { value: "접수", label: "접수" },
+                  { value: "처리중", label: "처리중" },
+                  { value: "완료", label: "완료" },
+                ]}
+              />
+              <FilterSelect
+                param="channel"
+                current={channel}
+                placeholder="채널 전체"
+                ariaLabel="채널 필터"
+                options={[
+                  { value: "웹", label: "웹" },
+                  { value: "전화", label: "전화" },
+                  { value: "방문", label: "방문" },
+                  { value: "앱", label: "앱" },
+                ]}
+              />
+              <div style={{ flex: 1 }} />
+              <SearchInput
+                param="q"
+                current={q}
+                placeholder="제목·요청자·내용 검색"
+              />
+              {hasFilter && (
+                <Link className="btn" href={resetHref}>
+                  초기화
+                </Link>
+              )}
+            </FilterBar>
           </div>
           <table>
             <thead>
@@ -106,13 +181,13 @@ export default async function SupportPage({
                   className={`row-link-host ${i.id === sel ? "selected" : ""}`}
                 >
                   <td>
-                    <a
-                      href={`/admin/support?sel=${i.id}`}
+                    <Link
+                      href={rowHref(i.id)}
                       className="row-link-stretch"
                       style={{ fontWeight: 900, color: "var(--text)" }}
                     >
                       {i.subject}
-                    </a>
+                    </Link>
                     <div className="muted">{i.created_at.slice(0, 10)}</div>
                   </td>
                   <td className="muted">{i.requester_name ?? "-"}</td>
@@ -128,8 +203,17 @@ export default async function SupportPage({
                 <tr>
                   <td colSpan={4}>
                     <div className="empty-state">
-                      <strong>문의가 없습니다</strong>
-                      <p>우측에서 전화/방문 문의를 직접 등록할 수 있습니다.</p>
+                      {hasFilter ? (
+                        <>
+                          <strong>검색 결과가 없습니다</strong>
+                          <p>필터·검색어를 조정해 보세요.</p>
+                        </>
+                      ) : (
+                        <>
+                          <strong>문의가 없습니다</strong>
+                          <p>우측에서 전화/방문 문의를 직접 등록할 수 있습니다.</p>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
