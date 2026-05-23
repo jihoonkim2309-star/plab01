@@ -247,6 +247,43 @@
   padding: 10px 10px 4px;
 }
 
+/* collapsible 그룹 라벨 (클릭 시 그룹 접/펼) */
+.nav-label-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  font-family: inherit;
+  border-radius: 6px;
+  transition: background 120ms ease, color 120ms ease;
+}
+.nav-label-toggle:hover {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+.nav-label-caret {
+  font-size: 10px;
+  color: var(--muted);
+  transition: transform 180ms ease;
+}
+.nav-label-toggle.open .nav-label-caret {
+  transform: rotate(0deg);
+}
+.nav-label-toggle:not(.open) .nav-label-caret {
+  transform: rotate(-90deg);
+}
+
+/* 접힌 그룹의 메뉴 항목 숨김 */
+.nav a.collapsed {
+  display: none;
+}
+
 .nav a {
   border: 0;
   background: transparent;

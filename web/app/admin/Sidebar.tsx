@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV } from "./nav";
+import { useState, useEffect } from "react";
+import { NAV, type NavGroup } from "./nav";
 
 function isActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === "/admin";
@@ -30,6 +31,16 @@ function isActive(pathname: string, href: string) {
   return pathname === href;
 }
 
+// 그룹이 collapsible 인지 — label 이 있는 그룹만. (Dashboard 같은 단독 그룹 제외)
+function isCollapsible(group: NavGroup) {
+  return !!group.label && group.items.length > 1;
+}
+
+// 현재 활성 페이지가 이 그룹 안에 있나?
+function groupContainsActive(group: NavGroup, pathname: string) {
+  return group.items.some((item) => isActive(pathname, item.href));
+}
+
 export default function Sidebar({
   role,
 }: {
@@ -42,6 +53,39 @@ export default function Sidebar({
     return role ? g.onlyRoles.includes(role as never) : false;
   });
 
+  // 그룹별 펼침 상태. 키 = group.label.
+  // 기본: 활성 페이지가 속한 그룹만 펼침. 나머지는 접힘.
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    for (const g of NAV) {
+      if (g.label && isCollapsible(g)) {
+        init[g.label] = false;
+      }
+    }
+    return init;
+  });
+
+  // 경로 변경 시 활성 그룹은 자동 펼침 (현재 위치 잃지 않게)
+  useEffect(() => {
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const g of NAV) {
+        if (g.label && isCollapsible(g) && groupContainsActive(g, pathname)) {
+          if (!next[g.label]) {
+            next[g.label] = true;
+            changed = true;
+          }
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [pathname]);
+
+  function toggle(label: string) {
+    setOpenGroups((p) => ({ ...p, [label]: !p[label] }));
+  }
+
   return (
     <aside className="sidebar">
       <Link className="brand" href="/admin" aria-label="Dashboard로 이동">
@@ -52,28 +96,50 @@ export default function Sidebar({
       </Link>
 
       <nav className="nav">
-        {visibleNav.map((group, gi) => (
-          <div className="nav-group" key={gi}>
-            {group.label && <div className="nav-label">{group.label}</div>}
-            {group.items.map((item) => (
-              <Link
-                key={item.slug}
-                href={item.href}
-                className={[
-                  item.sub ? "sub" : "",
-                  isActive(pathname, item.href) ? "active" : "",
-                  item.reviewed ? "" : "wip",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                title={item.reviewed ? undefined : "수정중 (sweep 미완료)"}
-              >
-                {!item.sub && <span className="ico">{item.icon ?? "•"}</span>}
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        ))}
+        {visibleNav.map((group, gi) => {
+          const collapsible = isCollapsible(group);
+          const open = !collapsible || !!openGroups[group.label ?? ""];
+
+          return (
+            <div className="nav-group" key={gi}>
+              {group.label && collapsible && (
+                <button
+                  type="button"
+                  className={`nav-label nav-label-toggle${open ? " open" : ""}`}
+                  onClick={() => toggle(group.label!)}
+                  aria-expanded={open}
+                >
+                  <span>{group.label}</span>
+                  <span className="nav-label-caret" aria-hidden>▾</span>
+                </button>
+              )}
+              {group.label && !collapsible && (
+                <div className="nav-label">{group.label}</div>
+              )}
+
+              {group.items.map((item) => (
+                <Link
+                  key={item.slug}
+                  href={item.href}
+                  className={[
+                    item.sub ? "sub" : "",
+                    isActive(pathname, item.href) ? "active" : "",
+                    item.reviewed ? "" : "wip",
+                    !open ? "collapsed" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  title={item.reviewed ? undefined : "수정중 (sweep 미완료)"}
+                  tabIndex={open ? 0 : -1}
+                  aria-hidden={!open}
+                >
+                  {!item.sub && <span className="ico">{item.icon ?? "•"}</span>}
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          );
+        })}
       </nav>
 
       <div className="sidebar-footer">
