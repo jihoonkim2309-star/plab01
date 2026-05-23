@@ -24,11 +24,6 @@ const p = (slug: string) => `/admin/p/${slug}`;
 
 export const NAV: NavGroup[] = [
   {
-    items: [
-      { label: "Dashboard", slug: "dashboard", href: "/admin", icon: "⌂", ready: true },
-    ],
-  },
-  {
     label: "프랜차이즈",
     onlyRoles: ["super_admin"],
     items: [
