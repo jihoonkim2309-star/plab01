@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import FilterSelect from "../FilterSelect";
@@ -17,13 +17,14 @@ export default async function NotificationsPage({
   searchParams: Promise<{ q?: string; status?: string; kind?: string }>;
 }) {
   const { q, status, kind } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   let listQuery = supabase
     .from("notifications")
     .select(
       "id, kind, recipient, template, status, provider, error, created_at, sent_at",
     )
+    .eq("center_id", cid)
     .order("created_at", { ascending: false })
     .limit(300);
   if (status) listQuery = listQuery.eq("status", status);
@@ -39,6 +40,7 @@ export default async function NotificationsPage({
     supabase
       .from("notifications")
       .select("status, kind")
+      .eq("center_id", cid)
       .order("created_at", { ascending: false })
       .limit(300),
   ]);

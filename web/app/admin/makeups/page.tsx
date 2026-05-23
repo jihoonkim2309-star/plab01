@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import { createMakeup, setMakeupStatus, deleteMakeup } from "./actions";
 import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
@@ -29,19 +29,20 @@ export default async function MakeupsPage({
   searchParams: Promise<{ q?: string; class_id?: string; status?: string }>;
 }) {
   const { q, class_id, status } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   let listQuery = supabase
     .from("makeups")
     .select("id, original_date, makeup_date, reason, status, class_id, classes(name)")
+    .eq("center_id", cid)
     .order("makeup_date", { ascending: false });
   if (class_id) listQuery = listQuery.eq("class_id", class_id);
   if (status) listQuery = listQuery.eq("status", status);
 
   const [listRes, classesRes, allRes] = await Promise.all([
     listQuery,
-    supabase.from("classes").select("id, name").order("name"),
-    supabase.from("makeups").select("status"),
+    supabase.from("classes").select("id, name").eq("center_id", cid).order("name"),
+    supabase.from("makeups").select("status").eq("center_id", cid),
   ]);
 
   let raw = (listRes.data ?? []) as unknown as M[];

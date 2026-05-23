@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import FilterSelect from "../FilterSelect";
@@ -35,7 +35,7 @@ export default async function ClassesPage({
   }>;
 }) {
   const { q, status, sport, sort, dir } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   const sortKey = sort && SORT_WHITELIST.has(sort) ? sort : "created_at";
   const ascending = sort && SORT_WHITELIST.has(sort) ? dir === "asc" : false;
@@ -43,6 +43,7 @@ export default async function ClassesPage({
   let listQuery = supabase
     .from("classes")
     .select("id, name, sport, level, capacity, coach, schedule, status")
+    .eq("center_id", cid)
     .order(sortKey, { ascending });
   if (q) listQuery = listQuery.or(`name.ilike.%${q}%,coach.ilike.%${q}%,sport.ilike.%${q}%`);
   if (status) listQuery = listQuery.eq("status", status);
@@ -50,8 +51,8 @@ export default async function ClassesPage({
 
   const [listRes, allRes, studRes] = await Promise.all([
     listQuery,
-    supabase.from("classes").select("status"),
-    supabase.from("students").select("class_id"),
+    supabase.from("classes").select("status").eq("center_id", cid),
+    supabase.from("students").select("class_id").eq("center_id", cid),
   ]);
 
   const list = listRes.data ?? [];

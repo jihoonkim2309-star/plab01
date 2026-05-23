@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import FilterBar from "../FilterBar";
 import FilterSelect from "../FilterSelect";
 import SearchInput from "../SearchInput";
@@ -22,7 +22,7 @@ export default async function MeasurementItemsPage({
   searchParams: Promise<{ q?: string; status?: string; category?: string }>;
 }) {
   const { q, status, category } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   // status 의미: 없음=활성만(기본), "inactive"=비활성만, "all"=전체
   let listQuery = supabase
@@ -30,6 +30,7 @@ export default async function MeasurementItemsPage({
     .select(
       "id, category, name, unit, value_kind, sort_order, active, icon, icon_url, icon_hidden",
     )
+    .eq("center_id", cid)
     .order("sort_order", { ascending: true });
   if (status === "inactive") listQuery = listQuery.eq("active", false);
   else if (status !== "all") listQuery = listQuery.eq("active", true);
@@ -40,7 +41,8 @@ export default async function MeasurementItemsPage({
     listQuery,
     supabase
       .from("measurement_items")
-      .select("category, active"),
+      .select("category, active")
+      .eq("center_id", cid),
   ]);
 
   const list = listRes.data ?? [];

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import LinksView, { type LinkRow } from "../LinksView";
 
 export default async function StudentLinksPage({
@@ -7,19 +7,20 @@ export default async function StudentLinksPage({
   searchParams: Promise<{ status?: string; q?: string }>;
 }) {
   const { status, q } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   let listQuery = supabase
     .from("student_account_links")
     .select(
       "id, status, created_at, student_id, students(name), account:users!user_id(name, email)",
     )
+    .eq("center_id", cid)
     .order("created_at", { ascending: false });
   if (status) listQuery = listQuery.eq("status", status);
 
   const [listRes, totalsRes] = await Promise.all([
     listQuery,
-    supabase.from("student_account_links").select("status"),
+    supabase.from("student_account_links").select("status").eq("center_id", cid),
   ]);
 
   type RawRow = {

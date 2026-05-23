@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import RadialRevenueChart from "./dashboard/RadialRevenueChart";
 import MembersDonutChart from "./dashboard/MembersDonutChart";
 import RevenueAreaChart from "./dashboard/RevenueAreaChart";
@@ -23,7 +24,9 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default async function AdminDashboard() {
-  const supabase = await createClient();
+  // 활성 센터 기준으로 모든 쿼리 필터.
+  // super_admin 은 RLS 통과라 명시적 .eq("center_id", cid) 필요.
+  const { supabase, centerId: cid } = await requireCenter();
   const now = new Date();
   const Y = now.getFullYear();
   const M = now.getMonth() + 1;
@@ -56,34 +59,40 @@ export default async function AdminDashboard() {
     centerRes,
     userRes,
   ] = await Promise.all([
-    supabase.from("students").select("id, status, created_at"),
-    supabase.from("invoices").select("id, amount, status, paid_at, period").eq("period", period),
-    supabase.from("parent_student_links").select("id, status").eq("status", "pending"),
-    supabase.from("student_account_links").select("id, status").eq("status", "pending"),
+    supabase.from("students").select("id, status, created_at").eq("center_id", cid),
+    supabase.from("invoices").select("id, amount, status, paid_at, period").eq("center_id", cid).eq("period", period),
+    supabase.from("parent_student_links").select("id, status").eq("center_id", cid).eq("status", "pending"),
+    supabase.from("student_account_links").select("id, status").eq("center_id", cid).eq("status", "pending"),
     supabase
       .from("grade_promotions")
       .select("id, status")
+      .eq("center_id", cid)
       .in("status", ["진학 확인 필요", "학부모 입력 요청"]),
     supabase
       .from("invoices")
       .select("id, due_date, status")
+      .eq("center_id", cid)
       .lt("due_date", todayIso)
       .in("status", ["청구", "실패"]),
     supabase
       .from("classes")
       .select("id, name, start_time, end_time, place, coach, days_of_week, status")
+      .eq("center_id", cid)
       .in("status", ["운영", "모집중"]),
     supabase
       .from("holidays")
       .select("id, holiday_date, reason, class_id, classes(name)")
+      .eq("center_id", cid)
       .eq("holiday_date", todayIso),
     supabase
       .from("makeups")
       .select("id, makeup_date, status, classes(name)")
+      .eq("center_id", cid)
       .eq("makeup_date", todayIso),
     supabase
       .from("students")
       .select("id, name, school, grade, created_at")
+      .eq("center_id", cid)
       .order("created_at", { ascending: false })
       .limit(5),
     supabase
@@ -91,33 +100,38 @@ export default async function AdminDashboard() {
       .select(
         "id, amount, status, paid_at, card_name, card_number_masked, invoice_id, invoices(students(name))",
       )
+      .eq("center_id", cid)
       .eq("status", "성공")
       .order("paid_at", { ascending: false })
       .limit(5),
     supabase
       .from("holidays")
       .select("id, holiday_date, reason, class_id, classes(name)")
+      .eq("center_id", cid)
       .gte("holiday_date", todayIso)
       .lte("holiday_date", sevenIso)
       .order("holiday_date"),
     supabase
       .from("makeups")
       .select("id, makeup_date, status, reason, classes(name)")
+      .eq("center_id", cid)
       .gte("makeup_date", todayIso)
       .lte("makeup_date", sevenIso)
       .order("makeup_date"),
     supabase
       .from("notifications")
       .select("id, kind, recipient, template, status, created_at")
+      .eq("center_id", cid)
       .order("created_at", { ascending: false })
       .limit(5),
     supabase
       .from("payments")
       .select("amount, paid_at, status")
+      .eq("center_id", cid)
       .eq("status", "성공")
       .gte("paid_at", `${sevenAgoIso}T00:00:00`)
       .lte("paid_at", `${todayIso}T23:59:59`),
-    supabase.from("centers").select("name").limit(1).single(),
+    supabase.from("centers").select("name").eq("id", cid).single(),
     supabase.auth.getUser(),
   ]);
 

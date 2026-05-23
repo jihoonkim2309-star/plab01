@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
 import FilterSelect from "../FilterSelect";
@@ -29,26 +29,30 @@ export default async function SchedulePage({
   const daysInMonth = new Date(y, m, 0).getDate();
   const lead = first.getDay(); // 앞쪽 빈 칸 수
 
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
   let classQuery = supabase
     .from("classes")
     .select("id, name, days_of_week, start_time, end_time, place, status")
+    .eq("center_id", cid)
     .in("status", ["운영", "모집중"]);
   if (class_id) classQuery = classQuery.eq("id", class_id);
 
   const { data: allClasses } = await supabase
     .from("classes")
     .select("id, name")
+    .eq("center_id", cid)
     .order("name");
   const { data: classes } = await classQuery;
   const { data: holidays } = await supabase
     .from("holidays")
     .select("holiday_date, reason, class_id")
+    .eq("center_id", cid)
     .gte("holiday_date", `${monthStr}-01`)
     .lte("holiday_date", `${monthStr}-${pad(daysInMonth)}`);
   const { data: makeups } = await supabase
     .from("makeups")
     .select("makeup_date, reason, status, class_id, classes(name)")
+    .eq("center_id", cid)
     .gte("makeup_date", `${monthStr}-01`)
     .lte("makeup_date", `${monthStr}-${pad(daysInMonth)}`);
 

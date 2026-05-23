@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import AccountsView, { type AccountRow } from "../AccountsView";
 
 export default async function CoachAccountsPage({
@@ -7,11 +7,12 @@ export default async function CoachAccountsPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   let listQuery = supabase
     .from("users")
     .select("id, name, email, phone, created_at")
+    .eq("center_id", cid)
     .eq("role", "coach")
     .order("created_at", { ascending: false });
   if (q) {
@@ -22,8 +23,8 @@ export default async function CoachAccountsPage({
 
   const [listRes, allRes, classesRes] = await Promise.all([
     listQuery,
-    supabase.from("users").select("id").eq("role", "coach"),
-    supabase.from("classes").select("name, coach_id"),
+    supabase.from("users").select("id").eq("center_id", cid).eq("role", "coach"),
+    supabase.from("classes").select("name, coach_id").eq("center_id", cid),
   ]);
 
   const byCoach = new Map<string, string[]>();

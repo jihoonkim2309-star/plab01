@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import CheckRowToggle from "../CheckRowToggle";
 import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
@@ -93,12 +93,13 @@ export default async function PaymentStatusPage({
   }>;
 }) {
   const { s, q, inv, seeded, seed_error } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   // 목록 쿼리 (상태 필터 적용)
   let listQuery = supabase
     .from("invoices")
     .select("id, period, amount, status, paid_at, due_date, students(name)")
+    .eq("center_id", cid)
     .order("created_at", { ascending: false })
     .limit(300);
   if (s) listQuery = listQuery.eq("status", s);
@@ -106,13 +107,14 @@ export default async function PaymentStatusPage({
   const [listRes, totalsRes, detailRes, paymentsRes, itemsRes, centerRes] =
     await Promise.all([
       listQuery,
-      supabase.from("invoices").select("status, amount"),
+      supabase.from("invoices").select("status, amount").eq("center_id", cid),
       inv
         ? supabase
             .from("invoices")
             .select(
               "id, period, amount, status, source, due_date, paid_at, issued_at, method, pg_tx_id, center_id, students(id, name)",
             )
+            .eq("center_id", cid)
             .eq("id", inv)
             .single()
         : Promise.resolve({ data: null }),
@@ -122,6 +124,7 @@ export default async function PaymentStatusPage({
             .select(
               "id, amount, status, provider, pg_tx_id, method, card_name, card_number_masked, installment_months, approval_no, receipt_url, failed_reason, paid_at, created_at",
             )
+            .eq("center_id", cid)
             .eq("invoice_id", inv)
             .order("created_at", { ascending: false })
         : Promise.resolve({ data: [] }),
@@ -129,13 +132,14 @@ export default async function PaymentStatusPage({
         ? supabase
             .from("invoice_items")
             .select("id, label, amount")
+            .eq("center_id", cid)
             .eq("invoice_id", inv)
         : Promise.resolve({ data: [] }),
-      // 영수증 헤더에 표시할 센터 정보 (한 번만 조회)
+      // 영수증 헤더에 표시할 활성 센터 정보
       supabase
         .from("centers")
         .select("name, address, contact_phone")
-        .limit(1)
+        .eq("id", cid)
         .single(),
     ]);
   const center = (centerRes.data ?? null) as unknown as {

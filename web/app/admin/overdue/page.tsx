@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import CheckRowToggle from "../CheckRowToggle";
 import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
@@ -27,12 +27,13 @@ export default async function OverduePage({
   searchParams: Promise<{ q?: string; bucket?: string }>;
 }) {
   const { q, bucket: bucketFilter } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
   const today = new Date().toISOString().slice(0, 10);
 
   const { data } = await supabase
     .from("invoices")
     .select("id, period, amount, status, due_date, student_id, students(name)")
+    .eq("center_id", cid)
     .in("status", ["청구", "실패"])
     .lt("due_date", today)
     .order("due_date", { ascending: true });

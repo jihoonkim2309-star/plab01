@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import AccountsView, { type AccountRow } from "../AccountsView";
 
 export default async function ParentAccountsPage({
@@ -7,12 +7,13 @@ export default async function ParentAccountsPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   // 검색 적용 목록 + 필터 무관 전체 카운트 + 자녀 연결 현황
   let listQuery = supabase
     .from("users")
     .select("id, name, email, phone, created_at")
+    .eq("center_id", cid)
     .eq("role", "parent")
     .order("created_at", { ascending: false });
   if (q) {
@@ -23,10 +24,11 @@ export default async function ParentAccountsPage({
 
   const [listRes, allRes, linksRes] = await Promise.all([
     listQuery,
-    supabase.from("users").select("id").eq("role", "parent"),
+    supabase.from("users").select("id").eq("center_id", cid).eq("role", "parent"),
     supabase
       .from("parent_student_links")
       .select("parent_id, status")
+      .eq("center_id", cid)
       .eq("status", "linked"),
   ]);
 

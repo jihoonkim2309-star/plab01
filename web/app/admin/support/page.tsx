@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import {
   createInquiry,
   replyMessage,
@@ -29,13 +29,14 @@ export default async function SupportPage({
   }>;
 }) {
   const { sel, s, q, channel } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   let listQuery = supabase
     .from("inquiries")
     .select(
       "id, requester_name, contact, channel, subject, body, status, created_at",
     )
+    .eq("center_id", cid)
     .order("created_at", { ascending: false });
   if (s && ["접수", "처리중", "완료"].includes(s))
     listQuery = listQuery.eq("status", s);
@@ -48,7 +49,7 @@ export default async function SupportPage({
 
   const [listRes, allRes] = await Promise.all([
     listQuery,
-    supabase.from("inquiries").select("status"),
+    supabase.from("inquiries").select("status").eq("center_id", cid),
   ]);
 
   const list = (listRes.data ?? []) as {
@@ -70,6 +71,7 @@ export default async function SupportPage({
         .select(
           "id, requester_name, contact, channel, subject, body, status, created_at",
         )
+        .eq("center_id", cid)
         .eq("id", sel)
         .maybeSingle()).data ?? null
     : null;
@@ -79,6 +81,7 @@ export default async function SupportPage({
     const { data: msgs } = await supabase
       .from("support_messages")
       .select("id, sender, body, created_at")
+      .eq("center_id", cid)
       .eq("inquiry_id", selected.id)
       .order("created_at", { ascending: true });
     messages = msgs ?? [];

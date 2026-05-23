@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import { deleteStudent } from "./actions";
 import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
@@ -80,7 +80,7 @@ export default async function StudentsPage({
     sort,
     dir,
   } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   // 정렬: 화이트리스트에 있는 컬럼만 허용. 기본은 created_at desc.
   const sortKey = sort && SORT_WHITELIST.has(sort) ? sort : "created_at";
@@ -92,6 +92,7 @@ export default async function StudentsPage({
     .select(
       "id, name, gender, school, grade, status, class_id, class_name, shuttle_use, photo_url",
     )
+    .eq("center_id", cid)
     .order(sortKey, { ascending });
   if (q) {
     listQuery = listQuery.or(`name.ilike.%${q}%,school.ilike.%${q}%`);
@@ -104,14 +105,15 @@ export default async function StudentsPage({
 
   const [listRes, summaryRes, selectedRes, linkedRes] = await Promise.all([
     listQuery,
-    supabase.from("students").select("status, shuttle_use"),
+    supabase.from("students").select("status, shuttle_use").eq("center_id", cid),
     selectedId
-      ? supabase.from("students").select("*").eq("id", selectedId).single()
+      ? supabase.from("students").select("*").eq("id", selectedId).eq("center_id", cid).single()
       : Promise.resolve({ data: null }),
     selectedId
       ? supabase
           .from("parent_student_links")
           .select("status, parent:users(id, name, email, phone)")
+          .eq("center_id", cid)
           .eq("student_id", selectedId)
       : Promise.resolve({ data: [] }),
   ]);

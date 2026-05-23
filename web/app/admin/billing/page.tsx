@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import { getCenterPg } from "@/lib/portone";
 import CheckRowToggle from "../CheckRowToggle";
 import ConfirmButton from "../ConfirmButton";
@@ -28,11 +28,12 @@ export default async function BillingPage({
 }) {
   const { ym, created } = await searchParams;
   const period = curMonth(ym);
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   const { data } = await supabase
     .from("invoices")
     .select("id, amount, status, source, due_date, paid_at, students(name)")
+    .eq("center_id", cid)
     .eq("period", period)
     .order("created_at", { ascending: false });
   const list = (data ?? []) as unknown as {
@@ -45,18 +46,7 @@ export default async function BillingPage({
     students: { name: string } | null;
   }[];
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: prof } = await supabase
-    .from("users")
-    .select("center_id")
-    .eq("id", user?.id ?? "")
-    .single();
-  const pg = await getCenterPg(
-    supabase,
-    (prof as { center_id: string } | null)?.center_id ?? "",
-  );
+  const pg = await getCenterPg(supabase, cid);
 
   const sum = (f: (s: string) => boolean) =>
     list.filter((i) => f(i.status)).reduce((a, b) => a + Number(b.amount), 0);

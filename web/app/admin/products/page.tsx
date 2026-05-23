@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import FilterSelect from "../FilterSelect";
@@ -26,7 +26,7 @@ export default async function ProductsPage({
   }>;
 }) {
   const { q, status, kind, sort, dir } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   const sortKey = sort && SORT_WHITELIST.has(sort) ? sort : "created_at";
   const ascending = sort && SORT_WHITELIST.has(sort) ? dir === "asc" : false;
@@ -34,6 +34,7 @@ export default async function ProductsPage({
   let listQuery = supabase
     .from("products")
     .select("id, name, kind, sessions_per_week, price, billing_cycle, active")
+    .eq("center_id", cid)
     .order(sortKey, { ascending });
   if (q) listQuery = listQuery.ilike("name", `%${q}%`);
   if (kind) listQuery = listQuery.eq("kind", kind);
@@ -42,7 +43,7 @@ export default async function ProductsPage({
 
   const [listRes, allRes] = await Promise.all([
     listQuery,
-    supabase.from("products").select("kind, active"),
+    supabase.from("products").select("kind, active").eq("center_id", cid),
   ]);
 
   const list = listRes.data ?? [];

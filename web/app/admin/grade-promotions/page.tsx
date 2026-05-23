@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import {
   bulkSetStatus,
   setGradePromotionStatus,
@@ -43,7 +43,7 @@ export default async function GradePromotionsPage({
   searchParams: Promise<{ sel?: string; status?: string; year?: string; q?: string }>;
 }) {
   const { sel, status, year, q } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   // 필터 무관 카운트 + 학년도 옵션을 위해 전체 한 번 + 필터 적용 목록 한 번
   let listQuery = supabase
@@ -51,6 +51,7 @@ export default async function GradePromotionsPage({
     .select(
       "id, school_year, from_grade, to_grade, promo_type, status, note, to_school, needs_parent_input, processed_at, created_at, student_id, students(name, school)",
     )
+    .eq("center_id", cid)
     .order("created_at", { ascending: false });
   if (status) listQuery = listQuery.eq("status", status);
   if (year) listQuery = listQuery.eq("school_year", year);
@@ -59,7 +60,8 @@ export default async function GradePromotionsPage({
     listQuery,
     supabase
       .from("grade_promotions")
-      .select("status, school_year"),
+      .select("status, school_year")
+      .eq("center_id", cid),
   ]);
 
   let raw = (listRes.data ?? []) as unknown as GP[];

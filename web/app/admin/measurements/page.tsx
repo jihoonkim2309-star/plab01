@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireStaff } from "@/lib/center";
 import MonthNav from "../MonthNav";
 import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
@@ -40,22 +40,14 @@ export default async function MeasurementsPage({
 }) {
   const { ym, sid, q, status } = await searchParams;
   const target = ym && /^\d{4}-\d{2}$/.test(ym) ? ym : thisMonth();
-  const supabase = await createClient();
+  const { supabase, centerId: cid, role } = await requireStaff();
 
-  // 미들웨어가 이미 JWT 검증했으므로 로컬 세션만 읽고 → 나머지 조회 병렬
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id;
-
-  // role 조회 + 학생 목록 + 그 달 measurements + 활성 항목 → 한 번에 병렬
-  const [meRes, studentsRes, msRes, itemsRes] = await Promise.all([
-    userId
-      ? supabase.from("users").select("role").eq("id", userId).single()
-      : Promise.resolve({ data: null }),
+  // 학생 목록 + 그 달 measurements + 활성 항목 → 한 번에 병렬
+  const [studentsRes, msRes, itemsRes] = await Promise.all([
     supabase
       .from("students")
       .select("id, name, school, grade, gender, birth")
+      .eq("center_id", cid)
       .eq("status", "활성")
       .order("name", { ascending: true }),
     supabase
@@ -63,14 +55,16 @@ export default async function MeasurementsPage({
       .select(
         "id, student_id, status, measured_at, reviewed_at, reject_reason, notes",
       )
+      .eq("center_id", cid)
       .eq("measurement_month", target),
     supabase
       .from("measurement_items")
       .select("id, category, name, unit, value_kind, sort_order, active")
+      .eq("center_id", cid)
       .eq("active", true)
       .order("sort_order", { ascending: true }),
   ]);
-  const isAdmin = meRes.data?.role === "admin";
+  const isAdmin = role === "admin";
   const students = studentsRes.data;
   const ms = msRes.data;
 

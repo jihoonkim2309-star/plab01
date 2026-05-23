@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import FilterBar from "../FilterBar";
 import FilterSelect from "../FilterSelect";
 import SearchInput from "../SearchInput";
@@ -10,11 +10,12 @@ export default async function AuditLogsPage({
   searchParams: Promise<{ q?: string; target?: string }>;
 }) {
   const { q, target } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   let listQuery = supabase
     .from("audit_logs")
     .select("id, action, target_table, target_id, created_at, users(name)")
+    .eq("center_id", cid)
     .order("created_at", { ascending: false })
     .limit(300);
   if (target) listQuery = listQuery.eq("target_table", target);
@@ -25,6 +26,7 @@ export default async function AuditLogsPage({
     supabase
       .from("audit_logs")
       .select("target_table, created_at")
+      .eq("center_id", cid)
       .order("created_at", { ascending: false })
       .limit(300),
   ]);

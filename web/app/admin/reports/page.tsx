@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import MonthNav from "../MonthNav";
 import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
@@ -38,21 +38,21 @@ export default async function ReportsPage({
 }) {
   const { ym, rid, q, status, publicTo } = await searchParams;
   const target = ym && /^\d{4}-\d{2}$/.test(ym) ? ym : thisMonth();
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
-  // 목록 쿼리 (월간 통합 리포트만)
-  // 목록 + 승인 측정 카운트 + 선택된 리포트 디테일 → 한 번에 병렬
   const [listRes, approvedRes, detailRes] = await Promise.all([
     supabase
       .from("reports")
       .select(
         "id, student_id, report_month, report_type, status, public_to_parent, published_at, students(name)",
       )
+      .eq("center_id", cid)
       .eq("report_month", target)
       .order("created_at", { ascending: false }),
     supabase
       .from("measurements")
       .select("id", { count: "exact", head: false })
+      .eq("center_id", cid)
       .eq("measurement_month", target)
       .eq("status", "승인완료"),
     rid
@@ -61,6 +61,7 @@ export default async function ReportsPage({
           .select(
             "id, snapshot, coach_comment, admin_comment, public_to_parent, published_at",
           )
+          .eq("center_id", cid)
           .eq("id", rid)
           .single()
       : Promise.resolve({ data: null }),

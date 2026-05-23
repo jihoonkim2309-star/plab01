@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import CheckRowToggle from "../CheckRowToggle";
 import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
@@ -28,13 +28,14 @@ export default async function RenewalsPage({
 }) {
   const { ym, q, status } = await searchParams;
   const target = nextMonth(ym);
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   const { data: enr } = await supabase
     .from("enrollments")
     .select(
       "id, status, student_id, product_id, students(name), products(id, name, price)",
     )
+    .eq("center_id", cid)
     .eq("status", "수강중");
 
   type EnrRow = {
@@ -50,6 +51,7 @@ export default async function RenewalsPage({
   const { data: rc } = await supabase
     .from("renewal_confirmations")
     .select("enrollment_id, status")
+    .eq("center_id", cid)
     .eq("target_month", target);
   const statusByEnr = new Map(
     (rc ?? []).map((r) => [r.enrollment_id, r.status]),

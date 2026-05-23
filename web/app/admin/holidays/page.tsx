@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import { createHoliday, deleteHoliday } from "./actions";
 import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
@@ -22,21 +22,22 @@ export default async function HolidaysPage({
   searchParams: Promise<{ q?: string; class_id?: string; past?: string }>;
 }) {
   const { q, class_id, past } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
 
   const today = new Date().toISOString().slice(0, 10);
 
   let listQuery = supabase
     .from("holidays")
     .select("id, holiday_date, reason, notify, class_id, classes(name)")
+    .eq("center_id", cid)
     .order("holiday_date", { ascending: false });
   if (class_id) listQuery = listQuery.eq("class_id", class_id);
   if (past !== "show") listQuery = listQuery.gte("holiday_date", today);
 
   const [listRes, classesRes, allRes] = await Promise.all([
     listQuery,
-    supabase.from("classes").select("id, name").order("name"),
-    supabase.from("holidays").select("holiday_date"),
+    supabase.from("classes").select("id, name").eq("center_id", cid).order("name"),
+    supabase.from("holidays").select("holiday_date").eq("center_id", cid),
   ]);
 
   let raw = (listRes.data ?? []) as unknown as H[];
