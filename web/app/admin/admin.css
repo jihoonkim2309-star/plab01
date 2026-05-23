@@ -125,6 +125,112 @@
   line-height: 1;
 }
 
+/* 사이드바 워크스페이스 셀렉터 (로고 아래) — 활성 지점 표시 + 슈퍼어드민 전환 */
+.sidebar-workspace {
+  position: relative;
+  margin: 10px 12px 4px;
+  flex-shrink: 0;
+}
+.sidebar-workspace-trigger,
+.sidebar-workspace-static {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: #fbfdfc;
+  border-radius: 10px;
+  color: var(--text);
+  text-align: left;
+}
+.sidebar-workspace-trigger {
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.sidebar-workspace-trigger:hover {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+.sw-icon {
+  font-size: 14px;
+  color: var(--brand);
+  flex-shrink: 0;
+}
+.sw-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.sw-label {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.sw-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sw-caret {
+  color: var(--muted);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.sidebar-workspace-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(20, 40, 30, 0.12);
+  padding: 6px;
+  z-index: 50;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.sw-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.sw-item:hover {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+.sw-item-active {
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 700;
+}
+.sw-check { color: var(--brand); font-weight: 800; }
+.sw-empty {
+  padding: 12px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .nav {
   display: flex;
   flex-direction: column;

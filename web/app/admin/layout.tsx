@@ -7,7 +7,6 @@ import Sidebar from "./Sidebar";
 import GlobalLoading from "./GlobalLoading";
 import SuppressInvalidTooltip from "./SuppressInvalidTooltip";
 import ProfileMenu from "./ProfileMenu";
-import CenterSwitcher from "./CenterSwitcher";
 import { ACTIVE_CENTER_COOKIE } from "@/lib/center";
 import PendingApproval from "./PendingApproval";
 
@@ -61,15 +60,19 @@ export default async function AdminLayout({
     profile?.center_id ??
     null;
 
-  // 슈퍼어드민 전환 드롭다운용 — 모든 지점 (RLS 통과)
-  const centersForSwitcher = isSuper
-    ? ((
-        await supabase
-          .from("centers")
-          .select("id, name")
-          .order("name", { ascending: true })
-      ).data ?? [])
-    : [];
+  // 사이드바 워크스페이스 셀렉터 + 활성 지점명
+  const [activeCenterRes, allCentersRes] = await Promise.all([
+    activeCenterId
+      ? supabase.from("centers").select("name").eq("id", activeCenterId).single()
+      : Promise.resolve({ data: null }),
+    isSuper
+      ? supabase.from("centers").select("id, name").order("name", { ascending: true })
+      : Promise.resolve({ data: [] }),
+  ]);
+  const activeCenterName =
+    (activeCenterRes.data as { name: string } | null)?.name ?? "지점 미선택";
+  const centersForSwitcher =
+    (allCentersRes.data as { id: string; name: string }[] | null) ?? [];
 
   const initial = (profile?.name ?? userEmail ?? "A").charAt(0).toUpperCase();
   const displayName = profile?.name ?? userEmail ?? "";
@@ -88,18 +91,18 @@ export default async function AdminLayout({
         <GlobalLoading />
       </Suspense>
       <SuppressInvalidTooltip />
-      <Sidebar role={role} />
+      <Sidebar
+        role={role}
+        isSuper={isSuper}
+        centers={centersForSwitcher}
+        activeCenterId={activeCenterId}
+        activeCenterName={activeCenterName}
+      />
       <div className="drawer-backdrop" />
 
       <main className="main">
         <header className="topbar">
           <div className="topbar-actions">
-            {isSuper && (
-              <CenterSwitcher
-                centers={centersForSwitcher}
-                activeCenterId={activeCenterId}
-              />
-            )}
             <button type="button" className="icon-button" aria-label="알림">
               🔔
               <span className="dot" aria-hidden />
@@ -125,8 +128,8 @@ export default async function AdminLayout({
                 padding: "12px 16px",
               }}
             >
-              활성 지점이 설정되지 않았습니다. 우측 상단 <b>지점 선택</b>에서
-              지점을 골라 주세요.
+              활성 지점이 설정되지 않았습니다. 좌측 사이드바 상단의{" "}
+              <b>지점 선택</b>에서 지점을 골라 주세요.
             </div>
           )}
           {children}
