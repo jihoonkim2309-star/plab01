@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { setActiveCenter } from "./actions-center";
+import { setActiveCenter, unsetActiveCenter } from "./actions-center";
 
 export default function SidebarWorkspace({
   isSuper,
@@ -62,6 +62,22 @@ export default function SidebarWorkspace({
       </button>
       {open && (
         <div className="sidebar-workspace-dropdown" role="menu">
+          <form action={unsetActiveCenter}>
+            <button
+              type="submit"
+              className={`sw-item${!activeCenterId ? " sw-item-active" : ""}`}
+              role="menuitem"
+              title="대시보드의 지점 선택 화면으로 돌아갑니다"
+            >
+              <span className="muted" style={{ fontSize: 12 }}>
+                지점 미선택 (전체 대시보드)
+              </span>
+              {!activeCenterId && (
+                <span className="sw-check" aria-hidden>✓</span>
+              )}
+            </button>
+          </form>
+          <div className="profile-dropdown-divider" />
           {centers.map((c) => (
             <form action={setActiveCenter} key={c.id}>
               <input type="hidden" name="center_id" value={c.id} />

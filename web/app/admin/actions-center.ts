@@ -43,3 +43,24 @@ export async function setActiveCenter(formData: FormData) {
   revalidatePath("/admin", "layout");
   redirect("/admin");
 }
+
+// 슈퍼어드민 — 활성 지점 해제 (대시보드 빈 상태로 돌아감)
+export async function unsetActiveCenter() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "super_admin") {
+    throw new Error("슈퍼 어드민만 지점 미선택 모드로 돌아갈 수 있습니다.");
+  }
+  const jar = await cookies();
+  jar.delete(ACTIVE_CENTER_COOKIE);
+  revalidatePath("/admin", "layout");
+  redirect("/admin");
+}
