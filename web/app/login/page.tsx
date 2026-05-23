@@ -178,17 +178,17 @@ export default function LoginPage() {
               }}
             >
               <div className="bg-white rounded-2xl px-4 py-4 shadow-xl ring-1 ring-zinc-100 w-[160px]">
-                <div className="text-zinc-500 text-xs font-semibold">이번 달 수납</div>
-                <div className="text-zinc-400 text-[10px] mt-0.5">Monthly Revenue</div>
+                <div className="text-zinc-500 text-xs font-semibold">이달 신규 가입</div>
+                <div className="text-zinc-400 text-[10px] mt-0.5">New Enrollments</div>
                 <div className="mt-3 flex items-end justify-between">
-                  <div className="text-xl font-extrabold text-zinc-900 tracking-tight">₩ 4.2M</div>
-                  <div className="text-xs font-bold text-[#28c76f]">+8%</div>
+                  <div className="text-2xl font-extrabold text-zinc-900 tracking-tight">18명</div>
+                  <div className="text-xs font-bold text-[#28c76f]">+24%</div>
                 </div>
                 <div className="mt-2 flex items-end gap-1 h-6">
-                  <div className="flex-1 rounded-sm bg-[#28c76f]/30" style={{ height: "40%" }} />
-                  <div className="flex-1 rounded-sm bg-[#28c76f]/50" style={{ height: "60%" }} />
-                  <div className="flex-1 rounded-sm bg-[#28c76f]/70" style={{ height: "50%" }} />
-                  <div className="flex-1 rounded-sm bg-[#28c76f]" style={{ height: "85%" }} />
+                  <div className="flex-1 rounded-sm bg-[#28c76f]/30" style={{ height: "30%" }} />
+                  <div className="flex-1 rounded-sm bg-[#28c76f]/50" style={{ height: "55%" }} />
+                  <div className="flex-1 rounded-sm bg-[#28c76f]/70" style={{ height: "45%" }} />
+                  <div className="flex-1 rounded-sm bg-[#28c76f]" style={{ height: "80%" }} />
                   <div className="flex-1 rounded-sm bg-[#1e794e]" style={{ height: "100%" }} />
                 </div>
               </div>

@@ -87,8 +87,10 @@
   overflow: hidden;
 }
 
-/* brand 높이 = topbar 높이 동일 (가로선 일치). 구분선 제거 — Vuexy 동일. */
+/* brand 높이 = topbar 높이 동일 (가로선 일치). 구분선 제거 — Vuexy 동일.
+   :after 로 아래쪽 부드러운 페이드 그라데이션 (스크롤 시 메뉴 가려지는 느낌). */
 .brand {
+  position: relative;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -101,6 +103,22 @@
   transition: background .15s ease;
   text-decoration: none;
   color: inherit;
+}
+.brand::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 18px;
+  background: linear-gradient(
+    to bottom,
+    rgba(20, 40, 30, 0.07) 0%,
+    rgba(20, 40, 30, 0.02) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 2;
 }
 
 .brand:hover { background: #f7faf8; }
@@ -2137,4 +2155,138 @@
   .receipt-paper::before, .receipt-paper::after { display: none; }
 
   .no-print { display: none !important; }
+}
+
+/* =====================================================================
+   SelectCenterDashboard — 슈퍼어드민 활성 지점 미설정 빈 상태 화면
+   ===================================================================== */
+.select-center-hero {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(40, 199, 111, 0.12), transparent 50%),
+    linear-gradient(135deg, #ffffff 0%, #f6faf8 100%);
+  padding: 22px 24px;
+  margin-bottom: 14px;
+}
+.select-center-hero-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.sch-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.sch-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 4px;
+}
+.sch-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.select-center-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 14px;
+}
+.select-center-card-form { margin: 0; }
+.select-center-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+.select-center-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--brand);
+  box-shadow: 0 12px 28px rgba(20, 40, 30, 0.08);
+}
+.scc-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.scc-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.scc-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.scc-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+.scc-addr {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scc-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.scc-stats > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 11px;
+}
+.scc-stats > div span {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 700;
+}
+.scc-stats > div strong {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  margin-top: 2px;
+}
+.scc-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand);
 }

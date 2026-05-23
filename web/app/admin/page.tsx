@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireCenter } from "@/lib/center";
+import { ACTIVE_CENTER_COOKIE } from "@/lib/center";
 import RadialRevenueChart from "./dashboard/RadialRevenueChart";
 import MembersDonutChart from "./dashboard/MembersDonutChart";
 import RevenueAreaChart from "./dashboard/RevenueAreaChart";
+import SelectCenterDashboard from "./SelectCenterDashboard";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const fmtKRW = (n: number) => `${Math.round(n).toLocaleString()}원`;
@@ -24,9 +27,65 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default async function AdminDashboard() {
-  // 활성 센터 기준으로 모든 쿼리 필터.
-  // super_admin 은 RLS 통과라 명시적 .eq("center_id", cid) 필요.
-  const { supabase, centerId: cid } = await requireCenter();
+  // 활성 센터 판정. super_admin 이 cookie 미설정이면 지점 선택 빈상태 화면.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { data: profile } = await supabase
+    .from("users")
+    .select("name, role, center_id")
+    .eq("id", user.id)
+    .single();
+  const isSuper = profile?.role === "super_admin";
+  const jar = await cookies();
+  const cid =
+    (isSuper ? jar.get(ACTIVE_CENTER_COOKIE)?.value : profile?.center_id) ??
+    profile?.center_id ??
+    null;
+
+  // 슈퍼어드민 + 활성 지점 미설정 → 지점 선택 빈상태 화면
+  if (isSuper && !cid) {
+    const [centersRes, studentsRes, usersRes] = await Promise.all([
+      supabase
+        .from("centers")
+        .select("id, name, address, contact_phone")
+        .order("name", { ascending: true }),
+      supabase.from("students").select("center_id, status"),
+      supabase.from("users").select("center_id, role").in("role", ["admin", "coach"]),
+    ]);
+    const centers = centersRes.data ?? [];
+    const counts: Record<
+      string,
+      { students: number; admins: number; coaches: number }
+    > = {};
+    for (const c of centers) counts[c.id] = { students: 0, admins: 0, coaches: 0 };
+    for (const s of studentsRes.data ?? []) {
+      if (!s.center_id || s.status !== "활성") continue;
+      const e = counts[s.center_id];
+      if (e) e.students += 1;
+    }
+    for (const u of usersRes.data ?? []) {
+      if (!u.center_id) continue;
+      const e = counts[u.center_id];
+      if (!e) continue;
+      if (u.role === "admin") e.admins += 1;
+      else if (u.role === "coach") e.coaches += 1;
+    }
+    return (
+      <SelectCenterDashboard
+        centers={centers}
+        counts={counts}
+        userName={profile?.name ?? user.email ?? "관리자"}
+      />
+    );
+  }
+
+  if (!cid) {
+    throw new Error("센터가 설정되지 않았습니다. 슈퍼 어드민의 승인을 기다려 주세요.");
+  }
+
   const now = new Date();
   const Y = now.getFullYear();
   const M = now.getMonth() + 1;
