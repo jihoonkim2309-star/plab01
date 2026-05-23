@@ -75,7 +75,8 @@
 .sidebar {
   background: #ffffff;
   color: #5d6b66;
-  padding: 0;
+  /* topbar 카드의 margin-top(12px) 과 동일하게 — brand 와 탑바 vertical center 일치 */
+  padding: 12px 0 0;
   position: sticky;
   top: 0;
   height: 100vh;
