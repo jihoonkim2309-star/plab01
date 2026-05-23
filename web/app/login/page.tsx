@@ -219,7 +219,7 @@ export default function LoginPage() {
                 <div>
                   <label className="block text-xs font-semibold text-zinc-700 mb-1.5">이름</label>
                   <input
-                    className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="홍길동"
@@ -231,7 +231,7 @@ export default function LoginPage() {
                   <input
                     type="tel"
                     inputMode="tel"
-                    className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="010-0000-0000"
@@ -241,7 +241,7 @@ export default function LoginPage() {
                 <div>
                   <label className="block text-xs font-semibold text-zinc-700 mb-1.5">신청 지점</label>
                   <select
-                    className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                    className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm text-zinc-900 bg-white focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
                     value={applyingCenter}
                     onChange={(e) => setApplyingCenter(e.target.value)}
                     required
@@ -263,7 +263,7 @@ export default function LoginPage() {
               <label className="block text-xs font-semibold text-zinc-700 mb-1.5">이메일</label>
               <input
                 type="email"
-                className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@example.com"
@@ -274,7 +274,7 @@ export default function LoginPage() {
               <label className="block text-xs font-semibold text-zinc-700 mb-1.5">비밀번호</label>
               <input
                 type="password"
-                className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••"
