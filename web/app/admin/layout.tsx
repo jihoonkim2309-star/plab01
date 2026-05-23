@@ -8,6 +8,7 @@ import GlobalLoading from "./GlobalLoading";
 import SuppressInvalidTooltip from "./SuppressInvalidTooltip";
 import ProfileMenu from "./ProfileMenu";
 import SidebarWorkspace from "./SidebarWorkspace";
+import DrawerToggle from "./DrawerToggle";
 import { ACTIVE_CENTER_COOKIE } from "@/lib/center";
 import PendingApproval from "./PendingApproval";
 
@@ -97,6 +98,7 @@ export default async function AdminLayout({
 
       <main className="main">
         <header className="topbar">
+          <DrawerToggle />
           <SidebarWorkspace
             isSuper={isSuper}
             centers={centersForSwitcher}
