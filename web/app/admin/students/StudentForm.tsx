@@ -1,6 +1,7 @@
 import PhotoUpload from "./PhotoUpload";
 import PhoneInput from "../PhoneInput";
 import AddressField from "../AddressField";
+import BackLink from "../BackLink";
 import { PHONE_PLACEHOLDER } from "@/lib/phone";
 
 type Student = Record<string, string | null> | null;
@@ -127,6 +128,7 @@ export default function StudentForm({
   action,
   submitLabel,
   cancelHref,
+  backLabel = "회원 목록",
 }: {
   title: string;
   student?: Student;
@@ -135,6 +137,7 @@ export default function StudentForm({
   action: (formData: FormData) => void;
   submitLabel: string;
   cancelHref: string;
+  backLabel?: string;
 }) {
   const s = student ?? {};
 
@@ -143,6 +146,7 @@ export default function StudentForm({
       <div className="page-head">
         <div>
           <h1>{title}</h1>
+          <BackLink href={cancelHref} label={backLabel} />
         </div>
         <div className="toolbar">
           <button type="button" className="btn" disabled title="준비 중인 기능입니다">

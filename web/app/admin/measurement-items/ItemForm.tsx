@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ConfirmButton from "../ConfirmButton";
+import BackLink from "../BackLink";
 import { IconLibrary, ICON_ID } from "./ItemIcon";
 import IconControl from "./IconControl";
 
@@ -33,6 +34,7 @@ export default function ItemForm({
   title,
   submitLabel,
   cancelHref,
+  backLabel = "항목 목록",
   deleteAction,
   deleteMessage,
 }: {
@@ -41,6 +43,7 @@ export default function ItemForm({
   title: string;
   submitLabel: string;
   cancelHref: string;
+  backLabel?: string;
   deleteAction?: (formData: FormData) => void;
   deleteMessage?: string;
 }) {
@@ -53,6 +56,7 @@ export default function ItemForm({
       <div className="page-head">
         <div>
           <h1>{title}</h1>
+          <BackLink href={cancelHref} label={backLabel} />
         </div>
         <div className="toolbar">
           {item?.id && deleteAction && (

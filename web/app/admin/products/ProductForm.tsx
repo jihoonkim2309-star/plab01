@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ConfirmButton from "../ConfirmButton";
+import BackLink from "../BackLink";
 
 type P = Record<string, string | number | boolean | null> | null;
 
@@ -9,6 +10,7 @@ export default function ProductForm({
   title,
   submitLabel,
   cancelHref,
+  backLabel = "상품 목록",
   deleteAction,
   deleteMessage,
 }: {
@@ -17,6 +19,7 @@ export default function ProductForm({
   title: string;
   submitLabel: string;
   cancelHref: string;
+  backLabel?: string;
   deleteAction?: (formData: FormData) => void;
   deleteMessage?: string;
 }) {
@@ -30,6 +33,7 @@ export default function ProductForm({
       <div className="page-head">
         <div>
           <h1>{title}</h1>
+          <BackLink href={cancelHref} label={backLabel} />
         </div>
         <div className="toolbar">
           {isEdit && deleteAction && (

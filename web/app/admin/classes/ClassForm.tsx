@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ConfirmButton from "../ConfirmButton";
+import BackLink from "../BackLink";
 
 type ClassRow = Record<string, string | number | null> | null;
 
@@ -12,6 +13,7 @@ export default function ClassForm({
   title,
   submitLabel,
   cancelHref,
+  backLabel = "클래스 목록",
   deleteAction,
   deleteMessage,
 }: {
@@ -21,6 +23,7 @@ export default function ClassForm({
   title: string;
   submitLabel: string;
   cancelHref: string;
+  backLabel?: string;
   deleteAction?: (formData: FormData) => void;
   deleteMessage?: string;
 }) {
@@ -34,6 +37,7 @@ export default function ClassForm({
       <div className="page-head">
         <div>
           <h1>{title}</h1>
+          <BackLink href={cancelHref} label={backLabel} />
         </div>
         <div className="toolbar">
           {isEdit && deleteAction && (

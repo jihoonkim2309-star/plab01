@@ -23,12 +23,12 @@ export async function createCenter(formData: FormData) {
     billing_day: parseDay(formData.get("billing_day"), 10),
     report_day: parseDay(formData.get("report_day"), 1),
   };
-  const { error } = await supabase.from("centers").insert(payload);
+  const { data: inserted, error } = await supabase.from("centers").insert(payload).select("id").single();
   if (error) {
     redirect("/admin/centers?error=" + encodeURIComponent(error.message));
   }
   revalidatePath("/admin/centers");
-  redirect("/admin/centers?saved=1");
+  redirect(`/admin/centers?center=${inserted.id}&saved=1`);
 }
 
 export async function updateCenter(formData: FormData) {
@@ -53,7 +53,7 @@ export async function updateCenter(formData: FormData) {
     redirect("/admin/centers?error=" + encodeURIComponent(error.message));
   }
   revalidatePath("/admin/centers");
-  redirect("/admin/centers?saved=1");
+  redirect(`/admin/centers?center=${id}&saved=1`);
 }
 
 export async function deleteCenter(formData: FormData) {

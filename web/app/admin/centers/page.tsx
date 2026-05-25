@@ -1,20 +1,15 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import ConfirmButton from "../ConfirmButton";
-import PhoneInput from "../PhoneInput";
-import AddressField from "../AddressField";
-import { createCenter, deleteCenter, updateCenter } from "./actions";
 
 export default async function CentersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string; edit?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string; center?: string }>;
 }) {
-  const { saved, error, edit } = await searchParams;
+  const { saved, error, center: selectedId } = await searchParams;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: me } = await supabase
@@ -32,21 +27,23 @@ export default async function CentersPage({
     );
   }
 
-  const { data: centers } = await supabase
-    .from("centers")
-    .select(
-      "id, name, contact_phone, address, billing_day, report_day, created_at",
-    )
-    .order("created_at", { ascending: true });
-
-  // 각 지점별 admin/coach/학생 카운트
-  const [usersRes, studentsRes] = await Promise.all([
+  const [centersRes, usersRes, studentsRes, selectedRes] = await Promise.all([
     supabase
-      .from("users")
-      .select("center_id, role")
-      .in("role", ["admin", "coach"]),
+      .from("centers")
+      .select("id, name, contact_phone, address, billing_day, report_day, created_at")
+      .order("created_at", { ascending: true }),
+    supabase.from("users").select("center_id, role").in("role", ["admin", "coach"]),
     supabase.from("students").select("center_id, status"),
+    selectedId
+      ? supabase
+          .from("centers")
+          .select("id, name, contact_phone, address, billing_day, report_day, created_at")
+          .eq("id", selectedId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
+
+  const list = centersRes.data ?? [];
   const adminCount = new Map<string, number>();
   const coachCount = new Map<string, number>();
   for (const u of usersRes.data ?? []) {
@@ -57,42 +54,32 @@ export default async function CentersPage({
   const studentActiveCount = new Map<string, number>();
   for (const s of studentsRes.data ?? []) {
     if (!s.center_id || s.status !== "활성") continue;
-    studentActiveCount.set(
-      s.center_id,
-      (studentActiveCount.get(s.center_id) ?? 0) + 1,
-    );
+    studentActiveCount.set(s.center_id, (studentActiveCount.get(s.center_id) ?? 0) + 1);
   }
 
-  const list = centers ?? [];
-  const editing = edit ? list.find((c) => c.id === edit) ?? null : null;
+  const selected = selectedRes.data;
 
   return (
     <>
       <div className="page-head">
         <div>
           <h1>지점 관리</h1>
-          <p className="subtext">
-            프랜차이즈 지점 개설·수정·삭제 (슈퍼 어드민 전용)
-          </p>
+          <p className="subtext">프랜차이즈 지점 개설·수정·삭제 (슈퍼 어드민 전용)</p>
+        </div>
+        <div className="toolbar">
+          <Link className="btn primary" href="/admin/centers/new">지점 개설</Link>
         </div>
       </div>
 
       {saved && (
-        <div className="panel" style={banner("green")}>
-          저장되었습니다.
-        </div>
+        <div className="panel" style={banner("green")}>저장되었습니다.</div>
       )}
       {error && (
-        <div className="panel" style={banner("red")}>
-          {error}
-        </div>
+        <div className="panel" style={banner("red")}>{error}</div>
       )}
 
       <div className="member-summary">
-        <div className="summary-card">
-          <span>전체 지점</span>
-          <strong>{list.length}</strong>
-        </div>
+        <div className="summary-card"><span>전체 지점</span><strong>{list.length}</strong></div>
         <div className="summary-card">
           <span>전체 관리자</span>
           <strong>{[...adminCount.values()].reduce((a, b) => a + b, 0)}</strong>
@@ -103,165 +90,110 @@ export default async function CentersPage({
         </div>
         <div className="summary-card">
           <span>활성 학생</span>
-          <strong>
-            {[...studentActiveCount.values()].reduce((a, b) => a + b, 0)}
-          </strong>
+          <strong>{[...studentActiveCount.values()].reduce((a, b) => a + b, 0)}</strong>
         </div>
       </div>
 
-      {/* 새 지점 개설 / 수정 폼 */}
-      <form
-        action={editing ? updateCenter : createCenter}
-        className="panel elevated"
-      >
-        <div className="panel-head">
-          <p className="panel-title">
-            {editing ? `지점 수정 — ${editing.name}` : "지점 개설"}
-          </p>
-        </div>
-        <div className="panel-body">
-          {editing && <input type="hidden" name="id" value={editing.id} />}
-          <div className="form-grid">
-            <div className="field">
-              <label>지점명 *</label>
-              <input
-                name="name"
-                defaultValue={editing?.name ?? ""}
-                placeholder="플랜비 본점"
-                required
-              />
-            </div>
-            <div className="field">
-              <label>대표 연락처</label>
-              <PhoneInput
-                name="contact_phone"
-                defaultValue={editing?.contact_phone ?? ""}
-              />
-            </div>
-            <div className="field span-2">
-              <label>주소</label>
-              <AddressField
-                name="address"
-                defaultValue={editing?.address ?? ""}
-              />
-            </div>
-            <div className="field">
-              <label>결제일 (매월 N일, 1~28)</label>
-              <input
-                name="billing_day"
-                type="number"
-                min={1}
-                max={28}
-                defaultValue={editing?.billing_day ?? 10}
-              />
-            </div>
-            <div className="field">
-              <label>리포트 발행일 (매월 N일, 1~28)</label>
-              <input
-                name="report_day"
-                type="number"
-                min={1}
-                max={28}
-                defaultValue={editing?.report_day ?? 1}
-              />
-            </div>
+      <div className="grid member-layout">
+        <div className="panel">
+          <div className="panel-head">
+            <p className="panel-title">
+              지점 목록{" "}
+              <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                {list.length}건
+              </span>
+            </p>
           </div>
-          <div className="detail-actions">
-            <button className="btn primary" type="submit">
-              {editing ? "변경 저장" : "지점 개설"}
-            </button>
-            {editing && (
-              <a className="btn" href="/admin/centers">
-                취소
-              </a>
-            )}
-          </div>
-        </div>
-      </form>
-
-      {/* 지점 목록 */}
-      <div className="panel elevated" style={{ marginTop: 14 }}>
-        <div className="panel-head">
-          <p className="panel-title">
-            지점 목록{" "}
-            <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-              {list.length}개
-            </span>
-          </p>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>지점명</th>
-              <th>연락처</th>
-              <th>결제일/리포트일</th>
-              <th>관리자/코치/학생</th>
-              <th>개설일</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((c) => (
-              <tr key={c.id}>
-                <td>
-                  <strong>{c.name}</strong>
-                  {c.address && (
-                    <div className="muted" style={{ fontSize: 12 }}>
-                      {c.address}
-                    </div>
-                  )}
-                </td>
-                <td className="muted">{c.contact_phone ?? "-"}</td>
-                <td className="muted">
-                  매월 {c.billing_day}일 / {c.report_day}일
-                </td>
-                <td className="muted">
-                  {adminCount.get(c.id) ?? 0} / {coachCount.get(c.id) ?? 0} /{" "}
-                  {studentActiveCount.get(c.id) ?? 0}
-                </td>
-                <td className="muted">{c.created_at?.slice(0, 10) ?? "-"}</td>
-                <td>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 6,
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <a
-                      className="btn"
-                      href={`/admin/centers?edit=${c.id}`}
-                      style={{ minHeight: 30, padding: "4px 10px" }}
-                    >
-                      수정
-                    </a>
-                    <form action={deleteCenter}>
-                      <input type="hidden" name="id" value={c.id} />
-                      <ConfirmButton
-                        message={`'${c.name}' 지점을 삭제할까요? 소속 학생·클래스·결제·계정도 함께 삭제됩니다. 되돌릴 수 없습니다.`}
-                        className="btn danger"
-                        type="submit"
-                        style={{ minHeight: 30, padding: "4px 10px" }}
-                      >
-                        삭제
-                      </ConfirmButton>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {list.length === 0 && (
+          <table className="member-table">
+            <thead>
               <tr>
-                <td colSpan={6}>
-                  <div className="empty-state">
-                    <strong>등록된 지점이 없습니다</strong>
-                    <p>위 폼으로 첫 지점을 개설하세요.</p>
-                  </div>
-                </td>
+                <th>지점명</th>
+                <th>관리자/코치</th>
+                <th>활성 학생</th>
+                <th>결제일</th>
               </tr>
+            </thead>
+            <tbody>
+              {list.map((c) => (
+                <tr key={c.id} className={`row-link-host ${c.id === selectedId ? "selected" : ""}`}>
+                  <td>
+                    <Link
+                      href={`/admin/centers?center=${c.id}`}
+                      className="row-link-stretch"
+                      style={{ fontWeight: 900, color: "var(--text)" }}
+                    >
+                      {c.name}
+                    </Link>
+                  </td>
+                  <td className="muted">
+                    {adminCount.get(c.id) ?? 0} / {coachCount.get(c.id) ?? 0}
+                  </td>
+                  <td className="muted">{studentActiveCount.get(c.id) ?? 0}</td>
+                  <td className="muted">매월 {c.billing_day}일</td>
+                </tr>
+              ))}
+              {list.length === 0 && (
+                <tr>
+                  <td colSpan={4}>
+                    <div className="empty-state">
+                      <strong>등록된 지점이 없습니다</strong>
+                      <p>우측 상단 “지점 개설”로 첫 지점을 추가하세요.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="panel">
+          <div className="panel-head">
+            <p className="panel-title">지점 상세</p>
+            {selected && (
+              <div className="toolbar">
+                <Link className="btn primary" href={`/admin/centers/${selected.id}/edit`}>수정</Link>
+              </div>
             )}
-          </tbody>
-        </table>
+          </div>
+          <div className="panel-body">
+            {!selected ? (
+              <div className="empty-state">
+                <strong>선택된 지점이 없습니다</strong>
+                <p>왼쪽 목록에서 지점을 선택해 주세요.</p>
+              </div>
+            ) : (
+              <>
+                <div className="profile-hero" style={{ alignItems: "center" }}>
+                  <div>
+                    <strong style={{ fontSize: 20 }}>{selected.name}</strong>
+                    <div className="muted" style={{ marginTop: 4 }}>
+                      개설일 {selected.created_at?.slice(0, 10) ?? "-"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="detail-block">
+                  <p className="detail-title">지점 정보</p>
+                  <div className="info-list">
+                    <div className="info-row"><span>대표 연락처</span><strong>{selected.contact_phone ?? "-"}</strong></div>
+                    <div className="info-row"><span>주소</span><strong>{selected.address ?? "-"}</strong></div>
+                    <div className="info-row"><span>결제일</span><strong>매월 {selected.billing_day}일</strong></div>
+                    <div className="info-row"><span>리포트 발행일</span><strong>매월 {selected.report_day}일</strong></div>
+                  </div>
+                </div>
+
+                <div className="detail-block">
+                  <p className="detail-title">소속 현황</p>
+                  <div className="info-list">
+                    <div className="info-row"><span>관리자</span><strong>{adminCount.get(selected.id) ?? 0}명</strong></div>
+                    <div className="info-row"><span>코치</span><strong>{coachCount.get(selected.id) ?? 0}명</strong></div>
+                    <div className="info-row"><span>활성 학생</span><strong>{studentActiveCount.get(selected.id) ?? 0}명</strong></div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </>
   );
