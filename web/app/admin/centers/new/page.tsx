@@ -5,6 +5,7 @@ import PhoneInput from "../../PhoneInput";
 import AddressField from "../../AddressField";
 import BusinessNoInput from "../../BusinessNoInput";
 import BackLink from "../../BackLink";
+import PolicyFields from "../PolicyFields";
 import { createCenter } from "../actions";
 
 export default async function NewCenterPage() {
@@ -70,35 +71,7 @@ export default async function NewCenterPage() {
                 본사 사용료 정책
               </p>
             </div>
-            <div className="field">
-              <label>요금 체계 *</label>
-              <select name="subscription_plan" defaultValue="정액" required>
-                <option value="정액">정액 (월 고정)</option>
-                <option value="학생수">학생수 (학생당 N원)</option>
-                <option value="매출비례">매출비례 (전월 매출의 N%)</option>
-              </select>
-            </div>
-            <div className="field">
-              <label>본사 청구일 (매월 N일) *</label>
-              <input name="hq_billing_day" type="number" min={1} max={28} defaultValue={1} required />
-            </div>
-            <div className="field">
-              <label>정액 기본료 (원)</label>
-              <input name="subscription_base_fee" type="number" min={0} step={10000} defaultValue={0} />
-            </div>
-            <div className="field">
-              <label>학생당 추가료 (원)</label>
-              <input name="subscription_per_student" type="number" min={0} step={100} defaultValue={0} />
-            </div>
-            <div className="field">
-              <label>매출비례 % (전월 매출 기준)</label>
-              <input name="subscription_revenue_pct" type="number" min={0} max={100} step={0.1} defaultValue={0} />
-            </div>
-            <div className="field span-2">
-              <p className="muted" style={{ fontSize: 11 }}>
-                💡 요금 체계에 해당하는 항목만 채우면 됩니다. 예) 정액 → 기본료만, 학생수 → 학생당 추가료만, 매출비례 → % 만.
-              </p>
-            </div>
+            <PolicyFields defaults={{}} />
           </div>
           <div className="detail-actions">
             <Link className="btn" href="/admin/centers">취소</Link>
