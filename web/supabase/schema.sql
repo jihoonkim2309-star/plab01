@@ -306,9 +306,10 @@ alter table public.centers add column if not exists pg_api_secret  text;
 alter table public.centers add column if not exists business_no    text;
 
 -- 본사가 지점에 청구하는 사용료 정책
-alter table public.centers add column if not exists subscription_plan        text default '정액';      -- 정액|학생수|혼합
-alter table public.centers add column if not exists subscription_base_fee    integer default 0;       -- 기본료 (정액 또는 혼합 시)
-alter table public.centers add column if not exists subscription_per_student integer default 0;       -- 학생 1명당 (학생수 또는 혼합 시)
+alter table public.centers add column if not exists subscription_plan        text default '정액';      -- 정액|학생수|매출비례
+alter table public.centers add column if not exists subscription_base_fee    integer default 0;       -- 기본료 (정액 시 사용)
+alter table public.centers add column if not exists subscription_per_student integer default 0;       -- 학생 1명당 (학생수 시 사용)
+alter table public.centers add column if not exists subscription_revenue_pct numeric(5,2) default 0;  -- 매출비례 % (매출비례 시 사용)
 alter table public.centers add column if not exists hq_billing_day           smallint default 1
   check (hq_billing_day between 1 and 28);                                                            -- 본사 청구 발행일
 
@@ -321,6 +322,8 @@ create table if not exists public.hq_invoices (
   base_fee        integer not null default 0,
   per_student_fee integer not null default 0,
   student_count   integer not null default 0,
+  revenue_base    integer not null default 0,                         -- 매출비례 시 전월 매출 스냅샷
+  revenue_pct     numeric(5,2) not null default 0,                    -- 매출비례 시 적용 % 스냅샷
   total           integer not null default 0,
   status          text not null default '청구',                       -- 청구|결제완료|미납|면제
   due_date        date,
@@ -332,6 +335,9 @@ create table if not exists public.hq_invoices (
   updated_at      timestamptz not null default now(),
   unique (center_id, period)
 );
+-- 기존 hq_invoices 가 매출비례 컬럼 없이 만들어진 경우 보강
+alter table public.hq_invoices add column if not exists revenue_base integer not null default 0;
+alter table public.hq_invoices add column if not exists revenue_pct  numeric(5,2) not null default 0;
 create index if not exists hq_invoices_center_idx on public.hq_invoices (center_id, period desc);
 create index if not exists hq_invoices_status_idx on public.hq_invoices (status);
 
@@ -358,12 +364,15 @@ returns integer language plpgsql security definer set search_path = public as $$
 declare
   v_count integer := 0;
   v_period text := to_char(current_date, 'YYYY-MM');
+  v_prev_period text := to_char(current_date - interval '1 month', 'YYYY-MM');
   r record;
   v_student_count integer;
+  v_revenue_base integer;
   v_total integer;
 begin
   for r in
-    select id, subscription_plan, subscription_base_fee, subscription_per_student, hq_billing_day
+    select id, subscription_plan, subscription_base_fee, subscription_per_student,
+           subscription_revenue_pct, hq_billing_day
       from public.centers
      where hq_billing_day = extract(day from current_date)::int
        and not exists (
@@ -375,23 +384,33 @@ begin
       from public.students
      where center_id = r.id and status = '활성';
 
+    -- 매출비례 시 전월 결제완료 합계 (매출 베이스)
+    select coalesce(sum(amount), 0)::integer into v_revenue_base
+      from public.invoices
+     where center_id = r.id and period = v_prev_period and status = '결제완료';
+
     if r.subscription_plan = '정액' then
       v_total := coalesce(r.subscription_base_fee, 0);
     elsif r.subscription_plan = '학생수' then
       v_total := coalesce(r.subscription_per_student, 0) * v_student_count;
+    elsif r.subscription_plan = '매출비례' then
+      v_total := round(v_revenue_base * coalesce(r.subscription_revenue_pct, 0) / 100.0)::integer;
     else
       v_total := coalesce(r.subscription_base_fee, 0)
                + coalesce(r.subscription_per_student, 0) * v_student_count;
     end if;
 
     insert into public.hq_invoices
-      (center_id, period, plan, base_fee, per_student_fee, student_count, total,
-       status, due_date, issued_at)
+      (center_id, period, plan, base_fee, per_student_fee, student_count,
+       revenue_base, revenue_pct, total, status, due_date, issued_at)
     values
       (r.id, v_period, coalesce(r.subscription_plan, '정액'),
        coalesce(r.subscription_base_fee, 0),
        coalesce(r.subscription_per_student, 0),
-       v_student_count, v_total, '청구',
+       v_student_count,
+       v_revenue_base,
+       coalesce(r.subscription_revenue_pct, 0),
+       v_total, '청구',
        (v_period || '-' || lpad(least(r.hq_billing_day, 28)::text, 2, '0'))::date,
        now());
     v_count := v_count + 1;

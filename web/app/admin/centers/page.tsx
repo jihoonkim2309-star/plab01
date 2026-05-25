@@ -37,7 +37,7 @@ export default async function CentersPage({
     selectedId
       ? supabase
           .from("centers")
-          .select("id, name, contact_phone, business_no, address, billing_day, report_day, created_at, subscription_plan, subscription_base_fee, subscription_per_student, hq_billing_day")
+          .select("id, name, contact_phone, business_no, address, billing_day, report_day, created_at, subscription_plan, subscription_base_fee, subscription_per_student, subscription_revenue_pct, hq_billing_day")
           .eq("id", selectedId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -210,8 +210,15 @@ export default async function CentersPage({
                   <p className="detail-title">본사 사용료 정책</p>
                   <div className="info-list">
                     <div className="info-row"><span>요금 체계</span><strong>{selected.subscription_plan ?? "정액"}</strong></div>
-                    <div className="info-row"><span>기본료</span><strong>{(selected.subscription_base_fee ?? 0).toLocaleString()}원</strong></div>
-                    <div className="info-row"><span>학생당</span><strong>{(selected.subscription_per_student ?? 0).toLocaleString()}원</strong></div>
+                    {selected.subscription_plan === "정액" && (
+                      <div className="info-row"><span>정액 기본료</span><strong>{(selected.subscription_base_fee ?? 0).toLocaleString()}원</strong></div>
+                    )}
+                    {selected.subscription_plan === "학생수" && (
+                      <div className="info-row"><span>학생당</span><strong>{(selected.subscription_per_student ?? 0).toLocaleString()}원</strong></div>
+                    )}
+                    {selected.subscription_plan === "매출비례" && (
+                      <div className="info-row"><span>매출 %</span><strong>{(selected.subscription_revenue_pct ?? 0)}%</strong></div>
+                    )}
                     <div className="info-row"><span>본사 청구일</span><strong>매월 {selected.hq_billing_day ?? 1}일</strong></div>
                   </div>
                 </div>

@@ -4,10 +4,24 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireSuperAdmin } from "@/lib/center";
 
-function calcTotal(plan: string, baseFee: number, perStudent: number, studentCount: number) {
+function calcTotal(
+  plan: string,
+  baseFee: number,
+  perStudent: number,
+  studentCount: number,
+  revenueBase: number,
+  revenuePct: number,
+) {
   if (plan === "정액") return baseFee;
   if (plan === "학생수") return perStudent * studentCount;
-  return baseFee + perStudent * studentCount; // 혼합
+  if (plan === "매출비례") return Math.round((revenueBase * revenuePct) / 100);
+  return baseFee + perStudent * studentCount; // 레거시 호환
+}
+
+function prevPeriod(period: string): string {
+  const [y, m] = period.split("-").map(Number);
+  const d = new Date(y, m - 2, 1); // m=1-indexed, getMonth=0-indexed → m-2 = 전월의 0-indexed
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
 // 수동 청구서 발행 — 슈퍼어드민이 특정 지점·기간 선택 → 자동 계산
@@ -21,7 +35,7 @@ export async function createHqInvoice(formData: FormData) {
 
   const { data: center } = await supabase
     .from("centers")
-    .select("subscription_plan, subscription_base_fee, subscription_per_student, hq_billing_day")
+    .select("subscription_plan, subscription_base_fee, subscription_per_student, subscription_revenue_pct, hq_billing_day")
     .eq("id", center_id)
     .single();
   if (!center) throw new Error("지점을 찾을 수 없습니다.");
@@ -36,7 +50,21 @@ export async function createHqInvoice(formData: FormData) {
   const plan = String(center.subscription_plan ?? "정액");
   const baseFee = Number(center.subscription_base_fee ?? 0);
   const perStudent = Number(center.subscription_per_student ?? 0);
-  const total = calcTotal(plan, baseFee, perStudent, studentCount);
+  const revenuePct = Number(center.subscription_revenue_pct ?? 0);
+
+  // 매출비례 시 전월 매출 (지점 invoice 결제완료 합계)
+  let revenueBase = 0;
+  if (plan === "매출비례") {
+    const { data: revRows } = await supabase
+      .from("invoices")
+      .select("amount")
+      .eq("center_id", center_id)
+      .eq("period", prevPeriod(period))
+      .eq("status", "결제완료");
+    revenueBase = (revRows ?? []).reduce((a, b) => a + Number(b.amount ?? 0), 0);
+  }
+
+  const total = calcTotal(plan, baseFee, perStudent, studentCount, revenueBase, revenuePct);
   const day = Math.min(Math.max(Number(center.hq_billing_day ?? 1), 1), 28);
   const due_date = `${period}-${String(day).padStart(2, "0")}`;
 
@@ -49,6 +77,8 @@ export async function createHqInvoice(formData: FormData) {
       base_fee: baseFee,
       per_student_fee: perStudent,
       student_count: studentCount,
+      revenue_base: revenueBase,
+      revenue_pct: revenuePct,
       total,
       status: "청구",
       due_date,

@@ -73,9 +73,9 @@ export default async function NewCenterPage() {
             <div className="field">
               <label>요금 체계 *</label>
               <select name="subscription_plan" defaultValue="정액" required>
-                <option value="정액">정액</option>
-                <option value="학생수">학생수 비례</option>
-                <option value="혼합">혼합 (기본료 + 학생당)</option>
+                <option value="정액">정액 (월 고정)</option>
+                <option value="학생수">학생수 (학생당 N원)</option>
+                <option value="매출비례">매출비례 (전월 매출의 N%)</option>
               </select>
             </div>
             <div className="field">
@@ -83,12 +83,21 @@ export default async function NewCenterPage() {
               <input name="hq_billing_day" type="number" min={1} max={28} defaultValue={1} required />
             </div>
             <div className="field">
-              <label>기본료 (원) *</label>
-              <input name="subscription_base_fee" type="number" min={0} step={10000} defaultValue={0} required />
+              <label>정액 기본료 (원)</label>
+              <input name="subscription_base_fee" type="number" min={0} step={10000} defaultValue={0} />
             </div>
             <div className="field">
-              <label>학생당 추가료 (원) *</label>
-              <input name="subscription_per_student" type="number" min={0} step={100} defaultValue={0} required />
+              <label>학생당 추가료 (원)</label>
+              <input name="subscription_per_student" type="number" min={0} step={100} defaultValue={0} />
+            </div>
+            <div className="field">
+              <label>매출비례 % (전월 매출 기준)</label>
+              <input name="subscription_revenue_pct" type="number" min={0} max={100} step={0.1} defaultValue={0} />
+            </div>
+            <div className="field span-2">
+              <p className="muted" style={{ fontSize: 11 }}>
+                💡 요금 체계에 해당하는 항목만 채우면 됩니다. 예) 정액 → 기본료만, 학생수 → 학생당 추가료만, 매출비례 → % 만.
+              </p>
             </div>
           </div>
           <div className="detail-actions">

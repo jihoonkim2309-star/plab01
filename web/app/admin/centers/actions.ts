@@ -15,9 +15,14 @@ function parseInt0(v: FormDataEntryValue | null): number {
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
 }
 
+function parseNum0(v: FormDataEntryValue | null): number {
+  const n = Number(v ?? "");
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
 function parsePlan(v: FormDataEntryValue | null): string {
   const s = String(v ?? "정액");
-  return ["정액", "학생수", "혼합"].includes(s) ? s : "정액";
+  return ["정액", "학생수", "매출비례"].includes(s) ? s : "정액";
 }
 
 export async function createCenter(formData: FormData) {
@@ -44,6 +49,7 @@ export async function createCenter(formData: FormData) {
     subscription_plan: parsePlan(formData.get("subscription_plan")),
     subscription_base_fee: parseInt0(formData.get("subscription_base_fee")),
     subscription_per_student: parseInt0(formData.get("subscription_per_student")),
+    subscription_revenue_pct: parseNum0(formData.get("subscription_revenue_pct")),
     hq_billing_day: parseDay(formData.get("hq_billing_day"), 1),
   };
   const { data: inserted, error } = await supabase.from("centers").insert(payload).select("id").single();
@@ -80,6 +86,7 @@ export async function updateCenter(formData: FormData) {
     subscription_plan: parsePlan(formData.get("subscription_plan")),
     subscription_base_fee: parseInt0(formData.get("subscription_base_fee")),
     subscription_per_student: parseInt0(formData.get("subscription_per_student")),
+    subscription_revenue_pct: parseNum0(formData.get("subscription_revenue_pct")),
     hq_billing_day: parseDay(formData.get("hq_billing_day"), 1),
   };
   const { error } = await supabase

@@ -34,7 +34,7 @@ export default async function MyHqInvoicesPage({
       ? supabase
           .from("hq_invoices")
           .select(
-            "id, period, plan, base_fee, per_student_fee, student_count, total, status, due_date, issued_at, paid_at, method, memo",
+            "id, period, plan, base_fee, per_student_fee, student_count, revenue_base, revenue_pct, total, status, due_date, issued_at, paid_at, method, memo",
           )
           .eq("id", selectedId)
           .eq("center_id", cid)
@@ -176,9 +176,21 @@ export default async function MyHqInvoicesPage({
                   <p className="detail-title">청구 내역</p>
                   <div className="info-list">
                     <div className="info-row"><span>요금 체계</span><strong>{selected.plan}</strong></div>
-                    <div className="info-row"><span>기본료</span><strong>{fmt(selected.base_fee)}</strong></div>
-                    <div className="info-row"><span>학생당 추가료</span><strong>{fmt(selected.per_student_fee)}</strong></div>
-                    <div className="info-row"><span>학생수 (발행 시점)</span><strong>{selected.student_count}명</strong></div>
+                    {selected.plan === "정액" && (
+                      <div className="info-row"><span>정액 기본료</span><strong>{fmt(selected.base_fee)}</strong></div>
+                    )}
+                    {selected.plan === "학생수" && (
+                      <>
+                        <div className="info-row"><span>학생당 추가료</span><strong>{fmt(selected.per_student_fee)}</strong></div>
+                        <div className="info-row"><span>학생수 (발행 시점)</span><strong>{selected.student_count}명</strong></div>
+                      </>
+                    )}
+                    {selected.plan === "매출비례" && (
+                      <>
+                        <div className="info-row"><span>전월 매출 베이스</span><strong>{fmt(selected.revenue_base)}</strong></div>
+                        <div className="info-row"><span>적용 %</span><strong>{selected.revenue_pct}%</strong></div>
+                      </>
+                    )}
                     <div className="info-row"><span>총 금액</span><strong style={{ color: "var(--brand)", fontSize: 16 }}>{fmt(selected.total)}</strong></div>
                   </div>
                 </div>
