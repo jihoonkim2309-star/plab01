@@ -3,7 +3,33 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import {
+  Bell,
+  BookOpen,
+  Building2,
+  Bus,
+  CalendarDays,
+  FileText,
+  MessageSquare,
+  Settings,
+  Users,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import { NAV, type NavGroup } from "./nav";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  Building2,
+  Users,
+  BookOpen,
+  CalendarDays,
+  Wallet,
+  FileText,
+  Bus,
+  MessageSquare,
+  Bell,
+  Settings,
+};
 
 function isActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === "/admin";
@@ -133,7 +159,14 @@ export default function Sidebar({
                   tabIndex={open ? 0 : -1}
                   aria-hidden={!open}
                 >
-                  {!item.sub && <span className="ico">{item.icon ?? "•"}</span>}
+                  {!item.sub && (
+                    <span className="ico" aria-hidden>
+                      {(() => {
+                        const Icon = item.icon ? ICON_MAP[item.icon] : null;
+                        return Icon ? <Icon size={18} strokeWidth={1.75} /> : <span>•</span>;
+                      })()}
+                    </span>
+                  )}
                   {item.label}
                 </Link>
               ))}
