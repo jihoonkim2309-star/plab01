@@ -116,6 +116,8 @@ export default async function AdminDashboard() {
   const Y = now.getFullYear();
   const M = now.getMonth() + 1;
   const period = `${Y}-${pad(M)}`;
+  const prevDate = new Date(Y, M - 2, 1);
+  const prevPeriod = `${prevDate.getFullYear()}-${pad(prevDate.getMonth() + 1)}`;
   const todayIso = now.toISOString().slice(0, 10);
   const sevenDaysLater = new Date(now);
   sevenDaysLater.setDate(now.getDate() + 7);
@@ -141,11 +143,13 @@ export default async function AdminDashboard() {
     upcomingMkRes,
     notifLogsRes,
     paymentsWeekRes,
+    prevPaidRes,
+    activeEnrollmentsRes,
     centerRes,
     userRes,
   ] = await Promise.all([
     supabase.from("students").select("id, status, created_at").eq("center_id", cid),
-    supabase.from("invoices").select("id, amount, status, paid_at, period").eq("center_id", cid).eq("period", period),
+    supabase.from("invoices").select("id, amount, status, source, paid_at, period").eq("center_id", cid).eq("period", period),
     supabase.from("parent_student_links").select("id, status").eq("center_id", cid).eq("status", "pending"),
     supabase.from("student_account_links").select("id, status").eq("center_id", cid).eq("status", "pending"),
     supabase
@@ -216,6 +220,17 @@ export default async function AdminDashboard() {
       .eq("status", "성공")
       .gte("paid_at", `${sevenAgoIso}T00:00:00`)
       .lte("paid_at", `${todayIso}T23:59:59`),
+    supabase
+      .from("invoices")
+      .select("student_id")
+      .eq("center_id", cid)
+      .eq("period", prevPeriod)
+      .eq("status", "결제완료"),
+    supabase
+      .from("enrollments")
+      .select("student_id, products(price)")
+      .eq("center_id", cid)
+      .eq("status", "수강중"),
     supabase.from("centers").select("name").eq("id", cid).single(),
     supabase.auth.getUser(),
   ]);
@@ -232,18 +247,43 @@ export default async function AdminDashboard() {
     (s) => s.created_at && s.created_at.startsWith(period),
   ).length;
 
-  // 수납 — 이번 달
+  // 매출 펀넬 (예상 → 수납/미납)
+  // 예상: 전월 결제완료 학생 중 이번달 active enrollment 의 상품가 합계
+  type EnrollmentRow = { student_id: string; products: { price: number } | null };
+  const prevPaidStudentIds = new Set(
+    (prevPaidRes.data ?? []).map((r) => r.student_id as string),
+  );
+  const activeEnrollments = (activeEnrollmentsRes.data ?? []) as unknown as EnrollmentRow[];
+  const expectedTotal = activeEnrollments
+    .filter((e) => prevPaidStudentIds.has(e.student_id))
+    .reduce((sum, e) => sum + Number(e.products?.price ?? 0), 0);
+  const expectedCount = new Set(
+    activeEnrollments
+      .filter((e) => prevPaidStudentIds.has(e.student_id))
+      .map((e) => e.student_id),
+  ).size;
+
+  // 수납 — 이번 달 invoice 결제완료 합계 (수강확인 + 신규 모두 — 당월 들어온 돈 전부)
   const monthPaid = invoicesMonth
     .filter((i) => i.status === "결제완료")
     .reduce((a, b) => a + Number(b.amount), 0);
-  const monthTarget = invoicesMonth.reduce(
-    (a, b) => (b.status === "환불" ? a : a + Number(b.amount)),
+  // 미납 — 수강확인 후 미결제 (액션 필요 건만 — 신규는 강제 미납 개념 X)
+  const monthOutstandingInvoices = invoicesMonth.filter(
+    (i) =>
+      i.source === "수강확인" && (i.status === "청구" || i.status === "실패"),
+  );
+  const monthOutstanding = monthOutstandingInvoices.reduce(
+    (a, b) => a + Number(b.amount),
     0,
   );
-  const monthPct = monthTarget > 0 ? (monthPaid / monthTarget) * 100 : 0;
-  const monthOutstanding = invoicesMonth
+  const outstandingCount = monthOutstandingInvoices.length;
+  // 라디얼: 이번 달 청구된 것 중 수납 비율 (신규 포함 전체 기준)
+  const monthBilledOutstanding = invoicesMonth
     .filter((i) => i.status === "청구" || i.status === "실패")
     .reduce((a, b) => a + Number(b.amount), 0);
+  const radialTarget = monthPaid + monthBilledOutstanding;
+  const monthPct = radialTarget > 0 ? (monthPaid / radialTarget) * 100 : 0;
+  const radialOutstanding = Math.max(0, radialTarget - monthPaid);
 
   // 처리 대기 합
   const pendingParentLinks = (parentLinksRes.data ?? []).length;
@@ -377,8 +417,8 @@ export default async function AdminDashboard() {
                 <strong>{fullHolidayToday ? 0 : todayClasses.length}개</strong>
               </div>
               <div>
-                <span>이달 수납</span>
-                <strong>{fmtKRW(monthPaid)}</strong>
+                <span>전체 회원</span>
+                <strong>{totalStudents}명</strong>
               </div>
             </div>
           </div>
@@ -395,23 +435,43 @@ export default async function AdminDashboard() {
             <RadialRevenueChart
               percent={monthPct}
               paid={monthPaid}
-              target={monthTarget}
+              target={radialTarget}
             />
-            {monthOutstanding > 0 && (
+            {radialOutstanding > 0 && (
               <div className="muted" style={{ textAlign: "center", fontSize: 12, marginTop: 6 }}>
-                미수납 {fmtKRW(monthOutstanding)}
+                미수납 {fmtKRW(radialOutstanding)}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* ROW 2: KPI 4개 */}
+      {/* ROW 2: 매출 펀넬 KPI (예상 → 수납 / 미납) */}
       <div className="kpi-row">
-        <KpiCard icon="👥" label="전체 회원" value={`${totalStudents}명`} hint={`활성 ${activeStudents}`} href="/admin/students" />
-        <KpiCard icon="✅" label="활성 회원" value={`${activeStudents}명`} hint={`전체 ${totalStudents}`} tone="green" href="/admin/students?status=활성" />
-        <KpiCard icon="💰" label="이달 수납" value={fmtKRW(monthPaid)} hint={`${Math.round(monthPct)}%`} tone="blue" href="/admin/payment-status?s=결제완료" />
-        <KpiCard icon="⏳" label="처리 대기" value={`${pendingTotal}건`} hint="액션 필요" tone="orange" href="/admin/parent-links" />
+        <KpiCard
+          icon="📊"
+          label="예상 총매출"
+          value={fmtKRW(expectedTotal)}
+          hint={`${expectedCount}명 (전월 결제 기준)`}
+          tone="brand"
+          href="/admin/renewals"
+        />
+        <KpiCard
+          icon="💰"
+          label="이달 수납"
+          value={fmtKRW(monthPaid)}
+          hint={`${Math.round(monthPct)}%`}
+          tone="blue"
+          href="/admin/payment-status?s=결제완료"
+        />
+        <KpiCard
+          icon="⚠️"
+          label="이달 미납"
+          value={fmtKRW(monthOutstanding)}
+          hint={`${outstandingCount}건 수강확인 미결제`}
+          tone="red"
+          href="/admin/overdue"
+        />
       </div>
 
       {/* ROW 3: 오늘 클래스 + 처리 대기 + 회원 분포 (3-col) */}
