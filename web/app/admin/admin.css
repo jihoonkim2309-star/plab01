@@ -395,6 +395,7 @@
   display: flex;
   flex-direction: column;
   background: #f6f7f9; /* 본문 영역 배경 — 카드(탑바·패널)와 대비 */
+  overflow-x: clip; /* topbar::before/::after 가 viewport 밖 확장 → 가로 overflow 방지. sticky 호환 */
 }
 
 /* Vuexy 스타일: 둥근 카드로 떠 있는 느낌 + 본문 영역과 분리.
@@ -439,8 +440,8 @@
 .topbar::before {
   content: "";
   position: absolute;
-  left: -100vw;
-  right: -100vw;
+  left: -50vw;
+  right: -50vw;
   bottom: 100%;
   height: 14px;
   background: #f6f7f9; /* .main 배경색과 동일 */
