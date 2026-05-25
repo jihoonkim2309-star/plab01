@@ -922,6 +922,126 @@ begin
   return v_count;
 end $$;
 
+-- ---------- 15. 셔틀 (노선/정류장/차량/운행/배정/이력) [Phase 1 어드민] ---
+
+-- 노선
+create table if not exists public.shuttle_routes (
+  id         uuid primary key default gen_random_uuid(),
+  center_id  uuid not null references public.centers(id) on delete cascade,
+  name       text not null,
+  direction  text not null default '등교',                -- 등교|하교|순환
+  status     text not null default '운영',                -- 운영|중단
+  memo       text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- 노선상 정류장 (순서)
+create table if not exists public.shuttle_stops (
+  id                     uuid primary key default gen_random_uuid(),
+  center_id              uuid not null references public.centers(id) on delete cascade,
+  route_id               uuid not null references public.shuttle_routes(id) on delete cascade,
+  sequence               integer not null default 0,
+  name                   text not null,
+  address                text,
+  lat                    double precision,
+  lng                    double precision,
+  est_minutes_from_start integer,
+  created_at             timestamptz not null default now()
+);
+create index if not exists shuttle_stops_route_idx
+  on public.shuttle_stops (route_id, sequence);
+
+-- 차량 (차량별 QR 토큰)
+create table if not exists public.shuttle_vehicles (
+  id         uuid primary key default gen_random_uuid(),
+  center_id  uuid not null references public.centers(id) on delete cascade,
+  name       text not null,
+  plate      text,
+  capacity   integer,
+  qr_token   text not null unique default replace(gen_random_uuid()::text, '-', ''),
+  status     text not null default '운영',                -- 운영|점검|폐기
+  memo       text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- 운행 일정 (노선 x 차량 x 기사 x 요일 x 시각)
+create table if not exists public.shuttle_runs (
+  id             uuid primary key default gen_random_uuid(),
+  center_id      uuid not null references public.centers(id) on delete cascade,
+  route_id       uuid not null references public.shuttle_routes(id) on delete cascade,
+  vehicle_id     uuid references public.shuttle_vehicles(id) on delete set null,
+  driver_user_id uuid references public.users(id) on delete set null,
+  weekday        smallint not null,                        -- 0=일 ~ 6=토
+  start_time     time not null,
+  end_time       time,
+  status         text not null default '운영',
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+create index if not exists shuttle_runs_route_idx
+  on public.shuttle_runs (route_id, weekday, start_time);
+
+-- 학생-정류장 배정 (등교/하교 정류장)
+create table if not exists public.student_stop_assignments (
+  id             uuid primary key default gen_random_uuid(),
+  center_id      uuid not null references public.centers(id) on delete cascade,
+  student_id     uuid not null references public.students(id) on delete cascade,
+  route_id       uuid references public.shuttle_routes(id) on delete set null,
+  board_stop_id  uuid references public.shuttle_stops(id) on delete set null,
+  alight_stop_id uuid references public.shuttle_stops(id) on delete set null,
+  direction      text,                                     -- 등교|하교|순환|null=공통
+  status         text not null default '활성',             -- 활성|중지
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+create index if not exists student_stop_assignments_student_idx
+  on public.student_stop_assignments (student_id);
+
+-- 승하차 이력 (Phase 2 부터 기록 — 테이블만 미리)
+create table if not exists public.boarding_logs (
+  id         uuid primary key default gen_random_uuid(),
+  center_id  uuid not null references public.centers(id) on delete cascade,
+  student_id uuid not null references public.students(id) on delete cascade,
+  vehicle_id uuid references public.shuttle_vehicles(id) on delete set null,
+  run_id     uuid references public.shuttle_runs(id) on delete set null,
+  stop_id    uuid references public.shuttle_stops(id) on delete set null,
+  action     text not null,                                -- 승차|하차
+  scanned_at timestamptz not null default now(),
+  scanned_by uuid references public.users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+create index if not exists boarding_logs_student_idx
+  on public.boarding_logs (student_id, scanned_at desc);
+create index if not exists boarding_logs_run_idx
+  on public.boarding_logs (run_id, scanned_at desc);
+
+-- RLS + updated_at 트리거 (셔틀 6 테이블)
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'shuttle_routes','shuttle_stops','shuttle_vehicles','shuttle_runs',
+    'student_stop_assignments','boarding_logs'
+  ] loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('drop policy if exists %I on public.%I', t||'_admin_all', t);
+    execute format(
+      'create policy %I on public.%I for all using (public.is_center_admin(center_id)) with check (public.is_center_admin(center_id))',
+      t||'_admin_all', t);
+  end loop;
+
+  foreach t in array array[
+    'shuttle_routes','shuttle_vehicles','shuttle_runs','student_stop_assignments'
+  ] loop
+    execute format('drop trigger if exists %I on public.%I', t||'_touch', t);
+    execute format(
+      'create trigger %I before update on public.%I for each row execute function public.touch_updated_at()',
+      t||'_touch', t);
+  end loop;
+end $$;
+
 -- =====================================================================
 --  부트스트랩 (최초 1회) — 아래 주석을 해제해서 실행하세요.
 --  1) 먼저 앱에서 어드민 계정으로 회원가입(또는 Supabase Auth에서 유저 생성)
