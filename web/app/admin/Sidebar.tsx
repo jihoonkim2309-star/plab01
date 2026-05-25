@@ -9,6 +9,7 @@ import {
   Building2,
   Bus,
   CalendarDays,
+  Circle,
   FileText,
   MessageSquare,
   Settings,
@@ -125,6 +126,7 @@ export default function Sidebar({
         {visibleNav.map((group, gi) => {
           const collapsible = isCollapsible(group);
           const open = !collapsible || !!openGroups[group.label ?? ""];
+          const GroupIcon = group.icon ? ICON_MAP[group.icon] : null;
 
           return (
             <div className="nav-group" key={gi}>
@@ -135,12 +137,26 @@ export default function Sidebar({
                   onClick={() => toggle(group.label!)}
                   aria-expanded={open}
                 >
-                  <span>{group.label}</span>
+                  <span className="nav-label-text">
+                    {GroupIcon && (
+                      <span className="nav-label-icon" aria-hidden>
+                        <GroupIcon size={16} strokeWidth={1.75} />
+                      </span>
+                    )}
+                    {group.label}
+                  </span>
                   <span className="nav-label-caret" aria-hidden>▾</span>
                 </button>
               )}
               {group.label && !collapsible && (
-                <div className="nav-label">{group.label}</div>
+                <div className="nav-label">
+                  {GroupIcon && (
+                    <span className="nav-label-icon" aria-hidden>
+                      <GroupIcon size={16} strokeWidth={1.75} />
+                    </span>
+                  )}
+                  {group.label}
+                </div>
               )}
 
               {group.items.map((item) => (
@@ -148,7 +164,7 @@ export default function Sidebar({
                   key={item.slug}
                   href={item.href}
                   className={[
-                    item.sub ? "sub" : "",
+                    "sub",
                     isActive(pathname, item.href) ? "active" : "",
                     item.reviewed ? "" : "wip",
                     !open ? "collapsed" : "",
@@ -159,14 +175,9 @@ export default function Sidebar({
                   tabIndex={open ? 0 : -1}
                   aria-hidden={!open}
                 >
-                  {!item.sub && (
-                    <span className="ico" aria-hidden>
-                      {(() => {
-                        const Icon = item.icon ? ICON_MAP[item.icon] : null;
-                        return Icon ? <Icon size={18} strokeWidth={1.75} /> : <span>•</span>;
-                      })()}
-                    </span>
-                  )}
+                  <span className="ico ico-dot" aria-hidden>
+                    <Circle size={6} strokeWidth={2} />
+                  </span>
                   {item.label}
                 </Link>
               ))}

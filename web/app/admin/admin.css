@@ -267,6 +267,18 @@
   padding: 10px 10px 4px;
 }
 
+/* 그룹 헤더 안의 아이콘+텍스트 (인라인 정렬) */
+.nav-label-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-label-icon {
+  display: inline-flex;
+  color: var(--brand);
+}
+.nav-label-toggle:hover .nav-label-icon { color: var(--brand); }
+
 /* collapsible 그룹 라벨 (클릭 시 그룹 접/펼) */
 .nav-label-toggle {
   display: flex;
@@ -328,7 +340,12 @@
   font-size: 13px;
 }
 
-.nav a.sub .ico { display: none; }
+.nav a.sub .ico { color: #b8c5c0; }
+.nav a.sub:hover .ico { color: var(--brand); }
+.nav a.sub.active .ico { color: #ffffff; }
+.nav a.sub.wip .ico { color: var(--red); }
+.nav a.sub.wip.active .ico { color: #ffffff; }
+.ico-dot { display: inline-flex; align-items: center; justify-content: center; }
 
 .nav a:hover {
   background: var(--brand-soft);
