@@ -9,6 +9,13 @@ do $$ begin
   create type user_role as enum ('admin','coach','parent','student','driver');
 exception when duplicate_object then null; end $$;
 
+-- 기존 user_role enum 이 다른 값 세트로 만들어져 있던 환경 대비 — 누락 시 자동 추가.
+-- (create type 은 이미 있으면 무시되므로 값을 보강해 줘야 안전)
+alter type user_role add value if not exists 'admin';
+alter type user_role add value if not exists 'coach';
+alter type user_role add value if not exists 'parent';
+alter type user_role add value if not exists 'student';
+alter type user_role add value if not exists 'driver';
 -- super_admin: 모든 센터 통합 관리 + 어드민 가입 승인 권한. 후행 추가 (enum 확장).
 alter type user_role add value if not exists 'super_admin';
 
