@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatPhone, PHONE_PLACEHOLDER } from "@/lib/phone";
 
+const MSG_MAP: Record<string, string> = {
+  ousted: "다른 곳에서 같은 계정으로 로그인되어 이 세션이 종료되었습니다.",
+  inactive: "오랫동안 활동이 없어 자동 로그아웃되었습니다. 다시 로그인해 주세요.",
+};
+
 export default function LoginPage() {
   const supabase = createClient();
 
@@ -18,6 +23,8 @@ export default function LoginPage() {
   const [centers, setCenters] = useState<{ id: string; name: string }[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // 다른 곳 활성 세션 감지 시 confirm 모달 표시
+  const [confirmTakeover, setConfirmTakeover] = useState(false);
 
   // 가입 모드 진입 시 지점 목록 로드 (anon RPC).
   useEffect(() => {
@@ -28,6 +35,13 @@ export default function LoginPage() {
       }
     });
   }, [mode, centers.length, supabase]);
+
+  // URL ?msg= 으로 들어오면 안내 메시지 표시 (강제 로그아웃 등)
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const m = p.get("msg");
+    if (m && MSG_MAP[m]) setMsg(MSG_MAP[m]);
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,8 +55,15 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      // 슈퍼어드민이 로그인할 때마다 지점 미선택 상태로 시작.
-      // (일반 admin/coach 는 user.center_id 가 자동 fallback 되어 영향 없음.)
+      // 다른 곳 활성 세션 있나 확인
+      const check = await fetch("/api/auth/take-session").then((r) => r.json());
+      if (check.needs_confirm) {
+        setConfirmTakeover(true);
+        setLoading(false);
+        return;
+      }
+      // 세션 발급 + admin 으로
+      await fetch("/api/auth/take-session?force=1", { method: "POST" });
       document.cookie = "active_center=; max-age=0; path=/";
       window.location.assign("/admin");
     } else if (mode === "reset") {
@@ -88,8 +109,82 @@ export default function LoginPage() {
     }
   }
 
+  async function onTakeoverConfirm() {
+    setLoading(true);
+    await fetch("/api/auth/take-session?force=1", { method: "POST" });
+    document.cookie = "active_center=; max-age=0; path=/";
+    window.location.assign("/admin");
+  }
+
+  async function onTakeoverCancel() {
+    setConfirmTakeover(false);
+    await supabase.auth.signOut();
+    setMsg("로그인이 취소되었습니다. 다른 곳의 세션을 먼저 종료한 후 다시 시도해 주세요.");
+  }
+
   return (
     <div className="min-h-screen flex bg-zinc-50">
+      {/* 다른 곳 활성 세션 takeover 모달 */}
+      {confirmTakeover && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.45)",
+            zIndex: 50,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 14,
+              padding: 24,
+              maxWidth: 380,
+              width: "100%",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+            }}
+          >
+            <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>
+              다른 곳에서 접속 중입니다
+            </h2>
+            <p style={{ marginTop: 10, fontSize: 14, color: "#525252" }}>
+              이 계정은 이미 다른 기기/브라우저에서 접속 중입니다.
+              <br />
+              <strong>그 세션을 종료하고 여기서 로그인할까요?</strong>
+              <br />
+              <span style={{ fontSize: 12, color: "#737373" }}>
+                기존 접속자는 다음 페이지 이동 시 자동 로그아웃됩니다.
+              </span>
+            </p>
+            <div style={{ display: "flex", gap: 8, marginTop: 18, justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className="rounded-md px-4 py-2 text-sm font-semibold border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                onClick={onTakeoverCancel}
+                disabled={loading}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="rounded-md px-4 py-2 text-sm font-bold text-white"
+                style={{
+                  background: "linear-gradient(135deg, #1e794e 0%, #2a9162 100%)",
+                  boxShadow: "0 4px 12px rgba(30,121,78,0.32)",
+                }}
+                onClick={onTakeoverConfirm}
+                disabled={loading}
+              >
+                {loading ? "처리 중..." : "여기서 로그인"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Left visual — Vuexy 패턴: 플로팅 카드 + 중앙 일러스트 */}
       <div className="hidden md:flex md:w-3/5 lg:w-[58%] relative overflow-hidden items-center justify-center bg-[#f6faf8]">
         {/* 좌상단 작은 로고 — SVG 그대로, 박스 없음 */}

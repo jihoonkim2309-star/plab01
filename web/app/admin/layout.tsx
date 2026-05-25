@@ -10,6 +10,7 @@ import ProfileMenu from "./ProfileMenu";
 import SidebarWorkspace from "./SidebarWorkspace";
 import DrawerToggle from "./DrawerToggle";
 import { ACTIVE_CENTER_COOKIE } from "@/lib/center";
+import { SESSION_COOKIE, isActiveSession } from "@/lib/session";
 import PendingApproval from "./PendingApproval";
 
 export default async function AdminLayout({
@@ -27,9 +28,38 @@ export default async function AdminLayout({
 
   const { data: profile } = await supabase
     .from("users")
-    .select("name, role, center_id, applying_center_id")
+    .select("name, role, center_id, applying_center_id, current_session_id, last_seen_at")
     .eq("id", userId)
     .single();
+
+  // 단일 세션 가드 — cookie session_id ≠ DB current_session_id 면 강제 로그아웃
+  // (다른 곳에서 takeover 했거나, inactivity 로그아웃 이후 우연히 다시 진입한 케이스)
+  const jarPre = await cookies();
+  const cookieSid = jarPre.get(SESSION_COOKIE)?.value ?? null;
+  if (profile?.current_session_id && cookieSid !== profile.current_session_id) {
+    await supabase.auth.signOut();
+    redirect("/login?msg=ousted");
+  }
+  // inactivity 만료 (4h+ 미갱신)
+  if (
+    profile?.current_session_id &&
+    profile?.last_seen_at &&
+    !isActiveSession(profile.last_seen_at)
+  ) {
+    await supabase
+      .from("users")
+      .update({ current_session_id: null })
+      .eq("id", userId);
+    await supabase.auth.signOut();
+    redirect("/login?msg=inactive");
+  }
+  // 활동 갱신
+  if (profile?.current_session_id) {
+    await supabase
+      .from("users")
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq("id", userId);
+  }
 
   const role = profile?.role ?? null;
   const isSuper = role === "super_admin";

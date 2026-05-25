@@ -1,22 +1,19 @@
-"use server";
-
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE } from "@/lib/session";
 
-export async function signOut() {
+// 로그아웃 — supabase signOut + users.current_session_id 클리어 + cookie 제거
+export async function POST() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
-    // 단일 세션 정책: DB 의 current_session_id 도 클리어
     await supabase
       .from("users")
       .update({ current_session_id: null })
       .eq("id", user.id);
   }
   await supabase.auth.signOut();
-  const jar = await cookies();
-  jar.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
-  redirect("/login");
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+  return res;
 }

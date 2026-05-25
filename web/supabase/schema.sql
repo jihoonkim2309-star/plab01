@@ -169,6 +169,13 @@ alter table public.users add column if not exists applying_center_id uuid
 alter table public.users add column if not exists applying_role text
   check (applying_role in ('admin','coach','driver'));
 
+-- 단일 세션 정책 — 같은 계정 동시 접속 차단 + inactivity 타이머.
+-- 로그인 시 새 UUID 발급 → users.current_session_id 갱신 + cookie 저장.
+-- 매 페이지 진입 시 가드가 cookie vs DB 비교 → 다르면 강제 로그아웃.
+-- last_seen_at 4h 이상 미갱신이면 inactivity 로그아웃.
+alter table public.users add column if not exists current_session_id uuid;
+alter table public.users add column if not exists last_seen_at timestamptz;
+
 -- ---------- 8. RLS 활성화 ----------------------------------------------
 alter table public.centers               enable row level security;
 alter table public.users                 enable row level security;
