@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ConfirmButton from "../ConfirmButton";
 import PhoneInput from "../PhoneInput";
+import AddressField from "../AddressField";
 import { createCenter, deleteCenter, updateCenter } from "./actions";
 
 export default async function CentersPage({
@@ -139,10 +140,9 @@ export default async function CentersPage({
             </div>
             <div className="field span-2">
               <label>주소</label>
-              <input
+              <AddressField
                 name="address"
                 defaultValue={editing?.address ?? ""}
-                placeholder="서울 ○○구 ○○로 00"
               />
             </div>
             <div className="field">

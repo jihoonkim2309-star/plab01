@@ -1,5 +1,6 @@
 import PhotoUpload from "./PhotoUpload";
 import PhoneInput from "../PhoneInput";
+import AddressField from "../AddressField";
 import { PHONE_PLACEHOLDER } from "@/lib/phone";
 
 type Student = Record<string, string | null> | null;
@@ -42,6 +43,13 @@ function Field({
           name={name}
           defaultValue={value ?? ""}
           placeholder={PHONE_PLACEHOLDER}
+          required={required}
+        />
+      ) : type === "address" ? (
+        <AddressField
+          name={name}
+          defaultValue={value ?? ""}
+          placeholder={placeholder ?? "도로명 주소"}
           required={required}
         />
       ) : (
@@ -189,6 +197,7 @@ export default function StudentForm({
                 <Field
                   label="주소 *"
                   name="address"
+                  type="address"
                   value={s.address}
                   placeholder="도로명 주소"
                   span2

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireCenter } from "@/lib/center";
 import ConfirmButton from "../../../ConfirmButton";
+import AddressField from "../../../AddressField";
 import {
   updateRoute,
   deleteRoute,
@@ -9,6 +10,7 @@ import {
   updateStop,
   deleteStop,
   moveStop,
+  setStopSequence,
 } from "../actions";
 
 export default async function ShuttleRouteDetailPage({
@@ -28,7 +30,7 @@ export default async function ShuttleRouteDetailPage({
       .maybeSingle(),
     supabase
       .from("shuttle_stops")
-      .select("id, sequence, name, address, est_minutes_from_start")
+      .select("id, sequence, name, address, est_minutes_from_start, lat, lng")
       .eq("route_id", id)
       .eq("center_id", cid)
       .order("sequence", { ascending: true }),
@@ -47,7 +49,7 @@ export default async function ShuttleRouteDetailPage({
             <Link href="/admin/shuttle/routes" style={{ color: "var(--muted)" }}>
               ← 노선 목록
             </Link>
-            {" · 노선 정보 수정 + 정류장 순서 관리"}
+            {" · 노선 정보 수정 + 정류장 순서/주소 관리"}
           </p>
         </div>
       </div>
@@ -103,7 +105,7 @@ export default async function ShuttleRouteDetailPage({
             <p className="panel-title">
               정류장 순서{" "}
               <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-                {stops.length}개
+                {stops.length}개 · 순서 번호 직접 입력 또는 ↑↓ 로 이동
               </span>
             </p>
           </div>
@@ -126,26 +128,39 @@ export default async function ShuttleRouteDetailPage({
                   alignItems: "flex-start",
                 }}
               >
-                <div
-                  style={{
-                    minWidth: 28,
-                    height: 28,
-                    borderRadius: 14,
-                    background: "var(--brand-soft)",
-                    color: "var(--brand)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: 800,
-                    fontSize: 13,
-                  }}
+                {/* 순서 번호 직접 변경 — 별도 form */}
+                <form
+                  action={setStopSequence.bind(null, route.id, s.id)}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}
                 >
-                  {s.sequence + 1}
-                </div>
+                  <input
+                    type="number"
+                    name="sequence"
+                    defaultValue={s.sequence + 1}
+                    min={1}
+                    max={stops.length}
+                    style={{
+                      width: 44,
+                      minHeight: 28,
+                      padding: "2px 4px",
+                      textAlign: "center",
+                      fontWeight: 800,
+                      fontSize: 13,
+                    }}
+                    aria-label="순서 번호"
+                  />
+                  <button
+                    type="submit"
+                    className="btn"
+                    style={{ minHeight: 22, padding: "0 6px", fontSize: 10 }}
+                  >
+                    이동
+                  </button>
+                </form>
 
                 <form
                   action={updateStop.bind(null, route.id, s.id)}
-                  style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}
+                  style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}
                 >
                   <input
                     name="name"
@@ -154,7 +169,7 @@ export default async function ShuttleRouteDetailPage({
                     placeholder="정류장 이름"
                     style={{ minHeight: 32, padding: "4px 8px", fontWeight: 700 }}
                   />
-                  <input
+                  <AddressField
                     name="address"
                     defaultValue={s.address ?? ""}
                     placeholder="주소"
@@ -169,6 +184,11 @@ export default async function ShuttleRouteDetailPage({
                       min="0"
                       style={{ minHeight: 28, padding: "2px 8px", width: 80, fontSize: 12 }}
                     />
+                    {s.lat != null && s.lng != null && (
+                      <span className="muted" style={{ fontSize: 11 }}>
+                        ✓ 좌표 등록됨
+                      </span>
+                    )}
                     <div style={{ flex: 1 }} />
                     <button
                       type="submit"
@@ -230,17 +250,21 @@ export default async function ShuttleRouteDetailPage({
             </div>
             <div className="field" style={{ marginTop: 12 }}>
               <label>주소</label>
-              <input name="address" placeholder="예: 서울 강남구 강남대로 ..." />
+              <AddressField name="address" placeholder="도로명 주소" />
             </div>
             <div className="field" style={{ marginTop: 12 }}>
-              <label>출발지로부터 도착 분</label>
+              <label>출발지로부터 도착 분 (선택)</label>
               <input
                 type="number"
                 name="est_minutes_from_start"
                 min="0"
-                placeholder="예: 12"
+                placeholder="비워두면 직선거리로 자동 추천"
               />
             </div>
+            <p className="muted" style={{ fontSize: 11, marginTop: 8 }}>
+              💡 [주소 검색] 으로 도로명 주소를 선택하면 좌표가 자동 변환됩니다.
+              도착 분을 비우고 저장하면 이전 정류장과의 직선거리로 추천 분을 계산해 채워 줍니다 (도심 평균 25km/h 기준).
+            </p>
             <div className="detail-actions">
               <button className="btn primary" type="submit">정류장 추가</button>
             </div>
