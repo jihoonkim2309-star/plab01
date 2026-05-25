@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BackLink from "../../../BackLink";
 import { createVehicle } from "../actions";
 
 export default function ShuttleVehicleNewPage() {
@@ -7,12 +8,7 @@ export default function ShuttleVehicleNewPage() {
       <div className="page-head">
         <div>
           <h1>차량 등록</h1>
-          <p className="subtext">
-            <Link href="/admin/shuttle/vehicles" style={{ color: "var(--muted)" }}>
-              ← 차량 목록
-            </Link>
-            {" · 등록 시 QR 토큰이 자동 발급됩니다"}
-          </p>
+          <BackLink href="/admin/shuttle/vehicles" label="차량 목록" desc="등록 시 QR 토큰이 자동 발급됩니다" />
         </div>
       </div>
 
@@ -39,7 +35,7 @@ export default function ShuttleVehicleNewPage() {
               <input name="memo" placeholder="예: 전기차 · 휠체어 가능 등" />
             </div>
           </div>
-          <div className="detail-actions" style={{ justifyContent: "space-between" }}>
+          <div className="detail-actions">
             <Link className="btn" href="/admin/shuttle/vehicles">취소</Link>
             <button className="btn primary" type="submit">차량 등록</button>
           </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireCenter } from "@/lib/center";
 import ConfirmButton from "../../../ConfirmButton";
+import BackLink from "../../../BackLink";
 import {
   updateVehicle,
   deleteVehicle,
@@ -33,12 +34,7 @@ export default async function ShuttleVehicleDetailPage({
       <div className="page-head">
         <div>
           <h1>{vehicle.name}</h1>
-          <p className="subtext">
-            <Link href="/admin/shuttle/vehicles" style={{ color: "var(--muted)" }}>
-              ← 차량 목록
-            </Link>
-            {" · 차량 정보 + 부착용 QR"}
-          </p>
+          <BackLink href="/admin/shuttle/vehicles" label="차량 목록" desc="차량 정보 + 부착용 QR" />
         </div>
       </div>
 

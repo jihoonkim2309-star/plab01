@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
+import BackLink from "../../BackLink";
 import { createHoliday } from "../actions";
 
 export default async function HolidayNewPage() {
@@ -15,10 +16,7 @@ export default async function HolidayNewPage() {
       <div className="page-head">
         <div>
           <h1>휴강 등록</h1>
-          <p className="subtext">
-            <Link href="/admin/holidays" style={{ color: "var(--muted)" }}>← 휴강 목록</Link>
-            {" · 전체 휴강 또는 특정 클래스 휴강"}
-          </p>
+          <BackLink href="/admin/holidays" label="휴강 목록" desc="전체 휴강 또는 특정 클래스 휴강" />
         </div>
       </div>
 
@@ -47,7 +45,7 @@ export default async function HolidayNewPage() {
           <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12, fontSize: 13 }}>
             <input type="checkbox" name="notify" /> 학부모 알림 발송 표시
           </label>
-          <div className="detail-actions" style={{ justifyContent: "space-between" }}>
+          <div className="detail-actions">
             <Link className="btn" href="/admin/holidays">취소</Link>
             <button className="btn primary" type="submit">휴강 등록</button>
           </div>

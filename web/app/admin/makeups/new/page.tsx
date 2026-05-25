@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
+import BackLink from "../../BackLink";
 import { createMakeup } from "../actions";
 
 export default async function MakeupNewPage() {
@@ -15,10 +16,7 @@ export default async function MakeupNewPage() {
       <div className="page-head">
         <div>
           <h1>보강 등록</h1>
-          <p className="subtext">
-            <Link href="/admin/makeups" style={{ color: "var(--muted)" }}>← 보강 목록</Link>
-            {" · 휴강·결석에 따른 보강 수업 일정"}
-          </p>
+          <BackLink href="/admin/makeups" label="보강 목록" desc="휴강·결석에 따른 보강 수업 일정" />
         </div>
       </div>
 
@@ -48,7 +46,7 @@ export default async function MakeupNewPage() {
             <label>사유</label>
             <input name="reason" placeholder="예: 휴강 보강 / 결석 보강" />
           </div>
-          <div className="detail-actions" style={{ justifyContent: "space-between" }}>
+          <div className="detail-actions">
             <Link className="btn" href="/admin/makeups">취소</Link>
             <button className="btn primary" type="submit">보강 등록</button>
           </div>

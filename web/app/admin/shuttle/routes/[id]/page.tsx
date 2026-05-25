@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireCenter } from "@/lib/center";
 import ConfirmButton from "../../../ConfirmButton";
 import AddressField from "../../../AddressField";
+import BackLink from "../../../BackLink";
 import {
   updateRoute,
   deleteRoute,
@@ -45,12 +46,7 @@ export default async function ShuttleRouteDetailPage({
       <div className="page-head">
         <div>
           <h1>{route.name}</h1>
-          <p className="subtext">
-            <Link href="/admin/shuttle/routes" style={{ color: "var(--muted)" }}>
-              ← 노선 목록
-            </Link>
-            {" · 노선 정보 수정 + 정류장 순서/주소 관리"}
-          </p>
+          <BackLink href="/admin/shuttle/routes" label="노선 목록" desc="노선 정보 수정 + 정류장 순서/주소 관리" />
         </div>
       </div>
 

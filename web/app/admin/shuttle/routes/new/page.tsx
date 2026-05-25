@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BackLink from "../../../BackLink";
 import { createRoute } from "../actions";
 
 export default function ShuttleRouteNewPage() {
@@ -7,12 +8,7 @@ export default function ShuttleRouteNewPage() {
       <div className="page-head">
         <div>
           <h1>노선 등록</h1>
-          <p className="subtext">
-            <Link href="/admin/shuttle/routes" style={{ color: "var(--muted)" }}>
-              ← 노선 목록
-            </Link>
-            {" · 새 셔틀 노선 추가"}
-          </p>
+          <BackLink href="/admin/shuttle/routes" label="노선 목록" desc="새 셔틀 노선 추가" />
         </div>
       </div>
 
@@ -39,7 +35,7 @@ export default function ShuttleRouteNewPage() {
               <input name="memo" placeholder="예: 우천 시 노선 변경 등" />
             </div>
           </div>
-          <div className="detail-actions" style={{ justifyContent: "space-between" }}>
+          <div className="detail-actions">
             <Link className="btn" href="/admin/shuttle/routes">취소</Link>
             <button className="btn primary" type="submit">노선 등록</button>
           </div>
