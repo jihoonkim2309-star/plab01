@@ -10,6 +10,16 @@ function parseDay(v: FormDataEntryValue | null, fallback: number) {
   return n;
 }
 
+function parseInt0(v: FormDataEntryValue | null): number {
+  const n = Number(v ?? "");
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
+}
+
+function parsePlan(v: FormDataEntryValue | null): string {
+  const s = String(v ?? "정액");
+  return ["정액", "학생수", "혼합"].includes(s) ? s : "정액";
+}
+
 export async function createCenter(formData: FormData) {
   const { supabase } = await requireSuperAdmin();
   const name = String(formData.get("name") ?? "").trim();
@@ -31,6 +41,10 @@ export async function createCenter(formData: FormData) {
     address,
     billing_day: parseDay(formData.get("billing_day"), 10),
     report_day: parseDay(formData.get("report_day"), 1),
+    subscription_plan: parsePlan(formData.get("subscription_plan")),
+    subscription_base_fee: parseInt0(formData.get("subscription_base_fee")),
+    subscription_per_student: parseInt0(formData.get("subscription_per_student")),
+    hq_billing_day: parseDay(formData.get("hq_billing_day"), 1),
   };
   const { data: inserted, error } = await supabase.from("centers").insert(payload).select("id").single();
   if (error) {
@@ -63,6 +77,10 @@ export async function updateCenter(formData: FormData) {
     address,
     billing_day: parseDay(formData.get("billing_day"), 10),
     report_day: parseDay(formData.get("report_day"), 1),
+    subscription_plan: parsePlan(formData.get("subscription_plan")),
+    subscription_base_fee: parseInt0(formData.get("subscription_base_fee")),
+    subscription_per_student: parseInt0(formData.get("subscription_per_student")),
+    hq_billing_day: parseDay(formData.get("hq_billing_day"), 1),
   };
   const { error } = await supabase
     .from("centers")

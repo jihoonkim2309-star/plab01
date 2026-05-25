@@ -37,7 +37,7 @@ export default async function CentersPage({
     selectedId
       ? supabase
           .from("centers")
-          .select("id, name, contact_phone, business_no, address, billing_day, report_day, created_at")
+          .select("id, name, contact_phone, business_no, address, billing_day, report_day, created_at, subscription_plan, subscription_base_fee, subscription_per_student, hq_billing_day")
           .eq("id", selectedId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -189,6 +189,16 @@ export default async function CentersPage({
                     <div className="info-row"><span>관리자</span><strong>{adminCount.get(selected.id) ?? 0}명</strong></div>
                     <div className="info-row"><span>코치</span><strong>{coachCount.get(selected.id) ?? 0}명</strong></div>
                     <div className="info-row"><span>활성 학생</span><strong>{studentActiveCount.get(selected.id) ?? 0}명</strong></div>
+                  </div>
+                </div>
+
+                <div className="detail-block">
+                  <p className="detail-title">본사 사용료 정책</p>
+                  <div className="info-list">
+                    <div className="info-row"><span>요금 체계</span><strong>{selected.subscription_plan ?? "정액"}</strong></div>
+                    <div className="info-row"><span>기본료</span><strong>{(selected.subscription_base_fee ?? 0).toLocaleString()}원</strong></div>
+                    <div className="info-row"><span>학생당</span><strong>{(selected.subscription_per_student ?? 0).toLocaleString()}원</strong></div>
+                    <div className="info-row"><span>본사 청구일</span><strong>매월 {selected.hq_billing_day ?? 1}일</strong></div>
                   </div>
                 </div>
               </>

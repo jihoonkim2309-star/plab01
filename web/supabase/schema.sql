@@ -291,6 +291,52 @@ alter table public.centers add column if not exists pg_api_secret  text;
 -- 사업자 등록번호 (000-00-00000)
 alter table public.centers add column if not exists business_no    text;
 
+-- 본사가 지점에 청구하는 사용료 정책
+alter table public.centers add column if not exists subscription_plan        text default '정액';      -- 정액|학생수|혼합
+alter table public.centers add column if not exists subscription_base_fee    integer default 0;       -- 기본료 (정액 또는 혼합 시)
+alter table public.centers add column if not exists subscription_per_student integer default 0;       -- 학생 1명당 (학생수 또는 혼합 시)
+alter table public.centers add column if not exists hq_billing_day           smallint default 1
+  check (hq_billing_day between 1 and 28);                                                            -- 본사 청구 발행일
+
+-- 본사→지점 청구서 (HQ invoices). 슈퍼어드민이 관리.
+create table if not exists public.hq_invoices (
+  id              uuid primary key default gen_random_uuid(),
+  center_id       uuid not null references public.centers(id) on delete cascade,
+  period          text not null,                                      -- YYYY-MM
+  plan            text not null default '정액',
+  base_fee        integer not null default 0,
+  per_student_fee integer not null default 0,
+  student_count   integer not null default 0,
+  total           integer not null default 0,
+  status          text not null default '청구',                       -- 청구|결제완료|미납|면제
+  due_date        date,
+  issued_at       timestamptz not null default now(),
+  paid_at         timestamptz,
+  method          text,                                                -- 계좌이체|카드|자동이체
+  memo            text,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  unique (center_id, period)
+);
+create index if not exists hq_invoices_center_idx on public.hq_invoices (center_id, period desc);
+create index if not exists hq_invoices_status_idx on public.hq_invoices (status);
+
+alter table public.hq_invoices enable row level security;
+
+drop policy if exists hq_invoices_super on public.hq_invoices;
+create policy hq_invoices_super on public.hq_invoices
+  for all using (public.is_super_admin()) with check (public.is_super_admin());
+
+drop policy if exists hq_invoices_center_read on public.hq_invoices;
+create policy hq_invoices_center_read on public.hq_invoices
+  for select using (
+    center_id = public.current_center_id() and public.current_role() = 'admin'
+  );
+
+drop trigger if exists hq_invoices_touch on public.hq_invoices;
+create trigger hq_invoices_touch before update on public.hq_invoices
+  for each row execute function public.touch_updated_at();
+
 -- classes 정규화 컬럼 보강
 alter table public.classes add column if not exists coach_id     uuid references public.users(id) on delete set null;
 alter table public.classes add column if not exists days_of_week text;       -- 예: "월,수,금"
