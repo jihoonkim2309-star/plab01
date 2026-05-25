@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Bell,
   BookOpen,
@@ -115,6 +115,31 @@ export default function Sidebar({
     setOpenGroups((p) => ({ ...p, [label]: !p[label] }));
   }
 
+  // 사이드바 nav 스크롤 위치 sessionStorage 보존 — 페이지 전환·뒤로가기 후 복원
+  const navRef = useRef<HTMLElement | null>(null);
+
+  // scroll 이벤트마다 저장 (passive)
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const onScroll = () => {
+      sessionStorage.setItem("sidebar-scroll", String(nav.scrollTop));
+    };
+    nav.addEventListener("scroll", onScroll, { passive: true });
+    return () => nav.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // pathname 변경 시 (또는 첫 마운트) 저장된 위치 복원
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const saved = sessionStorage.getItem("sidebar-scroll");
+    if (saved !== null) {
+      const v = Number(saved);
+      if (!Number.isNaN(v) && nav.scrollTop !== v) nav.scrollTop = v;
+    }
+  }, [pathname]);
+
   return (
     <aside className="sidebar">
       <Link className="brand" href="/admin" aria-label="Dashboard로 이동">
@@ -124,7 +149,7 @@ export default function Sidebar({
         </div>
       </Link>
 
-      <nav className="nav">
+      <nav className="nav" ref={navRef}>
         {visibleNav.map((group, gi) => {
           const collapsible = isCollapsible(group);
           const open = !collapsible || !!openGroups[group.label ?? ""];
