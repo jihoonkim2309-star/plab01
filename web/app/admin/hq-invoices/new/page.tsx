@@ -185,7 +185,7 @@ export default async function HqInvoiceNewPage({
                 <>
                   <div className="info-row"><span>활성 학생</span><strong>{c.studentCount}명</strong></div>
                   <div className="info-row">
-                    <span>학생당 × 명</span>
+                    <span>이용요금 × 명</span>
                     <strong>{fmt(c.perStudent)} × {c.studentCount} = {fmt(c.perStudent * c.studentCount)}</strong>
                   </div>
                 </>

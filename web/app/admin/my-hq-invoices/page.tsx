@@ -181,7 +181,7 @@ export default async function MyHqInvoicesPage({
                     )}
                     {selected.plan === "학생수" && (
                       <>
-                        <div className="info-row"><span>학생당 추가료</span><strong>{fmt(selected.per_student_fee)}</strong></div>
+                        <div className="info-row"><span>학생당 이용요금</span><strong>{fmt(selected.per_student_fee)}</strong></div>
                         <div className="info-row"><span>학생수 (발행 시점)</span><strong>{selected.student_count}명</strong></div>
                       </>
                     )}

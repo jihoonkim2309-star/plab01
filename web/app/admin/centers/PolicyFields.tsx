@@ -59,7 +59,7 @@ export default function PolicyFields({ defaults }: { defaults: Defaults }) {
         />
       </div>
       <div className="field" style={{ display: showPerStudent ? undefined : "none" }}>
-        <label>학생당 추가료 (원) *</label>
+        <label>학생당 이용요금 (원) *</label>
         <input
           name="subscription_per_student"
           type="number"

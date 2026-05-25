@@ -214,7 +214,7 @@ export default async function CentersPage({
                       <div className="info-row"><span>정액 기본료</span><strong>{(selected.subscription_base_fee ?? 0).toLocaleString()}원</strong></div>
                     )}
                     {selected.subscription_plan === "학생수" && (
-                      <div className="info-row"><span>학생당</span><strong>{(selected.subscription_per_student ?? 0).toLocaleString()}원</strong></div>
+                      <div className="info-row"><span>학생당 이용요금</span><strong>{(selected.subscription_per_student ?? 0).toLocaleString()}원</strong></div>
                     )}
                     {selected.subscription_plan === "매출비례" && (
                       <div className="info-row"><span>매출 %</span><strong>{(selected.subscription_revenue_pct ?? 0)}%</strong></div>
