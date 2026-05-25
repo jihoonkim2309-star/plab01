@@ -32,29 +32,41 @@ export default async function AdminLayout({
     .eq("id", userId)
     .single();
 
-  // 단일 세션 가드 — cookie session_id ≠ DB current_session_id 면 강제 로그아웃
-  // (다른 곳에서 takeover 했거나, inactivity 로그아웃 이후 우연히 다시 진입한 케이스)
+  // 단일 세션 가드
   const jarPre = await cookies();
   const cookieSid = jarPre.get(SESSION_COOKIE)?.value ?? null;
-  if (profile?.current_session_id && cookieSid !== profile.current_session_id) {
-    await supabase.auth.signOut();
-    redirect("/login?msg=ousted");
-  }
-  // inactivity 만료 (4h+ 미갱신)
-  if (
-    profile?.current_session_id &&
-    profile?.last_seen_at &&
-    !isActiveSession(profile.last_seen_at)
-  ) {
+
+  // legacy 호환: session 정책 배포 전 로그인한 사용자는 session_id 가 null.
+  // cookie 가 있으면 그 값으로, 없으면 새 UUID 발급해서 DB 와 cookie 동기화 (현 진입을 active 로 등록).
+  if (!profile?.current_session_id) {
+    const newSid = cookieSid ?? crypto.randomUUID();
     await supabase
       .from("users")
-      .update({ current_session_id: null })
+      .update({ current_session_id: newSid, last_seen_at: new Date().toISOString() })
       .eq("id", userId);
-    await supabase.auth.signOut();
-    redirect("/login?msg=inactive");
-  }
-  // 활동 갱신
-  if (profile?.current_session_id) {
+    if (!cookieSid) {
+      jarPre.set(SESSION_COOKIE, newSid, {
+        path: "/",
+        sameSite: "lax",
+        maxAge: 4 * 60 * 60,
+      });
+    }
+  } else {
+    // cookie ≠ DB → 다른 곳 takeover 발생. 강제 로그아웃.
+    if (cookieSid !== profile.current_session_id) {
+      await supabase.auth.signOut();
+      redirect("/login?msg=ousted");
+    }
+    // inactivity 만료 (4h+ 미갱신)
+    if (profile.last_seen_at && !isActiveSession(profile.last_seen_at)) {
+      await supabase
+        .from("users")
+        .update({ current_session_id: null })
+        .eq("id", userId);
+      await supabase.auth.signOut();
+      redirect("/login?msg=inactive");
+    }
+    // 활동 갱신
     await supabase
       .from("users")
       .update({ last_seen_at: new Date().toISOString() })
