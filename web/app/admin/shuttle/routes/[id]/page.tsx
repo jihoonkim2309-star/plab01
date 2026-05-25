@@ -263,7 +263,8 @@ export default async function ShuttleRouteDetailPage({
             </div>
             <p className="muted" style={{ fontSize: 11, marginTop: 8 }}>
               💡 [주소 검색] 으로 도로명 주소를 선택하면 좌표가 자동 변환됩니다.
-              도착 분을 비우고 저장하면 이전 정류장과의 직선거리로 추천 분을 계산해 채워 줍니다 (도심 평균 25km/h 기준).
+              도착 분을 비우면 TMap 자동차 경로(실제 도로) 기준 누적 분을 추천합니다. 첫 정류장은 센터(지점) 주소를 출발지로 사용.
+              TMap 키 미설정 시 직선거리×1.3 보정으로 fallback.
             </p>
             <div className="detail-actions">
               <button className="btn primary" type="submit">정류장 추가</button>

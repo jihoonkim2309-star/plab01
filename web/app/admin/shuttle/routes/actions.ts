@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireCenter } from "@/lib/center";
 import { addressToCoords } from "@/lib/kakao";
 import { haversineKm, suggestMinutes } from "@/lib/distance";
+import { routeByCar } from "@/lib/tmap";
 
 export async function createRoute(formData: FormData) {
   const { supabase, centerId: cid } = await requireCenter();
@@ -96,8 +97,15 @@ export async function createStop(routeId: string, formData: FormData) {
       }
     }
     if (origin) {
-      const km = haversineKm(origin, coords);
-      const segmentMin = suggestMinutes(km);
+      // 1순위: TMap 자동차 경로 (실제 도로)
+      let segmentMin: number | null = null;
+      const route = await routeByCar(origin, coords);
+      if (route) segmentMin = route.minutes;
+      else {
+        // 2순위 fallback: 직선거리 × 1.3 도로 곡률 보정 + 25km/h
+        const km = haversineKm(origin, coords);
+        segmentMin = suggestMinutes(km * 1.3);
+      }
       est = baseAccumMin + segmentMin;
     }
   }
