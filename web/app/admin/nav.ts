@@ -67,6 +67,7 @@ export const NAV: NavGroup[] = [
       { label: "청구 관리", slug: "billing-manage", href: "/admin/billing", ready: true, reviewed: true },
       { label: "결제 상태", slug: "payment-status", href: "/admin/payment-status", ready: true, reviewed: true },
       { label: "미납 관리", slug: "overdue-manage", href: "/admin/overdue", ready: true, reviewed: true },
+      { label: "본사 청구서 (받음)", slug: "my-hq-invoices", href: "/admin/my-hq-invoices", ready: true, reviewed: true },
     ],
   },
   {

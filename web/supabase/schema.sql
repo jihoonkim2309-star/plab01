@@ -337,6 +337,54 @@ drop trigger if exists hq_invoices_touch on public.hq_invoices;
 create trigger hq_invoices_touch before update on public.hq_invoices
   for each row execute function public.touch_updated_at();
 
+-- 본사 청구 자동 발행 (Vercel Cron 매일 호출). SECURITY DEFINER 로 RLS 우회.
+-- 오늘이 hq_billing_day 인 지점, 같은 period 청구서 미발행 케이스만 멱등 발행.
+create or replace function public.generate_due_hq_invoices()
+returns integer language plpgsql security definer set search_path = public as $$
+declare
+  v_count integer := 0;
+  v_period text := to_char(current_date, 'YYYY-MM');
+  r record;
+  v_student_count integer;
+  v_total integer;
+begin
+  for r in
+    select id, subscription_plan, subscription_base_fee, subscription_per_student, hq_billing_day
+      from public.centers
+     where hq_billing_day = extract(day from current_date)::int
+       and not exists (
+         select 1 from public.hq_invoices i
+          where i.center_id = centers.id and i.period = v_period
+       )
+  loop
+    select count(*) into v_student_count
+      from public.students
+     where center_id = r.id and status = '활성';
+
+    if r.subscription_plan = '정액' then
+      v_total := coalesce(r.subscription_base_fee, 0);
+    elsif r.subscription_plan = '학생수' then
+      v_total := coalesce(r.subscription_per_student, 0) * v_student_count;
+    else
+      v_total := coalesce(r.subscription_base_fee, 0)
+               + coalesce(r.subscription_per_student, 0) * v_student_count;
+    end if;
+
+    insert into public.hq_invoices
+      (center_id, period, plan, base_fee, per_student_fee, student_count, total,
+       status, due_date, issued_at)
+    values
+      (r.id, v_period, coalesce(r.subscription_plan, '정액'),
+       coalesce(r.subscription_base_fee, 0),
+       coalesce(r.subscription_per_student, 0),
+       v_student_count, v_total, '청구',
+       (v_period || '-' || lpad(least(r.hq_billing_day, 28)::text, 2, '0'))::date,
+       now());
+    v_count := v_count + 1;
+  end loop;
+  return v_count;
+end $$;
+
 -- classes 정규화 컬럼 보강
 alter table public.classes add column if not exists coach_id     uuid references public.users(id) on delete set null;
 alter table public.classes add column if not exists days_of_week text;       -- 예: "월,수,금"
