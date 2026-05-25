@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PlanB · 학원 관리",
-  description: "배드민턴 + 기초체력 학원 운영 관리 시스템",
+  title: "Planb Glow",
+  description: "Planb Glow",
 };
 
 export default function RootLayout({
