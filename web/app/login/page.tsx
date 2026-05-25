@@ -3,12 +3,23 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+// 휴대폰 번호 자동 하이픈. 11자리=3-4-4, 10자리=3-3-4 분기.
+function formatPhone(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 11);
+  if (d.length < 4) return d;
+  if (d.length < 7) return `${d.slice(0, 3)}-${d.slice(3)}`;
+  if (d.length === 10) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+  if (d.length < 11) return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+  return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+}
+
 export default function LoginPage() {
   const supabase = createClient();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [applyingCenter, setApplyingCenter] = useState("");
@@ -44,6 +55,11 @@ export default function LoginPage() {
       document.cookie = "active_center=; max-age=0; path=/";
       window.location.assign("/admin");
     } else {
+      if (password !== passwordConfirm) {
+        setMsg("비밀번호가 일치하지 않습니다.");
+        setLoading(false);
+        return;
+      }
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -235,11 +251,12 @@ export default function LoginPage() {
                   <label className="block text-xs font-semibold text-zinc-700 mb-1.5">연락처</label>
                   <input
                     type="tel"
-                    inputMode="tel"
+                    inputMode="numeric"
                     className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => setPhone(formatPhone(e.target.value))}
                     placeholder="010-0000-0000"
+                    maxLength={13}
                     required
                   />
                 </div>
@@ -303,6 +320,27 @@ export default function LoginPage() {
                 required
               />
             </div>
+            {mode === "signup" && (
+              <div>
+                <label className="block text-xs font-semibold text-zinc-700 mb-1.5">비밀번호 확인</label>
+                <input
+                  type="password"
+                  className={`w-full rounded-md border px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 transition ${
+                    passwordConfirm && password !== passwordConfirm
+                      ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500/15"
+                      : "border-zinc-200 focus:border-[#1e794e] focus:ring-[#1e794e]/15"
+                  }`}
+                  value={passwordConfirm}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
+                  placeholder="••••••"
+                  minLength={6}
+                  required
+                />
+                {passwordConfirm && password !== passwordConfirm && (
+                  <p className="text-[11px] text-rose-600 mt-1">비밀번호가 일치하지 않습니다.</p>
+                )}
+              </div>
+            )}
 
             {msg && (
               <div className="text-sm rounded-md p-3 bg-rose-50 text-rose-700 border border-rose-200">
