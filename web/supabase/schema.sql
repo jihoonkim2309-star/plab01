@@ -34,6 +34,13 @@ create table if not exists public.users (
   email      text,
   created_at timestamptz not null default now()
 );
+-- 기존 users 테이블이 다른 컬럼 세트로 만들어져 있던 환경 대비 — 누락 시 자동 추가.
+-- (create table if not exists 는 이미 있으면 컬럼 추가 안 함)
+alter table public.users add column if not exists center_id uuid references public.centers(id) on delete set null;
+alter table public.users add column if not exists role       user_role;
+alter table public.users add column if not exists name       text;
+alter table public.users add column if not exists email      text;
+alter table public.users add column if not exists created_at timestamptz not null default now();
 
 -- ---------- 3. students (학생) ------------------------------------------
 create table if not exists public.students (
