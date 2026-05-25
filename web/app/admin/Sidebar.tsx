@@ -13,6 +13,7 @@ import {
   FileText,
   MessageSquare,
   Settings,
+  UserCog,
   Users,
   Wallet,
   type LucideIcon,
@@ -22,6 +23,7 @@ import { NAV, type NavGroup } from "./nav";
 const ICON_MAP: Record<string, LucideIcon> = {
   Building2,
   Users,
+  UserCog,
   BookOpen,
   CalendarDays,
   Wallet,
@@ -66,6 +68,7 @@ function isActive(pathname: string, href: string) {
   if (href === "/admin/users") return pathname.startsWith("/admin/users");
   if (href === "/admin/hq-invoices") return pathname.startsWith("/admin/hq-invoices");
   if (href === "/admin/my-hq-invoices") return pathname.startsWith("/admin/my-hq-invoices");
+  if (href === "/admin/driver-accounts") return pathname.startsWith("/admin/driver-accounts");
   return pathname === href;
 }
 

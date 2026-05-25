@@ -44,7 +44,15 @@ export const NAV: NavGroup[] = [
       { label: "자녀 연결 승인", slug: "parent-link", href: "/admin/parent-links", ready: true },
       { label: "학생 계정 관리", slug: "student-accounts", href: "/admin/student-accounts", ready: true },
       { label: "학생 연결 승인", slug: "student-link", href: "/admin/student-links", ready: true },
+    ],
+  },
+  {
+    label: "직원",
+    icon: "UserCog",
+    items: [
       { label: "코치 계정 관리", slug: "coach-accounts", href: "/admin/coach-accounts", ready: true, reviewed: true },
+      { label: "기사 계정 관리", slug: "driver-accounts", href: "/admin/driver-accounts", ready: true, reviewed: true },
+      { label: "직원 가입 승인", slug: "staff-approvals", href: "/admin/admin-approvals", ready: true, reviewed: true },
     ],
   },
   {
@@ -109,7 +117,6 @@ export const NAV: NavGroup[] = [
       { label: "알림/로그", slug: "logs", href: "/admin/notifications", ready: true, reviewed: true },
       { label: "알림 발송 로그", slug: "notification-log", href: "/admin/notifications", ready: true, reviewed: true },
       { label: "감사 로그", slug: "audit-log", href: "/admin/audit-logs", ready: true, reviewed: true },
-      { label: "직원 가입 승인", slug: "admin-approvals-admin", href: "/admin/admin-approvals", ready: true, reviewed: true },
       { label: "설정", slug: "settings", href: "/admin/settings", ready: true, reviewed: true },
     ],
   },
