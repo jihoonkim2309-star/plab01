@@ -137,7 +137,7 @@ export default function StudentForm({
           <h1>{title}</h1>
         </div>
         <div className="toolbar">
-          <button type="button" className="btn" disabled title="다음 슬라이스">
+          <button type="button" className="btn" disabled title="준비 중인 기능입니다">
             임시저장
           </button>
           <a className="btn" href={cancelHref}>
@@ -270,7 +270,7 @@ export default function StudentForm({
                   )}
                 </div>
                 <Field label="수강 시작일" type="date" />
-                <Field label="청구 시작월" placeholder="YYYY-MM (결제 슬라이스)" />
+                <Field label="청구 시작월" placeholder="예: 2026-04 (자동 계산)" />
               </div>
             </div>
           </div>
@@ -390,11 +390,11 @@ export default function StudentForm({
                   placeholder="선택 없음"
                   span2
                 />
-                <Field label="승차 정류장" placeholder="셔틀 슬라이스" />
-                <Field label="하차 정류장" placeholder="셔틀 슬라이스" />
+                <Field label="승차 정류장" placeholder="셔틀 운영 시 자동 연결" />
+                <Field label="하차 정류장" placeholder="셔틀 운영 시 자동 연결" />
                 <Field
                   label="학생 앱 계정"
-                  placeholder="학생 계정 슬라이스"
+                  placeholder="학생 앱 가입 시 자동 연결"
                   span2
                 />
               </div>
