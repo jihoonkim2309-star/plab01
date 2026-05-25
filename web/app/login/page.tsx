@@ -2,16 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-
-// 휴대폰 번호 자동 하이픈. 11자리=3-4-4, 10자리=3-3-4 분기.
-function formatPhone(value: string): string {
-  const d = value.replace(/\D/g, "").slice(0, 11);
-  if (d.length < 4) return d;
-  if (d.length < 7) return `${d.slice(0, 3)}-${d.slice(3)}`;
-  if (d.length === 10) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
-  if (d.length < 11) return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
-  return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
-}
+import { formatPhone, PHONE_PLACEHOLDER } from "@/lib/phone";
 
 export default function LoginPage() {
   const supabase = createClient();
@@ -269,7 +260,7 @@ export default function LoginPage() {
                     className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
                     value={phone}
                     onChange={(e) => setPhone(formatPhone(e.target.value))}
-                    placeholder="010-0000-0000"
+                    placeholder={PHONE_PLACEHOLDER}
                     maxLength={13}
                     required
                   />

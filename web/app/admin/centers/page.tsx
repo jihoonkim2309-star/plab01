@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ConfirmButton from "../ConfirmButton";
+import PhoneInput from "../PhoneInput";
 import { createCenter, deleteCenter, updateCenter } from "./actions";
 
 export default async function CentersPage({
@@ -131,10 +132,9 @@ export default async function CentersPage({
             </div>
             <div className="field">
               <label>대표 연락처</label>
-              <input
+              <PhoneInput
                 name="contact_phone"
                 defaultValue={editing?.contact_phone ?? ""}
-                placeholder="02-0000-0000"
               />
             </div>
             <div className="field span-2">

@@ -38,7 +38,7 @@ export default async function UsersPage({
     .not("role", "is", null)
     .order("created_at", { ascending: false });
   if (role) listQuery = listQuery.eq("role", role);
-  if (q) listQuery = listQuery.or(`name.ilike.%${q}%,email.ilike.%${q}%`);
+  if (q) listQuery = listQuery.or(`name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`);
 
   const [listRes, allRes] = await Promise.all([
     listQuery,
@@ -113,7 +113,7 @@ export default async function UsersPage({
               ]}
             />
             <div style={{ flex: 1 }} />
-            <SearchInput param="q" current={q} placeholder="이름·이메일 검색" />
+            <SearchInput param="q" current={q} placeholder="이름·이메일·연락처 검색" />
             {hasFilter && (
               <Link className="btn" href="/admin/users">
                 초기화

@@ -1,4 +1,6 @@
 import PhotoUpload from "./PhotoUpload";
+import PhoneInput from "../PhoneInput";
+import { PHONE_PLACEHOLDER } from "@/lib/phone";
 
 type Student = Record<string, string | null> | null;
 
@@ -35,14 +37,23 @@ function Field({
       data-error={errorText}
     >
       <label>{label}</label>
-      <input
-        name={name}
-        type={type}
-        defaultValue={value ?? ""}
-        placeholder={placeholder}
-        required={required}
-        {...dateProps}
-      />
+      {type === "tel" ? (
+        <PhoneInput
+          name={name}
+          defaultValue={value ?? ""}
+          placeholder={PHONE_PLACEHOLDER}
+          required={required}
+        />
+      ) : (
+        <input
+          name={name}
+          type={type}
+          defaultValue={value ?? ""}
+          placeholder={placeholder}
+          required={required}
+          {...dateProps}
+        />
+      )}
     </div>
   );
 }

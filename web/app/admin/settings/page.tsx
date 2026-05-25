@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import PhoneInput from "../PhoneInput";
 import { updateSettings } from "./actions";
 
 export default async function SettingsPage({
@@ -61,7 +62,7 @@ export default async function SettingsPage({
               </div>
               <div className="field">
                 <label>대표 연락처</label>
-                <input name="contact_phone" defaultValue={v("contact_phone")} />
+                <PhoneInput name="contact_phone" defaultValue={v("contact_phone")} />
               </div>
               <div className="field span-2">
                 <label>주소</label>

@@ -7,6 +7,7 @@ import {
   deleteInquiry,
 } from "./actions";
 import ConfirmButton from "../ConfirmButton";
+import PhoneInput from "../PhoneInput";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import FilterSelect from "../FilterSelect";
@@ -242,7 +243,7 @@ export default async function SupportPage({
                 </div>
                 <div className="field" style={{ marginTop: 12 }}>
                   <label>연락처</label>
-                  <input name="contact" />
+                  <PhoneInput name="contact" />
                 </div>
                 <div className="field" style={{ marginTop: 12 }}>
                   <label>채널</label>

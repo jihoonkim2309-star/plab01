@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import PhoneInput from "../PhoneInput";
 import { updateMyProfile, changeMyPassword } from "./actions";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -87,11 +88,9 @@ export default async function MyProfilePage({
             </div>
             <div className="field">
               <label>연락처</label>
-              <input
+              <PhoneInput
                 name="phone"
                 defaultValue={p?.phone ?? ""}
-                placeholder="010-0000-0000"
-                inputMode="tel"
               />
             </div>
             <div className="field">
