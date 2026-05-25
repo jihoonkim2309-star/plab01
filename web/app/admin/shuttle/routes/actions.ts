@@ -75,11 +75,31 @@ export async function createStop(routeId: string, formData: FormData) {
     .maybeSingle();
   const nextSeq = (prev?.sequence ?? -1) + 1;
 
-  // 자동 추천: 사용자가 분 미입력 + 좌표 둘 다 있을 때
-  if (est === null && coords && prev?.lat != null && prev?.lng != null) {
-    const km = haversineKm({ lat: prev.lat, lng: prev.lng }, coords);
-    const segmentMin = suggestMinutes(km);
-    est = (prev.est_minutes_from_start ?? 0) + segmentMin;
+  // 자동 추천: 사용자가 분 미입력 + 새 정류장 좌표 있을 때
+  if (est === null && coords) {
+    let origin: { lat: number; lng: number } | null = null;
+    let baseAccumMin = 0;
+    if (prev?.lat != null && prev?.lng != null) {
+      // 이전 정류장 좌표 사용 (누적 분 이어받음)
+      origin = { lat: prev.lat, lng: prev.lng };
+      baseAccumMin = prev.est_minutes_from_start ?? 0;
+    } else {
+      // 첫 정류장: 센터(지점) 주소를 출발지로 사용
+      const { data: center } = await supabase
+        .from("centers")
+        .select("address")
+        .eq("id", cid)
+        .maybeSingle();
+      if (center?.address) {
+        const centerCoords = await addressToCoords(center.address);
+        if (centerCoords) origin = centerCoords;
+      }
+    }
+    if (origin) {
+      const km = haversineKm(origin, coords);
+      const segmentMin = suggestMinutes(km);
+      est = baseAccumMin + segmentMin;
+    }
   }
 
   const { error } = await supabase.from("shuttle_stops").insert({
