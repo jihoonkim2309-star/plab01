@@ -83,7 +83,7 @@ export const NAV: NavGroup[] = [
     icon: "Bus",
     items: [
       { label: "노선/정류장 관리", slug: "shuttle-routes", href: "/admin/shuttle/routes", ready: true },
-      { label: "차량 관리", slug: "shuttle-vehicles", href: p("shuttle-vehicles") },
+      { label: "차량 관리", slug: "shuttle-vehicles", href: "/admin/shuttle/vehicles", ready: true },
       { label: "운행 일정", slug: "shuttle-runs", href: p("shuttle-runs") },
       { label: "학생 배정", slug: "shuttle-assignments", href: p("shuttle-assignments") },
       { label: "승하차 로그", slug: "shuttle-logs", href: p("shuttle-logs") },
