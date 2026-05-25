@@ -29,6 +29,7 @@ export const NAV: NavGroup[] = [
     items: [
       { label: "지점 관리", slug: "centers", href: "/admin/centers", ready: true, reviewed: true },
       { label: "지점장 가입 승인", slug: "admin-approvals", href: "/admin/admin-approvals", ready: true, reviewed: true },
+      { label: "사용자 비밀번호 관리", slug: "users-reset", href: "/admin/users", ready: true, reviewed: true },
     ],
   },
   {

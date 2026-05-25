@@ -16,7 +16,7 @@ function formatPhone(value: string): string {
 export default function LoginPage() {
   const supabase = createClient();
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -54,6 +54,18 @@ export default function LoginPage() {
       // (일반 admin/coach 는 user.center_id 가 자동 fallback 되어 영향 없음.)
       document.cookie = "active_center=; max-age=0; path=/";
       window.location.assign("/admin");
+    } else if (mode === "reset") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        setMsg("재설정 메일 발송 실패: " + error.message);
+        setLoading(false);
+        return;
+      }
+      setMsg("재설정 링크를 이메일로 보냈습니다. 메일함을 확인해 주세요.");
+      setMode("signin");
+      setLoading(false);
     } else {
       if (password !== passwordConfirm) {
         setMsg("비밀번호가 일치하지 않습니다.");
@@ -226,12 +238,14 @@ export default function LoginPage() {
           </div>
 
           <h1 className="text-2xl font-extrabold text-zinc-900 tracking-tight">
-            환영합니다 <span>👋</span>
+            {mode === "reset" ? "비밀번호 찾기" : <>환영합니다 <span>👋</span></>}
           </h1>
           <p className="mt-2 text-sm text-zinc-500">
             {mode === "signin"
               ? "관리자 계정으로 로그인해 주세요."
-              : "관리자 계정을 만들어 시작하세요."}
+              : mode === "signup"
+                ? "관리자 계정을 만들어 시작하세요."
+                : "가입 시 사용한 이메일로 재설정 링크를 보내드립니다."}
           </p>
 
           <form onSubmit={onSubmit} className="mt-8 space-y-4">
@@ -308,18 +322,20 @@ export default function LoginPage() {
                 required
               />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 mb-1.5">비밀번호</label>
-              <input
-                type="password"
-                className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••"
-                minLength={6}
-                required
-              />
-            </div>
+            {mode !== "reset" && (
+              <div>
+                <label className="block text-xs font-semibold text-zinc-700 mb-1.5">비밀번호</label>
+                <input
+                  type="password"
+                  className="w-full rounded-md border border-zinc-200 px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#1e794e] focus:ring-2 focus:ring-[#1e794e]/15 transition"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••"
+                  minLength={6}
+                  required
+                />
+              </div>
+            )}
             {mode === "signup" && (
               <div>
                 <label className="block text-xs font-semibold text-zinc-700 mb-1.5">비밀번호 확인</label>
@@ -361,29 +377,49 @@ export default function LoginPage() {
                 ? "처리 중..."
                 : mode === "signin"
                   ? "로그인"
-                  : "회원가입"}
+                  : mode === "signup"
+                    ? "회원가입"
+                    : "재설정 링크 받기"}
             </button>
           </form>
 
-          <button
-            onClick={() => {
-              setMode(mode === "signin" ? "signup" : "signin");
-              setMsg(null);
-            }}
-            className="mt-6 w-full text-sm text-zinc-500 hover:text-[#1e794e] transition"
-          >
-            {mode === "signin" ? (
+          <div className="mt-6 flex flex-col items-center gap-2">
+            {mode === "signin" && (
               <>
-                관리자 계정이 없으신가요?{" "}
-                <span className="font-semibold text-[#1e794e]">회원가입</span>
-              </>
-            ) : (
-              <>
-                이미 계정이 있으신가요?{" "}
-                <span className="font-semibold text-[#1e794e]">로그인</span>
+                <button
+                  onClick={() => { setMode("reset"); setMsg(null); }}
+                  className="text-sm text-zinc-500 hover:text-[#1e794e] transition"
+                >
+                  비밀번호를 잊으셨나요?{" "}
+                  <span className="font-semibold text-[#1e794e]">재설정</span>
+                </button>
+                <button
+                  onClick={() => { setMode("signup"); setMsg(null); }}
+                  className="text-sm text-zinc-500 hover:text-[#1e794e] transition"
+                >
+                  관리자 계정이 없으신가요?{" "}
+                  <span className="font-semibold text-[#1e794e]">회원가입</span>
+                </button>
               </>
             )}
-          </button>
+            {mode === "signup" && (
+              <button
+                onClick={() => { setMode("signin"); setMsg(null); }}
+                className="text-sm text-zinc-500 hover:text-[#1e794e] transition"
+              >
+                이미 계정이 있으신가요?{" "}
+                <span className="font-semibold text-[#1e794e]">로그인</span>
+              </button>
+            )}
+            {mode === "reset" && (
+              <button
+                onClick={() => { setMode("signin"); setMsg(null); }}
+                className="text-sm text-zinc-500 hover:text-[#1e794e] transition"
+              >
+                <span className="font-semibold text-[#1e794e]">← 로그인으로 돌아가기</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
