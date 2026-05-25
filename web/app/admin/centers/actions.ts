@@ -19,6 +19,7 @@ export async function createCenter(formData: FormData) {
   const payload = {
     name,
     contact_phone: String(formData.get("contact_phone") ?? "").trim() || null,
+    business_no: String(formData.get("business_no") ?? "").trim() || null,
     address: String(formData.get("address") ?? "").trim() || null,
     billing_day: parseDay(formData.get("billing_day"), 10),
     report_day: parseDay(formData.get("report_day"), 1),
@@ -38,6 +39,7 @@ export async function updateCenter(formData: FormData) {
   const payload = {
     name: String(formData.get("name") ?? "").trim(),
     contact_phone: String(formData.get("contact_phone") ?? "").trim() || null,
+    business_no: String(formData.get("business_no") ?? "").trim() || null,
     address: String(formData.get("address") ?? "").trim() || null,
     billing_day: parseDay(formData.get("billing_day"), 10),
     report_day: parseDay(formData.get("report_day"), 1),

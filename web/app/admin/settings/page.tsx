@@ -1,6 +1,7 @@
 import { requireCenter } from "@/lib/center";
 import PhoneInput from "../PhoneInput";
 import AddressField from "../AddressField";
+import BusinessNoInput from "../BusinessNoInput";
 import { updateSettings } from "./actions";
 
 export default async function SettingsPage({
@@ -60,6 +61,10 @@ export default async function SettingsPage({
               <div className="field">
                 <label>대표 연락처</label>
                 <PhoneInput name="contact_phone" defaultValue={v("contact_phone")} />
+              </div>
+              <div className="field">
+                <label>사업자등록번호</label>
+                <BusinessNoInput name="business_no" defaultValue={v("business_no")} />
               </div>
               <div className="field span-2">
                 <label>주소</label>

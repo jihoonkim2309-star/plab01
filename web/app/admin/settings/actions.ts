@@ -15,6 +15,7 @@ export async function updateSettings(formData: FormData) {
     .update({
       name: String(formData.get("name") ?? "") || "플랜비 본점",
       contact_phone: String(formData.get("contact_phone") ?? "") || null,
+      business_no: String(formData.get("business_no") ?? "") || null,
       address: String(formData.get("address") ?? "") || null,
       billing_day: Math.min(Math.max(bd, 1), 28),
       report_day: Math.min(Math.max(rd, 1), 28),

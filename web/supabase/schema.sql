@@ -288,6 +288,8 @@ alter table public.centers add column if not exists notify_enabled boolean not n
 alter table public.centers add column if not exists pg_store_id    text;
 alter table public.centers add column if not exists pg_channel_key text;
 alter table public.centers add column if not exists pg_api_secret  text;
+-- 사업자 등록번호 (000-00-00000)
+alter table public.centers add column if not exists business_no    text;
 
 -- classes 정규화 컬럼 보강
 alter table public.classes add column if not exists coach_id     uuid references public.users(id) on delete set null;

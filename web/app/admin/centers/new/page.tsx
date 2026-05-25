@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import PhoneInput from "../../PhoneInput";
 import AddressField from "../../AddressField";
+import BusinessNoInput from "../../BusinessNoInput";
 import BackLink from "../../BackLink";
 import { createCenter } from "../actions";
 
@@ -47,6 +48,10 @@ export default async function NewCenterPage() {
             <div className="field">
               <label>대표 연락처</label>
               <PhoneInput name="contact_phone" />
+            </div>
+            <div className="field">
+              <label>사업자등록번호</label>
+              <BusinessNoInput name="business_no" />
             </div>
             <div className="field span-2">
               <label>주소</label>

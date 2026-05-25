@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import PhoneInput from "../../../PhoneInput";
 import AddressField from "../../../AddressField";
+import BusinessNoInput from "../../../BusinessNoInput";
 import BackLink from "../../../BackLink";
 import ConfirmButton from "../../../ConfirmButton";
 import { updateCenter, deleteCenter } from "../../actions";
@@ -32,7 +33,7 @@ export default async function EditCenterPage({
 
   const { data: center } = await supabase
     .from("centers")
-    .select("id, name, contact_phone, address, billing_day, report_day")
+    .select("id, name, contact_phone, business_no, address, billing_day, report_day")
     .eq("id", id)
     .maybeSingle();
   if (!center) notFound();
@@ -76,6 +77,10 @@ export default async function EditCenterPage({
             <div className="field">
               <label>대표 연락처</label>
               <PhoneInput name="contact_phone" defaultValue={center.contact_phone ?? ""} />
+            </div>
+            <div className="field">
+              <label>사업자등록번호</label>
+              <BusinessNoInput name="business_no" defaultValue={center.business_no ?? ""} />
             </div>
             <div className="field span-2">
               <label>주소</label>

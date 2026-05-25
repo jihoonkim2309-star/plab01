@@ -30,14 +30,14 @@ export default async function CentersPage({
   const [centersRes, usersRes, studentsRes, selectedRes] = await Promise.all([
     supabase
       .from("centers")
-      .select("id, name, contact_phone, address, billing_day, report_day, created_at")
+      .select("id, name, contact_phone, business_no, address, billing_day, report_day, created_at")
       .order("created_at", { ascending: true }),
     supabase.from("users").select("center_id, role").in("role", ["admin", "coach"]),
     supabase.from("students").select("center_id, status"),
     selectedId
       ? supabase
           .from("centers")
-          .select("id, name, contact_phone, address, billing_day, report_day, created_at")
+          .select("id, name, contact_phone, business_no, address, billing_day, report_day, created_at")
           .eq("id", selectedId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -176,6 +176,7 @@ export default async function CentersPage({
                   <p className="detail-title">지점 정보</p>
                   <div className="info-list">
                     <div className="info-row"><span>대표 연락처</span><strong>{selected.contact_phone ?? "-"}</strong></div>
+                    <div className="info-row"><span>사업자등록번호</span><strong>{selected.business_no ?? "-"}</strong></div>
                     <div className="info-row"><span>주소</span><strong>{selected.address ?? "-"}</strong></div>
                     <div className="info-row"><span>결제일</span><strong>매월 {selected.billing_day}일</strong></div>
                     <div className="info-row"><span>리포트 발행일</span><strong>매월 {selected.report_day}일</strong></div>
