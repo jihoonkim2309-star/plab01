@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import PhoneInput from "../PhoneInput";
 import { updateSettings } from "./actions";
 
@@ -8,17 +8,13 @@ export default async function SettingsPage({
   searchParams: Promise<{ saved?: string }>;
 }) {
   const { saved } = await searchParams;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
-    .from("users")
-    .select("center_id")
-    .eq("id", user?.id ?? "")
-    .single();
+  // active_center 쿠키 우선 (super_admin) → profile.center_id (일반 admin)
+  // action 측도 동일하게 requireCenter 사용 — 읽기/쓰기 같은 센터.
+  const { supabase, centerId: cid } = await requireCenter();
   const { data: c } = await supabase
     .from("centers")
     .select("*")
-    .eq("id", (profile as { center_id: string } | null)?.center_id ?? "")
+    .eq("id", cid)
     .single();
 
   const v = (k: string) =>
