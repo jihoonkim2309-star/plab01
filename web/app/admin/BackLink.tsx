@@ -18,11 +18,11 @@ export default function BackLink({
   desc?: string;
 }) {
   return (
-    <p className="subtext">
-      <Link href={href} style={{ color: "var(--muted)" }}>
+    <div className="back-link">
+      <Link href={href} className="back-link-anchor">
         ← {label}
       </Link>
-      {desc && <> · {desc}</>}
-    </p>
+      {desc && <p className="subtext" style={{ marginTop: 2 }}>{desc}</p>}
+    </div>
   );
 }

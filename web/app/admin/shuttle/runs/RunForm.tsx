@@ -44,8 +44,8 @@ export default function RunForm({
     <form action={action}>
       <div className="page-head">
         <div>
-          <h1>{title}</h1>
           <BackLink href={cancelHref} label={backLabel} />
+          <h1>{title}</h1>
         </div>
         <div className="toolbar">
           {isEdit && deleteAction && (

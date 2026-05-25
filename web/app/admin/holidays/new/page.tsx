@@ -15,8 +15,9 @@ export default async function HolidayNewPage() {
     <>
       <div className="page-head">
         <div>
+          <BackLink href="/admin/holidays" label="휴강 목록" />
           <h1>휴강 등록</h1>
-          <BackLink href="/admin/holidays" label="휴강 목록" desc="전체 휴강 또는 특정 클래스 휴강" />
+          <p className="subtext">전체 휴강 또는 특정 클래스 휴강</p>
         </div>
       </div>
 

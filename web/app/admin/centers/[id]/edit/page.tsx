@@ -41,12 +41,12 @@ export default async function EditCenterPage({
     <>
       <div className="page-head">
         <div>
-          <h1>{center.name}</h1>
           <BackLink
             href={`/admin/centers?center=${center.id}`}
             label="지점 상세"
-            desc="지점 정보 수정"
           />
+          <h1>{center.name}</h1>
+          <p className="subtext">지점 정보 수정</p>
         </div>
         <div className="toolbar">
           <form action={deleteCenter}>

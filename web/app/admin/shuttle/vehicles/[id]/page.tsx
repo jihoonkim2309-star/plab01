@@ -33,8 +33,9 @@ export default async function ShuttleVehicleDetailPage({
     <>
       <div className="page-head">
         <div>
+          <BackLink href="/admin/shuttle/vehicles" label="차량 목록" />
           <h1>{vehicle.name}</h1>
-          <BackLink href="/admin/shuttle/vehicles" label="차량 목록" desc="차량 정보 + 부착용 QR" />
+          <p className="subtext">차량 정보 + 부착용 QR</p>
         </div>
       </div>
 

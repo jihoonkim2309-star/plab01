@@ -145,8 +145,8 @@ export default function StudentForm({
     <form action={action}>
       <div className="page-head">
         <div>
-          <h1>{title}</h1>
           <BackLink href={cancelHref} label={backLabel} />
+          <h1>{title}</h1>
         </div>
         <div className="toolbar">
           <button type="button" className="btn" disabled title="준비 중인 기능입니다">

@@ -28,8 +28,9 @@ export default async function NewCenterPage() {
     <>
       <div className="page-head">
         <div>
+          <BackLink href="/admin/centers" label="지점 목록" />
           <h1>지점 개설</h1>
-          <BackLink href="/admin/centers" label="지점 목록" desc="새 지점 개설 (슈퍼 어드민 전용)" />
+          <p className="subtext">새 지점 개설 (슈퍼 어드민 전용)</p>
         </div>
       </div>
 

@@ -7,8 +7,9 @@ export default function ShuttleRouteNewPage() {
     <>
       <div className="page-head">
         <div>
+          <BackLink href="/admin/shuttle/routes" label="노선 목록" />
           <h1>노선 등록</h1>
-          <BackLink href="/admin/shuttle/routes" label="노선 목록" desc="새 셔틀 노선 추가" />
+          <p className="subtext">새 셔틀 노선 추가</p>
         </div>
       </div>
 

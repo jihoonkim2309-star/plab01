@@ -5,7 +5,7 @@
 // - 2행: 상세주소 input (동/호수·층수 등 사용자 직접 입력)
 // - submit 시 두 값을 공백으로 합쳐 한 name 으로 전송 (DB 컬럼 분리 안 함)
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 declare global {
   interface Window {
@@ -77,6 +77,19 @@ export default function AddressField({
 
   const combined = [road.trim(), detail.trim()].filter(Boolean).join(" ");
 
+  // 부모 form 의 reset 이벤트 listening — controlled state 도 초기값으로 복귀
+  const hiddenRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const form = hiddenRef.current?.closest("form");
+    if (!form) return;
+    const handler = () => {
+      setRoad(initial.road);
+      setDetail(initial.detail);
+    };
+    form.addEventListener("reset", handler);
+    return () => form.removeEventListener("reset", handler);
+  }, [initial.road, initial.detail]);
+
   async function openPostcode(query?: string) {
     if (loading) return;
     setLoading(true);
@@ -130,7 +143,7 @@ export default function AddressField({
         style={{ flex: 1, minWidth: 0 }}
       />
       {/* 실제 submit 되는 값 — 도로명 + 상세 합쳐서 한 문자열로 */}
-      <input type="hidden" name={name} value={combined} />
+      <input ref={hiddenRef} type="hidden" name={name} value={combined} />
     </div>
   );
 }

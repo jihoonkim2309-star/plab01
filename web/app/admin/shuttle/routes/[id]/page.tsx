@@ -45,8 +45,9 @@ export default async function ShuttleRouteDetailPage({
     <>
       <div className="page-head">
         <div>
+          <BackLink href="/admin/shuttle/routes" label="노선 목록" />
           <h1>{route.name}</h1>
-          <BackLink href="/admin/shuttle/routes" label="노선 목록" desc="노선 정보 수정 + 정류장 순서/주소 관리" />
+          <p className="subtext">노선 정보 수정 + 정류장 순서/주소 관리</p>
         </div>
       </div>
 

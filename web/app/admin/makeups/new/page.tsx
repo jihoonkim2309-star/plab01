@@ -15,8 +15,9 @@ export default async function MakeupNewPage() {
     <>
       <div className="page-head">
         <div>
+          <BackLink href="/admin/makeups" label="보강 목록" />
           <h1>보강 등록</h1>
-          <BackLink href="/admin/makeups" label="보강 목록" desc="휴강·결석에 따른 보강 수업 일정" />
+          <p className="subtext">휴강·결석에 따른 보강 수업 일정</p>
         </div>
       </div>
 

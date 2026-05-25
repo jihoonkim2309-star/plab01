@@ -7,8 +7,9 @@ export default function ShuttleVehicleNewPage() {
     <>
       <div className="page-head">
         <div>
+          <BackLink href="/admin/shuttle/vehicles" label="차량 목록" />
           <h1>차량 등록</h1>
-          <BackLink href="/admin/shuttle/vehicles" label="차량 목록" desc="등록 시 QR 토큰이 자동 발급됩니다" />
+          <p className="subtext">등록 시 QR 토큰이 자동 발급됩니다</p>
         </div>
       </div>
 
