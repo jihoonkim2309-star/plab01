@@ -58,6 +58,9 @@ export default async function CentersPage({
   }
 
   const selected = selectedRes.data;
+  const selectedError = selectedId && !selected
+    ? (selectedRes as { error?: { message?: string } | null }).error?.message ?? null
+    : null;
 
   return (
     <>
@@ -157,10 +160,21 @@ export default async function CentersPage({
           </div>
           <div className="panel-body">
             {!selected ? (
-              <div className="empty-state">
-                <strong>선택된 지점이 없습니다</strong>
-                <p>왼쪽 목록에서 지점을 선택해 주세요.</p>
-              </div>
+              selectedError ? (
+                <div className="empty-state">
+                  <strong>지점 정보를 불러올 수 없습니다</strong>
+                  <p style={{ color: "var(--red)", fontSize: 13 }}>{selectedError}</p>
+                  <p style={{ marginTop: 8 }}>
+                    Supabase SQL Editor 에서 schema.sql 재실행이 필요할 수 있습니다.
+                    (사용료 정책 컬럼 누락 등)
+                  </p>
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>선택된 지점이 없습니다</strong>
+                  <p>왼쪽 목록에서 지점을 선택해 주세요.</p>
+                </div>
+              )
             ) : (
               <>
                 <div className="profile-hero" style={{ alignItems: "center" }}>
