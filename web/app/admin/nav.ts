@@ -85,7 +85,7 @@ export const NAV: NavGroup[] = [
       { label: "노선/정류장 관리", slug: "shuttle-routes", href: "/admin/shuttle/routes", ready: true },
       { label: "차량 관리", slug: "shuttle-vehicles", href: "/admin/shuttle/vehicles", ready: true },
       { label: "운행 일정", slug: "shuttle-runs", href: "/admin/shuttle/runs", ready: true },
-      { label: "학생 배정", slug: "shuttle-assignments", href: p("shuttle-assignments") },
+      { label: "학생 배정", slug: "shuttle-assignments", href: "/admin/shuttle/assignments", ready: true },
       { label: "승하차 로그", slug: "shuttle-logs", href: p("shuttle-logs") },
       { label: "셔틀 현황", slug: "shuttle-dashboard", href: p("shuttle-dashboard") },
     ],

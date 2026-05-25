@@ -46,24 +46,24 @@ export default async function NewCenterPage() {
               <input name="name" placeholder="플랜비 본점" required />
             </div>
             <div className="field">
-              <label>대표 연락처</label>
-              <PhoneInput name="contact_phone" />
+              <label>대표 연락처 *</label>
+              <PhoneInput name="contact_phone" required />
             </div>
             <div className="field">
-              <label>사업자등록번호</label>
-              <BusinessNoInput name="business_no" />
+              <label>사업자등록번호 *</label>
+              <BusinessNoInput name="business_no" required />
             </div>
             <div className="field span-2">
-              <label>주소</label>
-              <AddressField name="address" />
+              <label>주소 *</label>
+              <AddressField name="address" required />
             </div>
             <div className="field">
-              <label>결제일 (매월 N일, 1~28)</label>
-              <input name="billing_day" type="number" min={1} max={28} defaultValue={10} />
+              <label>결제일 (매월 N일, 1~28) *</label>
+              <input name="billing_day" type="number" min={1} max={28} defaultValue={10} required />
             </div>
             <div className="field">
-              <label>리포트 발행일 (매월 N일, 1~28)</label>
-              <input name="report_day" type="number" min={1} max={28} defaultValue={1} />
+              <label>리포트 발행일 (매월 N일, 1~28) *</label>
+              <input name="report_day" type="number" min={1} max={28} defaultValue={1} required />
             </div>
           </div>
           <div className="detail-actions">

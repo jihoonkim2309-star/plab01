@@ -13,14 +13,22 @@ function parseDay(v: FormDataEntryValue | null, fallback: number) {
 export async function createCenter(formData: FormData) {
   const { supabase } = await requireSuperAdmin();
   const name = String(formData.get("name") ?? "").trim();
-  if (!name) {
-    redirect("/admin/centers?error=" + encodeURIComponent("지점명은 필수입니다."));
+  const contact_phone = String(formData.get("contact_phone") ?? "").trim();
+  const business_no = String(formData.get("business_no") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim();
+  const missing: string[] = [];
+  if (!name) missing.push("지점명");
+  if (!contact_phone) missing.push("대표 연락처");
+  if (!business_no) missing.push("사업자등록번호");
+  if (!address) missing.push("주소");
+  if (missing.length) {
+    redirect("/admin/centers?error=" + encodeURIComponent(`다음 항목이 필요합니다: ${missing.join(", ")}`));
   }
   const payload = {
     name,
-    contact_phone: String(formData.get("contact_phone") ?? "").trim() || null,
-    business_no: String(formData.get("business_no") ?? "").trim() || null,
-    address: String(formData.get("address") ?? "").trim() || null,
+    contact_phone,
+    business_no,
+    address,
     billing_day: parseDay(formData.get("billing_day"), 10),
     report_day: parseDay(formData.get("report_day"), 1),
   };
@@ -36,17 +44,26 @@ export async function updateCenter(formData: FormData) {
   const { supabase } = await requireSuperAdmin();
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("id 누락");
+  const name = String(formData.get("name") ?? "").trim();
+  const contact_phone = String(formData.get("contact_phone") ?? "").trim();
+  const business_no = String(formData.get("business_no") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim();
+  const missing: string[] = [];
+  if (!name) missing.push("지점명");
+  if (!contact_phone) missing.push("대표 연락처");
+  if (!business_no) missing.push("사업자등록번호");
+  if (!address) missing.push("주소");
+  if (missing.length) {
+    redirect(`/admin/centers/${id}/edit?error=` + encodeURIComponent(`다음 항목이 필요합니다: ${missing.join(", ")}`));
+  }
   const payload = {
-    name: String(formData.get("name") ?? "").trim(),
-    contact_phone: String(formData.get("contact_phone") ?? "").trim() || null,
-    business_no: String(formData.get("business_no") ?? "").trim() || null,
-    address: String(formData.get("address") ?? "").trim() || null,
+    name,
+    contact_phone,
+    business_no,
+    address,
     billing_day: parseDay(formData.get("billing_day"), 10),
     report_day: parseDay(formData.get("report_day"), 1),
   };
-  if (!payload.name) {
-    redirect("/admin/centers?error=" + encodeURIComponent("지점명은 필수입니다."));
-  }
   const { error } = await supabase
     .from("centers")
     .update(payload)

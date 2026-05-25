@@ -75,24 +75,24 @@ export default async function EditCenterPage({
               <input name="name" defaultValue={center.name} required />
             </div>
             <div className="field">
-              <label>대표 연락처</label>
-              <PhoneInput name="contact_phone" defaultValue={center.contact_phone ?? ""} />
+              <label>대표 연락처 *</label>
+              <PhoneInput name="contact_phone" defaultValue={center.contact_phone ?? ""} required />
             </div>
             <div className="field">
-              <label>사업자등록번호</label>
-              <BusinessNoInput name="business_no" defaultValue={center.business_no ?? ""} />
+              <label>사업자등록번호 *</label>
+              <BusinessNoInput name="business_no" defaultValue={center.business_no ?? ""} required />
             </div>
             <div className="field span-2">
-              <label>주소</label>
-              <AddressField name="address" defaultValue={center.address ?? ""} />
+              <label>주소 *</label>
+              <AddressField name="address" defaultValue={center.address ?? ""} required />
             </div>
             <div className="field">
-              <label>결제일 (매월 N일, 1~28)</label>
-              <input name="billing_day" type="number" min={1} max={28} defaultValue={center.billing_day} />
+              <label>결제일 (매월 N일, 1~28) *</label>
+              <input name="billing_day" type="number" min={1} max={28} defaultValue={center.billing_day} required />
             </div>
             <div className="field">
-              <label>리포트 발행일 (매월 N일, 1~28)</label>
-              <input name="report_day" type="number" min={1} max={28} defaultValue={center.report_day} />
+              <label>리포트 발행일 (매월 N일, 1~28) *</label>
+              <input name="report_day" type="number" min={1} max={28} defaultValue={center.report_day} required />
             </div>
           </div>
           <div className="detail-actions">
