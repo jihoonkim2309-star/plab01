@@ -29,7 +29,6 @@ export const NAV: NavGroup[] = [
     items: [
       { label: "지점 관리", slug: "centers", href: "/admin/centers", ready: true, reviewed: true },
       { label: "지점장 가입 승인", slug: "admin-approvals", href: "/admin/admin-approvals", ready: true, reviewed: true },
-      { label: "사용자 비밀번호 관리", slug: "users-reset", href: "/admin/users", ready: true, reviewed: true },
       { label: "본사 청구 관리", slug: "hq-invoices", href: "/admin/hq-invoices", ready: true, reviewed: true },
     ],
   },
@@ -113,10 +112,12 @@ export const NAV: NavGroup[] = [
   {
     label: "시스템",
     icon: "Settings",
+    onlyRoles: ["super_admin", "admin"],
     items: [
       { label: "알림/로그", slug: "logs", href: "/admin/notifications", ready: true, reviewed: true },
       { label: "알림 발송 로그", slug: "notification-log", href: "/admin/notifications", ready: true, reviewed: true },
       { label: "감사 로그", slug: "audit-log", href: "/admin/audit-logs", ready: true, reviewed: true },
+      { label: "사용자 비밀번호 관리", slug: "users-reset", href: "/admin/users", ready: true, reviewed: true },
       { label: "설정", slug: "settings", href: "/admin/settings", ready: true, reviewed: true },
     ],
   },

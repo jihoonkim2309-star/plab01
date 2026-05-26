@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { requireSuperAdmin } from "@/lib/center";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
@@ -30,20 +31,39 @@ export default async function UsersPage({
   searchParams: Promise<{ q?: string; role?: string }>;
 }) {
   const { q, role } = await searchParams;
-  const { supabase } = await requireSuperAdmin();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { data: me } = await supabase
+    .from("users")
+    .select("role, center_id")
+    .eq("id", user.id)
+    .single();
+  if (me?.role !== "super_admin" && me?.role !== "admin") {
+    return (
+      <div className="page-head">
+        <h1>접근 불가</h1>
+        <p className="subtext">슈퍼 어드민 또는 지점장만 사용자 비밀번호를 관리할 수 있습니다.</p>
+      </div>
+    );
+  }
+  const isSuper = me.role === "super_admin";
 
   let listQuery = supabase
     .from("users")
     .select("id, email, name, phone, role, center_id, centers(name), created_at")
     .not("role", "is", null)
     .order("created_at", { ascending: false });
+  // 지점장은 자기 지점 사용자만
+  if (!isSuper && me?.center_id) listQuery = listQuery.eq("center_id", me.center_id);
   if (role) listQuery = listQuery.eq("role", role);
   if (q) listQuery = listQuery.or(`name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`);
 
-  const [listRes, allRes] = await Promise.all([
-    listQuery,
-    supabase.from("users").select("role").not("role", "is", null),
-  ]);
+  // totals 도 동일 범위
+  let totalsQuery = supabase.from("users").select("role").not("role", "is", null);
+  if (!isSuper && me?.center_id) totalsQuery = totalsQuery.eq("center_id", me.center_id);
+
+  const [listRes, allRes] = await Promise.all([listQuery, totalsQuery]);
 
   type Row = {
     id: string;
@@ -71,9 +91,11 @@ export default async function UsersPage({
     <>
       <div className="page-head">
         <div>
-          <h1>사용자 관리</h1>
+          <h1>사용자 비밀번호 관리</h1>
           <p className="subtext">
-            전체 사용자 비밀번호 초기화 — 대상 이메일로 재설정 링크가 발송됩니다 (슈퍼 어드민 전용)
+            {isSuper
+              ? "전체 지점 사용자 비밀번호 초기화 — 대상 이메일로 재설정 링크 발송 (슈퍼 어드민)"
+              : "우리 지점 사용자 비밀번호 초기화 — 대상 이메일로 재설정 링크 발송"}
           </p>
         </div>
       </div>
