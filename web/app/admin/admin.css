@@ -343,8 +343,8 @@
 .nav a.sub .ico { color: #b8c5c0; }
 .nav a.sub:hover .ico { color: var(--brand); }
 .nav a.sub.active .ico { color: #ffffff; }
-.nav a.sub.wip .ico { color: var(--red); }
-.nav a.sub.wip.active .ico { color: #ffffff; }
+.nav a.sub.needs-check .ico { color: var(--orange); }
+.nav a.sub.needs-check.active .ico { color: #ffffff; }
 .ico-dot { display: inline-flex; align-items: center; justify-content: center; }
 
 .nav a:hover {
@@ -367,17 +367,17 @@
   transition: color 140ms ease;
 }
 
-/* 수정중(sweep 미완료) 메뉴 — 빨간 톤. */
-.nav a.wip { color: var(--red); }
-.nav a.wip .ico { color: var(--red); }
-.nav a.wip:hover { background: var(--red-soft); color: var(--red); }
-.nav a.wip:hover .ico { color: var(--red); }
-.nav a.wip.active {
-  background: linear-gradient(118deg, var(--red) 0%, #f06d6e 100%);
+/* 수정 체크 필요 — 주황 톤 (사용자가 직접 확인할 항목 표시). */
+.nav a.needs-check { color: var(--orange); }
+.nav a.needs-check .ico { color: var(--orange); }
+.nav a.needs-check:hover { background: var(--orange-soft); color: var(--orange); }
+.nav a.needs-check:hover .ico { color: var(--orange); }
+.nav a.needs-check.active {
+  background: linear-gradient(118deg, var(--orange) 0%, #ffb968 100%);
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(234, 84, 85, 0.32);
+  box-shadow: 0 2px 8px rgba(255, 159, 67, 0.32);
 }
-.nav a.wip.active .ico { color: #ffffff; }
+.nav a.needs-check.active .ico { color: #ffffff; }
 
 .sidebar-footer {
   margin-top: auto;

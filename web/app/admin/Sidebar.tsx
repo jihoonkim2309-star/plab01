@@ -209,12 +209,12 @@ export default function Sidebar({
                   className={[
                     "sub",
                     isActive(pathname, item.href) ? "active" : "",
-                    item.reviewed ? "" : "wip",
+                    item.needsCheck ? "needs-check" : "",
                     !open ? "collapsed" : "",
                   ]
                     .filter(Boolean)
                     .join(" ")}
-                  title={item.reviewed ? undefined : "수정중 (sweep 미완료)"}
+                  title={item.needsCheck ? "수정 체크 필요" : undefined}
                   tabIndex={open ? 0 : -1}
                   aria-hidden={!open}
                 >

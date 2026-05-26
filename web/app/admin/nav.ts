@@ -6,8 +6,9 @@ export type NavItem = {
   slug: string;
   href: string;
   ready?: boolean;
-  // 어드민 sweep 진행 상태. true=검토 완료(초록). 미지정=수정중(빨강) — 팀원 안내용.
-  reviewed?: boolean;
+  // 수정 체크가 필요한 항목 — 사이드바에서 노란색(주황)으로 표시.
+  // 기본값(미지정)은 검토 완료 상태.
+  needsCheck?: boolean;
 };
 
 export type NavGroup = {
@@ -27,17 +28,17 @@ export const NAV: NavGroup[] = [
     icon: "Building2",
     onlyRoles: ["super_admin"],
     items: [
-      { label: "지점 관리", slug: "centers", href: "/admin/centers", ready: true, reviewed: true },
-      { label: "지점장 가입 승인", slug: "admin-approvals", href: "/admin/admin-approvals", ready: true, reviewed: true },
-      { label: "본사 청구 관리", slug: "hq-invoices", href: "/admin/hq-invoices", ready: true, reviewed: true },
+      { label: "지점 관리", slug: "centers", href: "/admin/centers", ready: true },
+      { label: "지점장 가입 승인", slug: "admin-approvals", href: "/admin/admin-approvals", ready: true },
+      { label: "본사 청구 관리", slug: "hq-invoices", href: "/admin/hq-invoices", ready: true },
     ],
   },
   {
     label: "회원",
     icon: "Users",
     items: [
-      { label: "회원 목록/상세", slug: "members", href: "/admin/students", ready: true, reviewed: true },
-      { label: "학생 등록", slug: "student-create", href: "/admin/students/new", ready: true, reviewed: true },
+      { label: "회원 목록/상세", slug: "members", href: "/admin/students", ready: true },
+      { label: "학생 등록", slug: "student-create", href: "/admin/students/new", ready: true },
       { label: "진학/학년 승급 관리", slug: "grade-promotion", href: "/admin/grade-promotions", ready: true },
       { label: "학부모 계정 관리", slug: "parent-accounts", href: "/admin/parent-accounts", ready: true },
       { label: "자녀 연결 승인", slug: "parent-link", href: "/admin/parent-links", ready: true },
@@ -49,9 +50,9 @@ export const NAV: NavGroup[] = [
     label: "직원",
     icon: "UserCog",
     items: [
-      { label: "코치 계정 관리", slug: "coach-accounts", href: "/admin/coach-accounts", ready: true, reviewed: true },
-      { label: "기사 계정 관리", slug: "driver-accounts", href: "/admin/driver-accounts", ready: true, reviewed: true },
-      { label: "직원 가입 승인", slug: "staff-approvals", href: "/admin/admin-approvals", ready: true, reviewed: true },
+      { label: "코치 계정 관리", slug: "coach-accounts", href: "/admin/coach-accounts", ready: true },
+      { label: "기사 계정 관리", slug: "driver-accounts", href: "/admin/driver-accounts", ready: true },
+      { label: "직원 가입 승인", slug: "staff-approvals", href: "/admin/admin-approvals", ready: true },
     ],
   },
   {
@@ -69,21 +70,21 @@ export const NAV: NavGroup[] = [
     label: "결제",
     icon: "Wallet",
     items: [
-      { label: "수강 상품 관리", slug: "product-manage", href: "/admin/products", ready: true, reviewed: true },
-      { label: "다음 달 수강 확인", slug: "renewal-confirm", href: "/admin/renewals", ready: true, reviewed: true },
-      { label: "청구 관리", slug: "billing-manage", href: "/admin/billing", ready: true, reviewed: true },
-      { label: "결제 상태", slug: "payment-status", href: "/admin/payment-status", ready: true, reviewed: true },
-      { label: "미납 관리", slug: "overdue-manage", href: "/admin/overdue", ready: true, reviewed: true },
-      { label: "본사 청구서 (받음)", slug: "my-hq-invoices", href: "/admin/my-hq-invoices", ready: true, reviewed: true },
+      { label: "수강 상품 관리", slug: "product-manage", href: "/admin/products", ready: true },
+      { label: "다음 달 수강 확인", slug: "renewal-confirm", href: "/admin/renewals", ready: true },
+      { label: "청구 관리", slug: "billing-manage", href: "/admin/billing", ready: true },
+      { label: "결제 상태", slug: "payment-status", href: "/admin/payment-status", ready: true },
+      { label: "미납 관리", slug: "overdue-manage", href: "/admin/overdue", ready: true },
+      { label: "본사 청구서 (받음)", slug: "my-hq-invoices", href: "/admin/my-hq-invoices", ready: true },
     ],
   },
   {
     label: "리포트",
     icon: "FileText",
     items: [
-      { label: "리포트 관리", slug: "report-list", href: "/admin/reports", ready: true, reviewed: true },
-      { label: "측정 데이터 관리", slug: "report-data", href: "/admin/measurements", ready: true, reviewed: true },
-      { label: "측정 항목 관리", slug: "report-template", href: "/admin/measurement-items", ready: true, reviewed: true },
+      { label: "리포트 관리", slug: "report-list", href: "/admin/reports", ready: true },
+      { label: "측정 데이터 관리", slug: "report-data", href: "/admin/measurements", ready: true },
+      { label: "측정 항목 관리", slug: "report-template", href: "/admin/measurement-items", ready: true },
       { label: "영상 데이터 관리", slug: "video-feedback", href: p("video-feedback") },
     ],
   },
@@ -103,10 +104,10 @@ export const NAV: NavGroup[] = [
     label: "상담",
     icon: "MessageSquare",
     items: [
-      { label: "문의/채팅", slug: "support", href: "/admin/support", ready: true, reviewed: true },
-      { label: "문의 티켓", slug: "inquiry-ticket", href: "/admin/support", ready: true, reviewed: true },
-      { label: "1:1 채팅 상담", slug: "chat-counsel", href: "/admin/support", ready: true, reviewed: true },
-      { label: "상담 이력", slug: "support-history", href: "/admin/support?s=완료", ready: true, reviewed: true },
+      { label: "문의/채팅", slug: "support", href: "/admin/support", ready: true },
+      { label: "문의 티켓", slug: "inquiry-ticket", href: "/admin/support", ready: true },
+      { label: "1:1 채팅 상담", slug: "chat-counsel", href: "/admin/support", ready: true },
+      { label: "상담 이력", slug: "support-history", href: "/admin/support?s=완료", ready: true },
     ],
   },
   {
@@ -114,11 +115,11 @@ export const NAV: NavGroup[] = [
     icon: "Settings",
     onlyRoles: ["super_admin", "admin"],
     items: [
-      { label: "알림/로그", slug: "logs", href: "/admin/notifications", ready: true, reviewed: true },
-      { label: "알림 발송 로그", slug: "notification-log", href: "/admin/notifications", ready: true, reviewed: true },
-      { label: "감사 로그", slug: "audit-log", href: "/admin/audit-logs", ready: true, reviewed: true },
-      { label: "사용자 비밀번호 관리", slug: "users-reset", href: "/admin/users", ready: true, reviewed: true },
-      { label: "설정", slug: "settings", href: "/admin/settings", ready: true, reviewed: true },
+      { label: "알림/로그", slug: "logs", href: "/admin/notifications", ready: true },
+      { label: "알림 발송 로그", slug: "notification-log", href: "/admin/notifications", ready: true },
+      { label: "감사 로그", slug: "audit-log", href: "/admin/audit-logs", ready: true },
+      { label: "사용자 비밀번호 관리", slug: "users-reset", href: "/admin/users", ready: true },
+      { label: "설정", slug: "settings", href: "/admin/settings", ready: true },
     ],
   },
 ];
