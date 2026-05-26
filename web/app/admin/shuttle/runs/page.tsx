@@ -26,7 +26,7 @@ type Run = {
   end_time: string | null;
   status: string;
   routes: { name: string; direction: string } | null;
-  shuttle_vehicles: { name: string; plate: string | null } | null;
+  shuttle_vehicles: { name: string; plate: string | null; capacity: number | null } | null;
   users: { name: string | null; email: string | null } | null;
 };
 
@@ -41,7 +41,7 @@ export default async function ShuttleRunsPage({
   let listQuery = supabase
     .from("shuttle_runs")
     .select(
-      "id, route_id, vehicle_id, driver_user_id, weekday, start_time, end_time, status, routes:shuttle_routes(name, direction), shuttle_vehicles(name, plate), users(name, email)",
+      "id, route_id, vehicle_id, driver_user_id, weekday, start_time, end_time, status, routes:shuttle_routes(name, direction), shuttle_vehicles(name, plate, capacity), users(name, email)",
     )
     .eq("center_id", cid)
     .order("weekday", { ascending: true })
@@ -50,7 +50,15 @@ export default async function ShuttleRunsPage({
   if (weekday !== undefined && weekday !== "") listQuery = listQuery.eq("weekday", Number(weekday));
   if (status) listQuery = listQuery.eq("status", status);
 
-  const [listRes, routesRes, allRes, selectedRes, selectedStopsRes, allStudentsRes] = await Promise.all([
+  const [
+    listRes,
+    routesRes,
+    allRes,
+    selectedRes,
+    selectedStopsRes,
+    allStudentsRes,
+    allAssignRes,
+  ] = await Promise.all([
     listQuery,
     supabase.from("shuttle_routes").select("id, name").eq("center_id", cid).order("name"),
     supabase.from("shuttle_runs").select("status, weekday").eq("center_id", cid),
@@ -74,7 +82,35 @@ export default async function ShuttleRunsPage({
           .eq("center_id", cid)
           .order("name")
       : Promise.resolve({ data: [] }),
+    // 운행 목록 카운트용 — 그 센터의 모든 활성 배정 (route_id, weekdays)
+    supabase
+      .from("student_stop_assignments")
+      .select("route_id, weekdays")
+      .eq("center_id", cid)
+      .eq("status", "활성"),
   ]);
+
+  // 운행별 카운트 — route_id × weekday → 학생 수
+  // weekdays null 이면 모든 요일 카운트.
+  const WD_NUM = ["일", "월", "화", "수", "목", "금", "토"];
+  const runCount = new Map<string, number>(); // key: `${route_id}|${weekday}`
+  for (const a of (allAssignRes.data ?? []) as {
+    route_id: string | null;
+    weekdays: string | null;
+  }[]) {
+    if (!a.route_id) continue;
+    const days = a.weekdays
+      ? a.weekdays.split(",").map((d) => d.trim()).filter(Boolean)
+      : WD_NUM.slice(1, 6); // null → 평일 전부 가정
+    for (const d of days) {
+      const wd = WD_NUM.indexOf(d);
+      if (wd < 0) continue;
+      const k = `${a.route_id}|${wd}`;
+      runCount.set(k, (runCount.get(k) ?? 0) + 1);
+    }
+  }
+  const countFor = (routeId: string, weekday: number) =>
+    runCount.get(`${routeId}|${weekday}`) ?? 0;
 
   // 선택된 run 의 노선 stops + 배정 학생 + 같은 노선의 모든 운행 조회
   const selectedRouteId = (selectedRes.data as { route_id?: string } | null)?.route_id;
@@ -217,11 +253,14 @@ export default async function ShuttleRunsPage({
                 <th>시간</th>
                 <th>노선</th>
                 <th>차량/기사</th>
+                <th>배정</th>
                 <th>상태</th>
               </tr>
             </thead>
             <tbody>
-              {list.map((r) => (
+              {list.map((r) => {
+                const c = countFor(r.route_id, r.weekday);
+                return (
                 <tr key={r.id} className={`row-link-host ${r.id === selectedId ? "selected" : ""}`}>
                   <td>
                     <Link
@@ -246,13 +285,27 @@ export default async function ShuttleRunsPage({
                     {[r.shuttle_vehicles?.name, r.users?.name].filter(Boolean).join(" · ") || "-"}
                   </td>
                   <td>
+                    {(() => {
+                      const cap = r.shuttle_vehicles?.capacity ?? null;
+                      const over = cap != null && c > cap;
+                      return (
+                        <span
+                          className={`badge ${over ? "red" : c > 0 ? "blue" : "gray"}`}
+                        >
+                          {c}명{cap != null ? ` / ${cap}` : ""}
+                        </span>
+                      );
+                    })()}
+                  </td>
+                  <td>
                     <span className={`badge ${STATUS_BADGE[r.status] ?? "gray"}`}>{r.status}</span>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={5}>
+                  <td colSpan={6}>
                     <div className="empty-state">
                       {hasFilter ? (
                         <>
