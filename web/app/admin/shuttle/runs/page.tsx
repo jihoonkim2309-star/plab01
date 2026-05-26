@@ -3,6 +3,7 @@ import { requireCenter } from "@/lib/center";
 import FilterBar from "../../FilterBar";
 import StatusChips from "../../StatusChips";
 import FilterSelect from "../../FilterSelect";
+import AssignShuttleModal from "../assignments/AssignShuttleModal";
 
 const WEEKDAY_LABEL = ["일", "월", "화", "수", "목", "금", "토"];
 const STATUS_BADGE: Record<string, string> = {
@@ -49,7 +50,7 @@ export default async function ShuttleRunsPage({
   if (weekday !== undefined && weekday !== "") listQuery = listQuery.eq("weekday", Number(weekday));
   if (status) listQuery = listQuery.eq("status", status);
 
-  const [listRes, routesRes, allRes, selectedRes] = await Promise.all([
+  const [listRes, routesRes, allRes, selectedRes, selectedStopsRes, allStudentsRes] = await Promise.all([
     listQuery,
     supabase.from("shuttle_routes").select("id, name").eq("center_id", cid).order("name"),
     supabase.from("shuttle_runs").select("status, weekday").eq("center_id", cid),
@@ -63,7 +64,31 @@ export default async function ShuttleRunsPage({
           .eq("center_id", cid)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    Promise.resolve({ data: [] }), // will be replaced below if needed
+    selectedId
+      ? supabase
+          .from("students")
+          .select("id, name")
+          .eq("center_id", cid)
+          .order("name")
+      : Promise.resolve({ data: [] }),
   ]);
+
+  // 선택된 run 의 노선 stops 조회 (선택 시점에 의존)
+  const selectedRouteId = (selectedRes.data as { route_id?: string } | null)?.route_id;
+  const stopsForRun = selectedRouteId
+    ? (
+        await supabase
+          .from("shuttle_stops")
+          .select("id, route_id, sequence, name")
+          .eq("center_id", cid)
+          .eq("route_id", selectedRouteId)
+          .order("sequence", { ascending: true })
+      ).data ?? []
+    : [];
+  // (selectedStopsRes 자리 채우기용 변수 무시)
+  void selectedStopsRes;
+  const allStudents = (allStudentsRes.data ?? []) as { id: string; name: string }[];
 
   const list = (listRes.data ?? []) as unknown as Run[];
   const routes = routesRes.data ?? [];
@@ -204,6 +229,26 @@ export default async function ShuttleRunsPage({
             <p className="panel-title">운행 상세</p>
             {selected && (
               <div className="toolbar">
+                <AssignShuttleModal
+                  triggerLabel="+ 학생 배정"
+                  triggerClassName="btn"
+                  routes={[
+                    {
+                      id: selected.route_id,
+                      name: selected.routes?.name ?? "",
+                      direction: selected.routes?.direction ?? null,
+                    },
+                  ]}
+                  stops={stopsForRun as {
+                    id: string;
+                    route_id: string;
+                    sequence: number | null;
+                    name: string;
+                  }[]}
+                  students={allStudents}
+                  fixedRouteId={selected.route_id}
+                  backUrl={`/admin/shuttle/runs?run=${selected.id}`}
+                />
                 <Link className="btn primary" href={`/admin/shuttle/runs/${selected.id}/edit`}>수정</Link>
               </div>
             )}

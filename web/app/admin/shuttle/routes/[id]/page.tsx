@@ -4,7 +4,6 @@ import { requireCenter } from "@/lib/center";
 import ConfirmButton from "../../../ConfirmButton";
 import AddressField from "../../../AddressField";
 import BackLink from "../../../BackLink";
-import AssignShuttleModal from "../../assignments/AssignShuttleModal";
 import {
   updateRoute,
   deleteRoute,
@@ -23,7 +22,7 @@ export default async function ShuttleRouteDetailPage({
   const { id } = await params;
   const { supabase, centerId: cid } = await requireCenter();
 
-  const [routeRes, stopsRes, studentsRes] = await Promise.all([
+  const [routeRes, stopsRes] = await Promise.all([
     supabase
       .from("shuttle_routes")
       .select("id, name, direction, status, memo")
@@ -36,28 +35,11 @@ export default async function ShuttleRouteDetailPage({
       .eq("route_id", id)
       .eq("center_id", cid)
       .order("sequence", { ascending: true }),
-    supabase
-      .from("students")
-      .select("id, name")
-      .eq("center_id", cid)
-      .order("name"),
   ]);
 
   const route = routeRes.data;
   if (!route) notFound();
   const stops = stopsRes.data ?? [];
-  const allStudents = (studentsRes.data ?? []) as { id: string; name: string }[];
-  const stopsForModal = stops.map((s) => ({
-    id: s.id as string,
-    route_id: id,
-    sequence: (s.sequence ?? null) as number | null,
-    name: s.name as string,
-  }));
-  const routeForModal = {
-    id: route.id as string,
-    name: route.name as string,
-    direction: (route.direction ?? null) as string | null,
-  };
 
   return (
     <>
@@ -65,18 +47,7 @@ export default async function ShuttleRouteDetailPage({
         <div>
           <BackLink href="/admin/shuttle/routes" label="노선 목록" />
           <h1>{route.name}</h1>
-          <p className="subtext">노선 정보 수정 + 정류장 순서/주소 관리</p>
-        </div>
-        <div className="toolbar">
-          <AssignShuttleModal
-            triggerLabel="+ 학생 배정"
-            triggerClassName="btn primary"
-            routes={[routeForModal]}
-            stops={stopsForModal}
-            students={allStudents}
-            fixedRouteId={route.id}
-            backUrl={`/admin/shuttle/routes/${route.id}`}
-          />
+          <p className="subtext">노선 정보 수정 + 정류장 순서/주소 관리 (학생 배정은 운행 일정에서)</p>
         </div>
       </div>
 
