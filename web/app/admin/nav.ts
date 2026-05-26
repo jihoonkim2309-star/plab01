@@ -22,17 +22,8 @@ export type NavGroup = {
 // 준비중 페이지는 /admin/p/<slug> 제네릭 라우트로
 const p = (slug: string) => `/admin/p/${slug}`;
 
+// 그룹 순서: 일상 빈도가 높은 운영 그룹을 위, 관리·거버넌스 그룹을 아래.
 export const NAV: NavGroup[] = [
-  {
-    label: "프랜차이즈",
-    icon: "Building2",
-    onlyRoles: ["super_admin"],
-    items: [
-      { label: "지점 관리", slug: "centers", href: "/admin/centers", ready: true },
-      { label: "지점장 가입 승인", slug: "admin-approvals", href: "/admin/admin-approvals", ready: true },
-      { label: "본사 청구 관리", slug: "hq-invoices", href: "/admin/hq-invoices", ready: true },
-    ],
-  },
   {
     label: "회원",
     icon: "Users",
@@ -47,15 +38,6 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
-    label: "직원",
-    icon: "UserCog",
-    items: [
-      { label: "코치 계정 관리", slug: "coach-accounts", href: "/admin/coach-accounts", ready: true },
-      { label: "기사 계정 관리", slug: "driver-accounts", href: "/admin/driver-accounts", ready: true },
-      { label: "직원 가입 승인", slug: "staff-approvals", href: "/admin/admin-approvals", ready: true },
-    ],
-  },
-  {
     label: "수업 운영",
     icon: "BookOpen",
     items: [
@@ -64,6 +46,18 @@ export const NAV: NavGroup[] = [
       { label: "월간 시간표", slug: "schedule", href: "/admin/schedule", ready: true },
       { label: "휴강일 관리", slug: "holiday-manage", href: "/admin/holidays", ready: true },
       { label: "보강 일정 관리", slug: "makeup-manage", href: "/admin/makeups", ready: true },
+    ],
+  },
+  {
+    label: "셔틀",
+    icon: "Bus",
+    items: [
+      { label: "노선/정류장 관리", slug: "shuttle-routes", href: "/admin/shuttle/routes", ready: true },
+      { label: "차량 관리", slug: "shuttle-vehicles", href: "/admin/shuttle/vehicles", ready: true },
+      { label: "운행 일정", slug: "shuttle-runs", href: "/admin/shuttle/runs", ready: true },
+      { label: "학생 배정", slug: "shuttle-assignments", href: "/admin/shuttle/assignments", ready: true },
+      { label: "승하차 로그", slug: "shuttle-logs", href: "/admin/shuttle/logs", ready: true },
+      { label: "셔틀 현황", slug: "shuttle-dashboard", href: "/admin/shuttle/dashboard", ready: true },
     ],
   },
   {
@@ -89,24 +83,31 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
-    label: "셔틀",
-    icon: "Bus",
-    items: [
-      { label: "노선/정류장 관리", slug: "shuttle-routes", href: "/admin/shuttle/routes", ready: true },
-      { label: "차량 관리", slug: "shuttle-vehicles", href: "/admin/shuttle/vehicles", ready: true },
-      { label: "운행 일정", slug: "shuttle-runs", href: "/admin/shuttle/runs", ready: true },
-      { label: "학생 배정", slug: "shuttle-assignments", href: "/admin/shuttle/assignments", ready: true },
-      { label: "승하차 로그", slug: "shuttle-logs", href: "/admin/shuttle/logs", ready: true },
-      { label: "셔틀 현황", slug: "shuttle-dashboard", href: "/admin/shuttle/dashboard", ready: true },
-    ],
-  },
-  {
     label: "상담",
     icon: "MessageSquare",
     items: [
       { label: "문의 게시글", slug: "support-posts", href: "/admin/support/posts", ready: true },
       { label: "1:1 채팅", slug: "support-chats", href: "/admin/support/chats", ready: true },
       { label: "전화·방문 기록", slug: "support-offline", href: "/admin/support/offline", ready: true },
+    ],
+  },
+  {
+    label: "직원",
+    icon: "UserCog",
+    items: [
+      { label: "코치 계정 관리", slug: "coach-accounts", href: "/admin/coach-accounts", ready: true },
+      { label: "기사 계정 관리", slug: "driver-accounts", href: "/admin/driver-accounts", ready: true },
+      { label: "직원 가입 승인", slug: "staff-approvals", href: "/admin/admin-approvals", ready: true },
+    ],
+  },
+  {
+    label: "프랜차이즈",
+    icon: "Building2",
+    onlyRoles: ["super_admin"],
+    items: [
+      { label: "지점 관리", slug: "centers", href: "/admin/centers", ready: true },
+      { label: "지점장 가입 승인", slug: "admin-approvals", href: "/admin/admin-approvals", ready: true },
+      { label: "본사 청구 관리", slug: "hq-invoices", href: "/admin/hq-invoices", ready: true },
     ],
   },
   {
