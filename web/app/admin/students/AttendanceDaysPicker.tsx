@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-// 클래스 select + 참여 요일 체크박스 + 결제 상품 통합 (학생당 단일 클래스 가정).
+// 클래스 select + 참여 요일 체크박스 + 수강료 상품 통합 (학생당 단일 클래스 가정).
 // - 클래스 변경 시 그 클래스의 운영 요일만 노출
 // - 체크된 요일 수가 변하면 상품 select 가 sessions_per_week 일치 상품을 자동 추천
 // - 사용자가 수동 변경하면 그 선택 유지 (자동 덮어쓰기 안 함)
@@ -159,7 +159,7 @@ export default function AttendanceDaysPicker({
       </div>
 
       <div className="field">
-        <label>결제 상품</label>
+        <label>수강료 상품</label>
         <select
           name="product_id"
           value={productId}
@@ -178,17 +178,17 @@ export default function AttendanceDaysPicker({
         </select>
         {products.length === 0 && (
           <span className="muted" style={{ fontSize: 12 }}>
-            등록된 상품이 없습니다 — "수강 상품 관리"에서 먼저 생성하세요.
+            등록된 수강료 상품이 없습니다 — "수업 운영 → 수강료 상품"에서 먼저 생성하세요.
           </span>
         )}
         {!touched && matchedProduct && (
           <span className="muted" style={{ fontSize: 12 }}>
-            주 {days.length}회 매칭 상품 자동 선택: {matchedProduct.name}
+            주 {days.length}회 매칭 자동 선택: {matchedProduct.name}
           </span>
         )}
         {!touched && !matchedProduct && days.length > 0 && (
           <span className="muted" style={{ fontSize: 12, color: "var(--orange)" }}>
-            ⚠ 주 {days.length}회 상품이 없습니다 — "수강 상품 관리"에서 추가하세요.
+            ⚠ 주 {days.length}회 수강료 상품이 없습니다 — "수업 운영 → 수강료 상품"에서 추가하세요.
           </span>
         )}
         {productMismatch && (

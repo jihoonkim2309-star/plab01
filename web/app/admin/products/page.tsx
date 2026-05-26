@@ -83,18 +83,18 @@ export default async function ProductsPage({
     <>
       <div className="page-head">
         <div>
-          <h1>수강 상품 관리</h1>
-          <p className="subtext">학생 등록·청구의 결제 상품 기준 데이터</p>
+          <h1>수강료 상품</h1>
+          <p className="subtext">학생이 매월 결제하는 요금 패키지 (회수별 단가)</p>
         </div>
         <div className="toolbar">
           <Link className="btn primary" href="/admin/products/new">
-            상품 생성
+            수강료 상품 생성
           </Link>
         </div>
       </div>
 
       <div className="member-summary">
-        <div className="summary-card"><span>전체 상품</span><strong>{totals.total}</strong></div>
+        <div className="summary-card"><span>전체 수강료 상품</span><strong>{totals.total}</strong></div>
         <div className="summary-card"><span>활성</span><strong>{totals.active}</strong></div>
         <div className="summary-card"><span>정규반</span><strong>{totals.regular}</strong></div>
         <div className="summary-card"><span>특강</span><strong>{totals.special}</strong></div>
@@ -105,7 +105,7 @@ export default async function ProductsPage({
         <div className="panel">
           <div className="panel-head">
             <p className="panel-title">
-              상품 목록{" "}
+              수강료 상품 목록{" "}
               <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
                 {hasFilter ? `검색결과 ${list.length}건 / 전체 ${totals.total}` : `${list.length}건`}
               </span>
@@ -195,8 +195,8 @@ export default async function ProductsPage({
                         </>
                       ) : (
                         <>
-                          <strong>등록된 상품이 없습니다</strong>
-                          <p>우측 상단 "상품 생성"으로 수강 상품을 만들면 학생 등록·청구에서 사용됩니다.</p>
+                          <strong>등록된 수강료 상품이 없습니다</strong>
+                          <p>우측 상단 "수강료 상품 생성"으로 만들면 학생 등록·청구에서 사용됩니다.</p>
                         </>
                       )}
                     </div>
@@ -209,7 +209,7 @@ export default async function ProductsPage({
 
         <div className="panel">
           <div className="panel-head">
-            <p className="panel-title">상품 상세</p>
+            <p className="panel-title">수강료 상품 상세</p>
             {selected && (
               <div className="toolbar">
                 <Link className="btn primary" href={`/admin/products/${selected.id}/edit`}>수정</Link>
@@ -219,8 +219,8 @@ export default async function ProductsPage({
           <div className="panel-body">
             {!selected ? (
               <div className="empty-state">
-                <strong>선택된 상품이 없습니다</strong>
-                <p>왼쪽 목록에서 상품을 선택해 주세요.</p>
+                <strong>선택된 수강료 상품이 없습니다</strong>
+                <p>왼쪽 목록에서 항목을 선택해 주세요.</p>
               </div>
             ) : (
               <>
@@ -239,7 +239,7 @@ export default async function ProductsPage({
                 </div>
 
                 <div className="detail-block">
-                  <p className="detail-title">상품 정보</p>
+                  <p className="detail-title">수강료 정보</p>
                   <div className="info-list">
                     <div className="info-row"><span>유형</span><strong>{selected.kind}</strong></div>
                     <div className="info-row"><span>가격</span><strong style={{ color: "var(--brand)", fontSize: 16 }}>{fmt(Number(selected.price))}</strong></div>
@@ -253,7 +253,7 @@ export default async function ProductsPage({
                   <p className="detail-title">사용 현황</p>
                   <div className="info-list">
                     <div className="info-row">
-                      <span>이 상품 적용 학생</span>
+                      <span>이 수강료 적용 학생</span>
                       <strong>
                         {usageCount > 0 ? (
                           <Link href={`/admin/students?product=${selected.id}`} style={{ color: "var(--brand)" }}>

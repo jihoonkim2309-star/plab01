@@ -269,7 +269,7 @@ export default async function RenewalsPage({
                         <>
                           <strong>수강중 등록이 없습니다</strong>
                           <p>
-                            학생에 결제 상품을 지정한 뒤 "수강 등록 동기화" 를 누르세요.
+                            학생에 수강료 상품을 지정한 뒤 "수강 등록 동기화" 를 누르세요.
                           </p>
                         </>
                       )}

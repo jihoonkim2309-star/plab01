@@ -45,6 +45,7 @@ export const NAV: NavGroup[] = [
       { label: "월간 시간표", slug: "schedule", href: "/admin/schedule", ready: true },
       { label: "클래스 관리", slug: "class-manage", href: "/admin/classes", ready: true },
       { label: "클래스 생성", slug: "class-create", href: "/admin/classes/new", ready: true },
+      { label: "수강료 상품", slug: "product-manage", href: "/admin/products", ready: true },
       { label: "휴강일 관리", slug: "holiday-manage", href: "/admin/holidays", ready: true },
       { label: "보강 일정 관리", slug: "makeup-manage", href: "/admin/makeups", ready: true },
     ],
@@ -70,7 +71,6 @@ export const NAV: NavGroup[] = [
       { label: "결제 상태", slug: "payment-status", href: "/admin/payment-status", ready: true },
       { label: "미납 관리", slug: "overdue-manage", href: "/admin/overdue", ready: true },
       { label: "본사 청구서 (받음)", slug: "my-hq-invoices", href: "/admin/my-hq-invoices", ready: true },
-      { label: "수강 상품 관리", slug: "product-manage", href: "/admin/products", ready: true },
     ],
   },
   {

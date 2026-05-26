@@ -10,7 +10,7 @@ export default function ProductForm({
   title,
   submitLabel,
   cancelHref,
-  backLabel = "상품 목록",
+  backLabel = "수강료 상품",
   deleteAction,
   deleteMessage,
 }: {
@@ -58,7 +58,7 @@ export default function ProductForm({
 
       <div className="panel">
         <div className="panel-head">
-          <p className="panel-title">상품 정보</p>
+          <p className="panel-title">수강료 상품 정보</p>
         </div>
         <div className="panel-body">
           <div className="form-grid">

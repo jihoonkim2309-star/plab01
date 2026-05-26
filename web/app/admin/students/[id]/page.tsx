@@ -17,7 +17,7 @@ const BASIC: [string, string][] = [
 
 const ENROLL: [string, string][] = [
   ["수강 클래스", "class_name"],
-  ["결제 상품", "product"],
+  ["수강료 상품", "product"],
   ["셔틀 이용", "shuttle_use"],
   ["노선", "route"],
 ];

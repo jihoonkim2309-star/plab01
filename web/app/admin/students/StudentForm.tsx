@@ -241,7 +241,7 @@ export default function StudentForm({
 
           <div className="panel">
             <div className="panel-head">
-              <p className="panel-title">수강 클래스/결제</p>
+              <p className="panel-title">수강 클래스 · 수강료</p>
             </div>
             <div className="panel-body">
               <div className="form-grid">
