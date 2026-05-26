@@ -33,7 +33,7 @@ export default async function SchedulePage({
   const { supabase, centerId: cid } = await requireCenter();
   let classQuery = supabase
     .from("classes")
-    .select("id, name, days_of_week, start_time, end_time, place, status")
+    .select("id, name, days_of_week, start_time, end_time, place, status, color")
     .eq("center_id", cid)
     .in("status", ["운영", "모집중"]);
   if (class_id) classQuery = classQuery.eq("id", class_id);
@@ -176,9 +176,10 @@ export default async function SchedulePage({
                       const off = holidayClassIds.has(c.id);
                       const offHoliday = off ? dayHolidays.find((h) => h.class_id === c.id) : null;
                       const attCount = enrCount.get(c.id)?.get(dow) ?? 0;
+                      const tone = (c as { color?: string | null }).color;
                       return (
                         <Link
-                          className={`event${off ? " red" : ""}`}
+                          className={`event${off ? " red" : tone ? ` tone-${tone}` : ""}`}
                           key={c.id}
                           href={offHoliday ? `/admin/holidays?holiday=${offHoliday.id}` : `/admin/classes?class=${c.id}`}
                           style={{ color: "inherit", textDecoration: "none" }}

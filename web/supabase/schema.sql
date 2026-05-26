@@ -276,6 +276,15 @@ create table if not exists public.classes (
 alter table public.students
   add column if not exists class_id uuid references public.classes(id) on delete set null;
 
+-- 클래스 색상 (시간표·학생/학부모 포털에서 카드 톤 구분용). 12색 팔레트 key.
+alter table public.classes add column if not exists color text;
+do $$ begin
+  alter table public.classes add constraint classes_color_check
+    check (color is null or color in (
+      'green','blue','orange','purple','pink','amber','teal','cyan','indigo','lime','rose','slate'
+    ));
+exception when duplicate_object then null; end $$;
+
 alter table public.classes enable row level security;
 
 drop policy if exists classes_admin_all on public.classes;

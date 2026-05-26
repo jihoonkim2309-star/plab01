@@ -15,6 +15,7 @@ const FIELDS = [
   "end_time",
   "place",
   "status",
+  "color",
 ] as const;
 
 function readForm(formData: FormData) {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ConfirmButton from "../ConfirmButton";
 import BackLink from "../BackLink";
+import ClassColorPicker from "./ClassColorPicker";
 
 type ClassRow = Record<string, string | number | null> | null;
 
@@ -169,6 +170,7 @@ export default function ClassForm({
                 ))}
               </div>
             </div>
+            <ClassColorPicker defaultValue={v("color")} />
           </div>
         </div>
       </div>

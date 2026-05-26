@@ -1579,6 +1579,30 @@
 }
 .event.red .event-count { background: rgba(234, 84, 85, 0.16); color: var(--red); }
 
+/* 클래스별 카드 톤 — 12색 팔레트. tone-<key> 와 ClassColorPicker 의 키가 동기화됨.
+   휴강(.event.red) 가 tone 보다 우선 (CSS 순서에 의해 자동 처리됨). */
+.event.tone-green  { background: #e6f3ec; color: #1e794e; border-color: #b8dccb; }
+.event.tone-blue   { background: #e6efff; color: #2563eb; border-color: #bed3ff; }
+.event.tone-orange { background: #ffead0; color: #ea8a1f; border-color: #f0d19a; }
+.event.tone-purple { background: #efe5fb; color: #7c3aed; border-color: #d6c1f5; }
+.event.tone-pink   { background: #fde7ee; color: #db2777; border-color: #f4bcd0; }
+.event.tone-amber  { background: #fff3c6; color: #b45309; border-color: #f4dc8b; }
+.event.tone-teal   { background: #d2efe8; color: #0d9488; border-color: #a4dccf; }
+.event.tone-cyan   { background: #d5f0f6; color: #0e7490; border-color: #a5d8e2; }
+.event.tone-indigo { background: #e1e3fb; color: #4338ca; border-color: #bcc1f0; }
+.event.tone-lime   { background: #ecf6cf; color: #4d7c0f; border-color: #cbe39b; }
+.event.tone-rose   { background: #fde2e6; color: #be123c; border-color: #f3b4c0; }
+.event.tone-slate  { background: #e3e7eb; color: #475569; border-color: #c5ccd4; }
+.event[class*=" tone-"] .event-count,
+.event[class^="tone-"] .event-count {
+  background: rgba(0, 0, 0, 0.08);
+  color: inherit;
+}
+.event.red[class*="tone-"] .event-count {
+  background: rgba(234, 84, 85, 0.16);
+  color: var(--red);
+}
+
 .member-layout {
   display: grid;
   grid-template-columns: minmax(620px, 1.25fr) minmax(360px, 0.75fr);
