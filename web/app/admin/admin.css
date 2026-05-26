@@ -1566,6 +1566,18 @@
 .event.orange { background: var(--orange-soft); color: var(--orange); border-color: #f0d19a; }
 .event.blue { background: var(--blue-soft); color: var(--blue); border-color: #bed3ff; }
 .event.red { background: var(--red-soft); color: var(--red); border-color: #f0bdbd; }
+.event-count {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(30, 121, 78, 0.12);
+  color: var(--brand);
+  vertical-align: middle;
+}
+.event.red .event-count { background: rgba(234, 84, 85, 0.16); color: var(--red); }
 
 .member-layout {
   display: grid;

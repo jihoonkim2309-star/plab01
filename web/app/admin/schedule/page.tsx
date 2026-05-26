@@ -56,8 +56,32 @@ export default async function SchedulePage({
     .eq("center_id", cid)
     .gte("makeup_date", `${monthStr}-01`)
     .lte("makeup_date", `${monthStr}-${pad(daysInMonth)}`);
+  const { data: enrollments } = await supabase
+    .from("enrollments")
+    .select("class_id, attendance_days")
+    .eq("center_id", cid)
+    .eq("status", "수강중");
 
   const cls = classes ?? [];
+
+  // 클래스별 × 요일별 출석 카운트 — attendance_days CSV 에 그 요일 포함된 enrollment 수
+  const enrCount = new Map<string, Map<string, number>>();
+  for (const e of (enrollments ?? []) as {
+    class_id: string | null;
+    attendance_days: string | null;
+  }[]) {
+    if (!e.class_id) continue;
+    const days = (e.attendance_days ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+    if (days.length === 0) continue;
+    let inner = enrCount.get(e.class_id);
+    if (!inner) {
+      inner = new Map();
+      enrCount.set(e.class_id, inner);
+    }
+    for (const d of days) {
+      inner.set(d, (inner.get(d) ?? 0) + 1);
+    }
+  }
   const hol = ((holidays ?? []) as unknown as {
     id: string;
     holiday_date: string;
@@ -151,6 +175,7 @@ export default async function SchedulePage({
                     todays.map((c) => {
                       const off = holidayClassIds.has(c.id);
                       const offHoliday = off ? dayHolidays.find((h) => h.class_id === c.id) : null;
+                      const attCount = enrCount.get(c.id)?.get(dow) ?? 0;
                       return (
                         <Link
                           className={`event${off ? " red" : ""}`}
@@ -161,6 +186,9 @@ export default async function SchedulePage({
                           <strong>
                             {c.name}
                             {off ? " (휴강)" : ""}
+                            {!off && attCount > 0 && (
+                              <span className="event-count">{attCount}명</span>
+                            )}
                           </strong>
                           <small>
                             {(c.start_time ?? "").slice(0, 5)}

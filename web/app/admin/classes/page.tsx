@@ -50,7 +50,7 @@ export default async function ClassesPage({
   if (status) listQuery = listQuery.eq("status", status);
   if (sport) listQuery = listQuery.eq("sport", sport);
 
-  const [listRes, allRes, studRes, selectedRes] = await Promise.all([
+  const [listRes, allRes, studRes, selectedRes, selectedStudentsRes] = await Promise.all([
     listQuery,
     supabase.from("classes").select("status").eq("center_id", cid),
     supabase.from("students").select("class_id").eq("center_id", cid),
@@ -62,6 +62,14 @@ export default async function ClassesPage({
           .eq("center_id", cid)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    selectedId
+      ? supabase
+          .from("students")
+          .select("id, name, attendance_days, status")
+          .eq("center_id", cid)
+          .eq("class_id", selectedId)
+          .order("name")
+      : Promise.resolve({ data: [] }),
   ]);
 
   const list = listRes.data ?? [];
@@ -91,6 +99,12 @@ export default async function ClassesPage({
       : list;
 
   const selected = selectedRes.data;
+  const selectedStudents = (selectedStudentsRes.data ?? []) as {
+    id: string;
+    name: string;
+    attendance_days: string | null;
+    status: string | null;
+  }[];
 
   return (
     <>
@@ -253,6 +267,64 @@ export default async function ClassesPage({
                     <div className="info-row"><span>장소</span><strong>{selected.place ?? "-"}</strong></div>
                     <div className="info-row"><span>일정 메모</span><strong>{selected.schedule ?? "-"}</strong></div>
                   </div>
+                </div>
+
+                <div className="detail-block">
+                  <p className="detail-title">
+                    수강 학생{" "}
+                    <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                      {selectedStudents.length}명
+                    </span>
+                  </p>
+                  {selectedStudents.length === 0 ? (
+                    <div className="muted" style={{ fontSize: 13 }}>
+                      이 클래스에 배정된 학생이 없습니다.
+                    </div>
+                  ) : (
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>학생</th>
+                          <th>참여 요일</th>
+                          <th>회/주</th>
+                          <th>상태</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedStudents.map((s) => {
+                          const days = (s.attendance_days ?? "")
+                            .split(",")
+                            .map((d) => d.trim())
+                            .filter(Boolean);
+                          return (
+                            <tr key={s.id}>
+                              <td>
+                                <Link
+                                  href={`/admin/students/${s.id}`}
+                                  style={{ fontWeight: 700, color: "var(--text)" }}
+                                >
+                                  {s.name}
+                                </Link>
+                              </td>
+                              <td className="muted">
+                                {days.length === 0 ? (
+                                  <span className="muted">미지정</span>
+                                ) : (
+                                  days.join(", ")
+                                )}
+                              </td>
+                              <td>
+                                {days.length > 0 && (
+                                  <span className="badge gray">{days.length}회</span>
+                                )}
+                              </td>
+                              <td className="muted">{s.status ?? "-"}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </>
             )}
