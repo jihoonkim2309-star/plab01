@@ -26,21 +26,24 @@ export default async function SupportPage({
     s?: string;
     q?: string;
     channel?: string;
+    kind?: string;
   }>;
 }) {
-  const { sel, s, q, channel } = await searchParams;
+  const { sel, s, q, channel, kind } = await searchParams;
   const { supabase, centerId: cid } = await requireCenter();
 
   let listQuery = supabase
     .from("inquiries")
     .select(
-      "id, requester_name, contact, channel, subject, body, status, created_at",
+      "id, kind, requester_name, contact, channel, subject, body, status, created_at",
     )
     .eq("center_id", cid)
     .order("created_at", { ascending: false });
   if (s && ["접수", "처리중", "완료"].includes(s))
     listQuery = listQuery.eq("status", s);
   if (channel) listQuery = listQuery.eq("channel", channel);
+  if (kind && ["post", "chat"].includes(kind))
+    listQuery = listQuery.eq("kind", kind);
   const qSafe = safeIlike(q);
   if (qSafe) {
     listQuery = listQuery.or(
@@ -50,11 +53,12 @@ export default async function SupportPage({
 
   const [listRes, allRes] = await Promise.all([
     listQuery,
-    supabase.from("inquiries").select("status").eq("center_id", cid),
+    supabase.from("inquiries").select("status, kind").eq("center_id", cid),
   ]);
 
   const list = (listRes.data ?? []) as {
     id: string;
+    kind: string;
     requester_name: string | null;
     contact: string | null;
     channel: string;
@@ -63,14 +67,14 @@ export default async function SupportPage({
     status: string;
     created_at: string;
   }[];
-  const all = (allRes.data ?? []) as { status: string }[];
+  const all = (allRes.data ?? []) as { status: string; kind: string }[];
 
   // 선택은 필터 외에서도 유지
   const selected = sel
     ? (await supabase
         .from("inquiries")
         .select(
-          "id, requester_name, contact, channel, subject, body, status, created_at",
+          "id, kind, requester_name, contact, channel, subject, body, status, created_at",
         )
         .eq("center_id", cid)
         .eq("id", sel)
@@ -89,7 +93,8 @@ export default async function SupportPage({
   }
 
   const cnt = (x: string) => all.filter((i) => i.status === x).length;
-  const hasFilter = !!(q || s || channel);
+  const kindCnt = (k: string) => all.filter((i) => i.kind === k).length;
+  const hasFilter = !!(q || s || channel || kind);
 
   // sel 보존 + filter 유지를 위한 row link
   const rowHref = (id: string) => {
@@ -98,6 +103,7 @@ export default async function SupportPage({
     if (s) qs.set("s", s);
     if (channel) qs.set("channel", channel);
     if (q) qs.set("q", q);
+    if (kind) qs.set("kind", kind);
     return `/admin/support?${qs}`;
   };
   const resetHref = sel ? `/admin/support?sel=${sel}` : "/admin/support";
@@ -113,12 +119,11 @@ export default async function SupportPage({
 
       <div className="member-summary">
         <div className="summary-card"><span>전체 문의</span><strong>{all.length}</strong></div>
+        <div className="summary-card"><span>게시글</span><strong>{kindCnt("post")}</strong></div>
+        <div className="summary-card"><span>1:1 채팅</span><strong>{kindCnt("chat")}</strong></div>
         <div className="summary-card"><span>접수</span><strong>{cnt("접수")}</strong></div>
         <div className="summary-card"><span>처리중</span><strong>{cnt("처리중")}</strong></div>
         <div className="summary-card"><span>완료</span><strong>{cnt("완료")}</strong></div>
-        <div className="summary-card"><span>처리율</span><strong>
-          {all.length ? Math.round((cnt("완료") / all.length) * 100) : 0}%
-        </strong></div>
       </div>
 
       <div className="grid account-layout">
@@ -135,6 +140,14 @@ export default async function SupportPage({
           </div>
           <div className="panel-body" style={{ paddingBottom: 0 }}>
             <FilterBar>
+              <StatusChips
+                param="kind"
+                current={kind}
+                options={[
+                  { value: "post", label: "게시글" },
+                  { value: "chat", label: "1:1 채팅" },
+                ]}
+              />
               <StatusChips
                 param="s"
                 current={s}
@@ -172,6 +185,7 @@ export default async function SupportPage({
           <table>
             <thead>
               <tr>
+                <th>유형</th>
                 <th>제목</th>
                 <th>요청자</th>
                 <th>채널</th>
@@ -184,6 +198,11 @@ export default async function SupportPage({
                   key={i.id}
                   className={`row-link-host ${i.id === sel ? "selected" : ""}`}
                 >
+                  <td>
+                    <span className={`badge ${i.kind === "chat" ? "blue" : "gray"}`}>
+                      {i.kind === "chat" ? "채팅" : "게시글"}
+                    </span>
+                  </td>
                   <td>
                     <Link
                       href={rowHref(i.id)}
@@ -205,7 +224,7 @@ export default async function SupportPage({
               ))}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={4}>
+                  <td colSpan={5}>
                     <div className="empty-state">
                       {hasFilter ? (
                         <>
@@ -242,7 +261,15 @@ export default async function SupportPage({
           ) : (
             <>
               <div className="panel-head">
-                <p className="panel-title">{selected.subject}</p>
+                <p className="panel-title">
+                  <span
+                    className={`badge ${selected.kind === "chat" ? "blue" : "gray"}`}
+                    style={{ marginRight: 8 }}
+                  >
+                    {selected.kind === "chat" ? "채팅" : "게시글"}
+                  </span>
+                  {selected.subject}
+                </p>
                 <span className={`badge ${SB[selected.status] ?? "gray"}`}>
                   {selected.status}
                 </span>
@@ -263,7 +290,7 @@ export default async function SupportPage({
                       <strong>{selected.channel}</strong>
                     </div>
                   </div>
-                  {selected.body && (
+                  {selected.kind === "post" && selected.body && (
                     <div className="approval-note" style={{ whiteSpace: "pre-wrap" }}>
                       {selected.body}
                     </div>
@@ -271,7 +298,9 @@ export default async function SupportPage({
                 </div>
 
                 <div className="detail-block">
-                  <p className="detail-title">대화</p>
+                  <p className="detail-title">
+                    {selected.kind === "chat" ? "채팅 메시지" : "대화"}
+                  </p>
                   <div className="message-list">
                     {messages.length === 0 && (
                       <div className="muted">아직 답변이 없습니다.</div>
