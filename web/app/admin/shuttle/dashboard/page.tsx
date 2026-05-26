@@ -28,6 +28,7 @@ type Assignment = {
   board_stop_id: string | null;
   alight_stop_id: string | null;
   status: string;
+  weekdays: string | null;
   students: { name: string; school: string | null; grade: string | null } | null;
 };
 
@@ -51,8 +52,8 @@ export default async function ShuttleDashboardPage({
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
   const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
 
-  // 오늘 요일의 운행
-  const [runsRes, stopsRes, todaysLogsRes] = await Promise.all([
+  // 오늘 요일의 운행 + 카운트용 전체 활성 배정
+  const [runsRes, stopsRes, todaysLogsRes, allAssignRes] = await Promise.all([
     supabase
       .from("shuttle_runs")
       .select(
@@ -73,7 +74,29 @@ export default async function ShuttleDashboardPage({
       .eq("center_id", cid)
       .gte("scanned_at", todayStart)
       .lt("scanned_at", todayEnd),
+    supabase
+      .from("student_stop_assignments")
+      .select("route_id, weekdays")
+      .eq("center_id", cid)
+      .eq("status", "활성"),
   ]);
+
+  // 오늘 요일에 노선별 배정 카운트
+  const todayLabel = KOR_DAYS[weekday];
+  const WD_NUM = ["일", "월", "화", "수", "목", "금", "토"];
+  const runCount = new Map<string, number>();
+  for (const a of (allAssignRes.data ?? []) as {
+    route_id: string | null;
+    weekdays: string | null;
+  }[]) {
+    if (!a.route_id) continue;
+    const days = a.weekdays
+      ? a.weekdays.split(",").map((d) => d.trim()).filter(Boolean)
+      : WD_NUM.slice(1, 6); // null → 평일 전부 가정
+    if (!days.includes(todayLabel)) continue;
+    runCount.set(a.route_id, (runCount.get(a.route_id) ?? 0) + 1);
+  }
+  const countFor = (routeId: string) => runCount.get(routeId) ?? 0;
 
   const runs = (runsRes.data ?? []) as unknown as Run[];
   const allStops = (stopsRes.data ?? []) as { id: string; name: string; sequence: number; route_id: string }[];
@@ -87,12 +110,19 @@ export default async function ShuttleDashboardPage({
     const { data: aRes } = await supabase
       .from("student_stop_assignments")
       .select(
-        "student_id, route_id, board_stop_id, alight_stop_id, status, students(name, school, grade)",
+        "student_id, route_id, board_stop_id, alight_stop_id, status, weekdays, students(name, school, grade)",
       )
       .eq("center_id", cid)
       .eq("route_id", selectedRun.route_id)
       .eq("status", "활성");
-    selectedAssignments = (aRes ?? []) as unknown as Assignment[];
+    const rawAss = (aRes ?? []) as unknown as Assignment[];
+    // 오늘 요일에 타는 학생만 (weekdays null = 전부 가정 → 평일 포함)
+    selectedAssignments = rawAss.filter((a) => {
+      const days = a.weekdays
+        ? a.weekdays.split(",").map((d) => d.trim()).filter(Boolean)
+        : WD_NUM.slice(1, 6);
+      return days.includes(todayLabel);
+    });
   }
 
   // 학생별 마지막 boarding_log (선택된 run 에 한정)
@@ -108,12 +138,11 @@ export default async function ShuttleDashboardPage({
   const totalRuns = runs.length;
   const totalBoardings = allLogs.filter((l) => l.action === "승차").length;
   const totalAlightings = allLogs.filter((l) => l.action === "하차").length;
-  // 운행별 학생 수 합계 (대략적 — 같은 학생이 여러 노선에 배정되면 중복 카운트)
-  let totalStudents = 0;
-  for (const r of runs) {
-    totalStudents += allStops.filter((s) => s.route_id === r.route_id).length > 0 ? 1 : 0;
-  }
-  // 좀 더 정확: 운행별 배정 학생 수는 server 호출 비용 ↑. 단순 표시.
+  // 오늘 운행 노선들의 배정 학생 총합 (중복 없이 student 단위는 어렵고, 운행 row 합계)
+  const totalAssignedToday = runs.reduce(
+    (sum, r) => sum + countFor(r.route_id),
+    0,
+  );
 
   return (
     <>
@@ -126,6 +155,7 @@ export default async function ShuttleDashboardPage({
 
       <div className="member-summary">
         <div className="summary-card"><span>오늘 운행</span><strong>{totalRuns}</strong></div>
+        <div className="summary-card"><span>오늘 배정</span><strong>{totalAssignedToday}</strong></div>
         <div className="summary-card"><span>오늘 승차</span><strong>{totalBoardings}</strong></div>
         <div className="summary-card"><span>오늘 하차</span><strong>{totalAlightings}</strong></div>
         <div className="summary-card"><span>활성 노선</span><strong>{new Set(runs.map((r) => r.route_id)).size}</strong></div>
@@ -145,10 +175,15 @@ export default async function ShuttleDashboardPage({
                 <th>시각</th>
                 <th>노선</th>
                 <th>차량/기사</th>
+                <th>배정</th>
               </tr>
             </thead>
             <tbody>
-              {runs.map((r) => (
+              {runs.map((r) => {
+                const c = countFor(r.route_id);
+                const cap = r.shuttle_vehicles?.capacity ?? null;
+                const over = cap != null && c > cap;
+                return (
                 <tr key={r.id} className={`row-link-host ${r.id === (selectedRun?.id ?? "") ? "selected" : ""}`}>
                   <td>
                     <Link
@@ -169,11 +204,17 @@ export default async function ShuttleDashboardPage({
                   <td className="muted">
                     {[r.shuttle_vehicles?.name, r.users?.name].filter(Boolean).join(" · ") || "미배정"}
                   </td>
+                  <td>
+                    <span className={`badge ${over ? "red" : c > 0 ? "blue" : "gray"}`}>
+                      {c}명{cap != null ? ` / ${cap}` : ""}
+                    </span>
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
               {runs.length === 0 && (
                 <tr>
-                  <td colSpan={3}>
+                  <td colSpan={4}>
                     <div className="empty-state">
                       <strong>오늘({KOR_DAYS[weekday]}요일) 운행이 없습니다</strong>
                       <p>운행 일정은 [셔틀 → 운행 일정] 에서 등록합니다.</p>
