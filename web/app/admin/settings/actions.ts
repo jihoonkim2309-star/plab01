@@ -14,6 +14,7 @@ export async function updateSettings(formData: FormData) {
   const address = String(formData.get("address") ?? "").trim();
   const bdRaw = String(formData.get("billing_day") ?? "").trim();
   const rdRaw = String(formData.get("report_day") ?? "").trim();
+  const rcdRaw = String(formData.get("renewal_check_day") ?? "").trim();
   const pm = String(formData.get("promotion_month") ?? "").trim();
   const pd = String(formData.get("promotion_day") ?? "").trim();
 
@@ -23,10 +24,12 @@ export async function updateSettings(formData: FormData) {
   if (!address) redirect("/admin/settings?error=address");
   if (!bdRaw) redirect("/admin/settings?error=billing_day");
   if (!rdRaw) redirect("/admin/settings?error=report_day");
+  if (!rcdRaw) redirect("/admin/settings?error=renewal_check_day");
   if (!pm || !pd) redirect("/admin/settings?error=promotion_day");
 
   const bd = Number(bdRaw);
   const rd = Number(rdRaw);
+  const rcd = Number(rcdRaw);
   // pg_api_secret 은 빈 입력이면 기존 값 유지 (덮어쓰기 방지). 마스킹 패턴.
   const secretInput = String(formData.get("pg_api_secret") ?? "").trim();
 
@@ -41,6 +44,7 @@ export async function updateSettings(formData: FormData) {
     address,
     billing_day: Math.min(Math.max(bd, 1), 28),
     report_day: Math.min(Math.max(rd, 1), 28),
+    renewal_check_day: Math.min(Math.max(rcd, 1), 28),
     promotion_day: promotionDay,
     notify_enabled: formData.get("notify_enabled") === "on",
     pg_mode: String(formData.get("pg_mode") ?? "test"),

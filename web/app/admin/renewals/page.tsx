@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
 import { safeIlike } from "@/lib/db-search";
+import { checkRenewalGate } from "@/lib/renewal";
 import CheckRowToggle from "../CheckRowToggle";
 import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
@@ -30,6 +31,16 @@ export default async function RenewalsPage({
   const { ym, q, status } = await searchParams;
   const target = nextMonth(ym);
   const { supabase, centerId: cid } = await requireCenter();
+
+  // 다음 달 수강 확인 게이트 — 매월 N일 지나야 일괄 처리 가능
+  const { data: center } = await supabase
+    .from("centers")
+    .select("renewal_check_day")
+    .eq("id", cid)
+    .maybeSingle();
+  const gate = checkRenewalGate(
+    (center as { renewal_check_day: number | null } | null)?.renewal_check_day,
+  );
 
   // 서버 ilike — q 가 학생명 또는 상품명에 매칭되면 그 ID 들로 enrollments 좁히기
   const qSafe = safeIlike(q);
@@ -142,6 +153,46 @@ export default async function RenewalsPage({
         </div>
       </div>
 
+      {gate.state === "not-configured" && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--orange-soft)",
+            borderColor: "#f0d19a",
+            color: "var(--orange)",
+            padding: "12px 16px",
+          }}
+        >
+          ⚠ <Link href="/admin/settings">설정</Link> 에서 다음 달 수강 확인일을 먼저 지정해 주세요.
+        </div>
+      )}
+      {gate.state === "before" && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--orange-soft)",
+            borderColor: "#f0d19a",
+            color: "var(--orange)",
+            padding: "12px 16px",
+          }}
+        >
+          매월 <b>{gate.day}일</b> 수강 확인일 · D-{gate.daysLeft}. 그날이 지나야 확정/보류 일괄 처리가 가능합니다.
+        </div>
+      )}
+      {gate.state === "after" && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--green-soft)",
+            borderColor: "#b8dccb",
+            color: "var(--green)",
+            padding: "12px 16px",
+          }}
+        >
+          매월 <b>{gate.day}일</b> 수강 확인일 · 일괄 처리 가능
+        </div>
+      )}
+
       <div className="member-summary">
         <div className="summary-card"><span>수강중</span><strong>{totals.total}</strong></div>
         <div className="summary-card"><span>대기</span><strong>{totals.pending}</strong></div>
@@ -165,13 +216,38 @@ export default async function RenewalsPage({
             </span>
           </p>
           <div className="toolbar">
-            <button className="btn primary" name="status" value="확정" type="submit">
+            <button
+              className="btn primary"
+              name="status"
+              value="확정"
+              type="submit"
+              disabled={gate.state !== "after"}
+              title={
+                gate.state === "not-configured"
+                  ? "설정에서 수강 확인일을 먼저 지정하세요"
+                  : gate.state === "before"
+                    ? `수강 확인일까지 D-${gate.daysLeft}`
+                    : undefined
+              }
+            >
               선택 확정
             </button>
-            <button className="btn warn" name="status" value="보류" type="submit">
+            <button
+              className="btn warn"
+              name="status"
+              value="보류"
+              type="submit"
+              disabled={gate.state !== "after"}
+            >
               선택 보류
             </button>
-            <button className="btn" name="status" value="대기" type="submit">
+            <button
+              className="btn"
+              name="status"
+              value="대기"
+              type="submit"
+              disabled={gate.state !== "after"}
+            >
               대기로
             </button>
           </div>

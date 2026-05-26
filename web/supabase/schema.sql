@@ -333,6 +333,11 @@ alter table public.centers add column if not exists promotion_day text;
 do $$ begin
   alter table public.centers add constraint centers_promotion_day_format check (promotion_day is null or promotion_day ~ '^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$');
 exception when duplicate_object then null; end $$;
+-- 다음 달 수강 확인 일자 (매월 N일, 1~28). 이 날짜가 지나면 renewals 페이지에서 일괄 처리 가능.
+alter table public.centers add column if not exists renewal_check_day smallint;
+do $$ begin
+  alter table public.centers add constraint centers_renewal_check_day_range check (renewal_check_day is null or (renewal_check_day between 1 and 28));
+exception when duplicate_object then null; end $$;
 
 -- 본사→지점 청구서 (HQ invoices). 슈퍼어드민이 관리.
 create table if not exists public.hq_invoices (

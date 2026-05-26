@@ -11,6 +11,7 @@ const ERR_LABELS: Record<string, string> = {
   address: "주소",
   billing_day: "결제일",
   report_day: "리포트 발행일",
+  renewal_check_day: "다음 달 수강 확인일",
   promotion_day: "진학·학년 승급 처리일",
 };
 
@@ -130,6 +131,20 @@ export default async function SettingsPage({
                   defaultValue={v("report_day") || "1"}
                   required
                 />
+              </div>
+              <div className="field">
+                <label>다음 달 수강 확인일 (매월 N일, 1~28) *</label>
+                <input
+                  name="renewal_check_day"
+                  type="number"
+                  min={1}
+                  max={28}
+                  defaultValue={v("renewal_check_day") || "25"}
+                  required
+                />
+                <small className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+                  이 날짜가 지나면 "다음 달 수강 확인" 페이지에서 일괄 확정/보류 처리 가능
+                </small>
               </div>
               <div className="field span-2">
                 <label>진학·학년 승급 처리일 *</label>
