@@ -104,10 +104,7 @@ export const NAV: NavGroup[] = [
     label: "상담",
     icon: "MessageSquare",
     items: [
-      { label: "문의/채팅", slug: "support", href: "/admin/support", ready: true },
-      { label: "문의 티켓", slug: "inquiry-ticket", href: "/admin/support", ready: true },
-      { label: "1:1 채팅 상담", slug: "chat-counsel", href: "/admin/support", ready: true },
-      { label: "상담 이력", slug: "support-history", href: "/admin/support?s=완료", ready: true },
+      { label: "문의·채팅 상담", slug: "support", href: "/admin/support", ready: true },
     ],
   },
   {
@@ -115,7 +112,6 @@ export const NAV: NavGroup[] = [
     icon: "Settings",
     onlyRoles: ["super_admin", "admin"],
     items: [
-      { label: "알림/로그", slug: "logs", href: "/admin/notifications", ready: true },
       { label: "알림 발송 로그", slug: "notification-log", href: "/admin/notifications", ready: true },
       { label: "감사 로그", slug: "audit-log", href: "/admin/audit-logs", ready: true },
       { label: "사용자 비밀번호 관리", slug: "users-reset", href: "/admin/users", ready: true },
