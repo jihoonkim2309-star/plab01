@@ -90,6 +90,16 @@ export default async function GradePromotionsPage({
   const yearOptions = [...yearSet].sort().reverse();
 
   const selected = sel ? list.find((g) => g.id === sel) ?? null : null;
+
+  // sel 진입 링크가 다른 filter(status/year/q)를 보존하도록
+  const selectHref = (id: string) => {
+    const p = new URLSearchParams();
+    p.set("sel", id);
+    if (status) p.set("status", status);
+    if (year) p.set("year", year);
+    if (q) p.set("q", q);
+    return `/admin/grade-promotions?${p.toString()}`;
+  };
   const hasFilter = !!(status || year || q);
 
   return (
@@ -116,7 +126,7 @@ export default async function GradePromotionsPage({
         <div className="summary-card"><span>보류</span><strong>{totals.hold}</strong></div>
       </div>
 
-      <div className="grid account-layout">
+      <div className="grid member-layout">
         <form action={bulkSetStatus} className="panel elevated">
           <div className="panel-head">
             <p className="panel-title">
@@ -191,7 +201,7 @@ export default async function GradePromotionsPage({
                   </td>
                   <td>
                     <Link
-                      href={`/admin/grade-promotions?sel=${g.id}`}
+                      href={selectHref(g.id)}
                       className="row-link-stretch"
                       style={{ fontWeight: 900, color: "var(--text)" }}
                     >
@@ -359,11 +369,21 @@ export default async function GradePromotionsPage({
                       return true;
                     }).map((st) => {
                       const isApprove = st === "승인 완료";
+                      // 승인 완료 차단 조건: to_grade 비어있거나 / 학교변경인데 to_school 비어있음
+                      const missingGrade = !selected.to_grade?.trim();
+                      const missingSchool = selected.needs_parent_input && !selected.to_school?.trim();
+                      const approveBlocked = isApprove && (missingGrade || missingSchool);
+                      const blockedReason = missingGrade
+                        ? "새 학년 입력 필요"
+                        : missingSchool
+                          ? "학교 변경 — 새 학교 입력 필요"
+                          : "";
                       const btn = (
                         <button
                           className={`btn${st === "승인 완료" ? " primary" : st === "보류" ? " warn" : ""}`}
                           style={{ width: "100%" }}
-                          disabled={selected.status === st}
+                          disabled={selected.status === st || approveBlocked}
+                          title={approveBlocked ? blockedReason : undefined}
                           type="submit"
                         >
                           {st}
@@ -375,7 +395,7 @@ export default async function GradePromotionsPage({
                           key={st}
                           action={setGradePromotionStatus.bind(null, selected.id, st)}
                         >
-                          {isApprove && selected.status !== st ? (
+                          {isApprove && selected.status !== st && !approveBlocked ? (
                             <ConfirmButton
                               message={`'${selected.students?.name ?? "학생"}' 의 학년을 ${selected.to_grade ?? ""}${selected.to_school ? `, 학교를 ${selected.to_school}` : ""}로 반영합니다. 진행할까요?`}
                               className="btn primary"
@@ -391,6 +411,16 @@ export default async function GradePromotionsPage({
                       );
                     })}
                   </div>
+                  {selected && !selected.to_grade?.trim() && (
+                    <p className="muted" style={{ fontSize: 11, marginTop: 6 }}>
+                      ⚠ 새 학년이 입력되지 않아 "승인 완료"를 진행할 수 없습니다.
+                    </p>
+                  )}
+                  {selected?.needs_parent_input && !selected.to_school?.trim() && (
+                    <p className="muted" style={{ fontSize: 11, marginTop: 6 }}>
+                      ⚠ 학교 변경 건이므로 "새 학교" 입력이 필요합니다. (학부모 입력 대상)
+                    </p>
+                  )}
                   {!selected.needs_parent_input && selected.status !== "학부모 입력 요청" && (
                     <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
                       학년만 바뀌는 일반 승급이라 학부모 입력은 필요 없습니다. "승인 완료" 로 학년 반영하면 됩니다.
