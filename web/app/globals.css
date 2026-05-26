@@ -17,3 +17,14 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Tailwind Preflight 가 button cursor 를 default 로 reset 함 — 액션 요소에 손가락 커서 복원 */
+button:not(:disabled),
+[role="button"]:not(:disabled),
+a[href] {
+  cursor: pointer;
+}
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
