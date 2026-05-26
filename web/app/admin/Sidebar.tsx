@@ -51,10 +51,20 @@ function isActive(
   }
 
   if (hrefPath === "/admin") return pathname === "/admin";
-  if (hrefPath === "/admin/students")
+  // /students/new 는 별도 메뉴라 부모 매칭에서 제외
+  if (hrefPath === "/admin/students/new")
+    return pathname === "/admin/students/new";
+  if (hrefPath === "/admin/students") {
+    if (pathname === "/admin/students/new") return false;
     return pathname === "/admin/students" || pathname.startsWith("/admin/students/");
-  if (hrefPath === "/admin/classes")
+  }
+  // /classes/new 도 동일
+  if (hrefPath === "/admin/classes/new")
+    return pathname === "/admin/classes/new";
+  if (hrefPath === "/admin/classes") {
+    if (pathname === "/admin/classes/new") return false;
     return pathname === "/admin/classes" || pathname.startsWith("/admin/classes/");
+  }
   if (hrefPath === "/admin/grade-promotions")
     return pathname.startsWith("/admin/grade-promotions");
   if (hrefPath === "/admin/schedule") return pathname.startsWith("/admin/schedule");

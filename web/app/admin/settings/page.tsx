@@ -4,12 +4,22 @@ import AddressField from "../AddressField";
 import BusinessNoInput from "../BusinessNoInput";
 import { updateSettings } from "./actions";
 
+const ERR_LABELS: Record<string, string> = {
+  name: "센터명",
+  contact_phone: "대표 연락처",
+  business_no: "사업자등록번호",
+  address: "주소",
+  billing_day: "결제일",
+  report_day: "리포트 발행일",
+  promotion_day: "진학·학년 승급 처리일",
+};
+
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
-  const { saved } = await searchParams;
+  const { saved, error } = await searchParams;
   // active_center 쿠키 우선 (super_admin) → profile.center_id (일반 admin)
   // action 측도 동일하게 requireCenter 사용 — 읽기/쓰기 같은 센터.
   const { supabase, centerId: cid } = await requireCenter();
@@ -46,6 +56,19 @@ export default async function SettingsPage({
           저장되었습니다.
         </div>
       )}
+      {error && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--red-soft, #fdecec)",
+            borderColor: "#f3b1b1",
+            color: "var(--red)",
+            padding: "12px 16px",
+          }}
+        >
+          필수 항목이 비어 있습니다: <b>{ERR_LABELS[error] ?? error}</b>
+        </div>
+      )}
 
       <form action={updateSettings}>
         <div className="panel">
@@ -55,77 +78,103 @@ export default async function SettingsPage({
           <div className="panel-body">
             <div className="form-grid">
               <div className="field">
-                <label>센터명</label>
-                <input name="name" defaultValue={v("name") || "플랜비 본점"} />
+                <label>센터명 *</label>
+                <input
+                  name="name"
+                  defaultValue={v("name") || "플랜비 본점"}
+                  required
+                />
               </div>
               <div className="field">
-                <label>대표 연락처</label>
-                <PhoneInput name="contact_phone" defaultValue={v("contact_phone")} />
+                <label>대표 연락처 *</label>
+                <PhoneInput
+                  name="contact_phone"
+                  defaultValue={v("contact_phone")}
+                  required
+                />
               </div>
               <div className="field">
-                <label>사업자등록번호</label>
-                <BusinessNoInput name="business_no" defaultValue={v("business_no")} />
+                <label>사업자등록번호 *</label>
+                <BusinessNoInput
+                  name="business_no"
+                  defaultValue={v("business_no")}
+                  required
+                />
               </div>
               <div className="field span-2">
-                <label>주소</label>
-                <AddressField name="address" defaultValue={v("address")} />
+                <label>주소 *</label>
+                <AddressField
+                  name="address"
+                  defaultValue={v("address")}
+                  required
+                />
               </div>
               <div className="field">
-                <label>결제일 (매월 N일, 1~28)</label>
+                <label>결제일 (매월 N일, 1~28) *</label>
                 <input
                   name="billing_day"
                   type="number"
                   min={1}
                   max={28}
                   defaultValue={v("billing_day") || "10"}
+                  required
                 />
               </div>
               <div className="field">
-                <label>리포트 발행일 (매월 N일, 1~28)</label>
+                <label>리포트 발행일 (매월 N일, 1~28) *</label>
                 <input
                   name="report_day"
                   type="number"
                   min={1}
                   max={28}
                   defaultValue={v("report_day") || "1"}
+                  required
                 />
               </div>
               <div className="field span-2">
-                <label>진학·학년 승급 처리일</label>
+                <label>진학·학년 승급 처리일 *</label>
                 {(() => {
                   const pdRaw = v("promotion_day"); // 'MM-DD' 또는 ''
                   const pm = pdRaw ? pdRaw.slice(0, 2) : "";
                   const pd = pdRaw ? pdRaw.slice(3, 5) : "";
                   return (
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <select
-                        name="promotion_month"
-                        defaultValue={pm}
-                        style={{ flex: "0 0 100px" }}
-                      >
-                        <option value="">월 선택</option>
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                          <option key={m} value={String(m).padStart(2, "0")}>
-                            {m}월
+                    <>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <select
+                          name="promotion_month"
+                          defaultValue={pm}
+                          required
+                          style={{ flex: "0 0 120px" }}
+                        >
+                          <option value="" disabled>
+                            월 선택
                           </option>
-                        ))}
-                      </select>
-                      <select
-                        name="promotion_day"
-                        defaultValue={pd}
-                        style={{ flex: "0 0 100px" }}
-                      >
-                        <option value="">일 선택</option>
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                          <option key={d} value={String(d).padStart(2, "0")}>
-                            {d}일
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                            <option key={m} value={String(m).padStart(2, "0")}>
+                              {m}월
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          name="promotion_day"
+                          defaultValue={pd}
+                          required
+                          style={{ flex: "0 0 120px" }}
+                        >
+                          <option value="" disabled>
+                            일 선택
                           </option>
-                        ))}
-                      </select>
-                      <span className="muted" style={{ fontSize: 12 }}>
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                            <option key={d} value={String(d).padStart(2, "0")}>
+                              {d}일
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <small className="muted" style={{ fontSize: 12, marginTop: 4 }}>
                         매년 이 날짜가 지나면 진학·승급 페이지에서 일괄 생성 가능
-                      </span>
-                    </div>
+                      </small>
+                    </>
                   );
                 })()}
               </div>

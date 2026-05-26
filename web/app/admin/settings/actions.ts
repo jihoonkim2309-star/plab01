@@ -7,26 +7,38 @@ import { requireCenter } from "@/lib/center";
 export async function updateSettings(formData: FormData) {
   const { supabase, centerId } = await requireCenter();
 
-  const bd = Number(formData.get("billing_day") ?? 10);
-  const rd = Number(formData.get("report_day") ?? 1);
+  // 필수값 검증 — 하나라도 비면 redirect 로 안내
+  const name = String(formData.get("name") ?? "").trim();
+  const contactPhone = String(formData.get("contact_phone") ?? "").trim();
+  const businessNo = String(formData.get("business_no") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim();
+  const bdRaw = String(formData.get("billing_day") ?? "").trim();
+  const rdRaw = String(formData.get("report_day") ?? "").trim();
+  const pm = String(formData.get("promotion_month") ?? "").trim();
+  const pd = String(formData.get("promotion_day") ?? "").trim();
+
+  if (!name) redirect("/admin/settings?error=name");
+  if (!contactPhone) redirect("/admin/settings?error=contact_phone");
+  if (!businessNo) redirect("/admin/settings?error=business_no");
+  if (!address) redirect("/admin/settings?error=address");
+  if (!bdRaw) redirect("/admin/settings?error=billing_day");
+  if (!rdRaw) redirect("/admin/settings?error=report_day");
+  if (!pm || !pd) redirect("/admin/settings?error=promotion_day");
+
+  const bd = Number(bdRaw);
+  const rd = Number(rdRaw);
   // pg_api_secret 은 빈 입력이면 기존 값 유지 (덮어쓰기 방지). 마스킹 패턴.
   const secretInput = String(formData.get("pg_api_secret") ?? "").trim();
 
-  // 진학·승급 처리일 — month/day select 2개를 MM-DD 로 합침. 둘 중 하나라도 비면 null.
-  const pm = String(formData.get("promotion_month") ?? "").trim();
-  const pd = String(formData.get("promotion_day") ?? "").trim();
-  let promotionDay: string | null = null;
-  if (pm && pd) {
-    const m = Math.min(Math.max(Number(pm), 1), 12);
-    const d = Math.min(Math.max(Number(pd), 1), 31);
-    promotionDay = `${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-  }
+  const mm = Math.min(Math.max(Number(pm), 1), 12);
+  const dd = Math.min(Math.max(Number(pd), 1), 31);
+  const promotionDay = `${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
 
   const patch: Record<string, unknown> = {
-    name: String(formData.get("name") ?? "") || "플랜비 본점",
-    contact_phone: String(formData.get("contact_phone") ?? "") || null,
-    business_no: String(formData.get("business_no") ?? "") || null,
-    address: String(formData.get("address") ?? "") || null,
+    name,
+    contact_phone: contactPhone,
+    business_no: businessNo,
+    address,
     billing_day: Math.min(Math.max(bd, 1), 28),
     report_day: Math.min(Math.max(rd, 1), 28),
     promotion_day: promotionDay,
