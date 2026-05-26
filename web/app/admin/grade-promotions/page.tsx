@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
+import { checkPromotionGate } from "@/lib/promotion";
 import {
   bulkSetStatus,
   setGradePromotionStatus,
@@ -56,13 +57,21 @@ export default async function GradePromotionsPage({
   if (status) listQuery = listQuery.eq("status", status);
   if (year) listQuery = listQuery.eq("school_year", year);
 
-  const [listRes, allRes] = await Promise.all([
+  const [listRes, allRes, centerRes] = await Promise.all([
     listQuery,
     supabase
       .from("grade_promotions")
       .select("status, school_year")
       .eq("center_id", cid),
+    supabase
+      .from("centers")
+      .select("promotion_day")
+      .eq("id", cid)
+      .maybeSingle(),
   ]);
+  const gate = checkPromotionGate(
+    (centerRes.data as { promotion_day: string | null } | null)?.promotion_day,
+  );
 
   let raw = (listRes.data ?? []) as unknown as GP[];
 
@@ -108,13 +117,48 @@ export default async function GradePromotionsPage({
         <div>
           <h1>진학/학년 승급 관리</h1>
           <p className="subtext">
-            매년 2~3월 일괄 처리 · 승인 시 학생 학년(학교변경 시 학교)에 실제 반영
+            매년 처리일 이후 일괄 처리 · 승인 시 학생 학년(학교변경 시 학교)에 실제 반영
+          </p>
+          <p
+            className="muted"
+            style={{ fontSize: 12, marginTop: 4 }}
+          >
+            {gate.state === "not-configured" && (
+              <>
+                ⚠ <Link href="/admin/settings">설정</Link> 에서 진학·승급 처리일을 먼저 지정해 주세요.
+              </>
+            )}
+            {gate.state === "before" && (
+              <>
+                처리일: <b>{gate.targetDate}</b> · D-{gate.daysLeft} (그 날 이후 일괄 생성 가능)
+              </>
+            )}
+            {gate.state === "after" && (
+              <>
+                처리일: <b>{gate.targetDate}</b> · 일괄 생성 가능
+              </>
+            )}
           </p>
         </div>
         <div className="toolbar">
-          <Link className="btn primary" href="/admin/grade-promotions/new">
-            승급 대상 일괄 생성
-          </Link>
+          {gate.state === "after" ? (
+            <Link className="btn primary" href="/admin/grade-promotions/new">
+              승급 대상 일괄 생성
+            </Link>
+          ) : (
+            <button
+              className="btn primary"
+              type="button"
+              disabled
+              title={
+                gate.state === "not-configured"
+                  ? "설정에서 처리일을 먼저 지정하세요"
+                  : `처리일까지 D-${gate.daysLeft}`
+              }
+            >
+              승급 대상 일괄 생성
+            </button>
+          )}
         </div>
       </div>
 

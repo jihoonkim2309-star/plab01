@@ -319,6 +319,11 @@ alter table public.centers add column if not exists subscription_per_student int
 alter table public.centers add column if not exists subscription_revenue_pct numeric(5,2) default 0;  -- 매출비례 % (매출비례 시 사용)
 alter table public.centers add column if not exists hq_billing_day           smallint default 1
   check (hq_billing_day between 1 and 28);                                                            -- 본사 청구 발행일
+-- 진학·학년 승급 처리일 (MM-DD 형식, 매년 같은 날짜). null = 미설정 (어드민이 지정 전엔 일괄 생성 차단)
+alter table public.centers add column if not exists promotion_day text;
+do $$ begin
+  alter table public.centers add constraint centers_promotion_day_format check (promotion_day is null or promotion_day ~ '^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$');
+exception when duplicate_object then null; end $$;
 
 -- 본사→지점 청구서 (HQ invoices). 슈퍼어드민이 관리.
 create table if not exists public.hq_invoices (

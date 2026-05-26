@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { nextGrade, promoMeta } from "@/lib/promotion";
+import { requireCenter } from "@/lib/center";
+import { nextGrade, promoMeta, checkPromotionGate } from "@/lib/promotion";
 import { bulkCreateGradePromotions } from "../actions";
 import FilterBar from "../../FilterBar";
 import FilterSelect from "../../FilterSelect";
@@ -18,7 +18,59 @@ export default async function BulkNewPage({
   searchParams: Promise<{ grade?: string; q?: string; year?: string }>;
 }) {
   const { grade: gradeFilter, q, year } = await searchParams;
-  const supabase = await createClient();
+  const { supabase, centerId: cid } = await requireCenter();
+
+  // 처리일 게이트 — 미설정 또는 처리일 이전이면 차단 화면
+  const { data: center } = await supabase
+    .from("centers")
+    .select("promotion_day")
+    .eq("id", cid)
+    .maybeSingle();
+  const gate = checkPromotionGate(
+    (center as { promotion_day: string | null } | null)?.promotion_day,
+  );
+  if (gate.state !== "after") {
+    return (
+      <>
+        <div className="page-head">
+          <div>
+            <h1>승급 대상 일괄 생성</h1>
+            <p className="subtext">
+              <Link href="/admin/grade-promotions" style={{ color: "var(--muted)" }}>
+                ← 진학/학년 승급 관리
+              </Link>
+            </p>
+          </div>
+        </div>
+        <div
+          className="panel"
+          style={{
+            background: "var(--orange-soft)",
+            borderColor: "#f0d19a",
+            color: "var(--orange)",
+            padding: "16px 18px",
+          }}
+        >
+          {gate.state === "not-configured" ? (
+            <>
+              <strong>승급 처리일이 지정되지 않았습니다.</strong>
+              <p style={{ marginTop: 6 }}>
+                <Link href="/admin/settings">설정</Link> 에서 진학·승급 처리일을 먼저 입력해 주세요.
+              </p>
+            </>
+          ) : (
+            <>
+              <strong>아직 처리일이 되지 않았습니다.</strong>
+              <p style={{ marginTop: 6 }}>
+                처리일: <b>{gate.targetDate}</b> · D-{gate.daysLeft}. 그 날 이후
+                일괄 생성이 가능합니다.
+              </p>
+            </>
+          )}
+        </div>
+      </>
+    );
+  }
 
   // 현재 연도 기준 +2년까지 학년도 옵션 생성 (default = 현재 학년도)
   const Y = new Date().getFullYear();
@@ -28,6 +80,7 @@ export default async function BulkNewPage({
   let studentQuery = supabase
     .from("students")
     .select("id, name, school, grade")
+    .eq("center_id", cid)
     .order("name");
   if (gradeFilter) studentQuery = studentQuery.eq("grade", gradeFilter);
   if (q) studentQuery = studentQuery.or(`name.ilike.%${q}%,school.ilike.%${q}%`);
@@ -38,6 +91,7 @@ export default async function BulkNewPage({
     supabase
       .from("grade_promotions")
       .select("student_id, status")
+      .eq("center_id", cid)
       .eq("school_year", selectedYear),
   ]);
 

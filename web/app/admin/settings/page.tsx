@@ -91,6 +91,45 @@ export default async function SettingsPage({
                 />
               </div>
               <div className="field span-2">
+                <label>진학·학년 승급 처리일</label>
+                {(() => {
+                  const pdRaw = v("promotion_day"); // 'MM-DD' 또는 ''
+                  const pm = pdRaw ? pdRaw.slice(0, 2) : "";
+                  const pd = pdRaw ? pdRaw.slice(3, 5) : "";
+                  return (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <select
+                        name="promotion_month"
+                        defaultValue={pm}
+                        style={{ flex: "0 0 100px" }}
+                      >
+                        <option value="">월 선택</option>
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                          <option key={m} value={String(m).padStart(2, "0")}>
+                            {m}월
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        name="promotion_day"
+                        defaultValue={pd}
+                        style={{ flex: "0 0 100px" }}
+                      >
+                        <option value="">일 선택</option>
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                          <option key={d} value={String(d).padStart(2, "0")}>
+                            {d}일
+                          </option>
+                        ))}
+                      </select>
+                      <span className="muted" style={{ fontSize: 12 }}>
+                        매년 이 날짜가 지나면 진학·승급 페이지에서 일괄 생성 가능
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="field span-2">
                 <label
                   style={{ display: "flex", gap: 8, alignItems: "center" }}
                 >

@@ -23,3 +23,32 @@ export function promoMeta(to: string | null): {
   if (to === "고1") return { type: "중등→고등", needsParentInput: true };
   return { type: "일반 승급", needsParentInput: false };
 }
+
+// 승급 처리일(MM-DD) 기반의 상태 계산.
+// - 미설정 → not-configured
+// - 올해 그 날짜가 아직 안 됨 → before (D-day 표시)
+// - 그 날짜를 지났음 → after (일괄 생성 가능)
+export type PromotionGate =
+  | { state: "not-configured" }
+  | { state: "before"; targetDate: string; daysLeft: number; promotionDay: string }
+  | { state: "after"; targetDate: string; promotionDay: string };
+
+export function checkPromotionGate(
+  promotionDay: string | null | undefined,
+  now: Date = new Date(),
+): PromotionGate {
+  if (!promotionDay || !/^\d{2}-\d{2}$/.test(promotionDay)) {
+    return { state: "not-configured" };
+  }
+  const [mm, dd] = promotionDay.split("-").map(Number);
+  const y = now.getFullYear();
+  const target = new Date(y, mm - 1, dd);
+  const today = new Date(y, now.getMonth(), now.getDate());
+  const diffMs = target.getTime() - today.getTime();
+  const days = Math.round(diffMs / 86400000);
+  const isoTarget = `${y}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+  if (days > 0) {
+    return { state: "before", targetDate: isoTarget, daysLeft: days, promotionDay };
+  }
+  return { state: "after", targetDate: isoTarget, promotionDay };
+}
