@@ -77,6 +77,8 @@ export async function createStop(routeId: string, formData: FormData) {
   const nextSeq = (prev?.sequence ?? -1) + 1;
 
   // 자동 추천: 사용자가 분 미입력 + 새 정류장 좌표 있을 때
+  let estSource: "tmap" | "fallback" | "manual" | null =
+    est !== null ? "manual" : null;
   if (est === null && coords) {
     let origin: { lat: number; lng: number } | null = null;
     let baseAccumMin = 0;
@@ -100,11 +102,14 @@ export async function createStop(routeId: string, formData: FormData) {
       // 1순위: TMap 자동차 경로 (실제 도로)
       let segmentMin: number | null = null;
       const route = await routeByCar(origin, coords);
-      if (route) segmentMin = route.minutes;
-      else {
+      if (route) {
+        segmentMin = route.minutes;
+        estSource = "tmap";
+      } else {
         // 2순위 fallback: 직선거리 × 1.3 도로 곡률 보정 + 25km/h
         const km = haversineKm(origin, coords);
         segmentMin = suggestMinutes(km * 1.3);
+        estSource = "fallback";
       }
       est = baseAccumMin + segmentMin;
     }
@@ -117,6 +122,7 @@ export async function createStop(routeId: string, formData: FormData) {
     name,
     address,
     est_minutes_from_start: est,
+    est_source: estSource,
     lat: coords?.lat ?? null,
     lng: coords?.lng ?? null,
   });
@@ -138,10 +144,10 @@ export async function updateStop(
   if (!name) throw new Error("정류장 이름은 필수입니다.");
   if (est !== null && Number.isNaN(est)) throw new Error("도착 분 형식 오류");
 
-  // 현재 저장된 주소·좌표
+  // 현재 저장된 주소·좌표·도착 분·소스
   const { data: cur } = await supabase
     .from("shuttle_stops")
-    .select("address, lat, lng")
+    .select("address, lat, lng, est_minutes_from_start, est_source")
     .eq("id", stopId)
     .eq("center_id", cid)
     .maybeSingle();
@@ -155,9 +161,18 @@ export async function updateStop(
     lng = coords?.lng ?? null;
   }
 
+  // 도착 분이 변경되면 'manual' 로 기록 (사용자가 직접 수정한 것).
+  // 변경 없으면 기존 source 유지.
+  const prevEst = cur?.est_minutes_from_start ?? null;
+  const estChanged = est !== prevEst;
+  const nextSource =
+    estChanged && est !== null
+      ? "manual"
+      : (cur?.est_source as string | null) ?? null;
+
   const { error } = await supabase
     .from("shuttle_stops")
-    .update({ name, address, est_minutes_from_start: est, lat, lng })
+    .update({ name, address, est_minutes_from_start: est, est_source: nextSource, lat, lng })
     .eq("id", stopId)
     .eq("center_id", cid);
   if (error) throw error;

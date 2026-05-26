@@ -31,7 +31,7 @@ export default async function ShuttleRouteDetailPage({
       .maybeSingle(),
     supabase
       .from("shuttle_stops")
-      .select("id, sequence, name, address, est_minutes_from_start, lat, lng")
+      .select("id, sequence, name, address, est_minutes_from_start, est_source, lat, lng")
       .eq("route_id", id)
       .eq("center_id", cid)
       .order("sequence", { ascending: true }),
@@ -198,6 +198,52 @@ export default async function ShuttleRouteDetailPage({
                       min="0"
                       style={{ minHeight: 28, padding: "2px 8px", width: 80, fontSize: 12 }}
                     />
+                    {(() => {
+                      const src = (s as { est_source?: string | null }).est_source;
+                      if (s.est_minutes_from_start == null) return null;
+                      if (src === "tmap") {
+                        return (
+                          <span
+                            className="badge green"
+                            title="TMap 실제 도로 경로로 계산됨"
+                            style={{ fontSize: 10 }}
+                          >
+                            TMap
+                          </span>
+                        );
+                      }
+                      if (src === "fallback") {
+                        return (
+                          <span
+                            className="badge orange"
+                            title="TMap 호출 실패 — 직선거리 × 1.3 보정"
+                            style={{ fontSize: 10 }}
+                          >
+                            추정
+                          </span>
+                        );
+                      }
+                      if (src === "manual") {
+                        return (
+                          <span
+                            className="badge gray"
+                            title="사용자가 직접 입력한 값"
+                            style={{ fontSize: 10 }}
+                          >
+                            수동
+                          </span>
+                        );
+                      }
+                      return (
+                        <span
+                          className="badge gray"
+                          title="소스 미기록 (구 데이터)"
+                          style={{ fontSize: 10 }}
+                        >
+                          ?
+                        </span>
+                      );
+                    })()}
                     {s.lat != null && s.lng != null && (
                       <span className="muted" style={{ fontSize: 11 }}>
                         ✓ 좌표 등록됨

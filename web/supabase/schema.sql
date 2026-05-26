@@ -1113,6 +1113,12 @@ create table if not exists public.shuttle_stops (
   est_minutes_from_start integer,
   created_at             timestamptz not null default now()
 );
+-- 도착 분 산출 출처 — 'tmap' (실제 도로), 'fallback' (직선×1.3), 'manual' (사용자 입력)
+alter table public.shuttle_stops add column if not exists est_source text;
+do $$ begin
+  alter table public.shuttle_stops add constraint shuttle_stops_est_source_check
+    check (est_source is null or est_source in ('tmap','fallback','manual'));
+exception when duplicate_object then null; end $$;
 create index if not exists shuttle_stops_route_idx
   on public.shuttle_stops (route_id, sequence);
 
