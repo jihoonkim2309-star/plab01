@@ -16,14 +16,16 @@ export async function bulkOverdueAction(formData: FormData) {
     const { error } = await supabase
       .from("invoices")
       .update({ status: "결제완료", paid_at: new Date().toISOString() })
-      .in("id", ids);
+      .in("id", ids)
+      .eq("center_id", centerId);
     if (error) throw new Error("처리 실패: " + error.message);
   } else {
     if (action === "재청구") {
       await supabase
         .from("invoices")
         .update({ status: "청구" })
-        .in("id", ids);
+        .in("id", ids)
+        .eq("center_id", centerId);
     }
     const logs = ids.map((invoice_id) => ({
       center_id: centerId,

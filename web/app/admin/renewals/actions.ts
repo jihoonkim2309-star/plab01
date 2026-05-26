@@ -11,11 +11,13 @@ export async function syncEnrollments() {
   const { data: studs } = await supabase
     .from("students")
     .select("id, class_id, product_id")
+    .eq("center_id", centerId)
     .not("product_id", "is", null);
 
   const { data: existing } = await supabase
     .from("enrollments")
     .select("student_id")
+    .eq("center_id", centerId)
     .eq("status", "수강중");
   const have = new Set((existing ?? []).map((e) => e.student_id));
 

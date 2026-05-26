@@ -23,6 +23,7 @@ export async function generateInvoices(formData: FormData) {
   const { data: confirmed } = await supabase
     .from("renewal_confirmations")
     .select("enrollment_id, enrollments(student_id, products(name, price))")
+    .eq("center_id", centerId)
     .eq("target_month", period)
     .eq("status", "확정");
 
@@ -37,6 +38,7 @@ export async function generateInvoices(formData: FormData) {
   const { data: exist } = await supabase
     .from("invoices")
     .select("student_id")
+    .eq("center_id", centerId)
     .eq("period", period);
   const billed = new Set((exist ?? []).map((i) => i.student_id));
 
@@ -76,7 +78,7 @@ export async function generateInvoices(formData: FormData) {
 }
 
 export async function bulkInvoiceStatus(formData: FormData) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const ids = formData.getAll("ids").map(String).filter(Boolean);
   const status = String(formData.get("status") ?? "");
   const period = String(formData.get("period") ?? "");
@@ -90,7 +92,8 @@ export async function bulkInvoiceStatus(formData: FormData) {
   const { error } = await supabase
     .from("invoices")
     .update(patch)
-    .in("id", ids);
+    .in("id", ids)
+    .eq("center_id", centerId);
   if (error) throw new Error("처리 실패: " + error.message);
 
   revalidatePath("/admin/billing");
@@ -98,8 +101,12 @@ export async function bulkInvoiceStatus(formData: FormData) {
 }
 
 export async function deleteInvoice(id: string, period: string) {
-  const { supabase } = await requireCenter();
-  const { error } = await supabase.from("invoices").delete().eq("id", id);
+  const { supabase, centerId } = await requireCenter();
+  const { error } = await supabase
+    .from("invoices")
+    .delete()
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("삭제 실패: " + error.message);
   revalidatePath("/admin/billing");
   redirect(`/admin/billing?ym=${period}`);
