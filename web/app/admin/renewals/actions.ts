@@ -89,7 +89,7 @@ export async function bulkRenewal(formData: FormData) {
 
   // 학생 마스터 status 동기화 — 확정→활성, 보류→휴원
   if (status === "확정" || status === "보류") {
-    const newStudentStatus = status === "확정" ? "활성" : "휴원";
+    const newStudentStatus = status === "확정" ? "정상" : "휴원";
     const { data: enrolls } = await supabase
       .from("enrollments")
       .select("student_id")

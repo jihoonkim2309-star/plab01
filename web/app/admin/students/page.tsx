@@ -11,7 +11,7 @@ import AssignEnrollmentModal from "../enrollments/AssignEnrollmentModal";
 import AssignShuttleModal from "../shuttle/assignments/AssignShuttleModal";
 
 const STATUS_BADGE: Record<string, string> = {
-  활성: "green",
+  정상: "green",
   상담중: "blue",
   휴원: "orange",
   탈퇴: "gray",
@@ -170,7 +170,7 @@ export default async function StudentsPage({
   const allRows = summaryRes.data ?? [];
   const totals = {
     total: allRows.length,
-    active: allRows.filter((s) => s.status === "활성").length,
+    active: allRows.filter((s) => s.status === "정상").length,
     shuttle: allRows.filter((s) => s.shuttle_use === "이용").length,
     consult: allRows.filter((s) => s.status === "상담중").length,
     leave: allRows.filter((s) => s.status === "휴원").length,
@@ -233,7 +233,7 @@ export default async function StudentsPage({
           <strong>{totals.total}</strong>
         </div>
         <div className="summary-card">
-          <span>활성 회원</span>
+          <span>정상 회원</span>
           <strong>{totals.active}</strong>
         </div>
         <div className="summary-card">
@@ -273,7 +273,7 @@ export default async function StudentsPage({
                 param="status"
                 current={status}
                 options={[
-                  { value: "활성", label: "활성" },
+                  { value: "정상", label: "정상" },
                   { value: "상담중", label: "상담중" },
                   { value: "휴원", label: "휴원" },
                   { value: "탈퇴", label: "탈퇴" },

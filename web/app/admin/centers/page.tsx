@@ -53,7 +53,7 @@ export default async function CentersPage({
   }
   const studentActiveCount = new Map<string, number>();
   for (const s of studentsRes.data ?? []) {
-    if (!s.center_id || s.status !== "활성") continue;
+    if (!s.center_id || s.status !== "정상") continue;
     studentActiveCount.set(s.center_id, (studentActiveCount.get(s.center_id) ?? 0) + 1);
   }
 

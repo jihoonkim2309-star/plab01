@@ -48,7 +48,7 @@ export default async function MeasurementsPage({
       .from("students")
       .select("id, name, school, grade, gender, birth")
       .eq("center_id", cid)
-      .eq("status", "활성")
+      .eq("status", "정상")
       .order("name", { ascending: true }),
     supabase
       .from("measurements")

@@ -1,27 +1,27 @@
 "use client";
 
-// 회원 상태 분포 — Donut (활성/상담중/대기/휴면)
+// 회원 상태 분포 — Donut (정상/상담중/휴원/탈퇴)
 import ApexChart from "./ApexClient";
 
 export default function MembersDonutChart({
   active,
   consulting,
-  waiting,
-  dormant,
+  leave,
+  withdrawn,
 }: {
   active: number;
   consulting: number;
-  waiting: number;
-  dormant: number;
+  leave: number;
+  withdrawn: number;
 }) {
-  const total = active + consulting + waiting + dormant;
+  const total = active + consulting + leave + withdrawn;
   return (
     <ApexChart
       type="donut"
       height={260}
-      series={[active, consulting, waiting, dormant]}
+      series={[active, consulting, leave, withdrawn]}
       options={{
-        labels: ["활성", "상담중", "대기", "휴면"],
+        labels: ["정상", "상담중", "휴원", "탈퇴"],
         colors: ["#28c76f", "#1f6feb", "#ff9f43", "#a5b0ab"],
         stroke: { width: 2, colors: ["#ffffff"] },
         legend: {

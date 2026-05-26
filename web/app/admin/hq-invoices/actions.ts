@@ -45,7 +45,7 @@ export async function createHqInvoice(formData: FormData) {
     .from("students")
     .select("id", { count: "exact", head: true })
     .eq("center_id", center_id)
-    .eq("status", "활성");
+    .eq("status", "정상");
   const studentCount = count ?? 0;
 
   const plan = String(center.subscription_plan ?? "정액");

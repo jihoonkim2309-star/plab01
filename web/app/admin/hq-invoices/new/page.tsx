@@ -73,7 +73,7 @@ export default async function HqInvoiceNewPage({
 
   const studentCountByCenter = new Map<string, number>();
   for (const s of studentsRes.data ?? []) {
-    if (s.status === "활성" && s.center_id)
+    if (s.status === "정상" && s.center_id)
       studentCountByCenter.set(s.center_id, (studentCountByCenter.get(s.center_id) ?? 0) + 1);
   }
   const revenueByCenter = new Map<string, number>();

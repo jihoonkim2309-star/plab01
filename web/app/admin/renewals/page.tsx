@@ -22,6 +22,12 @@ const SB: Record<string, string> = {
   확정: "green",
   보류: "gray",
 };
+// 화면 표시용 라벨 (DB값은 그대로 유지)
+const STATUS_LABEL: Record<string, string> = {
+  대기: "선택 대기 중",
+  확정: "수강 확정",
+  보류: "수강 보류",
+};
 
 export default async function RenewalsPage({
   searchParams,
@@ -319,8 +325,8 @@ export default async function RenewalsPage({
                 <th>학생</th>
                 <th>상품</th>
                 <th>금액</th>
-                <th>{target} 상태</th>
-                <th>결정자</th>
+                <th>수강 확정 상태</th>
+                <th>응답자</th>
                 <th>알림</th>
               </tr>
             </thead>
@@ -328,10 +334,13 @@ export default async function RenewalsPage({
               {list.map((e) => {
                 const rc = rcByEnr.get(e.id);
                 const role = rc?.decided_by_role;
+                const currentStatus = st(e.id);
+                const isPending = currentStatus === "대기";
+                // 응답자: 결정된 행만 표시. 미정(대기) 행은 "—".
                 const roleLabel =
-                  role === "parent" ? "학부모" : role === "admin" ? "어드민" : role === "system" ? "시스템" : "미정";
+                  role === "parent" ? "학부모" : role === "admin" ? "어드민" : null;
                 const roleBadge =
-                  role === "parent" ? "green" : role === "admin" ? "blue" : role === "system" ? "gray" : "orange";
+                  role === "parent" ? "green" : role === "admin" ? "blue" : "gray";
                 return (
                   <tr key={e.id} className="row-link-host">
                     <td className="check-cell">
@@ -369,16 +378,22 @@ export default async function RenewalsPage({
                         : "-"}
                     </td>
                     <td>
-                      <span className={`badge ${SB[st(e.id)] ?? "gray"}`}>
-                        {st(e.id)}
+                      <span className={`badge ${SB[currentStatus] ?? "gray"}`}>
+                        {STATUS_LABEL[currentStatus] ?? currentStatus}
                       </span>
                     </td>
                     <td>
-                      <span className={`badge ${roleBadge}`}>{roleLabel}</span>
-                      {rc?.decided_at && (
-                        <div className="muted" style={{ fontSize: 11 }}>
-                          {rc.decided_at.slice(0, 10)}
-                        </div>
+                      {isPending || !roleLabel ? (
+                        <span className="muted">—</span>
+                      ) : (
+                        <>
+                          <span className={`badge ${roleBadge}`}>{roleLabel}</span>
+                          {rc?.decided_at && (
+                            <div className="muted" style={{ fontSize: 11 }}>
+                              {rc.decided_at.slice(0, 10)}
+                            </div>
+                          )}
+                        </>
                       )}
                     </td>
                     <td className="muted">

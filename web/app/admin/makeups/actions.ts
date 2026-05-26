@@ -64,20 +64,20 @@ export async function notifyMakeup(id: string) {
   };
   if (makeup.status === "취소") throw new Error("취소된 보강에는 알림을 보낼 수 없습니다.");
 
-  // 2) 그 클래스에 등록된 활성 학생들
+  // 2) 그 클래스에 등록된 정상 상태 학생들
   const { data: studs } = await supabase
     .from("students")
     .select("id, name, phone")
     .eq("center_id", centerId)
     .eq("class_id", makeup.class_id)
-    .eq("status", "활성");
+    .eq("status", "정상");
   const students = (studs ?? []) as {
     id: string;
     name: string;
     phone: string | null;
   }[];
   if (students.length === 0) {
-    throw new Error("이 클래스에 활성 상태 학생이 없습니다.");
+    throw new Error("이 클래스에 정상 상태 학생이 없습니다.");
   }
   const studentIds = students.map((s) => s.id);
 

@@ -84,7 +84,7 @@ export default async function AdminDashboard() {
       if (!s.center_id) continue;
       const e = counts[s.center_id];
       if (!e) continue;
-      if (s.status === "활성") e.students += 1;
+      if (s.status === "정상") e.students += 1;
       if (s.created_at && s.created_at >= monthStart) e.newStudents += 1;
     }
     for (const u of usersRes.data ?? []) {
@@ -239,10 +239,10 @@ export default async function AdminDashboard() {
   const students = studentsRes.data ?? [];
   const invoicesMonth = invoicesMonthRes.data ?? [];
   const totalStudents = students.length;
-  const activeStudents = students.filter((s) => s.status === "활성").length;
+  const activeStudents = students.filter((s) => s.status === "정상").length;
   const consultingStudents = students.filter((s) => s.status === "상담중").length;
-  const waitingStudents = students.filter((s) => s.status === "대기").length;
-  const dormantStudents = students.filter((s) => s.status === "휴면").length;
+  const leaveStudents = students.filter((s) => s.status === "휴원").length;
+  const withdrawnStudents = students.filter((s) => s.status === "탈퇴").length;
   const newThisMonth = students.filter(
     (s) => s.created_at && s.created_at.startsWith(period),
   ).length;
@@ -608,8 +608,8 @@ export default async function AdminDashboard() {
             <MembersDonutChart
               active={activeStudents}
               consulting={consultingStudents}
-              waiting={waitingStudents}
-              dormant={dormantStudents}
+              leave={leaveStudents}
+              withdrawn={withdrawnStudents}
             />
           </div>
         </div>

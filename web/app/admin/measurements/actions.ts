@@ -217,7 +217,7 @@ export async function seedDemoMeasurements(formData: FormData) {
       .from("students")
       .select("id, name")
       .eq("center_id", centerId)
-      .eq("status", "활성"),
+      .eq("status", "정상"),
     supabase
       .from("measurement_items")
       .select("id, name, value_kind, active")
