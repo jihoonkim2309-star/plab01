@@ -4,6 +4,16 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireCenter } from "@/lib/center";
 
+const WEEK_ORDER = ["월", "화", "수", "목", "금", "토", "일"];
+
+function normalizeWeekdays(raw: FormData): string | null {
+  const all = raw.getAll("weekdays").map(String).filter(Boolean);
+  if (all.length === 0) return null;
+  const cleaned = Array.from(new Set(all.filter((d) => WEEK_ORDER.includes(d))));
+  cleaned.sort((a, b) => WEEK_ORDER.indexOf(a) - WEEK_ORDER.indexOf(b));
+  return cleaned.length ? cleaned.join(",") : null;
+}
+
 function parseForm(formData: FormData) {
   const student_id = String(formData.get("student_id") ?? "").trim();
   const route_id = String(formData.get("route_id") ?? "").trim() || null;
@@ -11,8 +21,9 @@ function parseForm(formData: FormData) {
   const alight_stop_id = String(formData.get("alight_stop_id") ?? "").trim() || null;
   const direction = String(formData.get("direction") ?? "").trim() || null;
   const status = String(formData.get("status") ?? "활성");
+  const weekdays = normalizeWeekdays(formData);
   if (!student_id) throw new Error("학생은 필수입니다.");
-  return { student_id, route_id, board_stop_id, alight_stop_id, direction, status };
+  return { student_id, route_id, board_stop_id, alight_stop_id, direction, status, weekdays };
 }
 
 export async function createAssignment(formData: FormData) {
@@ -62,6 +73,7 @@ export async function assignShuttle(formData: FormData) {
   const boardId = String(formData.get("board_stop_id") ?? "").trim() || null;
   const alightId = String(formData.get("alight_stop_id") ?? "").trim() || null;
   const direction = String(formData.get("direction") ?? "").trim() || null;
+  const weekdays = normalizeWeekdays(formData);
   const backRaw = String(formData.get("back") ?? "").trim();
   const back = backRaw.startsWith("/admin/") ? backRaw : "/admin/students";
 
@@ -97,6 +109,7 @@ export async function assignShuttle(formData: FormData) {
       board_stop_id: boardId,
       alight_stop_id: alightId,
       direction,
+      weekdays,
       status: "활성",
     };
     if (existing) {

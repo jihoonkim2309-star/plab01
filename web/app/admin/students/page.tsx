@@ -424,7 +424,13 @@ export default async function StudentsPage({
                   triggerClassName="btn"
                   routes={shuttleRoutes}
                   stops={shuttleStops}
-                  students={[{ id: selected.id, name: selected.name ?? "" }]}
+                  students={[
+                    {
+                      id: selected.id,
+                      name: selected.name ?? "",
+                      attendance_days: (selected.attendance_days as string | null) ?? null,
+                    },
+                  ]}
                   fixedStudentId={selected.id}
                   backUrl={`/admin/students?student=${selected.id}`}
                 />

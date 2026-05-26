@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { assignShuttle } from "./actions";
 
+const ALL_DAYS = ["월", "화", "수", "목", "금", "토", "일"];
+
 type RouteOption = {
   id: string;
   name: string;
@@ -18,7 +20,13 @@ type StopOption = {
 type StudentOption = {
   id: string;
   name: string;
+  attendance_days?: string | null;
 };
+
+function parseDays(csv: string | null | undefined): string[] {
+  if (!csv) return [];
+  return csv.split(",").map((s) => s.trim()).filter(Boolean);
+}
 
 // 두 가지 진입 모드 (수강 배정 모달과 동일 패턴):
 // 1) 학생 컨텍스트 — fixedStudentId. routes select.
@@ -49,6 +57,8 @@ export default function AssignShuttleModal({
   const [boardId, setBoardId] = useState("");
   const [alightId, setAlightId] = useState("");
   const [direction, setDirection] = useState("");
+  const [weekdays, setWeekdays] = useState<string[]>([]);
+  const [weekdaysTouched, setWeekdaysTouched] = useState(false);
 
   useEffect(() => setMounted(true), []);
   useEffect(() => {
@@ -73,8 +83,33 @@ export default function AssignShuttleModal({
       setBoardId("");
       setAlightId("");
       setDirection("");
+      setWeekdays([]);
+      setWeekdaysTouched(false);
     }
   }, [open, fixedStudentId, fixedRouteId]);
+
+  // 학생이 바뀌면 수강 attendance_days 를 weekdays default 로 자동 채움
+  // (사용자가 수동 변경하면 그 선택 유지)
+  const selectedStudent = useMemo(
+    () => students.find((s) => s.id === studentId) ?? null,
+    [students, studentId],
+  );
+  const suggestedDays = useMemo(
+    () => parseDays(selectedStudent?.attendance_days),
+    [selectedStudent],
+  );
+  useEffect(() => {
+    if (weekdaysTouched) return;
+    if (!studentId) return;
+    setWeekdays(suggestedDays);
+  }, [studentId, suggestedDays, weekdaysTouched]);
+
+  function toggleDay(d: string) {
+    setWeekdaysTouched(true);
+    setWeekdays((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d],
+    );
+  }
 
   const selectedRoute = useMemo(
     () => routes.find((r) => r.id === routeId) ?? null,
@@ -262,6 +297,51 @@ export default function AssignShuttleModal({
                         {selectedRoute?.direction && !direction && (
                           <span className="muted" style={{ fontSize: 12 }}>
                             노선 기본 방향: {selectedRoute.direction}
+                          </span>
+                        )}
+                      </div>
+                      <div className="field span-2">
+                        <label>
+                          이용 요일{" "}
+                          <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>
+                            ({weekdays.length}회/주)
+                          </span>
+                        </label>
+                        {weekdays.map((d) => (
+                          <input
+                            key={d}
+                            type="hidden"
+                            name="weekdays"
+                            value={d}
+                          />
+                        ))}
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {ALL_DAYS.map((d) => {
+                            const on = weekdays.includes(d);
+                            return (
+                              <button
+                                key={d}
+                                type="button"
+                                onClick={() => toggleDay(d)}
+                                className={`btn${on ? " primary" : ""}`}
+                                style={{ minWidth: 44, padding: "6px 10px" }}
+                              >
+                                {d}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {!weekdaysTouched && suggestedDays.length > 0 && (
+                          <span className="muted" style={{ fontSize: 12 }}>
+                            수강 요일 ({suggestedDays.join(",")}) 기준 자동 적용. 셔틀만 다른 요일이면 수동 조정.
+                          </span>
+                        )}
+                        {!weekdaysTouched && studentId && suggestedDays.length === 0 && (
+                          <span
+                            className="muted"
+                            style={{ fontSize: 12, color: "var(--orange)" }}
+                          >
+                            ⚠ 학생의 수강 요일이 비어있어 자동 적용할 값이 없습니다. 직접 체크하세요.
                           </span>
                         )}
                       </div>

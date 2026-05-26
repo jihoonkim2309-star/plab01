@@ -1160,6 +1160,9 @@ create table if not exists public.student_stop_assignments (
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
 );
+-- 학생별 셔틀 이용 요일 (CSV "월,수,금"). null = 노선 운행 요일 전부 이용 (legacy).
+-- 보통 학생.attendance_days (수강 요일) 와 동일하게 자동 채움.
+alter table public.student_stop_assignments add column if not exists weekdays text;
 create index if not exists student_stop_assignments_student_idx
   on public.student_stop_assignments (student_id);
 

@@ -68,7 +68,7 @@ export default async function ShuttleRunsPage({
     selectedId
       ? supabase
           .from("students")
-          .select("id, name")
+          .select("id, name, attendance_days")
           .eq("center_id", cid)
           .order("name")
       : Promise.resolve({ data: [] }),
@@ -89,7 +89,7 @@ export default async function ShuttleRunsPage({
       ? supabase
           .from("student_stop_assignments")
           .select(
-            "id, status, direction, board_stop_id, alight_stop_id, students(id, name), board:shuttle_stops!board_stop_id(id, name, sequence), alight:shuttle_stops!alight_stop_id(id, name, sequence)",
+            "id, status, direction, weekdays, board_stop_id, alight_stop_id, students(id, name), board:shuttle_stops!board_stop_id(id, name, sequence), alight:shuttle_stops!alight_stop_id(id, name, sequence)",
           )
           .eq("center_id", cid)
           .eq("route_id", selectedRouteId)
@@ -98,11 +98,16 @@ export default async function ShuttleRunsPage({
   ]);
   const stopsForRun = stopsForRunRes.data ?? [];
   void selectedStopsRes;
-  const allStudents = (allStudentsRes.data ?? []) as { id: string; name: string }[];
+  const allStudents = (allStudentsRes.data ?? []) as {
+    id: string;
+    name: string;
+    attendance_days: string | null;
+  }[];
   const routeAssignments = (assignmentsRes.data ?? []) as unknown as {
     id: string;
     status: string;
     direction: string | null;
+    weekdays: string | null;
     board_stop_id: string | null;
     alight_stop_id: string | null;
     students: { id: string; name: string } | null;
@@ -365,54 +370,77 @@ export default async function ShuttleRunsPage({
                       {routeAssignments.length}명 · 노선 단위
                     </span>
                   </p>
-                  {routeAssignments.length === 0 ? (
-                    <div className="muted" style={{ fontSize: 13 }}>
-                      이 노선에 배정된 학생이 없습니다. 우측 상단 [+ 학생 배정] 으로 추가하세요.
-                    </div>
-                  ) : (
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>학생</th>
-                          <th>승차</th>
-                          <th>하차</th>
-                          <th>방향</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {routeAssignments
-                          .slice()
-                          .sort((a, b) =>
-                            (a.board?.sequence ?? 0) - (b.board?.sequence ?? 0),
-                          )
-                          .map((a) => (
-                            <tr key={a.id}>
-                              <td>
-                                {a.students?.id ? (
-                                  <Link
-                                    href={`/admin/students?student=${a.students.id}`}
-                                    style={{ fontWeight: 700, color: "var(--text)" }}
-                                  >
-                                    {a.students.name}
-                                  </Link>
-                                ) : (
-                                  <span className="muted">-</span>
-                                )}
-                              </td>
-                              <td className="muted">{a.board?.name ?? "-"}</td>
-                              <td className="muted">{a.alight?.name ?? "-"}</td>
-                              <td>
-                                {a.direction ? (
-                                  <span className="badge gray">{a.direction}</span>
-                                ) : (
-                                  "-"
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  )}
+                  {(() => {
+                    const WD = ["일", "월", "화", "수", "목", "금", "토"];
+                    const runDay = WD[selected.weekday];
+                    return routeAssignments.length === 0 ? (
+                      <div className="muted" style={{ fontSize: 13 }}>
+                        이 노선에 배정된 학생이 없습니다. 우측 상단 [+ 학생 배정] 으로 추가하세요.
+                      </div>
+                    ) : (
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>학생</th>
+                            <th>승차</th>
+                            <th>하차</th>
+                            <th>요일</th>
+                            <th>오늘 운행 ({runDay})</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {routeAssignments
+                            .slice()
+                            .sort((a, b) =>
+                              (a.board?.sequence ?? 0) - (b.board?.sequence ?? 0),
+                            )
+                            .map((a) => {
+                              const days = (a.weekdays ?? "")
+                                .split(",")
+                                .map((d) => d.trim())
+                                .filter(Boolean);
+                              const ridesThisRun =
+                                days.length === 0 || days.includes(runDay);
+                              return (
+                                <tr
+                                  key={a.id}
+                                  style={!ridesThisRun ? { opacity: 0.45 } : undefined}
+                                >
+                                  <td>
+                                    {a.students?.id ? (
+                                      <Link
+                                        href={`/admin/students?student=${a.students.id}`}
+                                        style={{ fontWeight: 700, color: "var(--text)" }}
+                                      >
+                                        {a.students.name}
+                                      </Link>
+                                    ) : (
+                                      <span className="muted">-</span>
+                                    )}
+                                  </td>
+                                  <td className="muted">{a.board?.name ?? "-"}</td>
+                                  <td className="muted">{a.alight?.name ?? "-"}</td>
+                                  <td className="muted">
+                                    {days.length === 0 ? (
+                                      <span className="muted">전부</span>
+                                    ) : (
+                                      days.join(",")
+                                    )}
+                                  </td>
+                                  <td>
+                                    {ridesThisRun ? (
+                                      <span className="badge green">탑승</span>
+                                    ) : (
+                                      <span className="badge gray">미탑승</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
+                    );
+                  })()}
                   <p className="muted" style={{ fontSize: 11, marginTop: 6 }}>
                     배정은 노선 단위로 저장됩니다. 같은 노선의 다른 운행에도 동일 학생 명단이 적용됩니다.
                   </p>

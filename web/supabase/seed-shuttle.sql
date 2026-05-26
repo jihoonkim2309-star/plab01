@@ -32,6 +32,7 @@ declare
   stud_rec record;
   i int := 0;
   assigned int := 0;
+  stud_days text;
 
   -- 학생 배정 패턴 (학생 index → 노선·승차·하차)
   pat text[][] := array[
@@ -158,7 +159,7 @@ begin
 
   -- ─── 7. 학생 배정 — 첫 6명 ─────────────────────────────────────
   for stud_rec in
-    select id, name from public.students
+    select id, name, attendance_days from public.students
      where center_id = cid
      order by created_at asc
      limit 6
@@ -184,10 +185,13 @@ begin
         when 's_e1' then s_e1 when 's_e2' then s_e2 when 's_e3' then s_e3 when 's_e4' then s_e4 end;
     end if;
 
+    -- 학생 수강 요일이 있으면 그대로 이용, 없으면 월~금 default
+    stud_days := coalesce(stud_rec.attendance_days, '월,화,수,목,금');
+
     insert into public.student_stop_assignments
-      (center_id, student_id, route_id, board_stop_id, alight_stop_id, direction, status)
+      (center_id, student_id, route_id, board_stop_id, alight_stop_id, direction, weekdays, status)
     values
-      (cid, stud_rec.id, use_route, use_board, use_alight, use_dir, '활성');
+      (cid, stud_rec.id, use_route, use_board, use_alight, use_dir, stud_days, '활성');
 
     -- 학생 마스터 비정규화 동기화
     update public.students
@@ -196,8 +200,8 @@ begin
      where id = stud_rec.id;
 
     assigned := assigned + 1;
-    raise notice '셔틀 배정 — % : 노선=% / 승차=% / 하차=%',
-      stud_rec.name, use_dir, board_key, alight_key;
+    raise notice '셔틀 배정 — % : 노선=% / 요일=% / 승차=% / 하차=%',
+      stud_rec.name, use_dir, stud_days, board_key, alight_key;
   end loop;
 
   raise notice '완료. [%] 노선 2개 + 정류장 8개 + 차량 2대 + 운행 10건 + 학생 % 명 배정',

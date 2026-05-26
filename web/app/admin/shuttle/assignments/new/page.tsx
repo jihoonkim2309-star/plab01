@@ -7,7 +7,7 @@ export default async function AssignmentNewPage() {
   const [studentsRes, routesRes, stopsRes] = await Promise.all([
     supabase
       .from("students")
-      .select("id, name, school, grade")
+      .select("id, name, school, grade, attendance_days")
       .eq("center_id", cid)
       .neq("status", "휴면")
       .order("name"),

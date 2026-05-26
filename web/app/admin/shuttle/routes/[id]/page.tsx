@@ -38,7 +38,7 @@ export default async function ShuttleRouteDetailPage({
     supabase
       .from("student_stop_assignments")
       .select(
-        "id, status, direction, students(id, name), board:shuttle_stops!board_stop_id(id, name, sequence), alight:shuttle_stops!alight_stop_id(id, name, sequence)",
+        "id, status, direction, weekdays, students(id, name), board:shuttle_stops!board_stop_id(id, name, sequence), alight:shuttle_stops!alight_stop_id(id, name, sequence)",
       )
       .eq("center_id", cid)
       .eq("route_id", id)
@@ -52,6 +52,7 @@ export default async function ShuttleRouteDetailPage({
     id: string;
     status: string;
     direction: string | null;
+    weekdays: string | null;
     students: { id: string; name: string } | null;
     board: { id: string; name: string; sequence: number | null } | null;
     alight: { id: string; name: string; sequence: number | null } | null;
@@ -311,6 +312,7 @@ export default async function ShuttleRouteDetailPage({
                   <th>학생</th>
                   <th>승차</th>
                   <th>하차</th>
+                  <th>요일</th>
                   <th>방향</th>
                 </tr>
               </thead>
@@ -321,31 +323,44 @@ export default async function ShuttleRouteDetailPage({
                     (a, b) =>
                       (a.board?.sequence ?? 0) - (b.board?.sequence ?? 0),
                   )
-                  .map((a) => (
-                    <tr key={a.id}>
-                      <td>
-                        {a.students?.id ? (
-                          <Link
-                            href={`/admin/students?student=${a.students.id}`}
-                            style={{ fontWeight: 700, color: "var(--text)" }}
-                          >
-                            {a.students.name}
-                          </Link>
-                        ) : (
-                          <span className="muted">-</span>
-                        )}
-                      </td>
-                      <td className="muted">{a.board?.name ?? "-"}</td>
-                      <td className="muted">{a.alight?.name ?? "-"}</td>
-                      <td>
-                        {a.direction ? (
-                          <span className="badge gray">{a.direction}</span>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  .map((a) => {
+                    const days = (a.weekdays ?? "")
+                      .split(",")
+                      .map((d) => d.trim())
+                      .filter(Boolean);
+                    return (
+                      <tr key={a.id}>
+                        <td>
+                          {a.students?.id ? (
+                            <Link
+                              href={`/admin/students?student=${a.students.id}`}
+                              style={{ fontWeight: 700, color: "var(--text)" }}
+                            >
+                              {a.students.name}
+                            </Link>
+                          ) : (
+                            <span className="muted">-</span>
+                          )}
+                        </td>
+                        <td className="muted">{a.board?.name ?? "-"}</td>
+                        <td className="muted">{a.alight?.name ?? "-"}</td>
+                        <td className="muted">
+                          {days.length === 0 ? (
+                            <span className="muted">전부</span>
+                          ) : (
+                            days.join(",")
+                          )}
+                        </td>
+                        <td>
+                          {a.direction ? (
+                            <span className="badge gray">{a.direction}</span>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           )}

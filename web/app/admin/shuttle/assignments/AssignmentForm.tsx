@@ -18,7 +18,15 @@ type Assignment = {
   alight_stop_id?: string | null;
   direction?: string | null;
   status?: string | null;
+  weekdays?: string | null;
 };
+
+const ALL_DAYS = ["월", "화", "수", "목", "금", "토", "일"];
+
+function parseDays(csv: string | null | undefined): string[] {
+  if (!csv) return [];
+  return csv.split(",").map((s) => s.trim()).filter(Boolean);
+}
 
 export default function AssignmentForm({
   assignment,
@@ -33,7 +41,13 @@ export default function AssignmentForm({
   deleteAction,
 }: {
   assignment?: Assignment;
-  students: { id: string; name: string; school: string | null; grade: string | null }[];
+  students: {
+    id: string;
+    name: string;
+    school: string | null;
+    grade: string | null;
+    attendance_days: string | null;
+  }[];
   routes: { id: string; name: string; direction: string }[];
   stops: Stop[];
   action: (formData: FormData) => void;
@@ -45,9 +59,31 @@ export default function AssignmentForm({
 }) {
   const a = assignment ?? {};
   const isEdit = !!a.id;
+  const [studentId, setStudentId] = useState(a.student_id ?? "");
   const [routeId, setRouteId] = useState(a.route_id ?? "");
   const [boardStop, setBoardStop] = useState(a.board_stop_id ?? "");
   const [alightStop, setAlightStop] = useState(a.alight_stop_id ?? "");
+  const [weekdays, setWeekdays] = useState<string[]>(parseDays(a.weekdays));
+  // 수정 진입: weekdays 가 이미 저장됨 → touched=true 로 자동 덮어쓰기 차단
+  const [weekdaysTouched, setWeekdaysTouched] = useState(!!a.weekdays);
+
+  const selectedStudent = students.find((s) => s.id === studentId) ?? null;
+  const suggestedDays = parseDays(selectedStudent?.attendance_days);
+
+  function onStudentChange(v: string) {
+    setStudentId(v);
+    if (!weekdaysTouched) {
+      const next = students.find((s) => s.id === v);
+      setWeekdays(parseDays(next?.attendance_days));
+    }
+  }
+
+  function toggleDay(d: string) {
+    setWeekdaysTouched(true);
+    setWeekdays((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d],
+    );
+  }
 
   const stopsOfRoute = stops
     .filter((s) => s.route_id === routeId)
@@ -90,7 +126,12 @@ export default function AssignmentForm({
           <div className="form-grid">
             <div className="field span-2">
               <label>학생 *</label>
-              <select name="student_id" defaultValue={a.student_id ?? ""} required>
+              <select
+                name="student_id"
+                value={studentId}
+                onChange={(e) => onStudentChange(e.target.value)}
+                required
+              >
                 <option value="" disabled>학생 선택</option>
                 {students.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -162,6 +203,43 @@ export default function AssignmentForm({
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="field span-2">
+              <label>
+                이용 요일{" "}
+                <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>
+                  ({weekdays.length}회/주)
+                </span>
+              </label>
+              {weekdays.map((d) => (
+                <input key={d} type="hidden" name="weekdays" value={d} />
+              ))}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {ALL_DAYS.map((d) => {
+                  const on = weekdays.includes(d);
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => toggleDay(d)}
+                      className={`btn${on ? " primary" : ""}`}
+                      style={{ minWidth: 44, padding: "6px 10px" }}
+                    >
+                      {d}
+                    </button>
+                  );
+                })}
+              </div>
+              {!weekdaysTouched && suggestedDays.length > 0 && (
+                <span className="muted" style={{ fontSize: 12 }}>
+                  수강 요일 ({suggestedDays.join(",")}) 기준 자동 적용. 셔틀만 다른 요일이면 수동 조정.
+                </span>
+              )}
+              {weekdays.length === 0 && (
+                <span className="muted" style={{ fontSize: 12 }}>
+                  비워두면 노선 운행 요일 전부 이용으로 간주됩니다.
+                </span>
+              )}
             </div>
           </div>
           {routes.length === 0 && (

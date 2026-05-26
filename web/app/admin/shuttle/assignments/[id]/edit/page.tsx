@@ -14,11 +14,11 @@ export default async function AssignmentEditPage({
   const [aRes, studentsRes, routesRes, stopsRes] = await Promise.all([
     supabase
       .from("student_stop_assignments")
-      .select("id, student_id, route_id, board_stop_id, alight_stop_id, direction, status")
+      .select("id, student_id, route_id, board_stop_id, alight_stop_id, direction, status, weekdays")
       .eq("id", id)
       .eq("center_id", cid)
       .maybeSingle(),
-    supabase.from("students").select("id, name, school, grade").eq("center_id", cid).order("name"),
+    supabase.from("students").select("id, name, school, grade, attendance_days").eq("center_id", cid).order("name"),
     supabase.from("shuttle_routes").select("id, name, direction").eq("center_id", cid).order("name"),
     supabase.from("shuttle_stops").select("id, route_id, name, sequence").eq("center_id", cid).order("sequence"),
   ]);
