@@ -2,13 +2,11 @@ import Link from "next/link";
 import { requireCenter } from "@/lib/center";
 import { safeIlike } from "@/lib/db-search";
 import {
-  createInquiry,
   replyMessage,
   setInquiryStatus,
   deleteInquiry,
 } from "./actions";
 import ConfirmButton from "../ConfirmButton";
-import PhoneInput from "../PhoneInput";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import FilterSelect from "../FilterSelect";
@@ -217,7 +215,7 @@ export default async function SupportPage({
                       ) : (
                         <>
                           <strong>문의가 없습니다</strong>
-                          <p>우측에서 전화/방문 문의를 직접 등록할 수 있습니다.</p>
+                          <p>학부모·학생 앱 또는 웹에서 들어온 문의가 여기 표시됩니다.</p>
                         </>
                       )}
                     </div>
@@ -232,38 +230,14 @@ export default async function SupportPage({
           {!selected ? (
             <>
               <div className="panel-head">
-                <p className="panel-title">문의 등록</p>
+                <p className="panel-title">문의 상세</p>
               </div>
-              <form action={createInquiry} className="panel-body">
-                <div className="field">
-                  <label>제목 *</label>
-                  <input name="subject" />
+              <div className="panel-body">
+                <div className="empty-state">
+                  <strong>문의를 선택하세요</strong>
+                  <p>좌측에서 문의를 선택하면 답변·상태 처리를 진행할 수 있습니다.</p>
                 </div>
-                <div className="field" style={{ marginTop: 12 }}>
-                  <label>요청자</label>
-                  <input name="requester_name" />
-                </div>
-                <div className="field" style={{ marginTop: 12 }}>
-                  <label>연락처</label>
-                  <PhoneInput name="contact" />
-                </div>
-                <div className="field" style={{ marginTop: 12 }}>
-                  <label>채널</label>
-                  <select name="channel" defaultValue="웹">
-                    <option>웹</option>
-                    <option>전화</option>
-                    <option>방문</option>
-                    <option>앱</option>
-                  </select>
-                </div>
-                <div className="field" style={{ marginTop: 12 }}>
-                  <label>내용</label>
-                  <textarea name="body" />
-                </div>
-                <div className="detail-actions">
-                  <button className="btn primary">문의 등록</button>
-                </div>
-              </form>
+              </div>
             </>
           ) : (
             <>

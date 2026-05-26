@@ -4,29 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCenter } from "@/lib/center";
 
-export async function createInquiry(formData: FormData) {
-  const { supabase, centerId } = await requireCenter();
-  const subject = String(formData.get("subject") ?? "");
-  if (!subject) throw new Error("제목은 필수입니다.");
-
-  const { data, error } = await supabase
-    .from("inquiries")
-    .insert({
-      center_id: centerId,
-      requester_name: String(formData.get("requester_name") ?? "") || null,
-      contact: String(formData.get("contact") ?? "") || null,
-      channel: String(formData.get("channel") ?? "웹"),
-      subject,
-      body: String(formData.get("body") ?? "") || null,
-    })
-    .select("id")
-    .single();
-  if (error) throw new Error("등록 실패: " + error.message);
-
-  revalidatePath("/admin/support");
-  redirect(`/admin/support?sel=${(data as { id: string }).id}`);
-}
-
 export async function replyMessage(inquiryId: string, formData: FormData) {
   const { supabase, centerId } = await requireCenter();
   const body = String(formData.get("body") ?? "").trim();
