@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
+import { safeIlike } from "@/lib/db-search";
 import CheckRowToggle from "../CheckRowToggle";
 import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
@@ -30,13 +31,70 @@ export default async function RenewalsPage({
   const target = nextMonth(ym);
   const { supabase, centerId: cid } = await requireCenter();
 
-  const { data: enr } = await supabase
+  // 서버 ilike — q 가 학생명 또는 상품명에 매칭되면 그 ID 들로 enrollments 좁히기
+  const qSafe = safeIlike(q);
+  let idFilter: { students: string[]; products: string[] } | null = null;
+  if (qSafe) {
+    const [{ data: sMatched }, { data: pMatched }] = await Promise.all([
+      supabase
+        .from("students")
+        .select("id")
+        .eq("center_id", cid)
+        .ilike("name", `%${qSafe}%`),
+      supabase
+        .from("products")
+        .select("id")
+        .eq("center_id", cid)
+        .ilike("name", `%${qSafe}%`),
+    ]);
+    idFilter = {
+      students: (sMatched ?? []).map((r) => r.id),
+      products: (pMatched ?? []).map((r) => r.id),
+    };
+  }
+
+  // 전체 통계용 (q 무관) — 카운트만 필요
+  const allQuery = supabase
     .from("enrollments")
     .select(
       "id, status, student_id, product_id, students(name), products(id, name, price)",
     )
     .eq("center_id", cid)
     .eq("status", "수강중");
+
+  // 검색 적용 쿼리
+  let listQuery = supabase
+    .from("enrollments")
+    .select(
+      "id, status, student_id, product_id, students(name), products(id, name, price)",
+    )
+    .eq("center_id", cid)
+    .eq("status", "수강중");
+  if (idFilter) {
+    const sIds = idFilter.students;
+    const pIds = idFilter.products;
+    if (sIds.length === 0 && pIds.length === 0) {
+      listQuery = listQuery.eq(
+        "id",
+        "00000000-0000-0000-0000-000000000000",
+      );
+    } else {
+      const parts: string[] = [];
+      if (sIds.length) parts.push(`student_id.in.(${sIds.join(",")})`);
+      if (pIds.length) parts.push(`product_id.in.(${pIds.join(",")})`);
+      listQuery = listQuery.or(parts.join(","));
+    }
+  }
+
+  const [allRes, listRes, rcRes] = await Promise.all([
+    allQuery,
+    listQuery,
+    supabase
+      .from("renewal_confirmations")
+      .select("enrollment_id, status")
+      .eq("center_id", cid)
+      .eq("target_month", target),
+  ]);
 
   type EnrRow = {
     id: string;
@@ -46,31 +104,15 @@ export default async function RenewalsPage({
     students: { name: string } | null;
     products: { id: string; name: string; price: number } | null;
   };
-  let raw = (enr ?? []) as unknown as EnrRow[];
 
-  const { data: rc } = await supabase
-    .from("renewal_confirmations")
-    .select("enrollment_id, status")
-    .eq("center_id", cid)
-    .eq("target_month", target);
   const statusByEnr = new Map(
-    (rc ?? []).map((r) => [r.enrollment_id, r.status]),
+    (rcRes.data ?? []).map((r) => [r.enrollment_id, r.status]),
   );
-
   const st = (id: string) => statusByEnr.get(id) ?? "대기";
 
-  if (status) raw = raw.filter((e) => st(e.id) === status);
-  if (q) {
-    const needle = q.toLowerCase();
-    raw = raw.filter((e) => {
-      const s = (e.students?.name ?? "").toLowerCase();
-      const p = (e.products?.name ?? "").toLowerCase();
-      return s.includes(needle) || p.includes(needle);
-    });
-  }
-
-  const allList = (enr ?? []) as unknown as EnrRow[];
-  const list = raw;
+  const allList = (allRes.data ?? []) as unknown as EnrRow[];
+  let list = (listRes.data ?? []) as unknown as EnrRow[];
+  if (status) list = list.filter((e) => st(e.id) === status);
 
   const totals = {
     total: allList.length,

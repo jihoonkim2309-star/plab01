@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
+import { safeIlike } from "@/lib/db-search";
 import CheckRowToggle from "../CheckRowToggle";
 import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
@@ -30,13 +31,44 @@ export default async function OverduePage({
   const { supabase, centerId: cid } = await requireCenter();
   const today = new Date().toISOString().slice(0, 10);
 
-  const { data } = await supabase
+  // 서버 ilike — q 가 학생명 매칭되면 그 ID 들로 invoices 좁히기
+  const qSafe = safeIlike(q);
+  let studentFilter: string[] | null = null;
+  if (qSafe) {
+    const { data: matched } = await supabase
+      .from("students")
+      .select("id")
+      .eq("center_id", cid)
+      .ilike("name", `%${qSafe}%`);
+    studentFilter = (matched ?? []).map((s) => s.id);
+  }
+
+  // 전체 (totals 용) — q 무관
+  const allQuery = supabase
     .from("invoices")
     .select("id, period, amount, status, due_date, student_id, students(name)")
     .eq("center_id", cid)
     .in("status", ["청구", "실패"])
     .lt("due_date", today)
     .order("due_date", { ascending: true });
+
+  // 검색 적용
+  let listQuery = supabase
+    .from("invoices")
+    .select("id, period, amount, status, due_date, student_id, students(name)")
+    .eq("center_id", cid)
+    .in("status", ["청구", "실패"])
+    .lt("due_date", today)
+    .order("due_date", { ascending: true });
+  if (studentFilter !== null) {
+    if (studentFilter.length === 0) {
+      listQuery = listQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+    } else {
+      listQuery = listQuery.in("student_id", studentFilter);
+    }
+  }
+
+  const [allRes, listRes] = await Promise.all([allQuery, listQuery]);
 
   type Row = {
     id: string;
@@ -47,22 +79,15 @@ export default async function OverduePage({
     student_id: string | null;
     students: { name: string } | null;
   };
-  let raw = (data ?? []) as unknown as Row[];
+  let raw = (listRes.data ?? []) as unknown as Row[];
 
-  // bucket 필터
+  // bucket 필터 (client-side — date 계산 기반)
   if (bucketFilter) {
     raw = raw.filter((i) => bucket(daysOver(i.due_date)).key === bucketFilter);
   }
-  // 학생명 검색
-  if (q) {
-    const needle = q.toLowerCase();
-    raw = raw.filter((i) =>
-      (i.students?.name ?? "").toLowerCase().includes(needle),
-    );
-  }
 
   const list = raw;
-  const allRaw = (data ?? []) as unknown as Row[];
+  const allRaw = (allRes.data ?? []) as unknown as Row[];
 
   const total = list.reduce((a, b) => a + Number(b.amount), 0);
   const totals = {
