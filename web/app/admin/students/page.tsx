@@ -145,7 +145,7 @@ export default async function StudentsPage({
       <div className="page-head">
         <div>
           <h1>회원 관리</h1>
-          <p className="subtext">학생 목록 · 실제 DB 연동</p>
+          <p className="subtext">학생 정보 등록·수정·검색 + 보호자·계정 연결</p>
         </div>
         <div className="toolbar">
           <Link className="btn primary" href="/admin/students/new">

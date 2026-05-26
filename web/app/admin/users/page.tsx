@@ -92,11 +92,7 @@ export default async function UsersPage({
       <div className="page-head">
         <div>
           <h1>사용자 비밀번호 관리</h1>
-          <p className="subtext">
-            {isSuper
-              ? "전체 지점 사용자 비밀번호 초기화 — 대상 이메일로 재설정 링크 발송 (슈퍼 어드민)"
-              : "우리 지점 사용자 비밀번호 초기화 — 대상 이메일로 재설정 링크 발송"}
-          </p>
+          <p className="subtext">사용자 이메일로 비밀번호 재설정 링크 발송</p>
         </div>
       </div>
 

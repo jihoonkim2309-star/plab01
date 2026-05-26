@@ -120,9 +120,7 @@ export default async function ShuttleDashboardPage({
       <div className="page-head">
         <div>
           <h1>셔틀 현황</h1>
-          <p className="subtext">
-            오늘 {now.getFullYear()}년 {now.getMonth() + 1}월 {now.getDate()}일 ({KOR_DAYS[weekday]}요일) 운행 현황
-          </p>
+          <p className="subtext">오늘 셔틀 운행 + 학생 탑승 상태</p>
         </div>
       </div>
 

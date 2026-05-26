@@ -97,7 +97,7 @@ export default async function ClassesPage({
       <div className="page-head">
         <div>
           <h1>클래스 관리</h1>
-          <p className="subtext">실제 DB 연동 · 학생 등록의 수강 클래스 드롭다운에 연결됨</p>
+          <p className="subtext">수업 클래스 관리 — 요일·시간·코치·정원</p>
         </div>
         <div className="toolbar">
           <Link className="btn primary" href="/admin/classes/new">클래스 생성</Link>

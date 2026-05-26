@@ -110,7 +110,7 @@ export default async function HqInvoicesPage({
       <div className="page-head">
         <div>
           <h1>본사 청구 관리</h1>
-          <p className="subtext">지점 사용료 청구서 발행·수납 관리 (슈퍼 어드민 전용)</p>
+          <p className="subtext">지점 사용료 청구서 발행·수납·미납 관리</p>
         </div>
         <div className="toolbar">
           <Link className="btn primary" href="/admin/hq-invoices/new">청구서 발행</Link>

@@ -111,11 +111,7 @@ export default async function HqInvoiceNewPage({
         <div>
           <BackLink href="/admin/hq-invoices" label="청구 목록" />
           <h1>청구서 발행</h1>
-          <p className="subtext">
-            기간(YYYY-MM)을 선택하면 각 지점의 정책으로 자동 계산된 청구액 미리보기.
-            매출비례는 <strong>{prevPer}</strong> (전월) 학생 결제완료 합계 기준.
-            청구 기준은 [지점 관리 → 본사 사용료 정책] 에서 설정.
-          </p>
+          <p className="subtext">기간 선택 시 지점별 정책으로 청구액 자동 계산</p>
         </div>
       </div>
 

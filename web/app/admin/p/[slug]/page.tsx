@@ -14,7 +14,7 @@ export default async function PlaceholderPage({
       <div className="page-head">
         <div>
           <h1>{title}</h1>
-          <p className="subtext">프로토타입 화면 · 기능 연결 예정</p>
+          <p className="subtext">준비 중인 기능 — 다음 슬라이스에서 구현 예정</p>
         </div>
         <div className="toolbar">
           <Link className="btn" href="/admin">

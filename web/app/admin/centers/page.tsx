@@ -67,7 +67,7 @@ export default async function CentersPage({
       <div className="page-head">
         <div>
           <h1>지점 관리</h1>
-          <p className="subtext">프랜차이즈 지점 개설·수정·삭제 (슈퍼 어드민 전용)</p>
+          <p className="subtext">프랜차이즈 지점 등록·정보·사용료 정책 관리</p>
         </div>
         <div className="toolbar">
           <Link className="btn primary" href="/admin/centers/new">지점 개설</Link>

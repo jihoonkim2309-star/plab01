@@ -119,10 +119,7 @@ export default async function ReportsPage({
       <div className="page-head">
         <div>
           <h1>리포트 관리</h1>
-          <p className="subtext">
-            {target} · 승인 완료 측정 {approvedCount}건 → 학생당 월간 통합 리포트
-            1개 생성/갱신
-          </p>
+          <p className="subtext">학생별 월간 통합 리포트 생성·발행 (PDF 미리보기)</p>
         </div>
         <div className="toolbar">
           <MonthNav ym={target} baseUrl="/admin/reports" />

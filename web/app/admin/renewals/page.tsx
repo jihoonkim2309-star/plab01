@@ -130,9 +130,7 @@ export default async function RenewalsPage({
       <div className="page-head">
         <div>
           <h1>다음 달 수강 확인</h1>
-          <p className="subtext">
-            {target} 수강 확정/보류 — 확정분이 청구 관리의 청구 대상이 됩니다
-          </p>
+          <p className="subtext">다음 달 수강 확정·보류 (확정분이 청구 대상)</p>
         </div>
         <div className="toolbar">
           <MonthNav ym={target} baseUrl="/admin/renewals" />

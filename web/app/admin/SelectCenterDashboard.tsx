@@ -39,10 +39,7 @@ export default function SelectCenterDashboard({
       <div className="page-head">
         <div>
           <h1>지점을 선택해 주세요</h1>
-          <p className="subtext">
-            {userName}님, 슈퍼 어드민으로 접속하셨습니다. 작업할 지점을
-            선택하시면 그 지점 컨텍스트로 모든 화면이 동작합니다.
-          </p>
+          <p className="subtext">{userName}님, 작업할 지점을 선택하시면 해당 지점 컨텍스트로 진입합니다</p>
         </div>
       </div>
 

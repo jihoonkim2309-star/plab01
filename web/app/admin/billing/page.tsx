@@ -80,10 +80,7 @@ export default async function BillingPage({
       <div className="page-head">
         <div>
           <h1>청구 관리</h1>
-          <p className="subtext">
-            {period} 청구서 — 확정 수강건으로 생성. 결제 결과·영수증·환불은{" "}
-            <Link href="/admin/payment-status">결제 상태</Link>에서 확인.
-          </p>
+          <p className="subtext">월별 청구서 생성·관리 (결제 결과는 결제 상태에서)</p>
         </div>
         <div className="toolbar">
           <form action={generateInvoices}>

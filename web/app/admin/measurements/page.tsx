@@ -144,9 +144,7 @@ export default async function MeasurementsPage({
       <div className="page-head">
         <div>
           <h1>측정 데이터 관리</h1>
-          <p className="subtext">
-            {target} · 코치 입력 → 어드민 승인 → 리포트 생성으로 이어집니다
-          </p>
+          <p className="subtext">월별 학생 측정값 입력·승인 (리포트의 원본 데이터)</p>
         </div>
         <div className="toolbar">
           <MonthNav

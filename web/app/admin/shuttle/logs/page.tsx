@@ -124,9 +124,7 @@ export default async function ShuttleLogsPage({
       <div className="page-head">
         <div>
           <h1>승하차 로그</h1>
-          <p className="subtext">
-            학생 QR 스캔 기록 — {targetDate} 기준 (날짜 변경 가능)
-          </p>
+          <p className="subtext">학생 QR 스캔 승하차 기록 (일별 조회)</p>
         </div>
       </div>
 

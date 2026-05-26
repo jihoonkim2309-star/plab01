@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { deleteStudent } from "../actions";
+import BackLink from "../../BackLink";
 import ConfirmButton from "../../ConfirmButton";
 
 const BASIC: [string, string][] = [
@@ -88,12 +89,9 @@ export default async function StudentDetailPage({
     <>
       <div className="page-head">
         <div>
+          <BackLink href="/admin/students" label="학생 목록" />
           <h1>{s.name}</h1>
-          <p className="subtext">
-            <Link href="/admin/students" style={{ color: "var(--muted)" }}>
-              ← 학생 목록
-            </Link>
-          </p>
+          <p className="subtext">학생 상세 정보 · 보호자·계정·셔틀 연결</p>
         </div>
         <div className="toolbar">
           <Link

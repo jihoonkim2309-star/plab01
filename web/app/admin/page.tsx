@@ -394,7 +394,7 @@ export default async function AdminDashboard() {
         <div>
           <h1>대시보드</h1>
           <p className="subtext">
-            {centerName} · {Y}년 {M}월 {now.getDate()}일 ({KOR_DAYS[now.getDay()]})
+            오늘 운영 한눈에 보기 · {centerName} · {Y}년 {M}월 {now.getDate()}일 ({KOR_DAYS[now.getDay()]})
           </p>
         </div>
       </div>

@@ -76,9 +76,7 @@ export default async function MyProfilePage({
       <div className="page-head">
         <div>
           <h1>내 프로필</h1>
-          <p className="subtext">
-            로그인 계정 정보 · 이름·연락처·비밀번호 변경
-          </p>
+          <p className="subtext">내 계정 정보 + 비밀번호 변경</p>
         </div>
       </div>
 

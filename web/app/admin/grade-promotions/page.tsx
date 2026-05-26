@@ -116,29 +116,7 @@ export default async function GradePromotionsPage({
       <div className="page-head">
         <div>
           <h1>진학/학년 승급 관리</h1>
-          <p className="subtext">
-            매년 처리일 이후 일괄 처리 · 승인 시 학생 학년(학교변경 시 학교)에 실제 반영
-          </p>
-          <p
-            className="muted"
-            style={{ fontSize: 12, marginTop: 4 }}
-          >
-            {gate.state === "not-configured" && (
-              <>
-                ⚠ <Link href="/admin/settings">설정</Link> 에서 진학·승급 처리일을 먼저 지정해 주세요.
-              </>
-            )}
-            {gate.state === "before" && (
-              <>
-                처리일: <b>{gate.targetDate}</b> · D-{gate.daysLeft} (그 날 이후 일괄 생성 가능)
-              </>
-            )}
-            {gate.state === "after" && (
-              <>
-                처리일: <b>{gate.targetDate}</b> · 일괄 생성 가능
-              </>
-            )}
-          </p>
+          <p className="subtext">매년 처리일에 학생 학년·학교를 일괄 승급 처리</p>
         </div>
         <div className="toolbar">
           {gate.state === "after" ? (
@@ -161,6 +139,46 @@ export default async function GradePromotionsPage({
           )}
         </div>
       </div>
+
+      {gate.state === "not-configured" && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--orange-soft)",
+            borderColor: "#f0d19a",
+            color: "var(--orange)",
+            padding: "12px 16px",
+          }}
+        >
+          ⚠ <Link href="/admin/settings">설정</Link> 에서 진학·승급 처리일을 먼저 지정해 주세요.
+        </div>
+      )}
+      {gate.state === "before" && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--orange-soft)",
+            borderColor: "#f0d19a",
+            color: "var(--orange)",
+            padding: "12px 16px",
+          }}
+        >
+          처리일: <b>{gate.targetDate}</b> · D-{gate.daysLeft} (그 날 이후 일괄 생성 가능)
+        </div>
+      )}
+      {gate.state === "after" && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--green-soft)",
+            borderColor: "#b8dccb",
+            color: "var(--green)",
+            padding: "12px 16px",
+          }}
+        >
+          처리일: <b>{gate.targetDate}</b> · 일괄 생성 가능
+        </div>
+      )}
 
       <div className="member-summary">
         <div className="summary-card"><span>승급 대상</span><strong>{totals.total}</strong></div>

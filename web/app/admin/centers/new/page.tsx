@@ -32,7 +32,7 @@ export default async function NewCenterPage() {
         <div>
           <BackLink href="/admin/centers" label="지점 목록" />
           <h1>지점 개설</h1>
-          <p className="subtext">새 지점 개설 (슈퍼 어드민 전용)</p>
+          <p className="subtext">신규 프랜차이즈 지점 정보·정책 등록</p>
         </div>
       </div>
 

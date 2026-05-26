@@ -179,10 +179,7 @@ export default async function PaymentStatusPage({
       <div className="page-head">
         <div>
           <h1>결제 상태</h1>
-          <p className="subtext">
-            전체 청구·결제 내역 (입금 확인 후 수동 확정 또는 PortOne 결제 결과
-            자동 반영). 행 클릭 → 우측 상세 (영수증·환불·결제이력).
-          </p>
+          <p className="subtext">청구·결제 내역 조회 + 영수증·환불·결제 이력</p>
         </div>
         <div className="toolbar">
           {process.env.NODE_ENV !== "production" && (

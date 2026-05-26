@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireCenter } from "@/lib/center";
 import { nextGrade, promoMeta, checkPromotionGate } from "@/lib/promotion";
 import { bulkCreateGradePromotions } from "../actions";
+import BackLink from "../../BackLink";
 import FilterBar from "../../FilterBar";
 import FilterSelect from "../../FilterSelect";
 import SearchInput from "../../SearchInput";
@@ -34,12 +35,9 @@ export default async function BulkNewPage({
       <>
         <div className="page-head">
           <div>
+            <BackLink href="/admin/grade-promotions" label="진학·학년 승급 관리" />
             <h1>승급 대상 일괄 생성</h1>
-            <p className="subtext">
-              <Link href="/admin/grade-promotions" style={{ color: "var(--muted)" }}>
-                ← 진학/학년 승급 관리
-              </Link>
-            </p>
+            <p className="subtext">처리일 이후 대상 학생을 선택해 승급 행 일괄 생성</p>
           </div>
         </div>
         <div
@@ -108,12 +106,9 @@ export default async function BulkNewPage({
     <>
       <div className="page-head">
         <div>
+          <BackLink href="/admin/grade-promotions" label="진학·학년 승급 관리" />
           <h1>승급 대상 일괄 생성</h1>
-          <p className="subtext">
-            <Link href="/admin/grade-promotions" style={{ color: "var(--muted)" }}>
-              ← 진학/학년 승급 관리
-            </Link>
-          </p>
+          <p className="subtext">처리일 이후 대상 학생을 선택해 승급 행 일괄 생성</p>
         </div>
       </div>
 
