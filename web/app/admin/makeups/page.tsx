@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
-import { setMakeupStatus, deleteMakeup } from "./actions";
+import { setMakeupStatus, deleteMakeup, notifyMakeup } from "./actions";
 import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
 import FilterSelect from "../FilterSelect";
@@ -15,6 +15,8 @@ type M = {
   status: string;
   class_id: string | null;
   classes: { name: string } | null;
+  notified_at: string | null;
+  last_notify_count: number | null;
 };
 
 const SB: Record<string, string> = {
@@ -26,14 +28,14 @@ const SB: Record<string, string> = {
 export default async function MakeupsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; class_id?: string; status?: string; makeup?: string }>;
+  searchParams: Promise<{ q?: string; class_id?: string; status?: string; makeup?: string; notified?: string }>;
 }) {
-  const { q, class_id, status, makeup: selectedId } = await searchParams;
+  const { q, class_id, status, makeup: selectedId, notified } = await searchParams;
   const { supabase, centerId: cid } = await requireCenter();
 
   let listQuery = supabase
     .from("makeups")
-    .select("id, original_date, makeup_date, reason, status, class_id, classes(name)")
+    .select("id, original_date, makeup_date, reason, status, class_id, classes(name), notified_at, last_notify_count")
     .eq("center_id", cid)
     .order("makeup_date", { ascending: false });
   if (class_id) listQuery = listQuery.eq("class_id", class_id);
@@ -46,7 +48,7 @@ export default async function MakeupsPage({
     selectedId
       ? supabase
           .from("makeups")
-          .select("id, original_date, makeup_date, reason, status, class_id, classes(name)")
+          .select("id, original_date, makeup_date, reason, status, class_id, classes(name), notified_at, last_notify_count")
           .eq("id", selectedId)
           .eq("center_id", cid)
           .maybeSingle()
@@ -85,6 +87,20 @@ export default async function MakeupsPage({
           <Link className="btn primary" href="/admin/makeups/new">보강 등록</Link>
         </div>
       </div>
+
+      {notified && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--green-soft)",
+            borderColor: "#b8dccb",
+            color: "var(--green)",
+            padding: "12px 16px",
+          }}
+        >
+          학생·학부모 알림 {notified} 건이 발송 큐에 등록되었습니다. (FCM/알림톡 라이브 연결 시 자동 전송)
+        </div>
+      )}
 
       <div className="member-summary">
         <div className="summary-card"><span>전체 보강</span><strong>{totals.total}</strong></div>
@@ -182,6 +198,21 @@ export default async function MakeupsPage({
             <p className="panel-title">보강 상세</p>
             {selected && (
               <div className="toolbar">
+                {selected.status !== "취소" && (
+                  <form action={notifyMakeup.bind(null, selected.id)}>
+                    <ConfirmButton
+                      message={
+                        selected.notified_at
+                          ? `이미 ${selected.last_notify_count ?? 0}건 발송된 보강입니다. 다시 발송하면 같은 학부모/학생에게 알림이 중복됩니다. 진행할까요?`
+                          : "이 보강의 학생·학부모에게 알림을 발송할까요?"
+                      }
+                      className="btn primary"
+                      type="submit"
+                    >
+                      {selected.notified_at ? "재발송" : "학생 알림 발송"}
+                    </ConfirmButton>
+                  </form>
+                )}
                 {selected.status !== "완료" && (
                   <form action={setMakeupStatus.bind(null, selected.id, "완료")}>
                     <button className="btn" type="submit">완료 처리</button>
@@ -234,6 +265,32 @@ export default async function MakeupsPage({
                     <div className="info-row"><span>보강일</span><strong>{selected.makeup_date ?? "-"}</strong></div>
                     <div className="info-row"><span>사유</span><strong>{selected.reason ?? "-"}</strong></div>
                   </div>
+                </div>
+
+                <div className="detail-block">
+                  <p className="detail-title">학생·학부모 알림</p>
+                  <div className="info-list">
+                    <div className="info-row">
+                      <span>최근 발송</span>
+                      <strong>
+                        {selected.notified_at
+                          ? `${selected.notified_at.slice(0, 16).replace("T", " ")} · ${selected.last_notify_count ?? 0}건`
+                          : "미발송"}
+                      </strong>
+                    </div>
+                    <div className="info-row">
+                      <span>발송 채널</span>
+                      <strong>
+                        notifications 큐 적재 →{" "}
+                        <Link href="/admin/notifications" style={{ color: "var(--brand)" }}>
+                          알림 발송 로그 →
+                        </Link>
+                      </strong>
+                    </div>
+                  </div>
+                  <p className="muted" style={{ fontSize: 11, marginTop: 6 }}>
+                    학생/학부모 포털 · FCM · 카카오 알림톡 라이브 연결 시 큐 워커가 자동 전송합니다 (Phase 2).
+                  </p>
                 </div>
               </>
             )}

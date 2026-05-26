@@ -566,6 +566,9 @@ create table if not exists public.makeups (
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
+-- 보강 알림 발송 이력 — 학생/학부모 포털용 notifications 큐에 행을 넣은 시점·인원
+alter table public.makeups add column if not exists notified_at timestamptz;
+alter table public.makeups add column if not exists last_notify_count integer;
 
 -- 진학 / 학년 승급
 create table if not exists public.grade_promotions (

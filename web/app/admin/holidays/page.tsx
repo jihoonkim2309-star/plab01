@@ -180,6 +180,12 @@ export default async function HolidaysPage({
             <p className="panel-title">휴강 상세</p>
             {selected && (
               <div className="toolbar">
+                <Link
+                  className="btn primary"
+                  href={`/admin/makeups/new?holiday=${selected.id}`}
+                >
+                  보강 일정 만들기
+                </Link>
                 <form action={deleteHoliday.bind(null, selected.id)}>
                   <ConfirmButton
                     message={`${selected.holiday_date} 휴강을 삭제할까요?`}
