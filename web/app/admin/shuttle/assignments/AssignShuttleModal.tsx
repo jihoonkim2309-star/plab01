@@ -111,15 +111,16 @@ export default function AssignShuttleModal({
     () => students.find((s) => s.id === studentId) ?? null,
     [students, studentId],
   );
-  const suggestedDays = useMemo(() => {
-    const days = parseDays(selectedStudent?.attendance_days);
-    // 운행 컨텍스트 진입 시 그 운행 요일도 포함 (학생이 그 운행에 타도록 자연스러운 default)
-    if (fixedRunWeekday != null) {
-      const wd = WD_BY_NUM[fixedRunWeekday];
-      if (wd && !days.includes(wd)) days.push(wd);
-    }
-    return days;
-  }, [selectedStudent, fixedRunWeekday]);
+  const suggestedDays = useMemo(
+    () => parseDays(selectedStudent?.attendance_days),
+    [selectedStudent],
+  );
+  // 운행 컨텍스트 진입 요일이 학생 수강 요일에 없으면 ⚠ 안내 (자동 추가는 안 함)
+  const runDayLabel = fixedRunWeekday != null ? WD_BY_NUM[fixedRunWeekday] : null;
+  const runDayMismatch =
+    !!runDayLabel &&
+    suggestedDays.length > 0 &&
+    !suggestedDays.includes(runDayLabel);
   useEffect(() => {
     if (weekdaysTouched) return;
     if (!studentId) return;
@@ -435,6 +436,14 @@ export default function AssignShuttleModal({
                             style={{ fontSize: 12, color: "var(--orange)" }}
                           >
                             ⚠ 학생의 수강 요일이 비어있어 자동 적용할 값이 없습니다. 직접 체크하세요.
+                          </span>
+                        )}
+                        {runDayMismatch && (
+                          <span
+                            className="muted"
+                            style={{ fontSize: 12, color: "var(--orange)" }}
+                          >
+                            ⚠ 진입 운행은 {runDayLabel}요일인데 이 학생은 그날 수강하지 않습니다. 그래도 배정하려면 위에서 {runDayLabel} 체크하세요.
                           </span>
                         )}
                       </div>
