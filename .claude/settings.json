@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs grep -l \"favicon\\\\|app/icon\")"
+      "Bash(xargs grep -l \"favicon\\\\|app/icon\")",
+      "Bash(ls -la /c/Users/jihoo/.claude/projects/c--dev-plab01/ | head -3 && echo \"---\" && ls /c/Users/jihoo/OneDrive/ClaudeSync/c--dev-plab01/ 2>&1 | head -5)",
+      "Read(//c/Users/jihoo/OneDrive/ClaudeSync/c--dev-plab01//**)",
+      "Bash(stat -c '%s %y' /c/Users/jihoo/OneDrive/ClaudeSync/c--dev-plab01/59986789-db5a-4aba-a878-0e42ac1c2a19.jsonl 2>&1)",
+      "Read(//c/dev/plab01/**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\jihoo\\.claude\\projects\\c--dev-plab01\\memory",

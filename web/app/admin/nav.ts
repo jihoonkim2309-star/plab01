@@ -106,6 +106,7 @@ export const NAV: NavGroup[] = [
     items: [
       { label: "문의 게시글", slug: "support-posts", href: "/admin/support/posts", ready: true },
       { label: "1:1 채팅", slug: "support-chats", href: "/admin/support/chats", ready: true },
+      { label: "전화·방문 기록", slug: "support-offline", href: "/admin/support/offline", ready: true },
     ],
   },
   {

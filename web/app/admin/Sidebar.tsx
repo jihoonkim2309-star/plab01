@@ -64,6 +64,8 @@ function isActive(
     return pathname.startsWith("/admin/support/posts");
   if (hrefPath === "/admin/support/chats")
     return pathname.startsWith("/admin/support/chats");
+  if (hrefPath === "/admin/support/offline")
+    return pathname.startsWith("/admin/support/offline");
   if (hrefPath === "/admin/notifications")
     return pathname.startsWith("/admin/notifications");
   if (hrefPath === "/admin/reports") return pathname.startsWith("/admin/reports");

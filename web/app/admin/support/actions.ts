@@ -21,7 +21,41 @@ async function pathForInquiry(
     .select("kind")
     .eq("id", inquiryId)
     .maybeSingle();
-  return data?.kind === "chat" ? "/admin/support/chats" : "/admin/support/posts";
+  if (data?.kind === "chat") return "/admin/support/chats";
+  if (data?.kind === "offline") return "/admin/support/offline";
+  return "/admin/support/posts";
+}
+
+// 어드민이 전화·방문 문의를 직접 기록 (kind='offline' 고정)
+export async function createOfflineInquiry(formData: FormData) {
+  const { supabase, centerId } = await requireCenter();
+  const subject = String(formData.get("subject") ?? "").trim();
+  if (!subject) {
+    redirect("/admin/support/offline?error=subject");
+  }
+
+  const channel = String(formData.get("channel") ?? "전화");
+  const requesterName = String(formData.get("requester_name") ?? "").trim() || null;
+  const contact = String(formData.get("contact") ?? "").trim() || null;
+  const body = String(formData.get("body") ?? "").trim() || null;
+
+  const { data, error } = await supabase
+    .from("inquiries")
+    .insert({
+      center_id: centerId,
+      kind: "offline",
+      channel,
+      requester_name: requesterName,
+      contact,
+      subject,
+      body,
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error("등록 실패: " + error.message);
+
+  revalidatePath("/admin/support/offline");
+  redirect(`/admin/support/offline?sel=${(data as { id: string }).id}`);
 }
 
 export async function replyMessage(inquiryId: string, formData: FormData) {
