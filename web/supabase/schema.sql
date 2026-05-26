@@ -721,20 +721,20 @@ begin
       set notified_at = excluded.notified_at;
 
     -- 학부모/학생 user 매칭 후 notifications 큐
-    select count(*) into notify_count from (
-      with recipients as (
-        select psl.parent_id as user_id, u.phone, 'parent'::text as role
-        from public.parent_student_links psl
-        join public.users u on u.id = psl.parent_id
-        where psl.student_id = rc.student_id
-          and psl.status = 'linked'
-        union
-        select sal.user_id, u.phone, 'student'::text as role
-        from public.student_account_links sal
-        join public.users u on u.id = sal.user_id
-        where sal.student_id = rc.student_id
-          and sal.status = 'linked'
-      )
+    with recipients as (
+      select psl.parent_id as user_id, u.phone, 'parent'::text as role
+      from public.parent_student_links psl
+      join public.users u on u.id = psl.parent_id
+      where psl.student_id = rc.student_id
+        and psl.status = 'linked'
+      union
+      select sal.user_id, u.phone, 'student'::text as role
+      from public.student_account_links sal
+      join public.users u on u.id = sal.user_id
+      where sal.student_id = rc.student_id
+        and sal.status = 'linked'
+    ),
+    ins as (
       insert into public.notifications
         (center_id, kind, recipient, template, payload, status)
       select rc.center_id,
@@ -752,7 +752,8 @@ begin
              '대기'
       from recipients r
       returning 1
-    ) inserted;
+    )
+    select count(*) into notify_count from ins;
 
     -- last_notify_count 업데이트
     update public.renewal_confirmations
