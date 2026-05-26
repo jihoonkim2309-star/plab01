@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
 import { getCenterPg } from "@/lib/portone";
+import { safeIlike } from "@/lib/db-search";
 import CheckRowToggle from "../CheckRowToggle";
 import ConfirmButton from "../ConfirmButton";
+import FilterBar from "../FilterBar";
+import StatusChips from "../StatusChips";
+import SearchInput from "../SearchInput";
 import PayButton from "./PayButton";
 import { generateInvoices, bulkInvoiceStatus, deleteInvoice } from "./actions";
 
@@ -24,18 +28,37 @@ const SB: Record<string, string> = {
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ym?: string; created?: string }>;
+  searchParams: Promise<{ ym?: string; created?: string; status?: string; q?: string }>;
 }) {
-  const { ym, created } = await searchParams;
+  const { ym, created, status, q } = await searchParams;
   const period = curMonth(ym);
   const { supabase, centerId: cid } = await requireCenter();
 
-  const { data } = await supabase
+  // 학생명 검색: students.name ilike q 한 ID set 으로 invoices.in
+  const qSafe = safeIlike(q);
+  let studentFilter: string[] | null = null;
+  if (qSafe) {
+    const { data: matched } = await supabase
+      .from("students")
+      .select("id")
+      .eq("center_id", cid)
+      .ilike("name", `%${qSafe}%`);
+    studentFilter = (matched ?? []).map((s) => s.id);
+  }
+
+  let listQuery = supabase
     .from("invoices")
     .select("id, amount, status, source, due_date, paid_at, students(name)")
     .eq("center_id", cid)
     .eq("period", period)
     .order("created_at", { ascending: false });
+  if (status) listQuery = listQuery.eq("status", status);
+  if (studentFilter !== null) {
+    if (studentFilter.length === 0) listQuery = listQuery.eq("id", "00000000-0000-0000-0000-000000000000"); // 빈 결과
+    else listQuery = listQuery.in("student_id", studentFilter);
+  }
+  const { data } = await listQuery;
+
   const list = (data ?? []) as unknown as {
     id: string;
     amount: number;
@@ -112,6 +135,26 @@ export default async function BillingPage({
               선택 실패
             </button>
           </div>
+        </div>
+        <div className="panel-body" style={{ paddingBottom: 0 }}>
+          <FilterBar>
+            <StatusChips
+              param="status"
+              current={status}
+              options={[
+                { value: "청구", label: "청구" },
+                { value: "결제완료", label: "결제완료" },
+                { value: "실패", label: "실패" },
+                { value: "환불", label: "환불" },
+                { value: "대기", label: "대기" },
+              ]}
+            />
+            <div style={{ flex: 1 }} />
+            <SearchInput param="q" current={q} placeholder="학생명 검색" />
+            {(status || q) && (
+              <Link className="btn" href={`/admin/billing?ym=${period}`}>초기화</Link>
+            )}
+          </FilterBar>
         </div>
         <CheckRowToggle>
           <table>
