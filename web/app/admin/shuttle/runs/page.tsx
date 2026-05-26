@@ -68,15 +68,17 @@ export default async function ShuttleRunsPage({
     selectedId
       ? supabase
           .from("students")
-          .select("id, name, attendance_days")
+          .select(
+            "id, name, attendance_days, class_name, classes(start_time, end_time)",
+          )
           .eq("center_id", cid)
           .order("name")
       : Promise.resolve({ data: [] }),
   ]);
 
-  // 선택된 run 의 노선 stops + 배정 학생 조회
+  // 선택된 run 의 노선 stops + 배정 학생 + 같은 노선의 모든 운행 조회
   const selectedRouteId = (selectedRes.data as { route_id?: string } | null)?.route_id;
-  const [stopsForRunRes, assignmentsRes] = await Promise.all([
+  const [stopsForRunRes, assignmentsRes, runsOnRouteRes] = await Promise.all([
     selectedRouteId
       ? supabase
           .from("shuttle_stops")
@@ -95,14 +97,36 @@ export default async function ShuttleRunsPage({
           .eq("route_id", selectedRouteId)
           .eq("status", "활성")
       : Promise.resolve({ data: [] }),
+    selectedRouteId
+      ? supabase
+          .from("shuttle_runs")
+          .select("weekday, start_time, end_time")
+          .eq("center_id", cid)
+          .eq("route_id", selectedRouteId)
+          .eq("status", "운영")
+      : Promise.resolve({ data: [] }),
   ]);
   const stopsForRun = stopsForRunRes.data ?? [];
+  const runsForSelectedRoute = (runsOnRouteRes.data ?? []) as {
+    weekday: number;
+    start_time: string;
+    end_time: string | null;
+  }[];
   void selectedStopsRes;
-  const allStudents = (allStudentsRes.data ?? []) as {
+  const allStudents = ((allStudentsRes.data ?? []) as unknown as {
     id: string;
     name: string;
     attendance_days: string | null;
-  }[];
+    class_name: string | null;
+    classes: { start_time: string | null; end_time: string | null } | null;
+  }[]).map((s) => ({
+    id: s.id,
+    name: s.name,
+    attendance_days: s.attendance_days,
+    class_name: s.class_name,
+    class_start_time: s.classes?.start_time ?? null,
+    class_end_time: s.classes?.end_time ?? null,
+  }));
   const routeAssignments = (assignmentsRes.data ?? []) as unknown as {
     id: string;
     status: string;
@@ -262,6 +286,7 @@ export default async function ShuttleRunsPage({
                       id: selected.route_id,
                       name: selected.routes?.name ?? "",
                       direction: selected.routes?.direction ?? null,
+                      runs: runsForSelectedRoute,
                     },
                   ]}
                   stops={stopsForRun as {
@@ -272,6 +297,7 @@ export default async function ShuttleRunsPage({
                   }[]}
                   students={allStudents}
                   fixedRouteId={selected.route_id}
+                  fixedRunWeekday={selected.weekday}
                   backUrl={`/admin/shuttle/runs?run=${selected.id}`}
                 />
                 <Link className="btn primary" href={`/admin/shuttle/runs/${selected.id}/edit`}>수정</Link>

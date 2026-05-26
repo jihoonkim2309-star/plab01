@@ -5,11 +5,18 @@ import { createPortal } from "react-dom";
 import { assignShuttle } from "./actions";
 
 const ALL_DAYS = ["월", "화", "수", "목", "금", "토", "일"];
+const WD_BY_NUM = ["일", "월", "화", "수", "목", "금", "토"]; // shuttle_runs.weekday: 0=일~6=토
 
+type RunInfo = {
+  weekday: number;
+  start_time: string; // HH:MM:SS
+  end_time?: string | null;
+};
 type RouteOption = {
   id: string;
   name: string;
   direction: string | null;
+  runs?: RunInfo[];
 };
 type StopOption = {
   id: string;
@@ -21,11 +28,19 @@ type StudentOption = {
   id: string;
   name: string;
   attendance_days?: string | null;
+  class_name?: string | null;
+  class_start_time?: string | null;
+  class_end_time?: string | null;
 };
 
 function parseDays(csv: string | null | undefined): string[] {
   if (!csv) return [];
   return csv.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+function hhmm(t: string | null | undefined): string {
+  if (!t) return "";
+  return t.slice(0, 5);
 }
 
 // 두 가지 진입 모드 (수강 배정 모달과 동일 패턴):
@@ -39,6 +54,7 @@ export default function AssignShuttleModal({
   students,
   fixedStudentId,
   fixedRouteId,
+  fixedRunWeekday,
   backUrl,
 }: {
   triggerLabel?: string;
@@ -48,6 +64,7 @@ export default function AssignShuttleModal({
   students: StudentOption[];
   fixedStudentId?: string;
   fixedRouteId?: string;
+  fixedRunWeekday?: number; // 운행 컨텍스트 진입 시: 0=일~6=토. weekdays default 에 자동 포함
   backUrl: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -94,10 +111,15 @@ export default function AssignShuttleModal({
     () => students.find((s) => s.id === studentId) ?? null,
     [students, studentId],
   );
-  const suggestedDays = useMemo(
-    () => parseDays(selectedStudent?.attendance_days),
-    [selectedStudent],
-  );
+  const suggestedDays = useMemo(() => {
+    const days = parseDays(selectedStudent?.attendance_days);
+    // 운행 컨텍스트 진입 시 그 운행 요일도 포함 (학생이 그 운행에 타도록 자연스러운 default)
+    if (fixedRunWeekday != null) {
+      const wd = WD_BY_NUM[fixedRunWeekday];
+      if (wd && !days.includes(wd)) days.push(wd);
+    }
+    return days;
+  }, [selectedStudent, fixedRunWeekday]);
   useEffect(() => {
     if (weekdaysTouched) return;
     if (!studentId) return;
@@ -207,6 +229,30 @@ export default function AssignShuttleModal({
                             </option>
                           ))}
                         </select>
+                        {selectedRoute && (selectedRoute.runs?.length ?? 0) > 0 && (
+                          <span className="muted" style={{ fontSize: 12 }}>
+                            운행 시간:{" "}
+                            {selectedRoute.runs!
+                              .slice()
+                              .sort(
+                                (a, b) =>
+                                  a.weekday - b.weekday ||
+                                  a.start_time.localeCompare(b.start_time),
+                              )
+                              .map((r) =>
+                                `${WD_BY_NUM[r.weekday]} ${hhmm(r.start_time)}${r.end_time ? `~${hhmm(r.end_time)}` : ""}`,
+                              )
+                              .join(" · ")}
+                          </span>
+                        )}
+                        {selectedRoute && (selectedRoute.runs?.length ?? 0) === 0 && (
+                          <span
+                            className="muted"
+                            style={{ fontSize: 12, color: "var(--orange)" }}
+                          >
+                            ⚠ 이 노선에 운행 일정이 없습니다. "운행 일정"에서 먼저 추가하세요.
+                          </span>
+                        )}
                         <span className="muted" style={{ fontSize: 12 }}>
                           미이용 선택 시 활성 배정이 해제되고 학생 셔틀 상태가 미이용으로 전환됩니다.
                         </span>
@@ -227,7 +273,36 @@ export default function AssignShuttleModal({
                           }}
                         >
                           {fixedRouteName}
+                          {fixedRunWeekday != null && (
+                            <span
+                              className="muted"
+                              style={{ marginLeft: 8, fontWeight: 400, fontSize: 12 }}
+                            >
+                              · 진입 운행: {WD_BY_NUM[fixedRunWeekday]}
+                            </span>
+                          )}
                         </div>
+                        {(() => {
+                          const r = routes.find((x) => x.id === fixedRouteId);
+                          const rs = r?.runs ?? [];
+                          if (rs.length === 0) return null;
+                          return (
+                            <span className="muted" style={{ fontSize: 12 }}>
+                              운행 시간:{" "}
+                              {rs
+                                .slice()
+                                .sort(
+                                  (a, b) =>
+                                    a.weekday - b.weekday ||
+                                    a.start_time.localeCompare(b.start_time),
+                                )
+                                .map((r) =>
+                                  `${WD_BY_NUM[r.weekday]} ${hhmm(r.start_time)}${r.end_time ? `~${hhmm(r.end_time)}` : ""}`,
+                                )
+                                .join(" · ")}
+                            </span>
+                          );
+                        })()}
                       </div>
                       <div className="field span-2">
                         <label>학생 *</label>
@@ -238,12 +313,30 @@ export default function AssignShuttleModal({
                           required
                         >
                           <option value="">선택</option>
-                          {students.map((s) => (
-                            <option key={s.id} value={s.id}>
-                              {s.name}
-                            </option>
-                          ))}
+                          {students.map((s) => {
+                            const days = s.attendance_days ? ` ${s.attendance_days}` : "";
+                            const t = s.class_end_time
+                              ? ` ~${hhmm(s.class_end_time)}`
+                              : s.class_start_time
+                                ? ` ${hhmm(s.class_start_time)}~`
+                                : "";
+                            const cls = s.class_name ? ` · ${s.class_name}${days}${t}` : "";
+                            return (
+                              <option key={s.id} value={s.id}>
+                                {s.name}{cls}
+                              </option>
+                            );
+                          })}
                         </select>
+                        {selectedStudent?.class_name && (
+                          <span className="muted" style={{ fontSize: 12 }}>
+                            수강: {selectedStudent.class_name}
+                            {selectedStudent.attendance_days ? ` · ${selectedStudent.attendance_days}` : ""}
+                            {selectedStudent.class_start_time
+                              ? ` · ${hhmm(selectedStudent.class_start_time)}${selectedStudent.class_end_time ? `~${hhmm(selectedStudent.class_end_time)}` : ""}`
+                              : ""}
+                          </span>
+                        )}
                       </div>
                     </>
                   )}

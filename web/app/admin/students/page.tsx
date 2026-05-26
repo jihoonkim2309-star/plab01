@@ -118,7 +118,12 @@ export default async function StudentsPage({
     listQuery,
     supabase.from("students").select("status, shuttle_use").eq("center_id", cid),
     selectedId
-      ? supabase.from("students").select("*").eq("id", selectedId).eq("center_id", cid).single()
+      ? supabase
+          .from("students")
+          .select("*, classes(name, start_time, end_time, days_of_week)")
+          .eq("id", selectedId)
+          .eq("center_id", cid)
+          .single()
       : Promise.resolve({ data: null }),
     selectedId
       ? supabase
@@ -146,7 +151,7 @@ export default async function StudentsPage({
     selectedId
       ? supabase
           .from("shuttle_routes")
-          .select("id, name, direction")
+          .select("id, name, direction, runs:shuttle_runs(weekday, start_time, end_time)")
           .eq("center_id", cid)
           .eq("status", "운영")
           .order("name")
@@ -195,6 +200,9 @@ export default async function StudentsPage({
     id: string;
     name: string;
     direction: string | null;
+    runs:
+      | { weekday: number; start_time: string; end_time: string | null }[]
+      | null;
   }[];
   const shuttleStops = (shuttleStopsRes.data ?? []) as {
     id: string;
@@ -422,13 +430,25 @@ export default async function StudentsPage({
                 <AssignShuttleModal
                   triggerLabel="셔틀 배정"
                   triggerClassName="btn"
-                  routes={shuttleRoutes}
+                  routes={shuttleRoutes.map((r) => ({
+                    id: r.id,
+                    name: r.name,
+                    direction: r.direction,
+                    runs: r.runs ?? [],
+                  }))}
                   stops={shuttleStops}
                   students={[
                     {
                       id: selected.id,
                       name: selected.name ?? "",
                       attendance_days: (selected.attendance_days as string | null) ?? null,
+                      class_name:
+                        (selected.classes as { name?: string } | null)?.name ??
+                        ((selected.class_name as string | null) ?? null),
+                      class_start_time:
+                        (selected.classes as { start_time?: string } | null)?.start_time ?? null,
+                      class_end_time:
+                        (selected.classes as { end_time?: string } | null)?.end_time ?? null,
                     },
                   ]}
                   fixedStudentId={selected.id}
