@@ -60,11 +60,10 @@ function isActive(
   if (hrefPath === "/admin/schedule") return pathname.startsWith("/admin/schedule");
   if (hrefPath === "/admin/products") return pathname.startsWith("/admin/products");
   if (hrefPath === "/admin/billing") return pathname.startsWith("/admin/billing");
-  if (hrefPath === "/admin/support") {
-    // /admin/support 단독 메뉴 — 쿼리(kind) 가 set 되어 있으면 inactive (분기 메뉴 차지)
-    if (!pathname.startsWith("/admin/support")) return false;
-    return !search.get("kind");
-  }
+  if (hrefPath === "/admin/support/posts")
+    return pathname.startsWith("/admin/support/posts");
+  if (hrefPath === "/admin/support/chats")
+    return pathname.startsWith("/admin/support/chats");
   if (hrefPath === "/admin/notifications")
     return pathname.startsWith("/admin/notifications");
   if (hrefPath === "/admin/reports") return pathname.startsWith("/admin/reports");
