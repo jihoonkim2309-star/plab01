@@ -7,7 +7,7 @@ import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
-import { syncEnrollments, bulkRenewal } from "./actions";
+import { syncEnrollments, bulkRenewal, notifyRenewal } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function nextMonth(ym?: string) {
@@ -26,9 +26,9 @@ const SB: Record<string, string> = {
 export default async function RenewalsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ym?: string; q?: string; status?: string }>;
+  searchParams: Promise<{ ym?: string; q?: string; status?: string; notified?: string }>;
 }) {
-  const { ym, q, status } = await searchParams;
+  const { ym, q, status, notified } = await searchParams;
   const target = nextMonth(ym);
   const { supabase, centerId: cid } = await requireCenter();
 
@@ -102,7 +102,7 @@ export default async function RenewalsPage({
     listQuery,
     supabase
       .from("renewal_confirmations")
-      .select("enrollment_id, status")
+      .select("enrollment_id, status, decided_by_role, decided_at, notified_at, last_notify_count")
       .eq("center_id", cid)
       .eq("target_month", target),
   ]);
@@ -115,6 +115,17 @@ export default async function RenewalsPage({
     students: { name: string } | null;
     products: { id: string; name: string; price: number } | null;
   };
+
+  const rcByEnr = new Map(
+    ((rcRes.data ?? []) as {
+      enrollment_id: string;
+      status: string;
+      decided_by_role: string | null;
+      decided_at: string | null;
+      notified_at: string | null;
+      last_notify_count: number | null;
+    }[]).map((r) => [r.enrollment_id, r]),
+  );
 
   const statusByEnr = new Map(
     (rcRes.data ?? []).map((r) => [r.enrollment_id, r.status]),
@@ -150,8 +161,39 @@ export default async function RenewalsPage({
               수강 등록 동기화
             </button>
           </form>
+          <form action={notifyRenewal}>
+            <input type="hidden" name="target_month" value={target} />
+            <button
+              className="btn primary"
+              type="submit"
+              disabled={gate.state !== "after" || totals.pending === 0}
+              title={
+                gate.state !== "after"
+                  ? "수강 확인일 이후 발송 가능"
+                  : totals.pending === 0
+                    ? "대기 상태 학생이 없습니다"
+                    : `대기 ${totals.pending}명 학부모/학생에게 알림 큐잉`
+              }
+            >
+              학부모 알림 발송 ({totals.pending})
+            </button>
+          </form>
         </div>
       </div>
+
+      {notified && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--green-soft)",
+            borderColor: "#b8dccb",
+            color: "var(--green)",
+            padding: "12px 16px",
+          }}
+        >
+          학부모·학생 알림 {notified} 건 발송 큐에 등록되었습니다 (FCM/알림톡 라이브 시 자동 전송).
+        </div>
+      )}
 
       {gate.state === "not-configured" && (
         <div
@@ -286,55 +328,87 @@ export default async function RenewalsPage({
                 <th>상품</th>
                 <th>금액</th>
                 <th>{target} 상태</th>
+                <th>결정자</th>
+                <th>알림</th>
               </tr>
             </thead>
             <tbody>
-              {list.map((e) => (
-                <tr key={e.id} className="row-link-host">
-                  <td className="check-cell">
-                    <input type="checkbox" name="ids" value={e.id} />
-                  </td>
-                  <td>
-                    {e.student_id ? (
-                      <Link
-                        href={`/admin/students?student=${e.student_id}`}
-                        className="no-row-toggle"
-                        style={{ color: "var(--text)", fontWeight: 900 }}
-                      >
-                        {e.students?.name ?? "-"}
-                      </Link>
-                    ) : (
-                      <strong>{e.students?.name ?? "-"}</strong>
-                    )}
-                  </td>
-                  <td className="muted">
-                    {e.products?.id ? (
-                      <Link
-                        href={`/admin/products/${e.products.id}/edit`}
-                        className="no-row-toggle"
-                        style={{ color: "inherit" }}
-                      >
-                        {e.products.name}
-                      </Link>
-                    ) : (
-                      (e.products?.name ?? "-")
-                    )}
-                  </td>
-                  <td>
-                    {e.products
-                      ? `${Number(e.products.price).toLocaleString()}원`
-                      : "-"}
-                  </td>
-                  <td>
-                    <span className={`badge ${SB[st(e.id)] ?? "gray"}`}>
-                      {st(e.id)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {list.map((e) => {
+                const rc = rcByEnr.get(e.id);
+                const role = rc?.decided_by_role;
+                const roleLabel =
+                  role === "parent" ? "학부모" : role === "admin" ? "어드민" : role === "system" ? "시스템" : "미정";
+                const roleBadge =
+                  role === "parent" ? "green" : role === "admin" ? "blue" : role === "system" ? "gray" : "orange";
+                return (
+                  <tr key={e.id} className="row-link-host">
+                    <td className="check-cell">
+                      <input type="checkbox" name="ids" value={e.id} />
+                    </td>
+                    <td>
+                      {e.student_id ? (
+                        <Link
+                          href={`/admin/students?student=${e.student_id}`}
+                          className="no-row-toggle"
+                          style={{ color: "var(--text)", fontWeight: 900 }}
+                        >
+                          {e.students?.name ?? "-"}
+                        </Link>
+                      ) : (
+                        <strong>{e.students?.name ?? "-"}</strong>
+                      )}
+                    </td>
+                    <td className="muted">
+                      {e.products?.id ? (
+                        <Link
+                          href={`/admin/products/${e.products.id}/edit`}
+                          className="no-row-toggle"
+                          style={{ color: "inherit" }}
+                        >
+                          {e.products.name}
+                        </Link>
+                      ) : (
+                        (e.products?.name ?? "-")
+                      )}
+                    </td>
+                    <td>
+                      {e.products
+                        ? `${Number(e.products.price).toLocaleString()}원`
+                        : "-"}
+                    </td>
+                    <td>
+                      <span className={`badge ${SB[st(e.id)] ?? "gray"}`}>
+                        {st(e.id)}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${roleBadge}`}>{roleLabel}</span>
+                      {rc?.decided_at && (
+                        <div className="muted" style={{ fontSize: 11 }}>
+                          {rc.decided_at.slice(0, 10)}
+                        </div>
+                      )}
+                    </td>
+                    <td className="muted">
+                      {rc?.notified_at ? (
+                        <>
+                          {rc.notified_at.slice(0, 10)}
+                          {rc.last_notify_count != null && (
+                            <div style={{ fontSize: 11 }}>
+                              · {rc.last_notify_count}건
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <span className="muted">미발송</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={5}>
+                  <td colSpan={7}>
                     <div className="empty-state">
                       {hasFilter ? (
                         <>

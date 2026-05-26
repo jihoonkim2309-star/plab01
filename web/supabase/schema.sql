@@ -497,6 +497,14 @@ create table if not exists public.renewal_confirmations (
   created_at   timestamptz not null default now(),
   unique (enrollment_id, target_month)
 );
+-- 결정 주체 ('parent', 'admin', 'system') + 학부모 알림 이력
+alter table public.renewal_confirmations add column if not exists decided_by_role text;
+do $$ begin
+  alter table public.renewal_confirmations add constraint renewal_confirmations_decided_by_role_check
+    check (decided_by_role is null or decided_by_role in ('parent','admin','system'));
+exception when duplicate_object then null; end $$;
+alter table public.renewal_confirmations add column if not exists notified_at timestamptz;
+alter table public.renewal_confirmations add column if not exists last_notify_count integer;
 
 -- 청구서
 create table if not exists public.invoices (
@@ -678,6 +686,85 @@ end $$;
 -- ---------- 12. 결제일 자동 청구 (Vercel Cron 이 RPC 호출) -------------
 -- SECURITY DEFINER: RLS 우회. 관리자가 '확정'한 수강건만, 이미 청구된 건
 -- 제외하고 멱등 생성. 매일 호출되며 billing_day == 오늘인 센터만 처리.
+-- 매월 renewal_check_day == 오늘인 센터에 대해:
+--  1) 현재월 invoices 결제완료 학생의 활성 enrollment 추출
+--  2) 다음달 renewal_confirmations 행을 status='대기' + notified_at=now 로 upsert
+--  3) 그 학생/학부모 user 에게 notifications (kind='push', template='[수강 확인] 다음 달 OO 등록 의사를 확인해 주세요') 큐잉
+-- 반환: 큐잉된 알림 개수
+create or replace function public.generate_due_renewals()
+returns integer language plpgsql security definer set search_path = public as $$
+declare
+  v_count integer := 0;
+  v_current text := to_char(current_date, 'YYYY-MM');
+  v_next    text := to_char(current_date + interval '1 month', 'YYYY-MM');
+  v_today   int  := extract(day from current_date)::int;
+  rc record;
+  notify_count int;
+begin
+  -- 대상 enrollment: 그 센터의 renewal_check_day=오늘 + 현재월 결제완료 + 활성 수강
+  for rc in
+    select distinct e.id as enrollment_id, e.center_id, e.student_id, e.product_id
+    from public.enrollments e
+    join public.centers c on c.id = e.center_id
+    join public.invoices i on i.student_id = e.student_id
+    where e.status = '수강중'
+      and c.renewal_check_day = v_today
+      and i.period = v_current
+      and i.status = '결제완료'
+  loop
+    -- 다음달 renewal_confirmations upsert (status='대기' 신규)
+    insert into public.renewal_confirmations
+      (center_id, enrollment_id, target_month, status, notified_at)
+    values
+      (rc.center_id, rc.enrollment_id, v_next, '대기', now())
+    on conflict (enrollment_id, target_month) do update
+      set notified_at = excluded.notified_at;
+
+    -- 학부모/학생 user 매칭 후 notifications 큐
+    select count(*) into notify_count from (
+      with recipients as (
+        select psl.parent_id as user_id, u.phone, 'parent'::text as role
+        from public.parent_student_links psl
+        join public.users u on u.id = psl.parent_id
+        where psl.student_id = rc.student_id
+          and psl.status = 'linked'
+        union
+        select sal.user_id, u.phone, 'student'::text as role
+        from public.student_account_links sal
+        join public.users u on u.id = sal.user_id
+        where sal.student_id = rc.student_id
+          and sal.status = 'linked'
+      )
+      insert into public.notifications
+        (center_id, kind, recipient, template, payload, status)
+      select rc.center_id,
+             'push',
+             coalesce(r.phone, r.user_id::text),
+             '[수강 확인] 다음 달 ' || v_next || ' 등록 의사를 확인해 주세요',
+             jsonb_build_object(
+               'type', 'renewal_check',
+               'enrollment_id', rc.enrollment_id,
+               'student_id', rc.student_id,
+               'target_month', v_next,
+               'target_role', r.role,
+               'target_user_id', r.user_id
+             ),
+             '대기'
+      from recipients r
+      returning 1
+    ) inserted;
+
+    -- last_notify_count 업데이트
+    update public.renewal_confirmations
+       set last_notify_count = notify_count
+     where enrollment_id = rc.enrollment_id
+       and target_month = v_next;
+
+    v_count := v_count + notify_count;
+  end loop;
+  return v_count;
+end $$;
+
 create or replace function public.generate_due_invoices()
 returns integer language plpgsql security definer set search_path = public as $$
 declare
