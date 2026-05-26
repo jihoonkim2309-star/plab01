@@ -159,10 +159,8 @@ export default async function SupportPostsPage({
                 placeholder="채널 전체"
                 ariaLabel="채널 필터"
                 options={[
-                  { value: "웹", label: "웹" },
-                  { value: "전화", label: "전화" },
-                  { value: "방문", label: "방문" },
                   { value: "앱", label: "앱" },
+                  { value: "웹", label: "웹" },
                 ]}
               />
               <div style={{ flex: 1 }} />
