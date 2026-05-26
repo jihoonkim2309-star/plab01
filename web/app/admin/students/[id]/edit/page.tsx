@@ -27,7 +27,7 @@ export default async function EditStudentPage({
 
   const { data: classes } = await supabase
     .from("classes")
-    .select("id, name")
+    .select("id, name, days_of_week")
     .order("name");
   const { data: products } = await supabase
     .from("products")

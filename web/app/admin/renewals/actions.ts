@@ -10,7 +10,7 @@ export async function syncEnrollments() {
 
   const { data: studs } = await supabase
     .from("students")
-    .select("id, class_id, product_id")
+    .select("id, class_id, product_id, attendance_days")
     .eq("center_id", centerId)
     .not("product_id", "is", null);
 
@@ -28,6 +28,7 @@ export async function syncEnrollments() {
       student_id: s.id,
       class_id: s.class_id,
       product_id: s.product_id,
+      attendance_days: s.attendance_days,
       status: "수강중",
     }));
 

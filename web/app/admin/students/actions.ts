@@ -14,6 +14,7 @@ const FIELDS = [
   "status",
   "class_id",
   "product_id",
+  "attendance_days",
   "shuttle_use",
   "route",
   "caution",

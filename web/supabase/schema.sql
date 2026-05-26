@@ -465,6 +465,11 @@ create table if not exists public.enrollments (
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now()
 );
+-- 학생별 참여 요일 — 같은 클래스(시간대) 안에서 학생마다 요일이 다를 수 있음.
+-- 예: 클래스가 월/화/수/목/금 운영. 학생A=월 (1회/주), 학생B=월,수,금 (3회/주).
+-- 값 형식: '월,수,금' (CSV). null = 운영 요일 전부 출석 (legacy).
+alter table public.enrollments add column if not exists attendance_days text;
+alter table public.students add column if not exists attendance_days text;
 
 -- 다음 달 수강 확인
 create table if not exists public.renewal_confirmations (

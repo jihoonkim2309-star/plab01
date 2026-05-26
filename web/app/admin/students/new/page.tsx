@@ -6,7 +6,7 @@ export default async function NewStudentPage() {
   const supabase = await createClient();
   const { data: classes } = await supabase
     .from("classes")
-    .select("id, name")
+    .select("id, name, days_of_week")
     .order("name");
   const { data: products } = await supabase
     .from("products")

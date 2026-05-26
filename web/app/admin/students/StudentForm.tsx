@@ -2,6 +2,7 @@ import PhotoUpload from "./PhotoUpload";
 import PhoneInput from "../PhoneInput";
 import AddressField from "../AddressField";
 import BackLink from "../BackLink";
+import AttendanceDaysPicker from "./AttendanceDaysPicker";
 import { PHONE_PLACEHOLDER } from "@/lib/phone";
 
 type Student = Record<string, string | null> | null;
@@ -132,7 +133,7 @@ export default function StudentForm({
 }: {
   title: string;
   student?: Student;
-  classes: { id: string; name: string }[];
+  classes: { id: string; name: string; days_of_week: string | null }[];
   products: { id: string; name: string }[];
   action: (formData: FormData) => void;
   submitLabel: string;
@@ -244,25 +245,11 @@ export default function StudentForm({
             </div>
             <div className="panel-body">
               <div className="form-grid">
-                <div className="field">
-                  <label>수강 클래스</label>
-                  <select
-                    name="class_id"
-                    defaultValue={(s.class_id as string) ?? ""}
-                  >
-                    <option value="">선택 안 함</option>
-                    {classes.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                  {classes.length === 0 && (
-                    <span className="muted">
-                      등록된 클래스가 없습니다 — “클래스 관리”에서 먼저 생성하세요.
-                    </span>
-                  )}
-                </div>
+                <AttendanceDaysPicker
+                  classes={classes}
+                  defaultClassId={(s.class_id as string) ?? null}
+                  defaultAttendanceDays={(s.attendance_days as string) ?? null}
+                />
                 <div className="field">
                   <label>결제 상품</label>
                   <select
