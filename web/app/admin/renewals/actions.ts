@@ -87,7 +87,32 @@ export async function bulkRenewal(formData: FormData) {
     .upsert(rows, { onConflict: "enrollment_id,target_month" });
   if (error) throw new Error("처리 실패: " + error.message);
 
+  // 학생 마스터 status 동기화 — 확정→활성, 보류→휴원
+  if (status === "확정" || status === "보류") {
+    const newStudentStatus = status === "확정" ? "활성" : "휴원";
+    const { data: enrolls } = await supabase
+      .from("enrollments")
+      .select("student_id")
+      .eq("center_id", centerId)
+      .in("id", ids);
+    const studentIds = Array.from(
+      new Set(
+        ((enrolls ?? []) as { student_id: string | null }[])
+          .map((e) => e.student_id)
+          .filter((x): x is string => !!x),
+      ),
+    );
+    if (studentIds.length > 0) {
+      await supabase
+        .from("students")
+        .update({ status: newStudentStatus })
+        .eq("center_id", centerId)
+        .in("id", studentIds);
+    }
+  }
+
   revalidatePath("/admin/renewals");
+  revalidatePath("/admin/students");
   redirect(`/admin/renewals?ym=${targetMonth}`);
 }
 

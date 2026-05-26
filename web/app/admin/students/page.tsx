@@ -13,8 +13,8 @@ import AssignShuttleModal from "../shuttle/assignments/AssignShuttleModal";
 const STATUS_BADGE: Record<string, string> = {
   활성: "green",
   상담중: "blue",
-  대기: "orange",
-  휴면: "gray",
+  휴원: "orange",
+  탈퇴: "gray",
 };
 
 const BASIC: [string, string][] = [
@@ -173,7 +173,8 @@ export default async function StudentsPage({
     active: allRows.filter((s) => s.status === "활성").length,
     shuttle: allRows.filter((s) => s.shuttle_use === "이용").length,
     consult: allRows.filter((s) => s.status === "상담중").length,
-    dormant: allRows.filter((s) => s.status === "휴면").length,
+    leave: allRows.filter((s) => s.status === "휴원").length,
+    withdrawn: allRows.filter((s) => s.status === "탈퇴").length,
   };
   const selected = selectedRes.data;
   const linkedParents = (linkedRes.data ?? []) as unknown as {
@@ -244,8 +245,12 @@ export default async function StudentsPage({
           <strong>{totals.consult}</strong>
         </div>
         <div className="summary-card">
-          <span>휴면</span>
-          <strong>{totals.dormant}</strong>
+          <span>휴원</span>
+          <strong>{totals.leave}</strong>
+        </div>
+        <div className="summary-card">
+          <span>탈퇴</span>
+          <strong>{totals.withdrawn}</strong>
         </div>
       </div>
 
@@ -270,8 +275,8 @@ export default async function StudentsPage({
                 options={[
                   { value: "활성", label: "활성" },
                   { value: "상담중", label: "상담중" },
-                  { value: "대기", label: "대기" },
-                  { value: "휴면", label: "휴면" },
+                  { value: "휴원", label: "휴원" },
+                  { value: "탈퇴", label: "탈퇴" },
                 ]}
               />
               <StatusChips

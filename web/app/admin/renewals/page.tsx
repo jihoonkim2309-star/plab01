@@ -236,10 +236,10 @@ export default async function RenewalsPage({
       )}
 
       <div className="member-summary">
-        <div className="summary-card"><span>수강중</span><strong>{totals.total}</strong></div>
-        <div className="summary-card"><span>대기</span><strong>{totals.pending}</strong></div>
-        <div className="summary-card"><span>확정</span><strong>{totals.confirmed}</strong></div>
-        <div className="summary-card"><span>보류</span><strong>{totals.held}</strong></div>
+        <div className="summary-card"><span>수강 대상</span><strong>{totals.total}</strong></div>
+        <div className="summary-card"><span>미정 (대기)</span><strong>{totals.pending}</strong></div>
+        <div className="summary-card"><span>수강 확정</span><strong>{totals.confirmed}</strong></div>
+        <div className="summary-card"><span>수강 보류</span><strong>{totals.held}</strong></div>
         <div className="summary-card">
           <span>확정 예상액</span>
           <strong>{confirmedAmount.toLocaleString()}원</strong>
@@ -269,10 +269,10 @@ export default async function RenewalsPage({
                   ? "설정에서 수강 확인일을 먼저 지정하세요"
                   : gate.state === "before"
                     ? `수강 확인일까지 D-${gate.daysLeft}`
-                    : undefined
+                    : "선택 학생을 활성으로 전환 + 다음 달 수강 확정"
               }
             >
-              선택 확정
+              수강 확정 (활성)
             </button>
             <button
               className="btn warn"
@@ -280,17 +280,9 @@ export default async function RenewalsPage({
               value="보류"
               type="submit"
               disabled={gate.state !== "after"}
+              title="선택 학생을 휴원으로 전환 + 다음 달 청구 제외"
             >
-              선택 보류
-            </button>
-            <button
-              className="btn"
-              name="status"
-              value="대기"
-              type="submit"
-              disabled={gate.state !== "after"}
-            >
-              대기로
+              수강 보류 (휴원)
             </button>
           </div>
         </div>

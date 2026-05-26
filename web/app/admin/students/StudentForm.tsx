@@ -213,7 +213,7 @@ export default function StudentForm({
                   label="회원 상태 *"
                   name="status"
                   value={s.status}
-                  options={["활성", "상담중", "대기", "휴면"]}
+                  options={["활성", "상담중", "휴원", "탈퇴"]}
                   placeholder="선택"
                   required
                 />

@@ -143,13 +143,23 @@ export async function createStudent(formData: FormData) {
 }
 
 export async function updateStudent(id: string, formData: FormData) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const formRow = readForm(formData);
   validateRequired(formRow);
   const row = await denormalize(supabase, formRow);
 
   const { error } = await supabase.from("students").update(row).eq("id", id);
   if (error) throw new Error("수정 실패: " + error.message);
+
+  // 탈퇴 처리 시 활성 enrollment 자동 종료
+  if (row.status === "탈퇴") {
+    await supabase
+      .from("enrollments")
+      .update({ status: "종료" })
+      .eq("center_id", centerId)
+      .eq("student_id", id)
+      .eq("status", "수강중");
+  }
 
   await applyPhotoChanges(supabase, id, formData);
 
