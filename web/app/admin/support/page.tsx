@@ -268,7 +268,9 @@ export default async function SupportPage({
                   >
                     {selected.kind === "chat" ? "채팅" : "게시글"}
                   </span>
-                  {selected.subject}
+                  {selected.kind === "chat"
+                    ? (selected.requester_name ?? "익명") + " 와의 대화"
+                    : selected.subject}
                 </p>
                 <span className={`badge ${SB[selected.status] ?? "gray"}`}>
                   {selected.status}

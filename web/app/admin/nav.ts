@@ -104,7 +104,8 @@ export const NAV: NavGroup[] = [
     label: "상담",
     icon: "MessageSquare",
     items: [
-      { label: "문의·채팅 상담", slug: "support", href: "/admin/support", ready: true },
+      { label: "문의 게시글", slug: "support-posts", href: "/admin/support?kind=post", ready: true },
+      { label: "1:1 채팅", slug: "support-chats", href: "/admin/support?kind=chat", ready: true },
     ],
   },
   {

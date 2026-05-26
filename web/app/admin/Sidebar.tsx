@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import {
   Bell,
@@ -34,46 +34,64 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Settings,
 };
 
-function isActive(pathname: string, href: string) {
-  if (href === "/admin") return pathname === "/admin";
-  if (href === "/admin/students")
+function isActive(
+  pathname: string,
+  href: string,
+  search: URLSearchParams,
+) {
+  // href 에 쿼리가 있으면 — path + query 모두 일치해야 active
+  const [hrefPath, hrefQuery] = href.split("?");
+  if (hrefQuery) {
+    if (!pathname.startsWith(hrefPath)) return false;
+    const want = new URLSearchParams(hrefQuery);
+    for (const [k, v] of want) {
+      if (search.get(k) !== v) return false;
+    }
+    return true;
+  }
+
+  if (hrefPath === "/admin") return pathname === "/admin";
+  if (hrefPath === "/admin/students")
     return pathname === "/admin/students" || pathname.startsWith("/admin/students/");
-  if (href === "/admin/classes")
+  if (hrefPath === "/admin/classes")
     return pathname === "/admin/classes" || pathname.startsWith("/admin/classes/");
-  if (href === "/admin/grade-promotions")
+  if (hrefPath === "/admin/grade-promotions")
     return pathname.startsWith("/admin/grade-promotions");
-  if (href === "/admin/schedule") return pathname.startsWith("/admin/schedule");
-  if (href === "/admin/products") return pathname.startsWith("/admin/products");
-  if (href === "/admin/billing") return pathname.startsWith("/admin/billing");
-  if (href.startsWith("/admin/support"))
-    return pathname.startsWith("/admin/support");
-  if (href === "/admin/notifications")
+  if (hrefPath === "/admin/schedule") return pathname.startsWith("/admin/schedule");
+  if (hrefPath === "/admin/products") return pathname.startsWith("/admin/products");
+  if (hrefPath === "/admin/billing") return pathname.startsWith("/admin/billing");
+  if (hrefPath === "/admin/support") {
+    // /admin/support 단독 메뉴 — 쿼리(kind) 가 set 되어 있으면 inactive (분기 메뉴 차지)
+    if (!pathname.startsWith("/admin/support")) return false;
+    return !search.get("kind");
+  }
+  if (hrefPath === "/admin/notifications")
     return pathname.startsWith("/admin/notifications");
-  if (href === "/admin/reports") return pathname.startsWith("/admin/reports");
-  if (href === "/admin/measurements")
+  if (hrefPath === "/admin/reports") return pathname.startsWith("/admin/reports");
+  if (hrefPath === "/admin/measurements")
     return pathname.startsWith("/admin/measurements");
-  if (href === "/admin/measurement-items")
+  if (hrefPath === "/admin/measurement-items")
     return pathname.startsWith("/admin/measurement-items");
-  if (href === "/admin/centers") return pathname.startsWith("/admin/centers");
-  if (href === "/admin/admin-approvals")
+  if (hrefPath === "/admin/centers") return pathname.startsWith("/admin/centers");
+  if (hrefPath === "/admin/admin-approvals")
     return pathname.startsWith("/admin/admin-approvals");
-  if (href === "/admin/shuttle/routes")
+  if (hrefPath === "/admin/shuttle/routes")
     return pathname.startsWith("/admin/shuttle/routes");
-  if (href === "/admin/shuttle/vehicles")
+  if (hrefPath === "/admin/shuttle/vehicles")
     return pathname.startsWith("/admin/shuttle/vehicles");
-  if (href === "/admin/shuttle/runs")
+  if (hrefPath === "/admin/shuttle/runs")
     return pathname.startsWith("/admin/shuttle/runs");
-  if (href === "/admin/shuttle/assignments")
+  if (hrefPath === "/admin/shuttle/assignments")
     return pathname.startsWith("/admin/shuttle/assignments");
-  if (href === "/admin/shuttle/dashboard")
+  if (hrefPath === "/admin/shuttle/dashboard")
     return pathname.startsWith("/admin/shuttle/dashboard");
-  if (href === "/admin/shuttle/logs")
+  if (hrefPath === "/admin/shuttle/logs")
     return pathname.startsWith("/admin/shuttle/logs");
-  if (href === "/admin/users") return pathname.startsWith("/admin/users");
-  if (href === "/admin/hq-invoices") return pathname.startsWith("/admin/hq-invoices");
-  if (href === "/admin/my-hq-invoices") return pathname.startsWith("/admin/my-hq-invoices");
-  if (href === "/admin/driver-accounts") return pathname.startsWith("/admin/driver-accounts");
-  return pathname === href;
+  if (hrefPath === "/admin/users") return pathname.startsWith("/admin/users");
+  if (hrefPath === "/admin/hq-invoices") return pathname.startsWith("/admin/hq-invoices");
+  if (hrefPath === "/admin/my-hq-invoices") return pathname.startsWith("/admin/my-hq-invoices");
+  if (hrefPath === "/admin/driver-accounts") return pathname.startsWith("/admin/driver-accounts");
+  return pathname === hrefPath;
 }
 
 // 그룹이 collapsible 인지 — label 이 있는 그룹만. (Dashboard 같은 단독 그룹 제외)
@@ -82,8 +100,12 @@ function isCollapsible(group: NavGroup) {
 }
 
 // 현재 활성 페이지가 이 그룹 안에 있나?
-function groupContainsActive(group: NavGroup, pathname: string) {
-  return group.items.some((item) => isActive(pathname, item.href));
+function groupContainsActive(
+  group: NavGroup,
+  pathname: string,
+  search: URLSearchParams,
+) {
+  return group.items.some((item) => isActive(pathname, item.href, search));
 }
 
 export default function Sidebar({
@@ -92,6 +114,8 @@ export default function Sidebar({
   role: "super_admin" | "admin" | "coach" | "parent" | "student" | "driver" | null;
 }) {
   const pathname = usePathname();
+  const searchParamsHook = useSearchParams();
+  const searchParams = searchParamsHook ?? new URLSearchParams();
 
   const visibleNav = NAV.filter((g) => {
     if (!g.onlyRoles) return true;
@@ -116,7 +140,11 @@ export default function Sidebar({
       const next = { ...prev };
       let changed = false;
       for (const g of NAV) {
-        if (g.label && isCollapsible(g) && groupContainsActive(g, pathname)) {
+        if (
+          g.label &&
+          isCollapsible(g) &&
+          groupContainsActive(g, pathname, searchParams)
+        ) {
           if (!next[g.label]) {
             next[g.label] = true;
             changed = true;
@@ -125,7 +153,7 @@ export default function Sidebar({
       }
       return changed ? next : prev;
     });
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   function toggle(label: string) {
     setOpenGroups((p) => ({ ...p, [label]: !p[label] }));
@@ -208,7 +236,7 @@ export default function Sidebar({
                   href={item.href}
                   className={[
                     "sub",
-                    isActive(pathname, item.href) ? "active" : "",
+                    isActive(pathname, item.href, searchParams) ? "active" : "",
                     item.needsCheck ? "needs-check" : "",
                     !open ? "collapsed" : "",
                   ]
