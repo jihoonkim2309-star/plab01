@@ -185,15 +185,17 @@ export default async function PaymentStatusPage({
           </p>
         </div>
         <div className="toolbar">
-          <form action={seedDummyPayments}>
-            <button
-              className="btn"
-              type="submit"
-              title="결제완료인데 카드 정보 없는 청구서에 더미 영수증 정보 채워주기 (테스트 전용)"
-            >
-              더미 결제정보 채우기
-            </button>
-          </form>
+          {process.env.NODE_ENV !== "production" && (
+            <form action={seedDummyPayments}>
+              <button
+                className="btn"
+                type="submit"
+                title="결제완료인데 카드 정보 없는 청구서에 더미 영수증 정보 채워주기 (테스트 전용 — 운영 환경에서 자동 숨김)"
+              >
+                더미 결제정보 채우기 (dev)
+              </button>
+            </form>
+          )}
         </div>
       </div>
 

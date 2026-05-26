@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireSuperAdmin } from "@/lib/center";
+import { logAudit } from "@/lib/audit";
 
 function calcTotal(
   plan: string,
@@ -96,11 +97,25 @@ export async function markPaid(id: string, formData: FormData) {
   const { supabase } = await requireSuperAdmin();
   const method = String(formData.get("method") ?? "").trim() || null;
   const memo = String(formData.get("memo") ?? "").trim() || null;
+  const { data: prev } = await supabase
+    .from("hq_invoices")
+    .select("center_id, total, period")
+    .eq("id", id)
+    .maybeSingle();
   const { error } = await supabase
     .from("hq_invoices")
     .update({ status: "결제완료", paid_at: new Date().toISOString(), method, memo })
     .eq("id", id);
   if (error) throw error;
+  if (prev?.center_id) {
+    await logAudit(supabase, {
+      center_id: prev.center_id,
+      action: "hq_invoice.mark_paid",
+      target_table: "hq_invoices",
+      target_id: id,
+      detail: { period: prev.period, total: prev.total, method, memo },
+    });
+  }
   revalidatePath("/admin/hq-invoices");
   redirect(`/admin/hq-invoices?invoice=${id}&saved=1`);
 }
@@ -118,8 +133,22 @@ export async function setStatus(id: string, status: string) {
 
 export async function deleteHqInvoice(id: string) {
   const { supabase } = await requireSuperAdmin();
+  const { data: prev } = await supabase
+    .from("hq_invoices")
+    .select("center_id, period, total, status")
+    .eq("id", id)
+    .maybeSingle();
   const { error } = await supabase.from("hq_invoices").delete().eq("id", id);
   if (error) throw error;
+  if (prev?.center_id) {
+    await logAudit(supabase, {
+      center_id: prev.center_id,
+      action: "hq_invoice.delete",
+      target_table: "hq_invoices",
+      target_id: id,
+      detail: { period: prev.period, total: prev.total, status: prev.status },
+    });
+  }
   revalidatePath("/admin/hq-invoices");
   redirect("/admin/hq-invoices");
 }

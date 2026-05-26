@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
+import { safeIlike } from "@/lib/db-search";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import FilterSelect from "../FilterSelect";
@@ -29,9 +30,10 @@ export default async function NotificationsPage({
     .limit(300);
   if (status) listQuery = listQuery.eq("status", status);
   if (kind) listQuery = listQuery.eq("kind", kind);
-  if (q) {
+  const qSafe = safeIlike(q);
+  if (qSafe) {
     listQuery = listQuery.or(
-      `recipient.ilike.%${q}%,template.ilike.%${q}%`,
+      `recipient.ilike.%${qSafe}%,template.ilike.%${qSafe}%`,
     );
   }
 

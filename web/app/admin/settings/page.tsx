@@ -137,9 +137,13 @@ export default async function SettingsPage({
                 <input
                   name="pg_api_secret"
                   type="password"
-                  defaultValue={v("pg_api_secret")}
-                  placeholder="서버 검증/웹훅용 (테스트 키)"
+                  defaultValue=""
+                  placeholder={v("pg_api_secret") ? "●●●●●●●● 등록됨 (변경 시에만 입력)" : "서버 검증/웹훅용 (테스트 키)"}
+                  autoComplete="new-password"
                 />
+                <span className="muted" style={{ fontSize: 11 }}>
+                  보안상 저장된 키는 다시 표시하지 않습니다. 빈 채로 저장하면 기존 값 유지.
+                </span>
               </div>
             </div>
           </div>

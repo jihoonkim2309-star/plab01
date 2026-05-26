@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { logAudit } from "@/lib/audit";
 
 export async function sendResetLink(targetEmail: string) {
   if (!targetEmail) throw new Error("이메일이 비어 있습니다.");
@@ -40,5 +41,13 @@ export async function sendResetLink(targetEmail: string) {
     redirectTo: `${siteUrl}/reset-password`,
   });
   if (error) throw new Error("재설정 메일 발송 실패: " + error.message);
+  if (me?.center_id) {
+    await logAudit(supabase, {
+      center_id: me.center_id,
+      action: "user.password_reset_sent",
+      target_table: "users",
+      detail: { target_email: targetEmail, by_role: me.role },
+    });
+  }
   revalidatePath("/admin/users");
 }

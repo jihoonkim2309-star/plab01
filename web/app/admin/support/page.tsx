@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
+import { safeIlike } from "@/lib/db-search";
 import {
   createInquiry,
   replyMessage,
@@ -42,9 +43,10 @@ export default async function SupportPage({
   if (s && ["접수", "처리중", "완료"].includes(s))
     listQuery = listQuery.eq("status", s);
   if (channel) listQuery = listQuery.eq("channel", channel);
-  if (q) {
+  const qSafe = safeIlike(q);
+  if (qSafe) {
     listQuery = listQuery.or(
-      `subject.ilike.%${q}%,requester_name.ilike.%${q}%,body.ilike.%${q}%`,
+      `subject.ilike.%${qSafe}%,requester_name.ilike.%${qSafe}%,body.ilike.%${qSafe}%`,
     );
   }
 
