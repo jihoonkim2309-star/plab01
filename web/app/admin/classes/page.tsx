@@ -5,6 +5,7 @@ import StatusChips from "../StatusChips";
 import FilterSelect from "../FilterSelect";
 import SearchInput from "../SearchInput";
 import SortHeader from "../SortHeader";
+import AssignEnrollmentModal from "../enrollments/AssignEnrollmentModal";
 
 const STATUS_BADGE: Record<string, string> = {
   운영: "green",
@@ -50,7 +51,7 @@ export default async function ClassesPage({
   if (status) listQuery = listQuery.eq("status", status);
   if (sport) listQuery = listQuery.eq("sport", sport);
 
-  const [listRes, allRes, studRes, selectedRes, selectedStudentsRes] = await Promise.all([
+  const [listRes, allRes, studRes, selectedRes, selectedStudentsRes, allStudentsRes, productsRes] = await Promise.all([
     listQuery,
     supabase.from("classes").select("status").eq("center_id", cid),
     supabase.from("students").select("class_id").eq("center_id", cid),
@@ -69,6 +70,21 @@ export default async function ClassesPage({
           .eq("center_id", cid)
           .eq("class_id", selectedId)
           .order("name")
+      : Promise.resolve({ data: [] }),
+    selectedId
+      ? supabase
+          .from("students")
+          .select("id, name")
+          .eq("center_id", cid)
+          .order("name")
+      : Promise.resolve({ data: [] }),
+    selectedId
+      ? supabase
+          .from("products")
+          .select("id, name, sessions_per_week, price")
+          .eq("center_id", cid)
+          .eq("active", true)
+          .order("sessions_per_week", { ascending: true, nullsFirst: false })
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -104,6 +120,16 @@ export default async function ClassesPage({
     name: string;
     attendance_days: string | null;
     status: string | null;
+  }[];
+  const allStudents = (allStudentsRes.data ?? []) as {
+    id: string;
+    name: string;
+  }[];
+  const allProducts = (productsRes.data ?? []) as {
+    id: string;
+    name: string;
+    sessions_per_week: number | null;
+    price: number | null;
   }[];
 
   return (
@@ -270,12 +296,36 @@ export default async function ClassesPage({
                 </div>
 
                 <div className="detail-block">
-                  <p className="detail-title">
-                    수강 학생{" "}
-                    <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-                      {selectedStudents.length}명
-                    </span>
-                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <p className="detail-title" style={{ margin: 0 }}>
+                      수강 학생{" "}
+                      <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                        {selectedStudents.length}명
+                      </span>
+                    </p>
+                    <AssignEnrollmentModal
+                      triggerLabel="+ 학생 추가"
+                      triggerClassName="btn primary"
+                      classes={[
+                        {
+                          id: selected.id,
+                          name: selected.name,
+                          days_of_week: selected.days_of_week,
+                        },
+                      ]}
+                      products={allProducts}
+                      students={allStudents}
+                      fixedClassId={selected.id}
+                      backUrl={`/admin/classes?class=${selected.id}`}
+                    />
+                  </div>
                   {selectedStudents.length === 0 ? (
                     <div className="muted" style={{ fontSize: 13 }}>
                       이 클래스에 배정된 학생이 없습니다.

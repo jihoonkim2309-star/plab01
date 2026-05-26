@@ -31,7 +31,7 @@ export default async function EditStudentPage({
     .order("name");
   const { data: products } = await supabase
     .from("products")
-    .select("id, name, sessions_per_week")
+    .select("id, name, sessions_per_week, price")
     .eq("active", true)
     .order("sessions_per_week", { ascending: true, nullsFirst: false })
     .order("name");

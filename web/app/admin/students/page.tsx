@@ -7,6 +7,7 @@ import StatusChips from "../StatusChips";
 import FilterSelect from "../FilterSelect";
 import SearchInput from "../SearchInput";
 import SortHeader from "../SortHeader";
+import AssignEnrollmentModal from "../enrollments/AssignEnrollmentModal";
 
 const STATUS_BADGE: Record<string, string> = {
   활성: "green",
@@ -103,7 +104,7 @@ export default async function StudentsPage({
   else if (shuttleFilter === "미이용")
     listQuery = listQuery.or("shuttle_use.is.null,shuttle_use.neq.이용");
 
-  const [listRes, summaryRes, selectedRes, linkedRes] = await Promise.all([
+  const [listRes, summaryRes, selectedRes, linkedRes, allClassesRes, allProductsRes] = await Promise.all([
     listQuery,
     supabase.from("students").select("status, shuttle_use").eq("center_id", cid),
     selectedId
@@ -115,6 +116,22 @@ export default async function StudentsPage({
           .select("status, parent:users(id, name, email, phone)")
           .eq("center_id", cid)
           .eq("student_id", selectedId)
+      : Promise.resolve({ data: [] }),
+    selectedId
+      ? supabase
+          .from("classes")
+          .select("id, name, days_of_week")
+          .eq("center_id", cid)
+          .in("status", ["운영", "모집중"])
+          .order("name")
+      : Promise.resolve({ data: [] }),
+    selectedId
+      ? supabase
+          .from("products")
+          .select("id, name, sessions_per_week, price")
+          .eq("center_id", cid)
+          .eq("active", true)
+          .order("sessions_per_week", { ascending: true, nullsFirst: false })
       : Promise.resolve({ data: [] }),
   ]);
   const { data: students, error } = listRes;
@@ -137,6 +154,17 @@ export default async function StudentsPage({
       email: string | null;
       phone: string | null;
     } | null;
+  }[];
+  const allClasses = (allClassesRes.data ?? []) as {
+    id: string;
+    name: string;
+    days_of_week: string | null;
+  }[];
+  const allProducts = (allProductsRes.data ?? []) as {
+    id: string;
+    name: string;
+    sessions_per_week: number | null;
+    price: number | null;
   }[];
   const hasActiveFilter = !!(q || status || shuttleFilter || gradeFilter);
 
@@ -346,6 +374,15 @@ export default async function StudentsPage({
             <p className="panel-title">학생 상세</p>
             {selected && (
               <div className="toolbar">
+                <AssignEnrollmentModal
+                  triggerLabel="수강 배정"
+                  triggerClassName="btn"
+                  classes={allClasses}
+                  products={allProducts}
+                  students={[{ id: selected.id, name: selected.name ?? "" }]}
+                  fixedStudentId={selected.id}
+                  backUrl={`/admin/students?student=${selected.id}`}
+                />
                 <Link
                   className="btn primary"
                   href={`/admin/students/${selected.id}/edit?from=${encodeURIComponent(`/admin/students?student=${selected.id}`)}`}

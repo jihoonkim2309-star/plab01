@@ -18,6 +18,7 @@ type ProductOption = {
   id: string;
   name: string;
   sessions_per_week: number | null;
+  price: number | null;
 };
 
 function parseDays(csv: string | null): string[] {
@@ -159,7 +160,24 @@ export default function AttendanceDaysPicker({
       </div>
 
       <div className="field">
-        <label>수강료 상품</label>
+        <label>
+          수강료 상품{" "}
+          {productId && (() => {
+            const sel = products.find((p) => p.id === productId);
+            return sel?.price != null ? (
+              <span
+                style={{
+                  fontWeight: 700,
+                  color: "var(--brand)",
+                  fontSize: 13,
+                  marginLeft: 6,
+                }}
+              >
+                · {Number(sel.price).toLocaleString()}원/월
+              </span>
+            ) : null;
+          })()}
+        </label>
         <select
           name="product_id"
           value={productId}
@@ -173,6 +191,7 @@ export default function AttendanceDaysPicker({
             <option key={p.id} value={p.id}>
               {p.name}
               {p.sessions_per_week ? ` (주 ${p.sessions_per_week}회)` : ""}
+              {p.price != null ? ` · ${Number(p.price).toLocaleString()}원` : ""}
             </option>
           ))}
         </select>

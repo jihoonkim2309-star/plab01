@@ -134,7 +134,7 @@ export default function StudentForm({
   title: string;
   student?: Student;
   classes: { id: string; name: string; days_of_week: string | null }[];
-  products: { id: string; name: string; sessions_per_week: number | null }[];
+  products: { id: string; name: string; sessions_per_week: number | null; price: number | null }[];
   action: (formData: FormData) => void;
   submitLabel: string;
   cancelHref: string;
