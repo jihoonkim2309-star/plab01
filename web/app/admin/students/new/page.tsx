@@ -10,8 +10,9 @@ export default async function NewStudentPage() {
     .order("name");
   const { data: products } = await supabase
     .from("products")
-    .select("id, name")
+    .select("id, name, sessions_per_week")
     .eq("active", true)
+    .order("sessions_per_week", { ascending: true, nullsFirst: false })
     .order("name");
 
   return (

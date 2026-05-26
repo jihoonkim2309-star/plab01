@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-// 클래스 select + 참여 요일 체크박스 통합 컴포넌트.
+// 클래스 select + 참여 요일 체크박스 + 결제 상품 통합 (학생당 단일 클래스 가정).
 // - 클래스 변경 시 그 클래스의 운영 요일만 노출
-// - 체크된 요일은 hidden input "attendance_days" 에 CSV 로 송신
-// - 학생당 단일 클래스 가정 (current schema)
+// - 체크된 요일 수가 변하면 상품 select 가 sessions_per_week 일치 상품을 자동 추천
+// - 사용자가 수동 변경하면 그 선택 유지 (자동 덮어쓰기 안 함)
 
 const ALL_DAYS = ["월", "화", "수", "목", "금", "토", "일"];
 
@@ -14,26 +14,35 @@ type ClassOption = {
   name: string;
   days_of_week: string | null;
 };
+type ProductOption = {
+  id: string;
+  name: string;
+  sessions_per_week: number | null;
+};
 
 function parseDays(csv: string | null): string[] {
   if (!csv) return [];
-  return csv
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  return csv.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
 export default function AttendanceDaysPicker({
   classes,
+  products,
   defaultClassId,
   defaultAttendanceDays,
+  defaultProductId,
 }: {
   classes: ClassOption[];
+  products: ProductOption[];
   defaultClassId: string | null;
   defaultAttendanceDays: string | null;
+  defaultProductId: string | null;
 }) {
   const [classId, setClassId] = useState(defaultClassId ?? "");
   const [days, setDays] = useState<string[]>(parseDays(defaultAttendanceDays));
+  const [productId, setProductId] = useState(defaultProductId ?? "");
+  // 사용자가 product 를 수동 변경했는지 추적 — 자동 추천 덮어쓰기 방지
+  const [touched, setTouched] = useState(!!defaultProductId);
 
   const selectedClass = useMemo(
     () => classes.find((c) => c.id === classId) ?? null,
@@ -44,7 +53,25 @@ export default function AttendanceDaysPicker({
     [selectedClass],
   );
 
-  // 클래스가 바뀌면 — 새 운영 요일에 없는 기존 선택은 제거
+  // 회수별 매칭 상품 추천
+  const matchedProduct = useMemo(
+    () =>
+      products.find(
+        (p) => p.sessions_per_week != null && p.sessions_per_week === days.length,
+      ) ?? null,
+    [products, days.length],
+  );
+
+  // 사용자가 수동 선택 안 했으면 매칭 상품으로 자동 갱신
+  useEffect(() => {
+    if (touched) return;
+    if (matchedProduct && productId !== matchedProduct.id) {
+      setProductId(matchedProduct.id);
+    } else if (!matchedProduct && days.length === 0 && productId) {
+      setProductId("");
+    }
+  }, [matchedProduct, touched, days.length, productId]);
+
   function onClassChange(newId: string) {
     setClassId(newId);
     const newClass = classes.find((c) => c.id === newId);
@@ -62,6 +89,13 @@ export default function AttendanceDaysPicker({
     .filter((d) => ALL_DAYS.includes(d))
     .sort((a, b) => ALL_DAYS.indexOf(a) - ALL_DAYS.indexOf(b))
     .join(",");
+
+  // 추천 가능한 상품 (수동 선택과 다를 때 안내용)
+  const productMismatch =
+    touched &&
+    productId &&
+    matchedProduct &&
+    productId !== matchedProduct.id;
 
   return (
     <>
@@ -87,7 +121,14 @@ export default function AttendanceDaysPicker({
       </div>
 
       <div className="field">
-        <label>참여 요일 {classId && <span className="muted" style={{ fontWeight: 400 }}>({days.length}회/주)</span>}</label>
+        <label>
+          참여 요일{" "}
+          {classId && (
+            <span className="muted" style={{ fontWeight: 400 }}>
+              ({days.length}회/주)
+            </span>
+          )}
+        </label>
         {!classId ? (
           <span className="muted" style={{ fontSize: 12 }}>
             클래스를 먼저 선택하세요.
@@ -115,6 +156,46 @@ export default function AttendanceDaysPicker({
           </div>
         )}
         <input type="hidden" name="attendance_days" value={attendanceCsv} />
+      </div>
+
+      <div className="field">
+        <label>결제 상품</label>
+        <select
+          name="product_id"
+          value={productId}
+          onChange={(e) => {
+            setProductId(e.target.value);
+            setTouched(true);
+          }}
+        >
+          <option value="">선택 안 함</option>
+          {products.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+              {p.sessions_per_week ? ` (주 ${p.sessions_per_week}회)` : ""}
+            </option>
+          ))}
+        </select>
+        {products.length === 0 && (
+          <span className="muted" style={{ fontSize: 12 }}>
+            등록된 상품이 없습니다 — "수강 상품 관리"에서 먼저 생성하세요.
+          </span>
+        )}
+        {!touched && matchedProduct && (
+          <span className="muted" style={{ fontSize: 12 }}>
+            주 {days.length}회 매칭 상품 자동 선택: {matchedProduct.name}
+          </span>
+        )}
+        {!touched && !matchedProduct && days.length > 0 && (
+          <span className="muted" style={{ fontSize: 12, color: "var(--orange)" }}>
+            ⚠ 주 {days.length}회 상품이 없습니다 — "수강 상품 관리"에서 추가하세요.
+          </span>
+        )}
+        {productMismatch && (
+          <span className="muted" style={{ fontSize: 12, color: "var(--orange)" }}>
+            ⚠ 참여 요일은 주 {days.length}회 인데 다른 회수 상품이 선택되어 있습니다.
+          </span>
+        )}
       </div>
     </>
   );

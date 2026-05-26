@@ -134,7 +134,7 @@ export default function StudentForm({
   title: string;
   student?: Student;
   classes: { id: string; name: string; days_of_week: string | null }[];
-  products: { id: string; name: string }[];
+  products: { id: string; name: string; sessions_per_week: number | null }[];
   action: (formData: FormData) => void;
   submitLabel: string;
   cancelHref: string;
@@ -247,28 +247,11 @@ export default function StudentForm({
               <div className="form-grid">
                 <AttendanceDaysPicker
                   classes={classes}
+                  products={products}
                   defaultClassId={(s.class_id as string) ?? null}
                   defaultAttendanceDays={(s.attendance_days as string) ?? null}
+                  defaultProductId={(s.product_id as string) ?? null}
                 />
-                <div className="field">
-                  <label>결제 상품</label>
-                  <select
-                    name="product_id"
-                    defaultValue={(s.product_id as string) ?? ""}
-                  >
-                    <option value="">선택 안 함</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                  {products.length === 0 && (
-                    <span className="muted">
-                      등록된 상품이 없습니다 — “수강 상품 관리”에서 먼저 생성하세요.
-                    </span>
-                  )}
-                </div>
                 <Field label="수강 시작일" type="date" />
                 <Field label="청구 시작월" placeholder="예: 2026-04 (자동 계산)" />
               </div>

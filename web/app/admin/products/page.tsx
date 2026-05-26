@@ -147,6 +147,7 @@ export default async function ProductsPage({
               <tr>
                 <th><SortHeader sortKey="name" label="상품명" current={sort} dir={dir} /></th>
                 <th><SortHeader sortKey="kind" label="유형" current={sort} dir={dir} /></th>
+                <th>회/주</th>
                 <th><SortHeader sortKey="price" label="가격" current={sort} dir={dir} /></th>
                 <th>상태</th>
               </tr>
@@ -166,6 +167,13 @@ export default async function ProductsPage({
                   <td>
                     <span className={`badge ${KIND_BADGE[p.kind] ?? "gray"}`}>{p.kind}</span>
                   </td>
+                  <td>
+                    {p.sessions_per_week ? (
+                      <span className="badge gray">주 {p.sessions_per_week}회</span>
+                    ) : (
+                      <span className="muted">-</span>
+                    )}
+                  </td>
                   <td><strong>{fmt(Number(p.price))}</strong></td>
                   <td>
                     {p.active ? (
@@ -178,7 +186,7 @@ export default async function ProductsPage({
               ))}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={4}>
+                  <td colSpan={5}>
                     <div className="empty-state">
                       {hasFilter ? (
                         <>
