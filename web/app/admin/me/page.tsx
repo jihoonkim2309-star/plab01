@@ -32,14 +32,34 @@ export default async function MyProfilePage({
     .from("users")
     .select("name, email, phone, role, center_id, created_at")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  const { data: center } = profile?.center_id
+  if (!profile) {
+    return (
+      <>
+        <div className="page-head">
+          <div>
+            <h1>내 프로필</h1>
+            <p className="subtext">로그인 계정 정보</p>
+          </div>
+        </div>
+        <div className="panel" style={banner("red")}>
+          <strong>프로필 데이터를 찾을 수 없습니다.</strong>
+          <p style={{ marginTop: 6 }}>
+            로그인은 되어 있지만 users 테이블에 행이 없습니다. 슈퍼관리자에게
+            계정 복구를 요청하세요.
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  const { data: center } = profile.center_id
     ? await supabase
         .from("centers")
         .select("name")
         .eq("id", profile.center_id)
-        .single()
+        .maybeSingle()
     : { data: null };
 
   const p = profile as {

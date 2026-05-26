@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireCenter } from "@/lib/center";
 import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
@@ -45,20 +46,26 @@ export default async function SchedulePage({
   const { data: classes } = await classQuery;
   const { data: holidays } = await supabase
     .from("holidays")
-    .select("holiday_date, reason, class_id")
+    .select("id, holiday_date, reason, class_id")
     .eq("center_id", cid)
     .gte("holiday_date", `${monthStr}-01`)
     .lte("holiday_date", `${monthStr}-${pad(daysInMonth)}`);
   const { data: makeups } = await supabase
     .from("makeups")
-    .select("makeup_date, reason, status, class_id, classes(name)")
+    .select("id, makeup_date, reason, status, class_id, classes(name)")
     .eq("center_id", cid)
     .gte("makeup_date", `${monthStr}-01`)
     .lte("makeup_date", `${monthStr}-${pad(daysInMonth)}`);
 
   const cls = classes ?? [];
-  const hol = (holidays ?? []).filter((h) => !class_id || h.class_id === class_id || !h.class_id);
+  const hol = ((holidays ?? []) as unknown as {
+    id: string;
+    holiday_date: string;
+    reason: string | null;
+    class_id: string | null;
+  }[]).filter((h) => !class_id || h.class_id === class_id || !h.class_id);
   const mk = ((makeups ?? []) as unknown as {
+    id: string;
     makeup_date: string;
     reason: string | null;
     status: string;
@@ -82,7 +89,7 @@ export default async function SchedulePage({
           <p className="subtext">클래스 요일/시간 기반 · 휴강·보강 반영</p>
         </div>
         <div className="toolbar">
-          <MonthNav ym={monthStr} baseUrl="/admin/schedule" />
+          <MonthNav ym={monthStr} baseUrl="/admin/schedule" extra={{ class_id }} />
         </div>
       </div>
 
@@ -100,6 +107,9 @@ export default async function SchedulePage({
               }))}
             />
             <div style={{ flex: 1 }} />
+            {class_id && (
+              <Link className="btn" href={`/admin/schedule?ym=${monthStr}`}>초기화</Link>
+            )}
           </FilterBar>
         </div>
         <div className="panel-body">
@@ -128,16 +138,26 @@ export default async function SchedulePage({
                 <div className={`day${fullHoliday ? " is-holiday" : ""}`} key={i}>
                   <div className="date">{Number(cell.date.slice(8))}</div>
                   {fullHoliday && (
-                    <span className="event red">
+                    <Link
+                      className="event red"
+                      href={`/admin/holidays?holiday=${fullHoliday.id}`}
+                      style={{ color: "inherit", textDecoration: "none" }}
+                    >
                       <strong>전체 휴강</strong>
                       <small>{fullHoliday.reason ?? ""}</small>
-                    </span>
+                    </Link>
                   )}
                   {!fullHoliday &&
                     todays.map((c) => {
                       const off = holidayClassIds.has(c.id);
+                      const offHoliday = off ? dayHolidays.find((h) => h.class_id === c.id) : null;
                       return (
-                        <span className={`event${off ? " red" : ""}`} key={c.id}>
+                        <Link
+                          className={`event${off ? " red" : ""}`}
+                          key={c.id}
+                          href={offHoliday ? `/admin/holidays?holiday=${offHoliday.id}` : `/admin/classes?class=${c.id}`}
+                          style={{ color: "inherit", textDecoration: "none" }}
+                        >
                           <strong>
                             {c.name}
                             {off ? " (휴강)" : ""}
@@ -147,17 +167,19 @@ export default async function SchedulePage({
                             {c.end_time ? `~${c.end_time.slice(0, 5)}` : ""}
                             {c.place ? ` · ${c.place}` : ""}
                           </small>
-                        </span>
+                        </Link>
                       );
                     })}
-                  {dayMakeups.map((x, j) => (
-                    <span
+                  {dayMakeups.map((x) => (
+                    <Link
                       className={`event ${x.status === "취소" ? "" : "orange"}`}
-                      key={`mk${j}`}
+                      key={`mk${x.id}`}
+                      href={`/admin/makeups?makeup=${x.id}`}
+                      style={{ color: "inherit", textDecoration: "none" }}
                     >
                       <strong>보강 · {x.classes?.name ?? ""}</strong>
                       <small>{x.reason ?? x.status}</small>
-                    </span>
+                    </Link>
                   ))}
                 </div>
               );

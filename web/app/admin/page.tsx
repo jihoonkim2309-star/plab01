@@ -292,6 +292,14 @@ export default async function AdminDashboard() {
   const overdueCount = (overdueRes.data ?? []).length;
   const pendingTotal =
     pendingParentLinks + pendingStudentLinks + pendingPromos + overdueCount;
+  // 가장 큰 pending 카테고리로 동적 라우팅 (이전엔 항상 parent-links)
+  const pendingTop = [
+    { count: pendingParentLinks, href: "/admin/parent-links?status=pending" },
+    { count: pendingStudentLinks, href: "/admin/student-links?status=pending" },
+    { count: pendingPromos, href: "/admin/grade-promotions" },
+    { count: overdueCount, href: "/admin/overdue" },
+  ].sort((a, b) => b.count - a.count)[0];
+  const pendingTopHref = pendingTop?.count > 0 ? pendingTop.href : "/admin/parent-links";
 
   // 오늘의 클래스 (요일 매칭)
   type ClassRow = {
@@ -403,7 +411,7 @@ export default async function AdminDashboard() {
               {pendingTotal > 0 && (
                 <>
                   {" · "}
-                  <Link href="/admin/parent-links">바로 보기 →</Link>
+                  <Link href={pendingTopHref}>바로 보기 →</Link>
                 </>
               )}
             </p>
@@ -455,6 +463,7 @@ export default async function AdminDashboard() {
           hint={`${expectedCount}명 (전월 결제 기준)`}
           tone="brand"
           href="/admin/renewals"
+          title="전월에 결제 완료한 학생 중 이번 달도 활성 수강중인 학생의 상품가 합계. 신규 학생은 포함되지 않음."
         />
         <KpiCard
           icon="💰"
@@ -463,6 +472,7 @@ export default async function AdminDashboard() {
           hint={`${Math.round(monthPct)}%`}
           tone="blue"
           href="/admin/payment-status?s=결제완료"
+          title="이번 달 invoice 결제완료 합계 (신규 가입 첫달 포함)."
         />
         <KpiCard
           icon="⚠️"
@@ -471,6 +481,7 @@ export default async function AdminDashboard() {
           hint={`${outstandingCount}건 수강확인 미결제`}
           tone="red"
           href="/admin/overdue"
+          title="이번 달 수강확인 후 결제되지 않은 금액 (source='수강확인' AND status in ('청구','실패')). 신규 첫달은 제외."
         />
       </div>
 
@@ -829,6 +840,7 @@ function KpiCard({
   hint,
   tone = "brand",
   href,
+  title,
 }: {
   icon: string;
   label: string;
@@ -836,6 +848,7 @@ function KpiCard({
   hint?: string;
   tone?: "brand" | "green" | "blue" | "orange" | "red";
   href: string;
+  title?: string;
 }) {
   const toneClass: Record<string, string> = {
     brand: "kpi-tone-brand",
@@ -845,7 +858,7 @@ function KpiCard({
     red: "kpi-tone-red",
   };
   return (
-    <Link className={`panel kpi-card ${toneClass[tone]}`} href={href}>
+    <Link className={`panel kpi-card ${toneClass[tone]}`} href={href} title={title}>
       <div className="kpi-icon" aria-hidden>
         {icon}
       </div>

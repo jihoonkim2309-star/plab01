@@ -11,7 +11,11 @@
       "Bash(git *)",
       "Bash(npm *)",
       "Bash(node *)",
-      "PowerShell(*)"
+      "PowerShell(*)",
+      "Bash(cd /c/dev/plab01/web && tail -5 app/admin/admin.css)",
+      "Read(//c/c/dev/plab01/web/app/admin/**)",
+      "Bash(git rev-list *)",
+      "Bash(npx tsc *)"
     ],
     "deny": [
       "Bash(rm -rf *)",

@@ -63,12 +63,15 @@ export default async function NotificationsPage({
       </div>
 
       <div className="member-summary">
-        <div className="summary-card"><span>전체</span><strong>{all.length}</strong></div>
+        <div className="summary-card" title="최근 300건 기준">
+          <span>최근 300건</span>
+          <strong>{all.length}</strong>
+        </div>
         <div className="summary-card"><span>대기</span><strong>{cnt("대기")}</strong></div>
         <div className="summary-card"><span>성공</span><strong>{cnt("성공")}</strong></div>
         <div className="summary-card"><span>실패</span><strong>{cnt("실패")}</strong></div>
-        <div className="summary-card">
-          <span>성공률</span>
+        <div className="summary-card" title="최근 300건 기준 성공률">
+          <span>성공률 (최근 300)</span>
           <strong>
             {all.length ? Math.round((cnt("성공") / all.length) * 100) : 0}%
           </strong>
@@ -81,8 +84,8 @@ export default async function NotificationsPage({
             발송 내역{" "}
             <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
               {hasFilter
-                ? `검색결과 ${list.length}건 / 전체 ${all.length}`
-                : `${list.length}건`}
+                ? `검색결과 ${list.length}건 / 최근 ${all.length}`
+                : `최근 ${list.length}건`}
             </span>
           </p>
         </div>

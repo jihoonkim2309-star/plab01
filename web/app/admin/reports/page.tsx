@@ -51,7 +51,7 @@ export default async function ReportsPage({
       .order("created_at", { ascending: false }),
     supabase
       .from("measurements")
-      .select("id", { count: "exact", head: false })
+      .select("id", { count: "exact", head: true })
       .eq("center_id", cid)
       .eq("measurement_month", target)
       .eq("status", "승인완료"),
@@ -62,8 +62,9 @@ export default async function ReportsPage({
             "id, snapshot, coach_comment, admin_comment, public_to_parent, published_at",
           )
           .eq("center_id", cid)
+          .eq("report_month", target)
           .eq("id", rid)
-          .single()
+          .maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
   const allList = (listRes.data ?? []) as unknown as {
@@ -79,7 +80,7 @@ export default async function ReportsPage({
 
   // 필터 무관 totals
   const cnt = (s: string) => allList.filter((r) => r.status === s).length;
-  const approvedCount = approvedRes.data?.length ?? 0;
+  const approvedCount = approvedRes.count ?? 0;
 
   // 필터 적용 리스트 (학생명 검색·상태·공개여부)
   const needle = q?.toLowerCase() ?? "";

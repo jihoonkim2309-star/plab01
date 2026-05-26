@@ -451,7 +451,9 @@ export default async function MeasurementsPage({
                             <input type="hidden" name="id" value={m.id} />
                             <input
                               name="reject_reason"
-                              placeholder="반려 사유"
+                              placeholder="반려 사유 (필수)"
+                              required
+                              minLength={2}
                               style={{ width: 200 }}
                             />
                             <button className="btn" type="submit">

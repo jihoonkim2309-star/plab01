@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep -l \"favicon\\\\|app/icon\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\jihoo\\.claude\\projects\\c--dev-plab01\\memory",
+      "C:\\Users\\jihoo\\OneDrive\\ClaudeSync\\c--dev-plab01\\memory"
+    ]
+  }
+}

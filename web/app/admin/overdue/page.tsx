@@ -14,10 +14,10 @@ function daysOver(due: string | null): number {
   return Math.floor((now.getTime() - d.getTime()) / 86400000);
 }
 function bucket(n: number) {
-  if (n >= 30) return { label: "장기", cls: "red", key: "long" };
-  if (n >= 7) return { label: "D+7", cls: "red", key: "d7" };
-  if (n >= 3) return { label: "D+3", cls: "orange", key: "d3" };
-  if (n >= 1) return { label: "D+1", cls: "orange", key: "d1" };
+  if (n >= 30) return { label: "장기(30일+)", cls: "red", key: "long" };
+  if (n >= 7) return { label: "7-29일", cls: "red", key: "d7" };
+  if (n >= 3) return { label: "3-6일", cls: "orange", key: "d3" };
+  if (n >= 1) return { label: "1-2일", cls: "orange", key: "d1" };
   return { label: "당일", cls: "gray", key: "today" };
 }
 
@@ -87,9 +87,9 @@ export default async function OverduePage({
       <div className="member-summary">
         <div className="summary-card"><span>미납 건수</span><strong>{totals.count}</strong></div>
         <div className="summary-card"><span>미납 총액</span><strong>{totals.amount.toLocaleString()}원</strong></div>
-        <div className="summary-card"><span>D+3</span><strong>{totals.d3}</strong></div>
-        <div className="summary-card"><span>D+7</span><strong>{totals.d7}</strong></div>
-        <div className="summary-card"><span>장기(30+)</span><strong>{totals.long}</strong></div>
+        <div className="summary-card"><span>3-6일</span><strong>{totals.d3}</strong></div>
+        <div className="summary-card"><span>7-29일</span><strong>{totals.d7}</strong></div>
+        <div className="summary-card"><span>장기(30일+)</span><strong>{totals.long}</strong></div>
       </div>
 
       <form action={bulkOverdueAction} className="panel elevated">
@@ -128,10 +128,10 @@ export default async function OverduePage({
               current={bucketFilter}
               options={[
                 { value: "today", label: "당일" },
-                { value: "d1", label: "D+1" },
-                { value: "d3", label: "D+3" },
-                { value: "d7", label: "D+7" },
-                { value: "long", label: "장기(30+)" },
+                { value: "d1", label: "1-2일" },
+                { value: "d3", label: "3-6일" },
+                { value: "d7", label: "7-29일" },
+                { value: "long", label: "장기(30일+)" },
               ]}
             />
             <div style={{ flex: 1 }} />
