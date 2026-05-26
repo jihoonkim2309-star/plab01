@@ -1,19 +1,20 @@
 -- =====================================================================
---  수업 운영 데모용 시드 — 클래스 + 수강료 상품 + 학생 매칭 예시
+--  수업 운영 데모용 시드 — 본점 한정
 --  사용법: Supabase SQL Editor 에 그대로 붙여 Run.
---  여러 번 실행 안전 — DELETE 가드 + memo='[SEED-CLASS-V2]' 식별자 사용.
+--  여러 번 실행 안전 — 같은 센터 데이터 전체 교체식.
 --
 --  실행 효과:
---   1) 기존 수업 운영 더미 데이터 정리 (classes, products, enrollments,
---      holidays, makeups, renewal_confirmations) — 그 센터 한정
---   2) 학생들의 class_id / product_id / attendance_days 비움 (학생 본체는 보존)
---   3) 신규 클래스 3개 + 수강료 상품 5종 (1~5회반) 시드
+--   1) 본점의 기존 수업 운영 더미 정리 (classes, products, enrollments,
+--      holidays, makeups, renewal_confirmations)
+--   2) 본점 학생들의 class_id / product_id / attendance_days 비움
+--   3) 신규 클래스 3개 + 수강료 상품 5종 시드
 --   4) 첫 5명 학생에게 클래스·참여 요일·자동 매칭 상품 적용
 -- =====================================================================
 
 do $$
 declare
   cid uuid;
+  cname text;
   c_after4 uuid;
   c_after6 uuid;
   c_sat_am uuid;
@@ -30,15 +31,23 @@ declare
   d_csv text;
   p_name text;
   matched_pid uuid;
-  matched_class uuid;
 begin
-  -- 활성 센터 1개 잡기 (현재 작업 컨텍스트 — 슈퍼어드민 다중지점이면 본점 우선)
-  select id into cid from public.centers
+  -- 본점 잡기 — 이름에 '본점' 포함된 센터 우선, 없으면 가장 먼저 만든 센터
+  select id, name into cid, cname
+    from public.centers
+   where name ilike '%본점%'
    order by created_at asc
    limit 1;
   if cid is null then
-    raise exception '먼저 지점을 등록한 뒤 실행하세요.';
+    select id, name into cid, cname
+      from public.centers
+     order by created_at asc
+     limit 1;
   end if;
+  if cid is null then
+    raise exception '센터가 하나도 등록되어 있지 않습니다.';
+  end if;
+  raise notice '대상 센터: % (id=%)', cname, cid;
 
   -- ─── 1. 기존 수업 운영 더미 정리 ───────────────────────────────
   delete from public.renewal_confirmations where center_id = cid;
@@ -80,29 +89,17 @@ begin
 
   -- ─── 3. 수강료 상품 5종 (sessions_per_week = 1~5) ────────────────
   insert into public.products (id, center_id, name, kind, sessions_per_week, price, billing_cycle, active)
-  values
-    (gen_random_uuid(), cid, '주 1회반', '정규반', 1,  80000, '월', true)
-  returning id into p_w1;
+  values (gen_random_uuid(), cid, '주 1회반', '정규반', 1,  80000, '월', true) returning id into p_w1;
   insert into public.products (id, center_id, name, kind, sessions_per_week, price, billing_cycle, active)
-  values
-    (gen_random_uuid(), cid, '주 2회반', '정규반', 2, 150000, '월', true)
-  returning id into p_w2;
+  values (gen_random_uuid(), cid, '주 2회반', '정규반', 2, 150000, '월', true) returning id into p_w2;
   insert into public.products (id, center_id, name, kind, sessions_per_week, price, billing_cycle, active)
-  values
-    (gen_random_uuid(), cid, '주 3회반', '정규반', 3, 210000, '월', true)
-  returning id into p_w3;
+  values (gen_random_uuid(), cid, '주 3회반', '정규반', 3, 210000, '월', true) returning id into p_w3;
   insert into public.products (id, center_id, name, kind, sessions_per_week, price, billing_cycle, active)
-  values
-    (gen_random_uuid(), cid, '주 4회반', '정규반', 4, 260000, '월', true)
-  returning id into p_w4;
+  values (gen_random_uuid(), cid, '주 4회반', '정규반', 4, 260000, '월', true) returning id into p_w4;
   insert into public.products (id, center_id, name, kind, sessions_per_week, price, billing_cycle, active)
-  values
-    (gen_random_uuid(), cid, '주 5회반', '정규반', 5, 300000, '월', true)
-  returning id into p_w5;
+  values (gen_random_uuid(), cid, '주 5회반', '정규반', 5, 300000, '월', true) returning id into p_w5;
 
   -- ─── 4. 첫 5명 학생에게 매칭 예시 적용 ─────────────────────────
-  -- 모든 학생을 c_after4 클래스에 두고, attendance_days 만 다르게.
-  -- 매칭되는 상품은 자동으로 결정 (회수 ↔ sessions_per_week).
   for stud_rec in
     select id, name from public.students
      where center_id = cid
@@ -129,15 +126,13 @@ begin
            product         = p_name
      where id = stud_rec.id;
 
-    -- enrollment 도 만들어 두면 시간표 카운트가 즉시 반영됨
     insert into public.enrollments
       (center_id, student_id, class_id, product_id, attendance_days, status)
     values
       (cid, stud_rec.id, c_after4, matched_pid, d_csv, '수강중');
 
-    raise notice '시드 매칭 — % : 클래스=오후 4시 / 요일=% / 상품=%',
-      stud_rec.name, d_csv, p_name;
+    raise notice '시드 매칭 — % : 요일=% / 상품=%', stud_rec.name, d_csv, p_name;
   end loop;
 
-  raise notice '완료. 새 클래스 3개 + 수강료 상품 5종 + 학생 % 명 매칭', i;
+  raise notice '완료. [%] 클래스 3개 + 수강료 상품 5종 + 학생 %명 매칭', cname, i;
 end $$;
