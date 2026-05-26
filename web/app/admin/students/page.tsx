@@ -8,6 +8,7 @@ import FilterSelect from "../FilterSelect";
 import SearchInput from "../SearchInput";
 import SortHeader from "../SortHeader";
 import AssignEnrollmentModal from "../enrollments/AssignEnrollmentModal";
+import AssignShuttleModal from "../shuttle/assignments/AssignShuttleModal";
 
 const STATUS_BADGE: Record<string, string> = {
   활성: "green",
@@ -104,7 +105,16 @@ export default async function StudentsPage({
   else if (shuttleFilter === "미이용")
     listQuery = listQuery.or("shuttle_use.is.null,shuttle_use.neq.이용");
 
-  const [listRes, summaryRes, selectedRes, linkedRes, allClassesRes, allProductsRes] = await Promise.all([
+  const [
+    listRes,
+    summaryRes,
+    selectedRes,
+    linkedRes,
+    allClassesRes,
+    allProductsRes,
+    shuttleRoutesRes,
+    shuttleStopsRes,
+  ] = await Promise.all([
     listQuery,
     supabase.from("students").select("status, shuttle_use").eq("center_id", cid),
     selectedId
@@ -132,6 +142,21 @@ export default async function StudentsPage({
           .eq("center_id", cid)
           .eq("active", true)
           .order("sessions_per_week", { ascending: true, nullsFirst: false })
+      : Promise.resolve({ data: [] }),
+    selectedId
+      ? supabase
+          .from("shuttle_routes")
+          .select("id, name, direction")
+          .eq("center_id", cid)
+          .eq("status", "운영")
+          .order("name")
+      : Promise.resolve({ data: [] }),
+    selectedId
+      ? supabase
+          .from("shuttle_stops")
+          .select("id, route_id, sequence, name")
+          .eq("center_id", cid)
+          .order("sequence", { ascending: true })
       : Promise.resolve({ data: [] }),
   ]);
   const { data: students, error } = listRes;
@@ -165,6 +190,17 @@ export default async function StudentsPage({
     name: string;
     sessions_per_week: number | null;
     price: number | null;
+  }[];
+  const shuttleRoutes = (shuttleRoutesRes.data ?? []) as {
+    id: string;
+    name: string;
+    direction: string | null;
+  }[];
+  const shuttleStops = (shuttleStopsRes.data ?? []) as {
+    id: string;
+    route_id: string;
+    sequence: number | null;
+    name: string;
   }[];
   const hasActiveFilter = !!(q || status || shuttleFilter || gradeFilter);
 
@@ -379,6 +415,15 @@ export default async function StudentsPage({
                   triggerClassName="btn"
                   classes={allClasses}
                   products={allProducts}
+                  students={[{ id: selected.id, name: selected.name ?? "" }]}
+                  fixedStudentId={selected.id}
+                  backUrl={`/admin/students?student=${selected.id}`}
+                />
+                <AssignShuttleModal
+                  triggerLabel="셔틀 배정"
+                  triggerClassName="btn"
+                  routes={shuttleRoutes}
+                  stops={shuttleStops}
                   students={[{ id: selected.id, name: selected.name ?? "" }]}
                   fixedStudentId={selected.id}
                   backUrl={`/admin/students?student=${selected.id}`}
