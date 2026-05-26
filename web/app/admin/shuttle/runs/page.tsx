@@ -74,21 +74,41 @@ export default async function ShuttleRunsPage({
       : Promise.resolve({ data: [] }),
   ]);
 
-  // 선택된 run 의 노선 stops 조회 (선택 시점에 의존)
+  // 선택된 run 의 노선 stops + 배정 학생 조회
   const selectedRouteId = (selectedRes.data as { route_id?: string } | null)?.route_id;
-  const stopsForRun = selectedRouteId
-    ? (
-        await supabase
+  const [stopsForRunRes, assignmentsRes] = await Promise.all([
+    selectedRouteId
+      ? supabase
           .from("shuttle_stops")
           .select("id, route_id, sequence, name")
           .eq("center_id", cid)
           .eq("route_id", selectedRouteId)
           .order("sequence", { ascending: true })
-      ).data ?? []
-    : [];
-  // (selectedStopsRes 자리 채우기용 변수 무시)
+      : Promise.resolve({ data: [] }),
+    selectedRouteId
+      ? supabase
+          .from("student_stop_assignments")
+          .select(
+            "id, status, direction, board_stop_id, alight_stop_id, students(id, name), board:shuttle_stops!board_stop_id(id, name, sequence), alight:shuttle_stops!alight_stop_id(id, name, sequence)",
+          )
+          .eq("center_id", cid)
+          .eq("route_id", selectedRouteId)
+          .eq("status", "활성")
+      : Promise.resolve({ data: [] }),
+  ]);
+  const stopsForRun = stopsForRunRes.data ?? [];
   void selectedStopsRes;
   const allStudents = (allStudentsRes.data ?? []) as { id: string; name: string }[];
+  const routeAssignments = (assignmentsRes.data ?? []) as unknown as {
+    id: string;
+    status: string;
+    direction: string | null;
+    board_stop_id: string | null;
+    alight_stop_id: string | null;
+    students: { id: string; name: string } | null;
+    board: { id: string; name: string; sequence: number | null } | null;
+    alight: { id: string; name: string; sequence: number | null } | null;
+  }[];
 
   const list = (listRes.data ?? []) as unknown as Run[];
   const routes = routesRes.data ?? [];
@@ -336,6 +356,66 @@ export default async function ShuttleRunsPage({
                   ) : (
                     <div className="muted" style={{ fontSize: 13 }}>기사 미배정 — “기사” 역할 가입자가 있으면 수정 화면에서 배정할 수 있습니다.</div>
                   )}
+                </div>
+
+                <div className="detail-block">
+                  <p className="detail-title">
+                    배정 학생{" "}
+                    <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                      {routeAssignments.length}명 · 노선 단위
+                    </span>
+                  </p>
+                  {routeAssignments.length === 0 ? (
+                    <div className="muted" style={{ fontSize: 13 }}>
+                      이 노선에 배정된 학생이 없습니다. 우측 상단 [+ 학생 배정] 으로 추가하세요.
+                    </div>
+                  ) : (
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>학생</th>
+                          <th>승차</th>
+                          <th>하차</th>
+                          <th>방향</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {routeAssignments
+                          .slice()
+                          .sort((a, b) =>
+                            (a.board?.sequence ?? 0) - (b.board?.sequence ?? 0),
+                          )
+                          .map((a) => (
+                            <tr key={a.id}>
+                              <td>
+                                {a.students?.id ? (
+                                  <Link
+                                    href={`/admin/students?student=${a.students.id}`}
+                                    style={{ fontWeight: 700, color: "var(--text)" }}
+                                  >
+                                    {a.students.name}
+                                  </Link>
+                                ) : (
+                                  <span className="muted">-</span>
+                                )}
+                              </td>
+                              <td className="muted">{a.board?.name ?? "-"}</td>
+                              <td className="muted">{a.alight?.name ?? "-"}</td>
+                              <td>
+                                {a.direction ? (
+                                  <span className="badge gray">{a.direction}</span>
+                                ) : (
+                                  "-"
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  )}
+                  <p className="muted" style={{ fontSize: 11, marginTop: 6 }}>
+                    배정은 노선 단위로 저장됩니다. 같은 노선의 다른 운행에도 동일 학생 명단이 적용됩니다.
+                  </p>
                 </div>
               </>
             )}

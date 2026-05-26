@@ -22,7 +22,7 @@ export default async function ShuttleRouteDetailPage({
   const { id } = await params;
   const { supabase, centerId: cid } = await requireCenter();
 
-  const [routeRes, stopsRes] = await Promise.all([
+  const [routeRes, stopsRes, assignmentsRes] = await Promise.all([
     supabase
       .from("shuttle_routes")
       .select("id, name, direction, status, memo")
@@ -35,11 +35,27 @@ export default async function ShuttleRouteDetailPage({
       .eq("route_id", id)
       .eq("center_id", cid)
       .order("sequence", { ascending: true }),
+    supabase
+      .from("student_stop_assignments")
+      .select(
+        "id, status, direction, students(id, name), board:shuttle_stops!board_stop_id(id, name, sequence), alight:shuttle_stops!alight_stop_id(id, name, sequence)",
+      )
+      .eq("center_id", cid)
+      .eq("route_id", id)
+      .eq("status", "활성"),
   ]);
 
   const route = routeRes.data;
   if (!route) notFound();
   const stops = stopsRes.data ?? [];
+  const assignments = (assignmentsRes.data ?? []) as unknown as {
+    id: string;
+    status: string;
+    direction: string | null;
+    students: { id: string; name: string } | null;
+    board: { id: string; name: string; sequence: number | null } | null;
+    alight: { id: string; name: string; sequence: number | null } | null;
+  }[];
 
   return (
     <>
@@ -268,6 +284,72 @@ export default async function ShuttleRouteDetailPage({
             </div>
           </div>
         </form>
+      </div>
+
+      <div className="panel" style={{ marginTop: 14 }}>
+        <div className="panel-head">
+          <p className="panel-title">
+            배정 학생{" "}
+            <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+              {assignments.length}명
+            </span>
+          </p>
+          <span className="muted" style={{ fontSize: 12 }}>
+            배정 추가/수정은 운행 일정에서
+          </span>
+        </div>
+        <div className="panel-body">
+          {assignments.length === 0 ? (
+            <div className="empty-state">
+              <strong>배정된 학생이 없습니다</strong>
+              <p>운행 일정 페이지의 운행 상세에서 [+ 학생 배정] 으로 학생을 추가하세요.</p>
+            </div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>학생</th>
+                  <th>승차</th>
+                  <th>하차</th>
+                  <th>방향</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignments
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      (a.board?.sequence ?? 0) - (b.board?.sequence ?? 0),
+                  )
+                  .map((a) => (
+                    <tr key={a.id}>
+                      <td>
+                        {a.students?.id ? (
+                          <Link
+                            href={`/admin/students?student=${a.students.id}`}
+                            style={{ fontWeight: 700, color: "var(--text)" }}
+                          >
+                            {a.students.name}
+                          </Link>
+                        ) : (
+                          <span className="muted">-</span>
+                        )}
+                      </td>
+                      <td className="muted">{a.board?.name ?? "-"}</td>
+                      <td className="muted">{a.alight?.name ?? "-"}</td>
+                      <td>
+                        {a.direction ? (
+                          <span className="badge gray">{a.direction}</span>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </>
   );
