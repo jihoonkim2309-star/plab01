@@ -281,8 +281,8 @@ alter table public.classes enable row level security;
 drop policy if exists classes_admin_all on public.classes;
 create policy classes_admin_all on public.classes
   for all
-  using  (center_id = public.current_center_id() and public.current_role() = 'admin')
-  with check (center_id = public.current_center_id() and public.current_role() = 'admin');
+  using  (public.is_center_admin(center_id))
+  with check (public.is_center_admin(center_id));
 
 drop trigger if exists classes_touch on public.classes;
 create trigger classes_touch before update on public.classes
