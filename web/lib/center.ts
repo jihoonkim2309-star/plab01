@@ -26,17 +26,15 @@ export async function requireCenter() {
     const active = jar.get(ACTIVE_CENTER_COOKIE)?.value;
     const centerId = active || profile.center_id;
     if (!centerId) {
-      throw new Error(
-        "활성 지점이 설정되지 않았습니다. 탑바의 지점 선택에서 지점을 골라 주세요.",
-      );
+      // 활성 지점 미선택 — 에러 대신 대시보드로 이동 (지점 선택 빈상태 화면 표시).
+      redirect("/admin?msg=pick-center");
     }
     return { supabase, centerId: centerId as string };
   }
 
   if (!profile?.center_id || profile.role !== "admin") {
-    throw new Error(
-      "센터/권한이 설정되지 않았습니다. 슈퍼 어드민의 승인을 기다려 주세요.",
-    );
+    // 미승인/권한 부족 — 대시보드로 이동 (PendingApproval 또는 적절한 안내 표시).
+    redirect("/admin?msg=no-access");
   }
   return { supabase, centerId: profile.center_id as string };
 }
@@ -59,7 +57,7 @@ export async function requireStaff() {
     const jar = await cookies();
     const active = jar.get(ACTIVE_CENTER_COOKIE)?.value;
     const centerId = active || profile.center_id;
-    if (!centerId) throw new Error("활성 지점이 설정되지 않았습니다.");
+    if (!centerId) redirect("/admin?msg=pick-center");
     return {
       supabase,
       centerId: centerId as string,
@@ -72,7 +70,7 @@ export async function requireStaff() {
     !profile?.center_id ||
     (profile.role !== "admin" && profile.role !== "coach")
   ) {
-    throw new Error("어드민 또는 코치 권한이 필요합니다.");
+    redirect("/admin?msg=no-access");
   }
   return {
     supabase,
@@ -97,7 +95,7 @@ export async function requireSuperAdmin() {
     .single();
 
   if (profile?.role !== "super_admin") {
-    throw new Error("슈퍼 어드민 권한이 필요합니다.");
+    redirect("/admin?msg=super-only");
   }
   return { supabase, userId: user.id };
 }
