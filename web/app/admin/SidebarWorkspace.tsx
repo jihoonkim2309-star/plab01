@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Building2, ChevronDown, Check } from "lucide-react";
 import { setActiveCenter, unsetActiveCenter } from "./actions-center";
 
 export default function SidebarWorkspace({
@@ -39,7 +40,9 @@ export default function SidebarWorkspace({
         className="sidebar-workspace sidebar-workspace-static"
         title={`현재 지점: ${activeCenterName}`}
       >
-        <span className="sw-icon" aria-hidden>◇</span>
+        <span className="sw-icon" aria-hidden>
+          <Building2 size={16} strokeWidth={1.75} />
+        </span>
         <span className="sw-name">{activeCenterName}</span>
       </div>
     );
@@ -56,9 +59,13 @@ export default function SidebarWorkspace({
         aria-expanded={open}
         title="슈퍼 어드민 · 지점 전환"
       >
-        <span className="sw-icon" aria-hidden>◇</span>
+        <span className="sw-icon" aria-hidden>
+          <Building2 size={16} strokeWidth={1.75} />
+        </span>
         <span className="sw-name">{activeCenterName}</span>
-        <span className="sw-caret" aria-hidden>▾</span>
+        <span className="sw-caret" aria-hidden>
+          <ChevronDown size={14} strokeWidth={2} />
+        </span>
       </button>
       {open && (
         <div className="sidebar-workspace-dropdown" role="menu">
@@ -73,7 +80,9 @@ export default function SidebarWorkspace({
                 지점 미선택 (전체 대시보드)
               </span>
               {!activeCenterId && (
-                <span className="sw-check" aria-hidden>✓</span>
+                <span className="sw-check" aria-hidden>
+                  <Check size={14} strokeWidth={2.25} />
+                </span>
               )}
             </button>
           </form>
@@ -88,7 +97,9 @@ export default function SidebarWorkspace({
               >
                 {c.name}
                 {c.id === activeCenterId && (
-                  <span className="sw-check" aria-hidden>✓</span>
+                  <span className="sw-check" aria-hidden>
+                  <Check size={14} strokeWidth={2.25} />
+                </span>
                 )}
               </button>
             </form>

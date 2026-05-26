@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Building2, ChevronDown, Check } from "lucide-react";
 import { setActiveCenter } from "./actions-center";
 
 export default function CenterSwitcher({
@@ -41,9 +42,13 @@ export default function CenterSwitcher({
         aria-expanded={open}
         title="지점 전환"
       >
-        <span className="cs-icon" aria-hidden>◇</span>
+        <span className="cs-icon" aria-hidden>
+          <Building2 size={16} strokeWidth={1.75} />
+        </span>
         <span className="cs-label">{active?.name ?? "지점 선택"}</span>
-        <span className="cs-caret" aria-hidden>▾</span>
+        <span className="cs-caret" aria-hidden>
+          <ChevronDown size={14} strokeWidth={2} />
+        </span>
       </button>
       {open && (
         <div className="center-switcher-dropdown" role="menu">
@@ -61,7 +66,9 @@ export default function CenterSwitcher({
               >
                 {c.name}
                 {c.id === active?.id && (
-                  <span className="cs-check" aria-hidden>✓</span>
+                  <span className="cs-check" aria-hidden>
+                    <Check size={14} strokeWidth={2.25} />
+                  </span>
                 )}
               </button>
             </form>
