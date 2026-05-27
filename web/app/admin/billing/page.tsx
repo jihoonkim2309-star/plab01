@@ -2,14 +2,15 @@ import Link from "next/link";
 import { requireCenter } from "@/lib/center";
 import { getCenterPg } from "@/lib/portone";
 import { safeIlike } from "@/lib/db-search";
+import { ensureInvoicesForMonth, resolveBillingMonth } from "@/lib/billing";
 import CheckRowToggle from "../CheckRowToggle";
 import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
+import MonthNav from "../MonthNav";
 import PayInvoiceModal from "./PayInvoiceModal";
 import {
-  generateInvoices,
   bulkInvoiceStatus,
   deleteInvoice,
   requestParentPayment,
@@ -22,13 +23,6 @@ const CHANNEL_LABELS: Record<string, string> = {
   offline_card: "단말",
   offline_transfer: "이체",
 };
-
-const pad = (n: number) => String(n).padStart(2, "0");
-function curMonth(ym?: string) {
-  if (ym && /^\d{4}-\d{2}$/.test(ym)) return ym;
-  const n = new Date();
-  return `${n.getFullYear()}-${pad(n.getMonth() + 1)}`;
-}
 
 const SB: Record<string, string> = {
   대기: "gray",
@@ -43,15 +37,37 @@ export default async function BillingPage({
 }: {
   searchParams: Promise<{
     ym?: string;
-    created?: string;
     status?: string;
     q?: string;
     requested?: string;
   }>;
 }) {
-  const { ym, created, status, q, requested } = await searchParams;
-  const period = curMonth(ym);
+  const { ym, status, q, requested } = await searchParams;
   const { supabase, centerId: cid } = await requireCenter();
+
+  // 자동 대상월 결정 — ym 명시되면 그 월, 아니면 renewal_check_day 기준 자동 (오늘 ≥ N → 다음달).
+  let period: string;
+  let isAutoMonth = false;
+  let isNextCycle = false;
+  let renewalCheckDay: number | null = null;
+  if (ym && /^\d{4}-\d{2}$/.test(ym)) {
+    period = ym;
+  } else {
+    const { data: center } = await supabase
+      .from("centers")
+      .select("renewal_check_day")
+      .eq("id", cid)
+      .single();
+    renewalCheckDay = (center as { renewal_check_day: number | null } | null)
+      ?.renewal_check_day ?? null;
+    const r = resolveBillingMonth(renewalCheckDay);
+    period = r.period;
+    isAutoMonth = true;
+    isNextCycle = r.isNextCycle;
+  }
+
+  // 자동 대상월일 때만 멱등 청구서 생성 (학부모 확정 → 자동 청구서 흐름)
+  const autoCreated = isAutoMonth ? await ensureInvoicesForMonth(period) : 0;
 
   // 학생명 검색: students.name ilike q 한 ID set 으로 invoices.in
   const qSafe = safeIlike(q);
@@ -100,17 +116,16 @@ export default async function BillingPage({
       <div className="page-head">
         <div>
           <h1>청구 관리</h1>
-          <p className="subtext">월별 청구서 생성·관리 (결제 결과는 결제 상태에서)</p>
+          <p className="subtext">
+            수강 확정 → 자동 청구. 수강 확인일{renewalCheckDay ? ` ${renewalCheckDay}일` : ""} 이후 다음달 사이클로 자동 전환.
+          </p>
         </div>
         <div className="toolbar">
-          <form action={generateInvoices}>
-            <input type="hidden" name="period" value={period} />
-            <button className="btn primary" type="submit">{period} 청구서 생성</button>
-          </form>
+          <MonthNav ym={period} baseUrl="/admin/billing" extra={{ status, q }} />
         </div>
       </div>
 
-      {created && (
+      {autoCreated > 0 && (
         <div
           className="panel"
           style={{
@@ -120,7 +135,7 @@ export default async function BillingPage({
             padding: "12px 16px",
           }}
         >
-          청구서 {created}건 생성됨.
+          확정된 수강건 {autoCreated}건이 자동으로 청구서로 발행되었습니다.
         </div>
       )}
       {requested && (
@@ -157,7 +172,22 @@ export default async function BillingPage({
         <input type="hidden" name="period" value={period} />
         <input type="hidden" name="back" value={`/admin/billing?ym=${period}`} />
         <div className="panel-head">
-          <p className="panel-title">{period} 청구서</p>
+          <p className="panel-title">
+            {period} 청구서{" "}
+            {isAutoMonth && (
+              <span
+                className="badge gray"
+                style={{ marginLeft: 6, fontSize: 11, verticalAlign: "middle" }}
+                title={
+                  isNextCycle
+                    ? "수강 확인일 이후 — 다음달 사이클로 자동 전환"
+                    : "이번달 청구 사이클"
+                }
+              >
+                {isNextCycle ? "다음 사이클" : "이번달"}
+              </span>
+            )}
+          </p>
           <div className="toolbar">
             <button
               className="btn"
@@ -275,8 +305,11 @@ export default async function BillingPage({
                     <div className="empty-state">
                       <strong>{period} 청구서가 없습니다</strong>
                       <p>
-                        먼저 "다음 달 수강 확인"에서 {period}을 확정한 뒤 "청구서
-                        생성"을 누르세요.
+                        <Link href={`/admin/renewals?ym=${period}`}>
+                          다음 달 수강 확인
+                        </Link>{" "}
+                        에서 {period}을 확정하면 자동으로 여기에 청구서가
+                        발행됩니다.
                       </p>
                     </div>
                   </td>
