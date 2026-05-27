@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
       status: "결제완료",
       paid_at: pay.paidAt ?? nowIso,
       method: pay.method ?? "card",
+      payment_method: "pg_in_store",
       pg_tx_id: paymentId,
     })
     .eq("id", inv.id);

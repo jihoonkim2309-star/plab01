@@ -531,6 +531,13 @@ create table if not exists public.invoice_items (
   label         text not null,
   amount        integer not null default 0
 );
+-- 결제 채널 구분 — 학부모 포털 / 지점 PG / 오프라인 수납 3종
+-- payment_method 는 결제완료 시점에 채워짐. method 컬럼은 결제수단(카드사 등) 별도 유지.
+alter table public.invoices add column if not exists payment_method text;
+alter table public.invoices drop constraint if exists invoices_payment_method_check;
+alter table public.invoices add constraint invoices_payment_method_check
+  check (payment_method is null or payment_method in
+    ('parent_portal','pg_in_store','offline_cash','offline_card','offline_transfer'));
 
 -- 결제 시도/결과 (PortOne — pg_mode=test 동안 샌드박스)
 create table if not exists public.payments (

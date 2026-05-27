@@ -26,6 +26,13 @@ const PSB: Record<string, string> = {
   환불: "blue",
   대기: "gray",
 };
+const CHANNEL_LABELS: Record<string, string> = {
+  parent_portal: "포털",
+  pg_in_store: "PG",
+  offline_cash: "현금",
+  offline_card: "단말",
+  offline_transfer: "이체",
+};
 
 type ListRow = {
   id: string;
@@ -34,6 +41,7 @@ type ListRow = {
   status: string;
   paid_at: string | null;
   due_date: string | null;
+  payment_method: string | null;
   students: { name: string } | null;
 };
 
@@ -98,7 +106,7 @@ export default async function PaymentStatusPage({
   // 목록 쿼리 (상태 필터 적용)
   let listQuery = supabase
     .from("invoices")
-    .select("id, period, amount, status, paid_at, due_date, students(name)")
+    .select("id, period, amount, status, paid_at, due_date, payment_method, students(name)")
     .eq("center_id", cid)
     .order("created_at", { ascending: false })
     .limit(300);
@@ -227,7 +235,7 @@ export default async function PaymentStatusPage({
 
       <div className="member-summary">
         <div className="summary-card"><span>전체</span><strong>{totals.total}</strong></div>
-        <div className="summary-card"><span>청구 대기</span><strong>{totals.waiting}</strong></div>
+        <div className="summary-card"><span>미결제</span><strong>{totals.waiting + totals.failed}</strong></div>
         <div className="summary-card"><span>결제완료</span><strong>{totals.paid}</strong></div>
         <div className="summary-card"><span>실패</span><strong>{totals.failed}</strong></div>
         <div className="summary-card"><span>환불</span><strong>{totals.refunded}</strong></div>
@@ -311,9 +319,16 @@ export default async function PaymentStatusPage({
                     <td className="muted">{i.period}</td>
                     <td>{Number(i.amount).toLocaleString()}원</td>
                     <td>
-                      <span className={`badge ${SB[i.status] ?? "gray"}`}>
-                        {i.status}
-                      </span>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <span className={`badge ${SB[i.status] ?? "gray"}`}>
+                          {i.status}
+                        </span>
+                        {i.status === "결제완료" && i.payment_method && (
+                          <span className="badge gray" title="결제 채널">
+                            {CHANNEL_LABELS[i.payment_method] ?? i.payment_method}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="muted">
                       {i.paid_at ? i.paid_at.slice(0, 10) : "-"}

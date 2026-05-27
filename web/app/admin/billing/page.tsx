@@ -7,8 +7,21 @@ import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
-import PayButton from "./PayButton";
-import { generateInvoices, bulkInvoiceStatus, deleteInvoice } from "./actions";
+import PayInvoiceModal from "./PayInvoiceModal";
+import {
+  generateInvoices,
+  bulkInvoiceStatus,
+  deleteInvoice,
+  requestParentPayment,
+} from "./actions";
+
+const CHANNEL_LABELS: Record<string, string> = {
+  parent_portal: "포털",
+  pg_in_store: "PG",
+  offline_cash: "현금",
+  offline_card: "단말",
+  offline_transfer: "이체",
+};
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function curMonth(ym?: string) {
@@ -28,9 +41,15 @@ const SB: Record<string, string> = {
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ym?: string; created?: string; status?: string; q?: string }>;
+  searchParams: Promise<{
+    ym?: string;
+    created?: string;
+    status?: string;
+    q?: string;
+    requested?: string;
+  }>;
 }) {
-  const { ym, created, status, q } = await searchParams;
+  const { ym, created, status, q, requested } = await searchParams;
   const period = curMonth(ym);
   const { supabase, centerId: cid } = await requireCenter();
 
@@ -48,7 +67,7 @@ export default async function BillingPage({
 
   let listQuery = supabase
     .from("invoices")
-    .select("id, amount, status, source, due_date, paid_at, students(name)")
+    .select("id, amount, status, source, due_date, paid_at, payment_method, students(name)")
     .eq("center_id", cid)
     .eq("period", period)
     .order("created_at", { ascending: false });
@@ -66,6 +85,7 @@ export default async function BillingPage({
     source: string;
     due_date: string | null;
     paid_at: string | null;
+    payment_method: string | null;
     students: { name: string } | null;
   }[];
 
@@ -103,10 +123,23 @@ export default async function BillingPage({
           청구서 {created}건 생성됨.
         </div>
       )}
+      {requested && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--green-soft)",
+            borderColor: "#b8dccb",
+            color: "var(--green)",
+            padding: "12px 16px",
+          }}
+        >
+          학부모 포털에 {requested}건 결제 요청 알림이 큐잉되었습니다.
+        </div>
+      )}
 
       <div className="member-summary">
         <div className="summary-card"><span>청구 건수</span><strong>{list.length}</strong></div>
-        <div className="summary-card"><span>청구 대기</span><strong>{cnt("청구")}</strong></div>
+        <div className="summary-card"><span>미결제</span><strong>{cnt("청구") + cnt("실패")}</strong></div>
         <div className="summary-card"><span>결제완료</span><strong>{cnt("결제완료")}</strong></div>
         <div className="summary-card">
           <span>수납액</span>
@@ -122,9 +155,18 @@ export default async function BillingPage({
 
       <form action={bulkInvoiceStatus} className="panel elevated">
         <input type="hidden" name="period" value={period} />
+        <input type="hidden" name="back" value={`/admin/billing?ym=${period}`} />
         <div className="panel-head">
           <p className="panel-title">{period} 청구서</p>
           <div className="toolbar">
+            <button
+              className="btn"
+              type="submit"
+              formAction={requestParentPayment}
+              title="선택한 청구서를 학부모 포털에 결제 요청 알림으로 보냅니다"
+            >
+              선택 포털 결제 요청
+            </button>
             <button className="btn primary" name="status" value="결제완료" type="submit">
               선택 결제완료
             </button>
@@ -160,7 +202,7 @@ export default async function BillingPage({
                 <th className="check-cell"></th>
                 <th>학생</th>
                 <th>금액</th>
-                <th>발생</th>
+                <th>출처</th>
                 <th>납기일</th>
                 <th>상태</th>
                 <th></th>
@@ -186,19 +228,29 @@ export default async function BillingPage({
                   <td className="muted">{i.source}</td>
                   <td className="muted">{i.due_date ?? "-"}</td>
                   <td>
-                    <span className={`badge ${SB[i.status] ?? "gray"}`}>
-                      {i.status}
-                    </span>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <span className={`badge ${SB[i.status] ?? "gray"}`}>
+                        {i.status}
+                      </span>
+                      {i.status === "결제완료" && i.payment_method && (
+                        <span className="badge gray" title="결제 채널">
+                          {CHANNEL_LABELS[i.payment_method] ?? i.payment_method}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td>
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }} className="no-row-toggle">
                       {(i.status === "청구" || i.status === "실패") && (
-                        <PayButton
+                        <PayInvoiceModal
                           invoiceId={i.id}
+                          studentName={i.students?.name ?? "학생"}
                           amount={Number(i.amount)}
-                          orderName={`${period} 수강료 · ${i.students?.name ?? ""}`}
+                          period={period}
+                          dueDate={i.due_date}
                           storeId={pg.storeId}
                           channelKey={pg.channelKey}
+                          backUrl={`/admin/billing?ym=${period}`}
                         />
                       )}
                       <form action={deleteInvoice.bind(null, i.id, period)}>
