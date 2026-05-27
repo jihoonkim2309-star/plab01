@@ -323,9 +323,11 @@ export default async function PaymentStatusPage({
                         <span className={`badge ${SB[i.status] ?? "gray"}`}>
                           {i.status}
                         </span>
-                        {i.status === "결제완료" && i.payment_method && (
+                        {i.status === "결제완료" && (
                           <span className="badge gray" title="결제 채널">
-                            {CHANNEL_LABELS[i.payment_method] ?? i.payment_method}
+                            {i.payment_method
+                              ? (CHANNEL_LABELS[i.payment_method] ?? i.payment_method)
+                              : "수동"}
                           </span>
                         )}
                       </div>

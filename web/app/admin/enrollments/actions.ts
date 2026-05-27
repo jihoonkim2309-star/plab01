@@ -75,7 +75,8 @@ export async function assignEnrollment(formData: FormData) {
         product_id: productId,
         attendance_days: attendanceDays,
       })
-      .eq("id", (existing as { id: string }).id);
+      .eq("id", (existing as { id: string }).id)
+      .eq("center_id", centerId);
     if (error) throw new Error("수강 등록 갱신 실패: " + error.message);
   } else {
     const { error } = await supabase.from("enrollments").insert({
