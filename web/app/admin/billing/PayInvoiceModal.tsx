@@ -14,6 +14,12 @@ const OFFLINE_LABELS: Record<OfflineMethod, string> = {
   offline_transfer: "계좌이체",
 };
 
+const MEMO_PLACEHOLDER: Record<OfflineMethod, string> = {
+  offline_cash: "영수증 번호 등 (선택)",
+  offline_card: "승인번호 (선택)",
+  offline_transfer: "입금자명 (선택)",
+};
+
 export default function PayInvoiceModal({
   invoiceId,
   studentName,
@@ -251,7 +257,7 @@ export default function PayInvoiceModal({
                       value={memo}
                       onChange={(e) => setMemo(e.target.value)}
                       rows={2}
-                      placeholder="선택 — 영수증 번호, 입금자명 등"
+                      placeholder={MEMO_PLACEHOLDER[offlineMethod]}
                     />
                   </div>
                 )}
