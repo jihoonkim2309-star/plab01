@@ -163,7 +163,7 @@ export default async function MeasurementsPage({
       <div className="page-head">
         <div>
           <h1>측정 데이터 관리</h1>
-          <p className="subtext">월별 학생 측정값 입력·승인 (리포트의 원본 데이터)</p>
+          <p className="subtext">월별 측정값 입력 → 승인 시 리포트 관리에서 자동 생성</p>
         </div>
         <div className="toolbar">
           <MonthNav

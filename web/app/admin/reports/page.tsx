@@ -123,7 +123,7 @@ export default async function ReportsPage({
       <div className="page-head">
         <div>
           <h1>리포트 관리</h1>
-          <p className="subtext">학생별 월간 통합 리포트 생성·발행 (PDF 미리보기)</p>
+          <p className="subtext">승인된 측정 기반 자동 생성 → 코멘트 → 발행 (학부모 공개)</p>
         </div>
         <div className="toolbar">
           <MonthNav ym={target} baseUrl="/admin/reports" />

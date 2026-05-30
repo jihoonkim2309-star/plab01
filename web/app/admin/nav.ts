@@ -77,8 +77,8 @@ export const NAV: NavGroup[] = [
     label: "리포트",
     icon: "FileText",
     items: [
-      { label: "리포트 관리", slug: "report-list", href: "/admin/reports", ready: true },
       { label: "측정 데이터 관리", slug: "report-data", href: "/admin/measurements", ready: true },
+      { label: "리포트 관리", slug: "report-list", href: "/admin/reports", ready: true },
       { label: "측정 항목 관리", slug: "report-template", href: "/admin/measurement-items", ready: true },
       { label: "영상 데이터 관리", slug: "video-feedback", href: p("video-feedback") },
     ],
