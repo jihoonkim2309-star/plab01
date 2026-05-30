@@ -63,8 +63,9 @@ export default async function BillingPage({
     isNextCycle = r.isNextCycle;
   }
 
-  // 자동 대상월일 때만 멱등 청구서 생성 (학부모 확정 → 자동 청구서 흐름)
-  const autoCreated = isAutoMonth ? await ensureInvoicesForMonth(period) : 0;
+  // 멱등 청구서 생성 — 확정 수강건이 있는데 청구서 없으면 자동 발행.
+  // ym 명시 진입(과거월) 시에도 호출하여 실수로 삭제된 청구서 자동 복원.
+  const autoCreated = await ensureInvoicesForMonth(period);
 
   // 학생명 검색: students.name ilike q 한 ID set 으로 invoices.in
   const qSafe = safeIlike(q);
@@ -262,7 +263,9 @@ export default async function BillingPage({
                   </td>
                   <td>
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }} className="no-row-toggle">
-                      {(i.status === "청구" || i.status === "실패") && (
+                      {(i.status === "청구" ||
+                        i.status === "실패" ||
+                        i.status === "환불") && (
                         <PayInvoiceModal
                           invoiceId={i.id}
                           studentName={i.students?.name ?? "학생"}
@@ -272,6 +275,7 @@ export default async function BillingPage({
                           storeId={pg.storeId}
                           channelKey={pg.channelKey}
                           backUrl={`/admin/billing?ym=${period}`}
+                          isRefund={i.status === "환불"}
                         />
                       )}
                       {i.status === "결제완료" && (

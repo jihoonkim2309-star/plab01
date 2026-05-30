@@ -41,6 +41,7 @@ export default function PayInvoiceModal({
   storeId,
   channelKey,
   backUrl,
+  isRefund = false,
 }: {
   invoiceId: string;
   studentName: string;
@@ -50,6 +51,7 @@ export default function PayInvoiceModal({
   storeId: string | null;
   channelKey: string | null;
   backUrl: string;
+  isRefund?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -171,18 +173,20 @@ export default function PayInvoiceModal({
     <>
       <button
         type="button"
-        className="btn"
+        className={`btn${isRefund ? " primary" : ""}`}
         style={{ minHeight: 30, padding: "4px 10px" }}
         onClick={() => setOpen(true)}
       >
-        결제 처리
+        {isRefund ? "재결제" : "결제 처리"}
       </button>
       {open && mounted &&
         createPortal(
           <div className="modal-backdrop">
             <div className="modal-card" style={{ maxWidth: 520 }}>
               <div className="panel-head" style={{ padding: "16px 20px 8px" }}>
-                <p className="panel-title">결제 처리</p>
+                <p className="panel-title">
+                  {isRefund ? "재결제 처리" : "결제 처리"}
+                </p>
                 <button
                   type="button"
                   className="btn"
@@ -195,6 +199,23 @@ export default function PayInvoiceModal({
                 </button>
               </div>
               <div className="panel-body" style={{ padding: "8px 20px 16px" }}>
+                {isRefund && (
+                  <div
+                    style={{
+                      padding: "10px 12px",
+                      background: "var(--orange-soft, #fff3e0)",
+                      border: "1px solid #f0c890",
+                      borderRadius: 8,
+                      marginBottom: 12,
+                      fontSize: 13,
+                      color: "#8a5a00",
+                    }}
+                  >
+                    환불 처리된 청구서를 다시 결제합니다. 진행 시 상태가{" "}
+                    <strong>결제완료</strong> 로 전환되고, 환불·재결제 이력은{" "}
+                    <strong>결제 상태</strong> 페이지에 모두 남습니다.
+                  </div>
+                )}
                 <div
                   style={{
                     padding: "12px 14px",
