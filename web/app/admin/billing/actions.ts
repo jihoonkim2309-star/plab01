@@ -33,6 +33,10 @@ export async function markOfflinePayment(formData: FormData) {
   // 카드(단말기)용
   const approvalNo = String(formData.get("approval_no") ?? "").trim() || null;
   const cardBrand = String(formData.get("card_brand") ?? "").trim() || null;
+  const cardApprovedAtRaw = String(formData.get("card_approved_at") ?? "").trim();
+  const cardApprovedAt = cardApprovedAtRaw
+    ? new Date(cardApprovedAtRaw).toISOString()
+    : null;
   // 계좌이체용
   const transferName = String(formData.get("transfer_name") ?? "").trim() || null;
   const transferAtRaw = String(formData.get("transfer_at") ?? "").trim();
@@ -56,20 +60,23 @@ export async function markOfflinePayment(formData: FormData) {
   const now = new Date().toISOString();
   const methodLabel = OFFLINE_METHODS[method];
 
-  // 수단별 컬럼·raw 분기:
-  //   현금       → raw.memo
-  //   카드(단말기) → approval_no + card_name 컬럼 + raw.memo
-  //   계좌이체    → raw.transfer_name + raw.transfer_at (+ memo)
+  // 수단별 컬럼·raw + paid_at 분기:
+  //   현금         → raw.memo, paid_at=now
+  //   카드(단말기)   → approval_no + card_name 컬럼 + raw.memo, paid_at=승인일시
+  //   계좌이체      → raw.transfer_name + transfer_at + raw.memo, paid_at=입금일시
   let payCardName: string | null = null;
   let payApprovalNo: string | null = null;
+  let payPaidAt = now;
   const rawObj: Record<string, unknown> = {};
   if (method === "offline_card") {
     payCardName = cardBrand;
     payApprovalNo = approvalNo;
+    if (cardApprovedAt) payPaidAt = cardApprovedAt;
     if (memo) rawObj.memo = memo;
   } else if (method === "offline_transfer") {
     if (transferName) rawObj.transfer_name = transferName;
     if (transferAt) rawObj.transfer_at = transferAt;
+    if (transferAt) payPaidAt = transferAt;
     if (memo) rawObj.memo = memo;
   } else {
     // offline_cash
@@ -86,7 +93,7 @@ export async function markOfflinePayment(formData: FormData) {
     method: methodLabel,
     card_name: payCardName,
     approval_no: payApprovalNo,
-    paid_at: method === "offline_transfer" && transferAt ? transferAt : now,
+    paid_at: payPaidAt,
     raw: payRaw,
   });
   if (payErr) throw new Error("결제 기록 실패: " + payErr.message);
@@ -95,7 +102,7 @@ export async function markOfflinePayment(formData: FormData) {
     .from("invoices")
     .update({
       status: "결제완료",
-      paid_at: now,
+      paid_at: payPaidAt,
       payment_method: method,
       method: methodLabel,
     })

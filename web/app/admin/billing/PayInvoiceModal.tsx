@@ -52,6 +52,7 @@ export default function PayInvoiceModal({
   const [memo, setMemo] = useState("");
   const [approvalNo, setApprovalNo] = useState("");
   const [cardBrand, setCardBrand] = useState("");
+  const [cardApprovedAt, setCardApprovedAt] = useState("");
   const [transferName, setTransferName] = useState("");
   const [transferAt, setTransferAt] = useState("");
   const [busy, setBusy] = useState(false);
@@ -83,10 +84,12 @@ export default function PayInvoiceModal({
       setApprovalNo("");
       setCardBrand("");
       setTransferName("");
-      // 입금 일시 기본값 = 지금 (datetime-local 형식: YYYY-MM-DDTHH:MM)
+      // datetime-local 기본값 = 지금 (YYYY-MM-DDTHH:MM, 로컬타임존)
       const now = new Date();
       const tzOff = now.getTimezoneOffset() * 60000;
-      setTransferAt(new Date(now.getTime() - tzOff).toISOString().slice(0, 16));
+      const localNow = new Date(now.getTime() - tzOff).toISOString().slice(0, 16);
+      setCardApprovedAt(localNow);
+      setTransferAt(localNow);
       setBusy(false);
       setMsg(null);
     }
@@ -295,6 +298,14 @@ export default function PayInvoiceModal({
                           />
                         </div>
                         <div>
+                          <label style={{ marginBottom: 6 }}>승인일시</label>
+                          <input
+                            type="datetime-local"
+                            value={cardApprovedAt}
+                            onChange={(e) => setCardApprovedAt(e.target.value)}
+                          />
+                        </div>
+                        <div style={{ gridColumn: "1 / -1" }}>
                           <label style={{ marginBottom: 6 }}>카드사</label>
                           <select
                             value={cardBrand}
@@ -312,7 +323,8 @@ export default function PayInvoiceModal({
                           className="muted"
                           style={{ fontSize: 12, gridColumn: "1 / -1" }}
                         >
-                          추후 환불·매출 조회 매칭을 위해 입력 권장 (선택)
+                          승인번호 + 승인일시는 단말기 취소 시 원거래 매칭에
+                          사용됩니다. 영수증 보고 입력 권장.
                         </span>
                       </div>
                     )}
@@ -383,6 +395,7 @@ export default function PayInvoiceModal({
                 <input type="hidden" name="memo" value={memo} />
                 <input type="hidden" name="approval_no" value={approvalNo} />
                 <input type="hidden" name="card_brand" value={cardBrand} />
+                <input type="hidden" name="card_approved_at" value={cardApprovedAt} />
                 <input type="hidden" name="transfer_name" value={transferName} />
                 <input type="hidden" name="transfer_at" value={transferAt} />
                 <input type="hidden" name="back" value={backUrl} />
