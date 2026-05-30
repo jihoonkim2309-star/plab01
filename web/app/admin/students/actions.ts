@@ -146,10 +146,27 @@ export async function updateStudent(id: string, formData: FormData) {
   validateRequired(formRow);
   const row = await denormalize(supabase, formRow);
 
+  // 휴원/탈퇴 진입 시 셔틀 배정 자동 중지 + 학생 마스터 shuttle_use 동기화.
+  // 정상 복귀 시 자동 활성화는 X — 어드민이 [셔틀 배정] 모달로 명시 재배정.
+  const stoppingShuttle = row.status === "휴원" || row.status === "탈퇴";
+  if (stoppingShuttle) {
+    (row as Record<string, string | null>).shuttle_use = "미이용";
+    (row as Record<string, string | null>).route = null;
+  }
+
   const { error } = await supabase.from("students").update(row).eq("id", id);
   if (error) throw new Error("수정 실패: " + error.message);
 
-  // 탈퇴 처리 시 활성 enrollment 자동 종료
+  if (stoppingShuttle) {
+    await supabase
+      .from("student_stop_assignments")
+      .update({ status: "중지" })
+      .eq("center_id", centerId)
+      .eq("student_id", id)
+      .eq("status", "활성");
+  }
+
+  // 탈퇴 처리 시 활성 enrollment 자동 종료 (휴원은 enrollment 유지 — 복귀 가능성)
   if (row.status === "탈퇴") {
     await supabase
       .from("enrollments")
