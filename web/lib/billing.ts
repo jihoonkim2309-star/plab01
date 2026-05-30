@@ -1,6 +1,31 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireCenter } from "./center";
 
 const pad = (n: number) => String(n).padStart(2, "0");
+
+// 결제완료 시 — 그 학생의 활성 셔틀 배정 weekdays 를 현재 enrollment.attendance_days 로 자동 sync.
+// 재수강 시 요일이 바뀌면 셔틀 weekdays 도 따라옴. enrollment 가 없거나 attendance_days 미설정이면 no-op.
+export async function syncShuttleWeekdaysToEnrollment(
+  supabase: SupabaseClient,
+  centerId: string,
+  studentId: string,
+): Promise<void> {
+  const { data: enr } = await supabase
+    .from("enrollments")
+    .select("attendance_days")
+    .eq("center_id", centerId)
+    .eq("student_id", studentId)
+    .eq("status", "수강중")
+    .maybeSingle();
+  const days = (enr as { attendance_days: string | null } | null)?.attendance_days;
+  if (!days) return;
+  await supabase
+    .from("student_stop_assignments")
+    .update({ weekdays: days })
+    .eq("center_id", centerId)
+    .eq("student_id", studentId)
+    .eq("status", "활성");
+}
 
 // 해당 월의 '확정' 수강건 → 청구서 멱등 생성. 이미 같은 학생/월 청구서가 있으면 skip.
 // 반환: 신규 생성된 청구서 수.

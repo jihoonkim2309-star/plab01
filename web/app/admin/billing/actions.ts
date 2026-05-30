@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCenter } from "@/lib/center";
+import { syncShuttleWeekdaysToEnrollment } from "@/lib/billing";
 
 export async function bulkInvoiceStatus(formData: FormData) {
   const { supabase, centerId } = await requireCenter();
@@ -58,7 +59,7 @@ export async function markOfflinePayment(formData: FormData) {
 
   const { data: inv, error: getErr } = await supabase
     .from("invoices")
-    .select("id, amount, status")
+    .select("id, amount, status, student_id")
     .eq("center_id", centerId)
     .eq("id", invoiceId)
     .single();
@@ -92,6 +93,12 @@ export async function markOfflinePayment(formData: FormData) {
     .eq("id", invoiceId)
     .eq("center_id", centerId);
   if (updErr) throw new Error("청구서 갱신 실패: " + updErr.message);
+
+  await syncShuttleWeekdaysToEnrollment(
+    supabase,
+    centerId,
+    (inv as { student_id: string }).student_id,
+  );
 
   revalidatePath("/admin/billing");
   revalidatePath("/admin/payment-status");

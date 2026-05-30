@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCenterPg, fetchPortOnePayment } from "@/lib/portone";
+import { syncShuttleWeekdaysToEnrollment } from "@/lib/billing";
 
 // 결제창 성공 후 클라이언트가 호출 → 서버에서 PortOne 조회로 검증.
 export async function POST(request: NextRequest) {
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
 
   const { data: inv } = await supabase
     .from("invoices")
-    .select("id, center_id, amount, status")
+    .select("id, center_id, amount, status, student_id")
     .eq("id", invoiceId)
     .single();
   if (!inv)
@@ -77,6 +78,12 @@ export async function POST(request: NextRequest) {
     paid_at: pay.paidAt ?? nowIso,
     raw: pay.raw as object,
   });
+
+  await syncShuttleWeekdaysToEnrollment(
+    supabase,
+    inv.center_id as string,
+    inv.student_id as string,
+  );
 
   return NextResponse.json({ ok: true });
 }
