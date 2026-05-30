@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
+import { getCenterPg } from "@/lib/portone";
 import { safeIlike } from "@/lib/db-search";
 import CheckRowToggle from "../CheckRowToggle";
-import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
+import PayInvoiceModal from "../billing/PayInvoiceModal";
+import { requestParentPayment } from "../billing/actions";
 import { bulkOverdueAction } from "./actions";
 
 function daysOver(due: string | null): number {
@@ -68,7 +70,11 @@ export default async function OverduePage({
     }
   }
 
-  const [allRes, listRes] = await Promise.all([allQuery, listQuery]);
+  const [allRes, listRes, pg] = await Promise.all([
+    allQuery,
+    listQuery,
+    getCenterPg(supabase, cid),
+  ]);
 
   type Row = {
     id: string;
@@ -118,6 +124,7 @@ export default async function OverduePage({
       </div>
 
       <form action={bulkOverdueAction} className="panel elevated">
+        <input type="hidden" name="back" value="/admin/overdue" />
         <div className="panel-head">
           <p className="panel-title">
             미납 목록{" "}
@@ -134,15 +141,14 @@ export default async function OverduePage({
             <button className="btn warn" name="action" value="알림" type="submit">
               선택 알림 발송
             </button>
-            <ConfirmButton
-              message="선택한 청구를 결제완료(수납)로 처리할까요?"
+            <button
               className="btn primary"
               type="submit"
-              name="action"
-              value="결제완료"
+              formAction={requestParentPayment}
+              title="선택한 청구서를 학부모 포털에 결제 요청 알림으로 보냅니다"
             >
-              선택 수납완료
-            </ConfirmButton>
+              선택 포털 결제 요청
+            </button>
           </div>
         </div>
 
@@ -180,6 +186,7 @@ export default async function OverduePage({
                 <th>납기일</th>
                 <th>경과</th>
                 <th>상태</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -232,12 +239,24 @@ export default async function OverduePage({
                         </span>
                       </Link>
                     </td>
+                    <td className="no-row-toggle">
+                      <PayInvoiceModal
+                        invoiceId={i.id}
+                        studentName={i.students?.name ?? "학생"}
+                        amount={Number(i.amount)}
+                        period={i.period}
+                        dueDate={i.due_date}
+                        storeId={pg.storeId}
+                        channelKey={pg.channelKey}
+                        backUrl="/admin/overdue"
+                      />
+                    </td>
                   </tr>
                 );
               })}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={7}>
+                  <td colSpan={8}>
                     <div className="empty-state">
                       {hasFilter ? (
                         <>

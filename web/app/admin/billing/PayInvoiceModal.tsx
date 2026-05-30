@@ -281,123 +281,117 @@ export default function PayInvoiceModal({
 
                 {channel === "offline" && (
                   <div
-                    className="field span-2"
-                    style={{
-                      padding: 12,
-                      background: "var(--bg)",
-                      border: "1px solid var(--line)",
-                      borderRadius: 8,
-                    }}
+                    className="field span-2 offline-pay-panel"
                   >
-                    <label style={{ marginBottom: 6 }}>수납 방법 *</label>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
-                      {(Object.keys(OFFLINE_LABELS) as OfflineMethod[]).map((m) => {
-                        const on = offlineMethod === m;
-                        return (
-                          <button
-                            key={m}
-                            type="button"
-                            onClick={() => setOfflineMethod(m)}
-                            className={`btn${on ? " primary" : ""}`}
-                            style={{ minHeight: 30, padding: "4px 12px" }}
-                          >
-                            {OFFLINE_LABELS[m]}
-                          </button>
-                        );
-                      })}
+                    <div className="offline-field">
+                      <label>수납 방법 *</label>
+                      <div className="offline-method-chips">
+                        {(Object.keys(OFFLINE_LABELS) as OfflineMethod[]).map((m) => {
+                          const on = offlineMethod === m;
+                          return (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => setOfflineMethod(m)}
+                              className={`btn${on ? " primary" : ""}`}
+                              style={{ minHeight: 32, padding: "4px 14px", flex: 1 }}
+                            >
+                              {OFFLINE_LABELS[m]}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    <label style={{ marginBottom: 6 }}>수납 금액 *</label>
-                    <input
-                      type="text"
-                      value={formattedAmount}
-                      onChange={onReceivedAmountChange}
-                      inputMode="numeric"
-                      placeholder="0"
-                      style={{ marginBottom: amountDiff !== 0 ? 4 : 12 }}
-                    />
-                    {amountDiff !== 0 && (
-                      <span
-                        className="muted"
-                        style={{
-                          fontSize: 12,
-                          color: "var(--orange)",
-                          marginBottom: 12,
-                          display: "block",
-                        }}
-                      >
-                        ⚠ 청구 금액 ({amount.toLocaleString()}원) 과{" "}
-                        {Math.abs(amountDiff).toLocaleString()}원{" "}
-                        {amountDiff > 0 ? "초과" : "부족"} — 진행은 가능합니다.
-                      </span>
-                    )}
+                    <div className="offline-field">
+                      <div className="offline-label-row">
+                        <label>수납 금액 *</label>
+                        <span className="muted" style={{ fontSize: 12 }}>
+                          청구 {amount.toLocaleString()}원
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={formattedAmount}
+                        onChange={onReceivedAmountChange}
+                        inputMode="numeric"
+                        placeholder="0"
+                      />
+                      {amountDiff !== 0 && (
+                        <span className="offline-amount-warn">
+                          ⚠ 청구와 {Math.abs(amountDiff).toLocaleString()}원{" "}
+                          {amountDiff > 0 ? "초과" : "부족"} — 진행은 가능합니다.
+                        </span>
+                      )}
+                    </div>
 
                     {offlineMethod === "offline_cash" && (
-                      <>
-                        <label style={{ marginBottom: 6 }}>메모</label>
+                      <div className="offline-field">
+                        <label>메모</label>
                         <textarea
                           value={memo}
                           onChange={(e) => setMemo(e.target.value)}
                           rows={2}
                           placeholder="영수증 번호 등 (선택)"
                         />
-                      </>
-                    )}
-
-                    {offlineMethod === "offline_card" && (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                        <div>
-                          <label style={{ marginBottom: 6 }}>승인번호</label>
-                          <input
-                            type="text"
-                            value={approvalNo}
-                            onChange={(e) => setApprovalNo(e.target.value)}
-                            placeholder="단말기 영수증 8자리"
-                            inputMode="numeric"
-                          />
-                        </div>
-                        <div>
-                          <label style={{ marginBottom: 6 }}>카드사</label>
-                          <select
-                            value={cardBrand}
-                            onChange={(e) => setCardBrand(e.target.value)}
-                          >
-                            <option value="">선택 안 함</option>
-                            {CARD_BRANDS.map((b) => (
-                              <option key={b} value={b}>
-                                {b}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ marginBottom: 6 }}>승인일자</label>
-                          <DatePickerInput
-                            value={cardApprovedDate}
-                            onChange={setCardApprovedDate}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ marginBottom: 6 }}>승인시간</label>
-                          <TimePickerInput
-                            value={cardApprovedTime}
-                            onChange={setCardApprovedTime}
-                          />
-                        </div>
-                        <span
-                          className="muted"
-                          style={{ fontSize: 12, gridColumn: "1 / -1" }}
-                        >
-                          승인번호 + 승인일시는 단말기 취소 시 원거래 매칭에
-                          사용됩니다. 영수증 보고 입력 권장.
-                        </span>
                       </div>
                     )}
 
+                    {offlineMethod === "offline_card" && (
+                      <>
+                        <div className="offline-grid-2">
+                          <div className="offline-field">
+                            <label>승인번호</label>
+                            <input
+                              type="text"
+                              value={approvalNo}
+                              onChange={(e) => setApprovalNo(e.target.value)}
+                              placeholder="단말기 영수증 8자리"
+                              inputMode="numeric"
+                            />
+                          </div>
+                          <div className="offline-field">
+                            <label>카드사</label>
+                            <select
+                              value={cardBrand}
+                              onChange={(e) => setCardBrand(e.target.value)}
+                            >
+                              <option value="">선택 안 함</option>
+                              {CARD_BRANDS.map((b) => (
+                                <option key={b} value={b}>
+                                  {b}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="offline-grid-2">
+                          <div className="offline-field">
+                            <label>승인일자</label>
+                            <DatePickerInput
+                              value={cardApprovedDate}
+                              onChange={setCardApprovedDate}
+                            />
+                          </div>
+                          <div className="offline-field">
+                            <label>승인시간</label>
+                            <TimePickerInput
+                              value={cardApprovedTime}
+                              onChange={setCardApprovedTime}
+                            />
+                          </div>
+                        </div>
+                        <span className="offline-hint">
+                          승인번호 + 승인일시는 단말기 취소 시 원거래 매칭에
+                          사용됩니다. 영수증 보고 입력 권장.
+                        </span>
+                      </>
+                    )}
+
                     {offlineMethod === "offline_transfer" && (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                        <div style={{ gridColumn: "1 / -1" }}>
-                          <label style={{ marginBottom: 6 }}>입금자명</label>
+                      <>
+                        <div className="offline-field">
+                          <label>입금자명</label>
                           <input
                             type="text"
                             value={transferName}
@@ -405,27 +399,26 @@ export default function PayInvoiceModal({
                             placeholder="통장 표시 이름 (학부모 등)"
                           />
                         </div>
-                        <div>
-                          <label style={{ marginBottom: 6 }}>입금일자</label>
-                          <DatePickerInput
-                            value={transferDate}
-                            onChange={setTransferDate}
-                          />
+                        <div className="offline-grid-2">
+                          <div className="offline-field">
+                            <label>입금일자</label>
+                            <DatePickerInput
+                              value={transferDate}
+                              onChange={setTransferDate}
+                            />
+                          </div>
+                          <div className="offline-field">
+                            <label>입금시간</label>
+                            <TimePickerInput
+                              value={transferTime}
+                              onChange={setTransferTime}
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label style={{ marginBottom: 6 }}>입금시간</label>
-                          <TimePickerInput
-                            value={transferTime}
-                            onChange={setTransferTime}
-                          />
-                        </div>
-                        <span
-                          className="muted"
-                          style={{ fontSize: 12, gridColumn: "1 / -1" }}
-                        >
+                        <span className="offline-hint">
                           통장 내역 매칭을 위해 입력 권장 (선택)
                         </span>
-                      </div>
+                      </>
                     )}
                   </div>
                 )}
