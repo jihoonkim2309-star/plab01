@@ -1,17 +1,10 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
-import CheckRowToggle from "../CheckRowToggle";
-import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
 import PaymentReceipt from "./PaymentReceipt";
-import {
-  setPaymentStatus,
-  setInvoiceStatusInDetail,
-  deleteInvoiceInDetail,
-  seedDummyPayments,
-} from "./actions";
+import { seedDummyPayments } from "./actions";
 
 const SB: Record<string, string> = {
   대기: "gray",
@@ -242,7 +235,7 @@ export default async function PaymentStatusPage({
       </div>
 
       <div className="grid member-layout">
-        <form action={setPaymentStatus} className="panel elevated">
+        <div className="panel elevated">
           <div className="panel-head">
             <p className="panel-title">
               내역{" "}
@@ -252,17 +245,6 @@ export default async function PaymentStatusPage({
                   : `${list.length}건`}
               </span>
             </p>
-            <div className="toolbar">
-              <button className="btn primary" name="status" value="결제완료" type="submit">
-                선택 결제완료
-              </button>
-              <button className="btn warn" name="status" value="실패" type="submit">
-                선택 실패
-              </button>
-              <button className="btn" name="status" value="환불" type="submit">
-                선택 환불
-              </button>
-            </div>
           </div>
           <div className="panel-body" style={{ paddingBottom: 0 }}>
             <FilterBar>
@@ -286,11 +268,10 @@ export default async function PaymentStatusPage({
               )}
             </FilterBar>
           </div>
-          <CheckRowToggle>
+          <div>
             <table>
               <thead>
                 <tr>
-                  <th className="check-cell"></th>
                   <th>학생</th>
                   <th>청구월</th>
                   <th>금액</th>
@@ -304,9 +285,6 @@ export default async function PaymentStatusPage({
                     key={i.id}
                     className={`row-link-host ${i.id === inv ? "selected" : ""}`}
                   >
-                    <td className="check-cell">
-                      <input type="checkbox" name="ids" value={i.id} />
-                    </td>
                     <td>
                       <Link
                         href={`/admin/payment-status?inv=${i.id}${s ? `&s=${encodeURIComponent(s)}` : ""}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
@@ -339,7 +317,7 @@ export default async function PaymentStatusPage({
                 ))}
                 {list.length === 0 && (
                   <tr>
-                    <td colSpan={6}>
+                    <td colSpan={5}>
                       <div className="empty-state">
                         {hasFilter ? (
                           <>
@@ -361,8 +339,8 @@ export default async function PaymentStatusPage({
                 )}
               </tbody>
             </table>
-          </CheckRowToggle>
-        </form>
+          </div>
+        </div>
 
         <div className="panel">
           <div className="panel-head">
@@ -561,68 +539,17 @@ export default async function PaymentStatusPage({
                 </div>
 
                 <div className="detail-block">
-                  <p className="detail-title">수동 상태 처리</p>
-                  <p className="muted" style={{ fontSize: 12, marginBottom: 8 }}>
-                    PG 미사용 수동 수납·환불용. PortOne 결제는 청구 관리에서 진행.
-                  </p>
-                  <div className="action-grid">
-                    {["청구", "결제완료", "실패", "환불"].map((st) => {
-                      const isDestructive = st === "환불";
-                      const btn = (
-                        <button
-                          type="submit"
-                          className={`btn${st === "결제완료" ? " primary" : st === "환불" ? " warn" : st === "실패" ? " danger" : ""}`}
-                          style={{ width: "100%" }}
-                          disabled={detail.status === st}
-                        >
-                          {st === "결제완료"
-                            ? "결제완료 처리"
-                            : st === "환불"
-                              ? "환불 처리"
-                              : st === "실패"
-                                ? "실패 처리"
-                                : "청구로 되돌리기"}
-                        </button>
-                      );
-                      return (
-                        <form
-                          key={st}
-                          action={setInvoiceStatusInDetail.bind(
-                            null,
-                            detail.id,
-                            st,
-                          )}
-                        >
-                          {isDestructive && detail.status !== st ? (
-                            <ConfirmButton
-                              message={`${detail.students?.name ?? "학생"} 의 ${detail.period} 결제를 환불 처리할까요?\n(PortOne 실제 환불 API 호출은 추후 — 현재는 상태만 변경)`}
-                              className="btn warn"
-                              type="submit"
-                              style={{ width: "100%" }}
-                            >
-                              환불 처리
-                            </ConfirmButton>
-                          ) : (
-                            btn
-                          )}
-                        </form>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="detail-block">
-                  <p className="detail-title">위험 영역</p>
-                  <form action={deleteInvoiceInDetail.bind(null, detail.id)}>
-                    <ConfirmButton
-                      message={`'${detail.students?.name ?? "학생"}' 의 ${detail.period} 청구서를 삭제할까요?\n관련 결제 이력(payments)도 함께 삭제됩니다.`}
-                      className="btn danger"
-                      type="submit"
-                      style={{ width: "100%" }}
+                  <p className="detail-title">상태 변경·환불</p>
+                  <p className="muted" style={{ fontSize: 13 }}>
+                    결제 처리·환불·청구서 삭제는{" "}
+                    <Link
+                      href={`/admin/billing?ym=${detail.period}`}
+                      style={{ color: "var(--brand)" }}
                     >
-                      청구서 삭제
-                    </ConfirmButton>
-                  </form>
+                      청구 관리 ({detail.period})
+                    </Link>{" "}
+                    에서 진행하세요.
+                  </p>
                 </div>
 
                 {payments.length > 1 && (
