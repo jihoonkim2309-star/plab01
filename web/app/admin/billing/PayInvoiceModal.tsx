@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import * as PortOne from "@portone/browser-sdk/v2";
+import DatePickerInput from "../DatePickerInput";
+import TimePickerInput from "../TimePickerInput";
 import { markOfflinePayment, requestParentPayment } from "./actions";
 
 type Channel = "parent_portal" | "pg_in_store" | "offline";
@@ -349,18 +351,16 @@ export default function PayInvoiceModal({
                         </div>
                         <div>
                           <label style={{ marginBottom: 6 }}>승인일자</label>
-                          <input
-                            type="date"
+                          <DatePickerInput
                             value={cardApprovedDate}
-                            onChange={(e) => setCardApprovedDate(e.target.value)}
+                            onChange={setCardApprovedDate}
                           />
                         </div>
                         <div>
                           <label style={{ marginBottom: 6 }}>승인시간</label>
-                          <input
-                            type="time"
+                          <TimePickerInput
                             value={cardApprovedTime}
-                            onChange={(e) => setCardApprovedTime(e.target.value)}
+                            onChange={setCardApprovedTime}
                           />
                         </div>
                         <span
@@ -386,18 +386,16 @@ export default function PayInvoiceModal({
                         </div>
                         <div>
                           <label style={{ marginBottom: 6 }}>입금일자</label>
-                          <input
-                            type="date"
+                          <DatePickerInput
                             value={transferDate}
-                            onChange={(e) => setTransferDate(e.target.value)}
+                            onChange={setTransferDate}
                           />
                         </div>
                         <div>
                           <label style={{ marginBottom: 6 }}>입금시간</label>
-                          <input
-                            type="time"
+                          <TimePickerInput
                             value={transferTime}
-                            onChange={(e) => setTransferTime(e.target.value)}
+                            onChange={setTransferTime}
                           />
                         </div>
                         <span

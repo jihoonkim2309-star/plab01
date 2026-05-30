@@ -3,6 +3,8 @@ import PhoneInput from "../PhoneInput";
 import AddressField from "../AddressField";
 import BackLink from "../BackLink";
 import AttendanceDaysPicker from "./AttendanceDaysPicker";
+import DatePickerInput from "../DatePickerInput";
+import MonthPickerInput from "../MonthPickerInput";
 import { PHONE_PLACEHOLDER } from "@/lib/phone";
 
 type Student = Record<string, string | null> | null;
@@ -32,8 +34,6 @@ function Field({
   required?: boolean;
   errorText?: string;
 }) {
-  const dateProps =
-    type === "date" ? { min: "1900-01-01", max: "2100-12-31" } : {};
   return (
     <div
       className={`field${span2 ? " span-2" : ""}`}
@@ -54,6 +54,20 @@ function Field({
           placeholder={placeholder ?? "도로명 주소"}
           required={required}
         />
+      ) : type === "date" ? (
+        <DatePickerInput
+          name={name}
+          value={value ?? ""}
+          required={required}
+          placeholder={placeholder ?? "YYYY-MM-DD"}
+        />
+      ) : type === "month" ? (
+        <MonthPickerInput
+          name={name}
+          value={value ?? ""}
+          required={required}
+          placeholder={placeholder ?? "YYYY-MM"}
+        />
       ) : (
         <input
           name={name}
@@ -61,7 +75,6 @@ function Field({
           defaultValue={value ?? ""}
           placeholder={placeholder}
           required={required}
-          {...dateProps}
         />
       )}
     </div>
