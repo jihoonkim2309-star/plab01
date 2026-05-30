@@ -1759,6 +1759,27 @@
 }
 @keyframes plab-spin { to { transform: rotate(360deg); } }
 
+/* 페이지 전환 시 표시되는 skeleton — SPA 같은 즉각 윤곽 노출. */
+.page-skeleton .skel {
+  background: linear-gradient(90deg, var(--bg) 0%, #edf3ef 50%, var(--bg) 100%);
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+  display: block;
+}
+.page-skeleton .skel-bar {
+  border-radius: 4px;
+}
+.page-skeleton .skel-row {
+  height: 44px;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+@keyframes skel-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* 행 전체 클릭 → 상세. tr 에 row-link-host, 첫 셀 안 a 에 row-link-stretch */
 .row-link-host { position: relative; cursor: pointer; }
 .row-link-host:hover > td { background: rgba(15, 110, 86, 0.05); }

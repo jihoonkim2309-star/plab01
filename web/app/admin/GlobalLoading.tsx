@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
-// 전역 폼 제출 감지 → 결과가 페이지 갱신/이동으로 끝날 때까지 오버레이 표시.
-// 라우트 간 이동의 자동 로딩은 admin/loading.tsx 가 처리, 이 컴포넌트는 액션(폼 제출) 담당.
+// 폼 제출 시 결과까지 오버레이 표시. 페이지 이동(링크 클릭) 은
+// admin/loading.tsx 의 skeleton 이 담당 — 두 오버레이 중복 방지.
 export default function GlobalLoading() {
   const [show, setShow] = useState(false);
   const pathname = usePathname();
@@ -23,37 +23,9 @@ export default function GlobalLoading() {
       if (form.dataset.noLoading === "true") return;
       setShow(true);
     }
-    function onClick(e: MouseEvent) {
-      if (e.defaultPrevented) return;
-      // 일반 좌클릭만 (수정자키 누른 클릭/중간 클릭은 새 탭이므로 제외)
-      if (e.button !== 0) return;
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      const t = e.target as Element | null;
-      const a = t?.closest?.("a") as HTMLAnchorElement | null;
-      if (!a || !a.href) return;
-      if (a.target === "_blank") return;
-      if (a.hasAttribute("download")) return;
-      if (a.dataset.noLoading === "true") return;
-      try {
-        const url = new URL(a.href, window.location.href);
-        if (url.origin !== window.location.origin) return;
-        // 같은 URL이면 네비게이션이 안 일어나므로 표시 안 함 (영구 멈춤 방지)
-        if (
-          url.pathname === window.location.pathname &&
-          url.search === window.location.search &&
-          url.hash === window.location.hash
-        )
-          return;
-        setShow(true);
-      } catch {
-        /* invalid href, 무시 */
-      }
-    }
     document.addEventListener("submit", onSubmit, true);
-    document.addEventListener("click", onClick, true);
     return () => {
       document.removeEventListener("submit", onSubmit, true);
-      document.removeEventListener("click", onClick, true);
     };
   }, []);
 
