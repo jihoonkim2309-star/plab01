@@ -67,12 +67,7 @@ export default function RefundModal({
       </button>
       {open && mounted &&
         createPortal(
-          <div
-            className="modal-backdrop"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setOpen(false);
-            }}
-          >
+          <div className="modal-backdrop">
             <form
               ref={formRef}
               action={refundInvoice}

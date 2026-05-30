@@ -169,12 +169,7 @@ export default function PayInvoiceModal({
       </button>
       {open && mounted &&
         createPortal(
-          <div
-            className="modal-backdrop"
-            onClick={(e) => {
-              if (e.target === e.currentTarget && !busy) setOpen(false);
-            }}
-          >
+          <div className="modal-backdrop">
             <div className="modal-card" style={{ maxWidth: 520 }}>
               <div className="panel-head" style={{ padding: "16px 20px 8px" }}>
                 <p className="panel-title">결제 처리</p>

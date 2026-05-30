@@ -142,12 +142,7 @@ export default function AssignEnrollmentModal({
       </button>
       {open && mounted &&
         createPortal(
-          <div
-            className="modal-backdrop"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setOpen(false);
-            }}
-          >
+          <div className="modal-backdrop">
             <form
               action={assignEnrollment}
               className="modal-card"

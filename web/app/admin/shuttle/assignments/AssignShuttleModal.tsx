@@ -189,12 +189,7 @@ export default function AssignShuttleModal({
       </button>
       {open && mounted &&
         createPortal(
-          <div
-            className="modal-backdrop"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setOpen(false);
-            }}
-          >
+          <div className="modal-backdrop">
             <form
               action={assignShuttle}
               className="modal-card"
