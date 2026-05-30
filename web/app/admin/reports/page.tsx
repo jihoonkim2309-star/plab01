@@ -2,16 +2,12 @@ import Link from "next/link";
 import { requireCenter } from "@/lib/center";
 import { ensureReportsForMonth } from "@/lib/reports";
 import MonthNav from "../MonthNav";
-import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
-import {
-  deleteReport,
-  publishReport,
-  unpublishReport,
-  updateReport,
-} from "./actions";
+import { ReportDrawerProvider } from "./ReportDrawerContext";
+import ReportDetailDrawer from "./ReportDetailDrawer";
+import ReportRowLink from "./ReportRowLink";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function thisMonth() {
@@ -119,7 +115,7 @@ export default async function ReportsPage({
   };
 
   return (
-    <>
+    <ReportDrawerProvider>
       <div className="page-head">
         <div>
           <h1>리포트 관리</h1>
@@ -223,10 +219,11 @@ export default async function ReportsPage({
               {list.map((r) => (
                 <tr
                   key={r.id}
-                  className={`row-link-host ${selected?.id === r.id ? "selected" : ""}`}
+                  className="row-link-host"
                 >
                   <td>
-                    <Link
+                    <ReportRowLink
+                      reportId={r.id}
                       href={navUrl({
                         ym: target,
                         rid: r.id,
@@ -236,7 +233,7 @@ export default async function ReportsPage({
                       style={{ color: "inherit" }}
                     >
                       <strong>{r.students?.name ?? "-"}</strong>
-                    </Link>
+                    </ReportRowLink>
                   </td>
                   <td>
                     <span
@@ -283,140 +280,9 @@ export default async function ReportsPage({
           </table>
         </div>
 
-        {/* 우: 디테일 */}
-        <div className="panel elevated">
-          {!selected || !rDetail ? (
-            <>
-              <div className="panel-head">
-                <p className="panel-title">리포트 상세</p>
-              </div>
-              <div className="panel-body">
-                <div className="empty-state">
-                  <strong>리포트를 선택하세요</strong>
-                  <p>좌측에서 리포트를 선택하면 코멘트·미리보기·발행을 처리할 수 있습니다.</p>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="panel-head">
-                <p className="panel-title">
-                  <Link
-                    href={`/admin/students?student=${selected.student_id}`}
-                    style={{ color: "var(--text)" }}
-                  >
-                    {selected.students?.name ?? "-"}
-                  </Link>{" "}
-                  · {selected.report_type} · {selected.report_month}
-                </p>
-                <span
-                  className={`badge ${STATUS_BADGE[selected.status] ?? "gray"}`}
-                >
-                  {selected.status}
-                </span>
-              </div>
-              <div className="panel-body">
-                {/* 미리보기 — 발행 전엔 최신 측정값으로 항상 라이브 빌드됨 */}
-                <div
-                  className="toolbar"
-                  style={{ justifyContent: "flex-start", marginBottom: 12 }}
-                >
-                  <Link
-                    className="btn"
-                    href={`/admin/reports/${selected.id}/preview`}
-                    target="_blank"
-                  >
-                    PDF 미리보기 (새 창)
-                  </Link>
-                  <span
-                    className="muted"
-                    style={{ fontSize: 12, alignSelf: "center" }}
-                  >
-                    발행 전엔 최신 측정값이 자동 반영됩니다. 발행 시점에 동결.
-                  </span>
-                </div>
-
-                {/* 코멘트/공개 */}
-                <form action={updateReport} className="form-grid">
-                  <input type="hidden" name="id" value={selected.id} />
-                  <div className="field span-2">
-                    <label>코치 코멘트</label>
-                    <textarea
-                      name="coach_comment"
-                      defaultValue={rDetail.coach_comment ?? ""}
-                      rows={3}
-                    />
-                  </div>
-                  <div className="field span-2">
-                    <label>관리자 코멘트</label>
-                    <textarea
-                      name="admin_comment"
-                      defaultValue={rDetail.admin_comment ?? ""}
-                      rows={3}
-                    />
-                  </div>
-                  <div className="field span-2">
-                    <label>학부모 공개</label>
-                    <label
-                      style={{ display: "flex", alignItems: "center", gap: 8 }}
-                    >
-                      <input
-                        name="public_to_parent"
-                        type="checkbox"
-                        defaultChecked={rDetail.public_to_parent}
-                      />
-                      <span className="muted">
-                        체크 시 학부모 앱·링크에 노출 (발행 시 자동 체크됨)
-                      </span>
-                    </label>
-                  </div>
-                  <div
-                    className="span-2 toolbar"
-                    style={{ justifyContent: "flex-start" }}
-                  >
-                    <button className="btn primary" type="submit">
-                      코멘트 저장
-                    </button>
-                  </div>
-                </form>
-
-                {/* 발행 액션 */}
-                <div
-                  className="toolbar"
-                  style={{ justifyContent: "flex-start", marginTop: 12 }}
-                >
-                  {selected.status !== "발행완료" ? (
-                    <form action={publishReport}>
-                      <input type="hidden" name="id" value={selected.id} />
-                      <button className="btn primary" type="submit">
-                        발행
-                      </button>
-                    </form>
-                  ) : (
-                    <form action={unpublishReport}>
-                      <input type="hidden" name="id" value={selected.id} />
-                      <button className="btn" type="submit">
-                        발행 취소
-                      </button>
-                    </form>
-                  )}
-                  <form action={deleteReport}>
-                    <input type="hidden" name="id" value={selected.id} />
-                    <input type="hidden" name="ym" value={target} />
-                    <ConfirmButton
-                      message={`'${selected.students?.name ?? "학생"}'의 ${selected.report_month} 리포트를 삭제할까요?`}
-                      className="btn danger"
-                      type="submit"
-                    >
-                      삭제
-                    </ConfirmButton>
-                  </form>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+        {/* 우: 디테일 (client drawer) */}
+        <ReportDetailDrawer period={target} />
       </div>
-    </>
+    </ReportDrawerProvider>
   );
 }
