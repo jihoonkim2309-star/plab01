@@ -253,7 +253,7 @@ export default function StudentForm({
                   defaultProductId={(s.product_id as string) ?? null}
                 />
                 <Field label="수강 시작일" type="date" />
-                <Field label="청구 시작월" placeholder="예: 2026-04 (자동 계산)" />
+                <Field label="청구 시작월" type="month" />
               </div>
             </div>
           </div>
