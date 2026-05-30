@@ -88,6 +88,27 @@ function fmtFieldValue(key: string, val: unknown): string {
   return String(val);
 }
 
+// CSS 클래스 충돌 가능성 0 — 모두 inline style.
+const BACKDROP_STYLE: React.CSSProperties = {
+  position: "fixed",
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 0,
+  background: "rgba(31, 51, 43, 0.32)",
+  zIndex: 9000,
+  display: "flex",
+  justifyContent: "flex-end",
+};
+
+const PANEL_STYLE: React.CSSProperties = {
+  width: "min(640px, 100%)",
+  height: "100vh",
+  background: "#fff",
+  boxShadow: "-8px 0 32px rgba(31, 51, 43, 0.18)",
+  overflowY: "auto",
+};
+
 export default function StudentDetailDrawer() {
   const { studentId, setStudentId } = useStudentDrawer();
   const [data, setData] = useState<Detail | null>(null);
@@ -122,12 +143,7 @@ export default function StudentDetailDrawer() {
       if (e.key === "Escape") setStudentId(null);
     }
     document.addEventListener("keydown", onEsc);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onEsc);
-      document.body.style.overflow = prev;
-    };
+    return () => document.removeEventListener("keydown", onEsc);
   }, [studentId, setStudentId]);
 
   if (!studentId) return null;
@@ -144,14 +160,14 @@ export default function StudentDetailDrawer() {
     : null;
 
   return (
-    <div className="drawer-backdrop" onClick={() => setStudentId(null)}>
+    <div style={BACKDROP_STYLE} onClick={() => setStudentId(null)}>
       <div
-        className="drawer-panel"
+        style={PANEL_STYLE}
         role="dialog"
         aria-label="학생 상세"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="panel-head" style={{ position: "sticky", top: 0, background: "var(--panel)", zIndex: 1 }}>
+        <div className="panel-head" style={{ position: "sticky", top: 0, background: "#fff", zIndex: 1 }}>
           <p className="panel-title">학생 상세</p>
           <div className="toolbar">
             {selected && data && (
