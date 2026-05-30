@@ -2618,33 +2618,6 @@
   font-weight: 700;
 }
 
-/* 학생 상세 Drawer — 우측 슬라이드. 학생 클릭 시 URL 변경 없이 즉시 표시. */
-.drawer-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(31, 51, 43, 0.32);
-  z-index: 9000;
-  display: flex;
-  justify-content: flex-end;
-  animation: drawer-fade-in 0.18s ease-out;
-}
-.drawer-panel {
-  width: min(640px, 100%);
-  height: 100vh;
-  background: var(--panel);
-  box-shadow: -8px 0 32px rgba(31, 51, 43, 0.18);
-  overflow-y: auto;
-  animation: drawer-slide-in 0.22s ease-out;
-}
-@keyframes drawer-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes drawer-slide-in {
-  from { transform: translateX(40px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
 /* PayInvoiceModal — 오프라인 수납 패널 (portal 안에 그려지므로 admin-shell prefix 금지) */
 .offline-pay-panel {
   padding: 14px;
