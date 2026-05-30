@@ -1,13 +1,11 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ACTIVE_CENTER_COOKIE } from "@/lib/center";
-import RadialPanel from "./dashboard/RadialPanel";
-import MembersPanel from "./dashboard/MembersPanel";
-import RevenueWeekPanel from "./dashboard/RevenueWeekPanel";
-import ChartSkeleton from "./dashboard/ChartSkeleton";
+import RadialRevenueChart from "./dashboard/RadialRevenueChart";
+import MembersDonutChart from "./dashboard/MembersDonutChart";
+import RevenueAreaChart from "./dashboard/RevenueAreaChart";
 import SelectCenterDashboard from "./SelectCenterDashboard";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -129,10 +127,8 @@ export default async function AdminDashboard() {
   const sevenAgoIso = sevenDaysAgo.toISOString().slice(0, 10);
   const todayDow = KOR_DAYS[now.getDay()];
 
-  // 차트/회원분포/주간수납 데이터는 별도 panel (Suspense) 가 자체 fetch — 메인 페이지 응답 가벼움.
   const [
-    totalStudentsRes,
-    newStudentsRes,
+    studentsRes,
     invoicesMonthRes,
     parentLinksRes,
     studentLinksRes,
@@ -146,13 +142,13 @@ export default async function AdminDashboard() {
     upcomingHolRes,
     upcomingMkRes,
     notifLogsRes,
+    paymentsWeekRes,
     prevPaidRes,
     activeEnrollmentsRes,
     centerRes,
     userRes,
   ] = await Promise.all([
-    supabase.from("students").select("*", { count: "exact", head: true }).eq("center_id", cid),
-    supabase.from("students").select("*", { count: "exact", head: true }).eq("center_id", cid).gte("created_at", `${period}-01`),
+    supabase.from("students").select("id, status, created_at").eq("center_id", cid),
     supabase.from("invoices").select("id, amount, status, source, paid_at, period").eq("center_id", cid).eq("period", period),
     supabase.from("parent_student_links").select("id, status").eq("center_id", cid).eq("status", "pending"),
     supabase.from("student_account_links").select("id, status").eq("center_id", cid).eq("status", "pending"),
@@ -218,6 +214,13 @@ export default async function AdminDashboard() {
       .order("created_at", { ascending: false })
       .limit(5),
     supabase
+      .from("payments")
+      .select("amount, paid_at, status")
+      .eq("center_id", cid)
+      .eq("status", "성공")
+      .gte("paid_at", `${sevenAgoIso}T00:00:00`)
+      .lte("paid_at", `${todayIso}T23:59:59`),
+    supabase
       .from("invoices")
       .select("student_id")
       .eq("center_id", cid)
@@ -232,10 +235,17 @@ export default async function AdminDashboard() {
     supabase.auth.getUser(),
   ]);
 
-  // 헬퍼: 카운트 (status 별 분포는 MembersPanel 이 자체 fetch — 여기서는 total + 신규만)
+  // 헬퍼: 카운트
+  const students = studentsRes.data ?? [];
   const invoicesMonth = invoicesMonthRes.data ?? [];
-  const totalStudents = totalStudentsRes.count ?? 0;
-  const newThisMonth = newStudentsRes.count ?? 0;
+  const totalStudents = students.length;
+  const activeStudents = students.filter((s) => s.status === "정상").length;
+  const consultingStudents = students.filter((s) => s.status === "상담중").length;
+  const leaveStudents = students.filter((s) => s.status === "휴원").length;
+  const withdrawnStudents = students.filter((s) => s.status === "탈퇴").length;
+  const newThisMonth = students.filter(
+    (s) => s.created_at && s.created_at.startsWith(period),
+  ).length;
 
   // 매출 펀넬 (예상 → 수납/미납)
   // 예상: 전월 결제완료 학생 중 이번달 active enrollment 의 상품가 합계
@@ -362,6 +372,19 @@ export default async function AdminDashboard() {
     created_at: string | null;
   }[];
 
+  // 7일 수납 추이 (일자별 합계)
+  const week = (paymentsWeekRes.data ?? []) as { amount: number; paid_at: string }[];
+  const days: { date: string; amount: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const sum = week
+      .filter((p) => p.paid_at?.startsWith(key))
+      .reduce((a, b) => a + Number(b.amount), 0);
+    days.push({ date: key, amount: sum });
+  }
+
   const centerName = (centerRes.data as { name: string } | null)?.name ?? "플랜비 본점";
   const userName = userRes.data.user?.user_metadata?.name ?? userRes.data.user?.email?.split("@")[0] ?? "관리자";
 
@@ -409,9 +432,26 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        <Suspense fallback={<div className="panel"><div className="panel-body"><ChartSkeleton height={260} /></div></div>}>
-          <RadialPanel period={period} />
-        </Suspense>
+        <div className="panel">
+          <div className="panel-head">
+            <p className="panel-title">이번 달 수납 진행도</p>
+            <Link className="panel-action" href="/admin/billing">
+              청구 →
+            </Link>
+          </div>
+          <div className="panel-body">
+            <RadialRevenueChart
+              percent={monthPct}
+              paid={monthPaid}
+              target={radialTarget}
+            />
+            {radialOutstanding > 0 && (
+              <div className="muted" style={{ textAlign: "center", fontSize: 12, marginTop: 6 }}>
+                미수납 {fmtKRW(radialOutstanding)}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* ROW 2: 매출 펀넬 KPI (예상 → 수납 / 미납) */}
@@ -557,16 +597,37 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        <Suspense fallback={<div className="panel"><div className="panel-body"><ChartSkeleton height={260} /></div></div>}>
-          <MembersPanel />
-        </Suspense>
+        <div className="panel">
+          <div className="panel-head">
+            <p className="panel-title">회원 상태 분포</p>
+            <Link className="panel-action" href="/admin/students">
+              회원 목록 →
+            </Link>
+          </div>
+          <div className="panel-body">
+            <MembersDonutChart
+              active={activeStudents}
+              consulting={consultingStudents}
+              leave={leaveStudents}
+              withdrawn={withdrawnStudents}
+            />
+          </div>
+        </div>
       </div>
 
       {/* ROW 4: 7일 수납 + 최근 가입 + 최근 결제 (3-col) */}
       <div className="dashboard-row dashboard-row-3col">
-        <Suspense fallback={<div className="panel"><div className="panel-body"><ChartSkeleton height={240} /></div></div>}>
-          <RevenueWeekPanel />
-        </Suspense>
+        <div className="panel">
+          <div className="panel-head">
+            <p className="panel-title">최근 7일 수납 추이</p>
+            <Link className="panel-action" href="/admin/payment-status">
+              결제 상태 →
+            </Link>
+          </div>
+          <div className="panel-body">
+            <RevenueAreaChart data={days} />
+          </div>
+        </div>
 
         <div className="panel">
           <div className="panel-head">
