@@ -24,6 +24,8 @@ type StopOption = {
   sequence: number | null;
   name: string;
 };
+type EnrollmentStatus = "수강중" | "결제대기" | "신규" | "상담중";
+
 type StudentOption = {
   id: string;
   name: string;
@@ -31,6 +33,21 @@ type StudentOption = {
   class_name?: string | null;
   class_start_time?: string | null;
   class_end_time?: string | null;
+  enrollment_status?: EnrollmentStatus | null;
+};
+
+const STATUS_BADGE_CLASS: Record<EnrollmentStatus, string> = {
+  수강중: "green",
+  결제대기: "orange",
+  신규: "gray",
+  상담중: "blue",
+};
+
+const STATUS_NOTE: Record<EnrollmentStatus, string | null> = {
+  수강중: null,
+  결제대기: "이번달 결제대기 상태입니다 — 셔틀 배정은 진행 가능합니다.",
+  신규: "청구서 미발행 (신규 등록) 상태입니다 — 셔틀 배정은 진행 가능합니다.",
+  상담중: "상담중 상태입니다 — 정식 등록 전이지만 셔틀 배정은 진행 가능합니다.",
 };
 
 function parseDays(csv: string | null | undefined): string[] {
@@ -210,10 +227,27 @@ export default function AssignShuttleModal({
                             border: "1px solid var(--line)",
                             borderRadius: 8,
                             fontWeight: 700,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
                           }}
                         >
-                          {fixedStudentName}
+                          <span>{fixedStudentName}</span>
+                          {selectedStudent?.enrollment_status && (
+                            <span
+                              className={`badge ${STATUS_BADGE_CLASS[selectedStudent.enrollment_status]}`}
+                              style={{ fontSize: 11 }}
+                            >
+                              {selectedStudent.enrollment_status}
+                            </span>
+                          )}
                         </div>
+                        {selectedStudent?.enrollment_status &&
+                          STATUS_NOTE[selectedStudent.enrollment_status] && (
+                            <span className="muted" style={{ fontSize: 12 }}>
+                              ⓘ {STATUS_NOTE[selectedStudent.enrollment_status]}
+                            </span>
+                          )}
                       </div>
                       <div className="field span-2">
                         <label>노선 *</label>
@@ -322,22 +356,53 @@ export default function AssignShuttleModal({
                                 ? ` ${hhmm(s.class_start_time)}~`
                                 : "";
                             const cls = s.class_name ? ` · ${s.class_name}${days}${t}` : "";
+                            const stat =
+                              s.enrollment_status && s.enrollment_status !== "수강중"
+                                ? ` [${s.enrollment_status}]`
+                                : "";
                             return (
                               <option key={s.id} value={s.id}>
-                                {s.name}{cls}
+                                {s.name}{stat}{cls}
                               </option>
                             );
                           })}
                         </select>
-                        {selectedStudent?.class_name && (
-                          <span className="muted" style={{ fontSize: 12 }}>
-                            수강: {selectedStudent.class_name}
-                            {selectedStudent.attendance_days ? ` · ${selectedStudent.attendance_days}` : ""}
-                            {selectedStudent.class_start_time
-                              ? ` · ${hhmm(selectedStudent.class_start_time)}${selectedStudent.class_end_time ? `~${hhmm(selectedStudent.class_end_time)}` : ""}`
-                              : ""}
+                        {selectedStudent && (
+                          <span
+                            className="muted"
+                            style={{
+                              fontSize: 12,
+                              display: "flex",
+                              gap: 6,
+                              alignItems: "center",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            {selectedStudent.enrollment_status && (
+                              <span
+                                className={`badge ${STATUS_BADGE_CLASS[selectedStudent.enrollment_status]}`}
+                                style={{ fontSize: 11 }}
+                              >
+                                {selectedStudent.enrollment_status}
+                              </span>
+                            )}
+                            {selectedStudent.class_name && (
+                              <span>
+                                수강: {selectedStudent.class_name}
+                                {selectedStudent.attendance_days ? ` · ${selectedStudent.attendance_days}` : ""}
+                                {selectedStudent.class_start_time
+                                  ? ` · ${hhmm(selectedStudent.class_start_time)}${selectedStudent.class_end_time ? `~${hhmm(selectedStudent.class_end_time)}` : ""}`
+                                  : ""}
+                              </span>
+                            )}
                           </span>
                         )}
+                        {selectedStudent?.enrollment_status &&
+                          STATUS_NOTE[selectedStudent.enrollment_status] && (
+                            <span className="muted" style={{ fontSize: 12 }}>
+                              ⓘ {STATUS_NOTE[selectedStudent.enrollment_status]}
+                            </span>
+                          )}
                       </div>
                     </>
                   )}

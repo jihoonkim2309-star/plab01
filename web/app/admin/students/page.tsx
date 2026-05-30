@@ -114,6 +114,7 @@ export default async function StudentsPage({
     allProductsRes,
     shuttleRoutesRes,
     shuttleStopsRes,
+    selectedInvoiceRes,
   ] = await Promise.all([
     listQuery,
     supabase.from("students").select("status, shuttle_use").eq("center_id", cid),
@@ -163,6 +164,21 @@ export default async function StudentsPage({
           .eq("center_id", cid)
           .order("sequence", { ascending: true })
       : Promise.resolve({ data: [] }),
+    selectedId
+      ? supabase
+          .from("invoices")
+          .select("status")
+          .eq("center_id", cid)
+          .eq("student_id", selectedId)
+          .eq(
+            "period",
+            (() => {
+              const n = new Date();
+              return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`;
+            })(),
+          )
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
   const { data: students, error } = listRes;
   const list = students ?? [];
@@ -177,6 +193,19 @@ export default async function StudentsPage({
     withdrawn: allRows.filter((s) => s.status === "탈퇴").length,
   };
   const selected = selectedRes.data;
+  const selectedInvoiceStatus = (
+    selectedInvoiceRes.data as { status: string } | null
+  )?.status;
+  const selectedEnrollmentStatus: "수강중" | "결제대기" | "신규" | "상담중" | null =
+    selected
+      ? selected.status === "상담중"
+        ? "상담중"
+        : selectedInvoiceStatus === "결제완료"
+          ? "수강중"
+          : selectedInvoiceStatus
+            ? "결제대기"
+            : "신규"
+      : null;
   const linkedParents = (linkedRes.data ?? []) as unknown as {
     status: string;
     parent: {
@@ -454,6 +483,7 @@ export default async function StudentsPage({
                         (selected.classes as { start_time?: string } | null)?.start_time ?? null,
                       class_end_time:
                         (selected.classes as { end_time?: string } | null)?.end_time ?? null,
+                      enrollment_status: selectedEnrollmentStatus,
                     },
                   ]}
                   fixedStudentId={selected.id}

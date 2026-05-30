@@ -77,9 +77,10 @@ export default async function ShuttleRunsPage({
       ? supabase
           .from("students")
           .select(
-            "id, name, attendance_days, class_name, classes(start_time, end_time)",
+            "id, name, status, attendance_days, class_name, classes(start_time, end_time)",
           )
           .eq("center_id", cid)
+          .in("status", ["정상", "상담중"])
           .order("name")
       : Promise.resolve({ data: [] }),
     // 운행 목록 카운트용 — 그 센터의 모든 활성 배정 (route_id, weekdays)
@@ -149,9 +150,33 @@ export default async function ShuttleRunsPage({
     end_time: string | null;
   }[];
   void selectedStopsRes;
+  // 학생별 수강 상태 — 이번달 invoice 결제완료 → '수강중', 그 외 → '결제대기' / '신규' / '상담중'.
+  const now = new Date();
+  const thisPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const invMap = new Map<string, string>();
+  if (selectedId) {
+    const { data: invs } = await supabase
+      .from("invoices")
+      .select("student_id, status")
+      .eq("center_id", cid)
+      .eq("period", thisPeriod);
+    for (const r of (invs ?? []) as { student_id: string; status: string }[]) {
+      invMap.set(r.student_id, r.status);
+    }
+  }
+  const enrollmentStatusOf = (
+    stuStatus: string | null | undefined,
+    invStatus: string | undefined,
+  ): "수강중" | "결제대기" | "신규" | "상담중" => {
+    if (stuStatus === "상담중") return "상담중";
+    if (invStatus === "결제완료") return "수강중";
+    if (invStatus) return "결제대기";
+    return "신규";
+  };
   const allStudents = ((allStudentsRes.data ?? []) as unknown as {
     id: string;
     name: string;
+    status: string | null;
     attendance_days: string | null;
     class_name: string | null;
     classes: { start_time: string | null; end_time: string | null } | null;
@@ -162,6 +187,7 @@ export default async function ShuttleRunsPage({
     class_name: s.class_name,
     class_start_time: s.classes?.start_time ?? null,
     class_end_time: s.classes?.end_time ?? null,
+    enrollment_status: enrollmentStatusOf(s.status, invMap.get(s.id)),
   }));
   const routeAssignments = (assignmentsRes.data ?? []) as unknown as {
     id: string;
