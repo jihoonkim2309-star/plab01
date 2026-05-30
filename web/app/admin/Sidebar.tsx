@@ -245,6 +245,7 @@ export default function Sidebar({
                 <Link
                   key={item.slug}
                   href={item.href}
+                  prefetch={false}
                   className={[
                     "sub",
                     isActive(pathname, item.href, searchParams) ? "active" : "",
