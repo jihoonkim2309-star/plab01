@@ -251,18 +251,6 @@ export default async function StudentsPage({
           <p className="subtext">학생 정보 등록·수정·검색 + 보호자·계정 연결</p>
         </div>
         <div className="toolbar">
-          <ExportLink
-            href={`/api/admin/export/students?${(() => {
-              const p = new URLSearchParams();
-              if (q) p.set("q", q);
-              if (status) p.set("status", status);
-              if (shuttleFilter) p.set("shuttle", shuttleFilter);
-              if (gradeFilter) p.set("grade", gradeFilter);
-              if (sort) p.set("sort", sort);
-              if (dir) p.set("dir", dir);
-              return p.toString();
-            })()}`}
-          />
           <Link className="btn primary" href="/admin/students/new">
             학생 등록
           </Link>
@@ -307,6 +295,20 @@ export default async function StudentsPage({
                   : `${list.length}건`}
               </span>
             </p>
+            <div className="toolbar">
+              <ExportLink
+                href={`/api/admin/export/students?${(() => {
+                  const p = new URLSearchParams();
+                  if (q) p.set("q", q);
+                  if (status) p.set("status", status);
+                  if (shuttleFilter) p.set("shuttle", shuttleFilter);
+                  if (gradeFilter) p.set("grade", gradeFilter);
+                  if (sort) p.set("sort", sort);
+                  if (dir) p.set("dir", dir);
+                  return p.toString();
+                })()}`}
+              />
+            </div>
           </div>
 
           <div className="panel-body" style={{ paddingBottom: 0 }}>
