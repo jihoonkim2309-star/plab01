@@ -42,14 +42,33 @@ export default async function MeasurementsPage({
   const target = ym && /^\d{4}-\d{2}$/.test(ym) ? ym : thisMonth();
   const { supabase, centerId: cid, role } = await requireStaff();
 
+  // 그 달 청구 발행된 학생 (결제완료 + 미납 + 실패, 환불 제외) 만 측정 대상.
+  // 학부모 보류 / 환불 / 청구 없음 학생은 자동 제외 — 학원 운영 모델 반영.
+  const { data: invoiced } = await supabase
+    .from("invoices")
+    .select("student_id")
+    .eq("center_id", cid)
+    .eq("period", target)
+    .in("status", ["결제완료", "청구", "실패"]);
+  const eligibleIds = Array.from(
+    new Set((invoiced ?? []).map((i) => i.student_id).filter(Boolean)),
+  );
+
   // 학생 목록 + 그 달 measurements + 활성 항목 → 한 번에 병렬
+  let studentsQuery = supabase
+    .from("students")
+    .select("id, name, school, grade, gender, birth")
+    .eq("center_id", cid)
+    .eq("status", "정상")
+    .order("name", { ascending: true });
+  if (eligibleIds.length === 0) {
+    studentsQuery = studentsQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+  } else {
+    studentsQuery = studentsQuery.in("id", eligibleIds);
+  }
+
   const [studentsRes, msRes, itemsRes] = await Promise.all([
-    supabase
-      .from("students")
-      .select("id, name, school, grade, gender, birth")
-      .eq("center_id", cid)
-      .eq("status", "정상")
-      .order("name", { ascending: true }),
+    studentsQuery,
     supabase
       .from("measurements")
       .select(
@@ -277,8 +296,13 @@ export default async function MeasurementsPage({
                         </>
                       ) : (
                         <>
-                          <strong>학생이 없습니다</strong>
-                          <p>학생 등록 후 측정을 입력할 수 있습니다.</p>
+                          <strong>측정 대상 학생이 없습니다</strong>
+                          <p>
+                            {target} 청구가 발행된 학생만 측정 대상입니다.{" "}
+                            <Link href={`/admin/renewals?ym=${target}`}>다음 달 수강 확인</Link>
+                            에서 수강 확정 → <Link href={`/admin/billing?ym=${target}`}>청구 관리</Link>
+                            에서 청구 발행이 되어야 합니다.
+                          </p>
                         </>
                       )}
                     </div>
