@@ -10,6 +10,9 @@ import SortHeader from "../SortHeader";
 import ExportLink from "../ExportLink";
 import AssignEnrollmentModal from "../enrollments/AssignEnrollmentModal";
 import AssignShuttleModal from "../shuttle/assignments/AssignShuttleModal";
+import { StudentDrawerProvider } from "./StudentDrawerContext";
+import StudentDetailDrawer from "./StudentDetailDrawer";
+import StudentRowLink from "./StudentRowLink";
 
 const STATUS_BADGE: Record<string, string> = {
   정상: "green",
@@ -244,7 +247,7 @@ export default async function StudentsPage({
   const hasActiveFilter = !!(q || status || shuttleFilter || gradeFilter);
 
   return (
-    <>
+    <StudentDrawerProvider>
       <div className="page-head">
         <div>
           <h1>회원 관리</h1>
@@ -410,13 +413,14 @@ export default async function StudentsPage({
                   className={`row-link-host ${s.id === selectedId ? "selected" : ""}`}
                 >
                   <td>
-                    <Link
+                    <StudentRowLink
+                      studentId={s.id}
                       href={`/admin/students?student=${s.id}`}
                       className="row-link-stretch"
                       style={{ fontWeight: 900, color: "var(--text)" }}
                     >
                       {s.name}
-                    </Link>
+                    </StudentRowLink>
                   </td>
                   <td className="muted">
                     {[s.school, s.grade].filter(Boolean).join(" ") || "-"}
@@ -668,6 +672,7 @@ export default async function StudentsPage({
           </div>
         </div>
       </div>
-    </>
+      <StudentDetailDrawer />
+    </StudentDrawerProvider>
   );
 }
