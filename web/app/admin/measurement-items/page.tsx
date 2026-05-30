@@ -3,8 +3,11 @@ import { requireCenter } from "@/lib/center";
 import FilterBar from "../FilterBar";
 import FilterSelect from "../FilterSelect";
 import SearchInput from "../SearchInput";
-import { seedItems, moveItemUp, moveItemDown } from "./actions";
+import { seedItems } from "./actions";
 import ItemIcon, { IconLibrary } from "./ItemIcon";
+import { ItemDrawerProvider } from "./ItemDrawerContext";
+import ItemDetailDrawer from "./ItemDetailDrawer";
+import ItemRowLink from "./ItemRowLink";
 
 const CAT_BADGE: Record<string, string> = {
   신체: "blue",
@@ -74,7 +77,7 @@ export default async function MeasurementItemsPage({
   const cur = (status as "active" | "inactive" | "all" | undefined) ?? "active";
 
   return (
-    <>
+    <ItemDrawerProvider>
       <IconLibrary />
       <div className="page-head">
         <div>
@@ -159,13 +162,14 @@ export default async function MeasurementItemsPage({
                     />
                   </td>
                   <td>
-                    <Link
+                    <ItemRowLink
+                      itemId={i.id}
                       href={`/admin/measurement-items?item=${i.id}`}
                       className="row-link-stretch"
                       style={{ fontWeight: 900, color: "var(--text)" }}
                     >
                       {i.name}
-                    </Link>
+                    </ItemRowLink>
                   </td>
                   <td className="muted">{i.unit ?? "-"}</td>
                   <td>
@@ -196,77 +200,8 @@ export default async function MeasurementItemsPage({
           </table>
         </div>
 
-        <div className="panel">
-          <div className="panel-head">
-            <p className="panel-title">항목 상세</p>
-            {selected && (
-              <div className="toolbar">
-                <form action={moveItemUp.bind(null, selected.id)}>
-                  <button
-                    type="submit"
-                    className="btn"
-                    disabled={groupSiblings.get(selected.category)?.first === selected.id}
-                    title="같은 카테고리 안에서 위로"
-                  >
-                    ↑
-                  </button>
-                </form>
-                <form action={moveItemDown.bind(null, selected.id)}>
-                  <button
-                    type="submit"
-                    className="btn"
-                    disabled={groupSiblings.get(selected.category)?.last === selected.id}
-                    title="같은 카테고리 안에서 아래로"
-                  >
-                    ↓
-                  </button>
-                </form>
-                <Link className="btn primary" href={`/admin/measurement-items/${selected.id}/edit`}>수정</Link>
-              </div>
-            )}
-          </div>
-          <div className="panel-body">
-            {!selected ? (
-              <div className="empty-state">
-                <strong>선택된 항목이 없습니다</strong>
-                <p>왼쪽 목록에서 항목을 선택해 주세요.</p>
-              </div>
-            ) : (
-              <>
-                <div className="profile-hero" style={{ alignItems: "center" }}>
-                  <div className="avatar" aria-hidden style={{ width: 64, height: 64 }}>
-                    <ItemIcon
-                      name={selected.name}
-                      category={selected.category}
-                      fallback={selected.icon ?? null}
-                      iconUrl={selected.icon_url ?? null}
-                      iconHidden={selected.icon_hidden ?? false}
-                    />
-                  </div>
-                  <div>
-                    <strong style={{ fontSize: 20 }}>{selected.name}</strong>
-                    <div style={{ marginTop: 8 }}>
-                      <span className={`badge ${CAT_BADGE[selected.category] ?? "gray"}`}>{selected.category}</span>{" "}
-                      {selected.active ? <span className="badge green">활성</span> : <span className="badge gray">비활성</span>}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="detail-block">
-                  <p className="detail-title">기본 정보</p>
-                  <div className="info-list">
-                    <div className="info-row"><span>카테고리</span><strong>{selected.category}</strong></div>
-                    <div className="info-row"><span>단위</span><strong>{selected.unit ?? "-"}</strong></div>
-                    <div className="info-row"><span>형식</span><strong>{selected.value_kind}</strong></div>
-                    <div className="info-row"><span>정렬 순서</span><strong>{selected.sort_order}</strong></div>
-                    <div className="info-row"><span>아이콘 숨김</span><strong>{selected.icon_hidden ? "예" : "아니오"}</strong></div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+        <ItemDetailDrawer />
       </div>
-    </>
+    </ItemDrawerProvider>
   );
 }
