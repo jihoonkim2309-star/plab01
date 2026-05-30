@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
+import { ensureReportsForMonth } from "@/lib/reports";
 import MonthNav from "../MonthNav";
 import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
@@ -7,7 +8,6 @@ import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
 import {
   deleteReport,
-  generateReportsForMonth,
   publishReport,
   unpublishReport,
   updateReport,
@@ -39,6 +39,10 @@ export default async function ReportsPage({
   const { ym, rid, q, status, publicTo } = await searchParams;
   const target = ym && /^\d{4}-\d{2}$/.test(ym) ? ym : thisMonth();
   const { supabase, centerId: cid } = await requireCenter();
+
+  // 멱등 리포트 보장 — 청구 관리의 ensureInvoicesForMonth 패턴.
+  // 승인된 측정이 있는데 리포트 없으면 자동 생성, 발행 전 리포트는 snapshot 최신화.
+  const autoCreated = await ensureReportsForMonth(target);
 
   const [listRes, approvedRes, detailRes] = await Promise.all([
     supabase
@@ -123,23 +127,22 @@ export default async function ReportsPage({
         </div>
         <div className="toolbar">
           <MonthNav ym={target} baseUrl="/admin/reports" />
-          <form action={generateReportsForMonth}>
-            <input type="hidden" name="ym" value={target} />
-            <button
-              className="btn primary"
-              type="submit"
-              disabled={approvedCount === 0}
-              title={
-                approvedCount === 0
-                  ? "이 달엔 승인 완료된 측정이 없습니다. '측정 데이터 관리'에서 먼저 채우세요."
-                  : ""
-              }
-            >
-              일괄 생성/누락 보충
-            </button>
-          </form>
         </div>
       </div>
+
+      {autoCreated > 0 && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--green-soft)",
+            borderColor: "#b8dccb",
+            color: "var(--green)",
+            padding: "12px 16px",
+          }}
+        >
+          승인된 측정 {autoCreated}건이 자동으로 리포트로 생성되었습니다.
+        </div>
+      )}
 
       <div className="member-summary">
         <div className="summary-card">
@@ -264,9 +267,11 @@ export default async function ReportsPage({
                         <>
                           <strong>리포트가 없습니다</strong>
                           <p>
-                            승인 완료된 측정이 있으면 위의{" "}
-                            <b>일괄 생성/누락 보충</b> 버튼으로 한 번에 생성할
-                            수 있습니다.
+                            <Link href={`/admin/measurements?ym=${target}`}>
+                              측정 데이터 관리
+                            </Link>
+                            에서 학생 측정값을 입력·승인하면 여기에 리포트가
+                            자동 생성됩니다.
                           </p>
                         </>
                       )}
