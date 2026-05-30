@@ -26,6 +26,21 @@ const CARD_BRANDS = [
   "기타",
 ];
 
+// datetime 자동 마스킹 헬퍼 — raw digit (최대 12자리) ↔ 표시 / ISO
+const digitsOnly = (s: string) => s.replace(/\D/g, "").slice(0, 12);
+function formatDatetime(d: string): string {
+  if (d.length <= 4) return d;
+  if (d.length <= 6) return `${d.slice(0, 4)}-${d.slice(4)}`;
+  if (d.length <= 8) return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6)}`;
+  if (d.length <= 10)
+    return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)} ${d.slice(8)}`;
+  return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)} ${d.slice(8, 10)}:${d.slice(10, 12)}`;
+}
+function datetimeToIso(d: string): string {
+  if (d.length < 12) return "";
+  return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}T${d.slice(8, 10)}:${d.slice(10, 12)}`;
+}
+
 export default function PayInvoiceModal({
   invoiceId,
   studentName,
@@ -328,9 +343,14 @@ export default function PayInvoiceModal({
                         <div>
                           <label style={{ marginBottom: 6 }}>승인일시</label>
                           <input
-                            type="datetime-local"
-                            value={cardApprovedAt}
-                            onChange={(e) => setCardApprovedAt(e.target.value)}
+                            type="text"
+                            value={formatDatetime(cardApprovedAt)}
+                            onChange={(e) =>
+                              setCardApprovedAt(digitsOnly(e.target.value))
+                            }
+                            placeholder="YYYY-MM-DD HH:MM"
+                            inputMode="numeric"
+                            maxLength={16}
                           />
                         </div>
                         <div style={{ gridColumn: "1 / -1" }}>
@@ -371,9 +391,14 @@ export default function PayInvoiceModal({
                         <div>
                           <label style={{ marginBottom: 6 }}>입금 일시</label>
                           <input
-                            type="datetime-local"
-                            value={transferAt}
-                            onChange={(e) => setTransferAt(e.target.value)}
+                            type="text"
+                            value={formatDatetime(transferAt)}
+                            onChange={(e) =>
+                              setTransferAt(digitsOnly(e.target.value))
+                            }
+                            placeholder="YYYY-MM-DD HH:MM"
+                            inputMode="numeric"
+                            maxLength={16}
                           />
                         </div>
                         <span
@@ -424,9 +449,9 @@ export default function PayInvoiceModal({
                 <input type="hidden" name="memo" value={memo} />
                 <input type="hidden" name="approval_no" value={approvalNo} />
                 <input type="hidden" name="card_brand" value={cardBrand} />
-                <input type="hidden" name="card_approved_at" value={cardApprovedAt} />
+                <input type="hidden" name="card_approved_at" value={datetimeToIso(cardApprovedAt)} />
                 <input type="hidden" name="transfer_name" value={transferName} />
-                <input type="hidden" name="transfer_at" value={transferAt} />
+                <input type="hidden" name="transfer_at" value={datetimeToIso(transferAt)} />
                 <input type="hidden" name="back" value={backUrl} />
               </form>
             </div>
