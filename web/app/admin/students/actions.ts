@@ -15,8 +15,6 @@ const FIELDS = [
   "class_id",
   "product_id",
   "attendance_days",
-  "shuttle_use",
-  "route",
   "caution",
   "memo",
   // 신규 — 학생 본인 연락처·주소

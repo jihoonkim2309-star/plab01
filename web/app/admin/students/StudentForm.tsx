@@ -352,37 +352,6 @@ export default function StudentForm({
             </div>
           </div>
 
-          <div className="panel">
-            <div className="panel-head">
-              <p className="panel-title">셔틀/학생 앱</p>
-            </div>
-            <div className="panel-body">
-              <div className="form-grid">
-                <Select
-                  label="셔틀 이용 여부"
-                  name="shuttle_use"
-                  value={s.shuttle_use}
-                  options={["이용", "미이용"]}
-                  span2
-                />
-                <Select
-                  label="노선"
-                  name="route"
-                  value={s.route}
-                  options={["1호차 송도 A", "2호차 청라 B"]}
-                  placeholder="선택 없음"
-                  span2
-                />
-                <Field label="승차 정류장" placeholder="셔틀 운영 시 자동 연결" />
-                <Field label="하차 정류장" placeholder="셔틀 운영 시 자동 연결" />
-                <Field
-                  label="학생 앱 계정"
-                  placeholder="학생 앱 가입 시 자동 연결"
-                  span2
-                />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </form>
