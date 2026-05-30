@@ -10,11 +10,7 @@ import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
 import MonthNav from "../MonthNav";
 import PayInvoiceModal from "./PayInvoiceModal";
-import {
-  bulkInvoiceStatus,
-  deleteInvoice,
-  requestParentPayment,
-} from "./actions";
+import { deleteInvoice, requestParentPayment } from "./actions";
 
 const CHANNEL_LABELS: Record<string, string> = {
   parent_portal: "포털",
@@ -168,8 +164,7 @@ export default async function BillingPage({
         </div>
       </div>
 
-      <form action={bulkInvoiceStatus} className="panel elevated">
-        <input type="hidden" name="period" value={period} />
+      <form action={requestParentPayment} className="panel elevated">
         <input type="hidden" name="back" value={`/admin/billing?ym=${period}`} />
         <div className="panel-head">
           <p className="panel-title">
@@ -192,16 +187,9 @@ export default async function BillingPage({
             <button
               className="btn"
               type="submit"
-              formAction={requestParentPayment}
               title="선택한 청구서를 학부모 포털에 결제 요청 알림으로 보냅니다"
             >
               선택 포털 결제 요청
-            </button>
-            <button className="btn primary" name="status" value="결제완료" type="submit">
-              선택 결제완료
-            </button>
-            <button className="btn warn" name="status" value="실패" type="submit">
-              선택 실패
             </button>
           </div>
         </div>

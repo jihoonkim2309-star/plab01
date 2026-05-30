@@ -5,29 +5,6 @@ import { redirect } from "next/navigation";
 import { requireCenter } from "@/lib/center";
 import { syncShuttleWeekdaysToEnrollment } from "@/lib/billing";
 
-export async function bulkInvoiceStatus(formData: FormData) {
-  const { supabase, centerId } = await requireCenter();
-  const ids = formData.getAll("ids").map(String).filter(Boolean);
-  const status = String(formData.get("status") ?? "");
-  const period = String(formData.get("period") ?? "");
-  if (ids.length === 0) throw new Error("선택된 항목이 없습니다.");
-  if (!["대기", "청구", "결제완료", "실패", "환불"].includes(status))
-    throw new Error("잘못된 상태입니다.");
-
-  const patch: Record<string, string | null> = { status };
-  patch.paid_at = status === "결제완료" ? new Date().toISOString() : null;
-
-  const { error } = await supabase
-    .from("invoices")
-    .update(patch)
-    .in("id", ids)
-    .eq("center_id", centerId);
-  if (error) throw new Error("처리 실패: " + error.message);
-
-  revalidatePath("/admin/billing");
-  redirect(`/admin/billing?ym=${period}`);
-}
-
 export async function deleteInvoice(id: string, period: string) {
   const { supabase, centerId } = await requireCenter();
   const { error } = await supabase
