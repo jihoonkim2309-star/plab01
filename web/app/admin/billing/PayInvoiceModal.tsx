@@ -82,26 +82,26 @@ export default function PayInvoiceModal({
       setChannel("offline");
       setOfflineMethod("offline_cash");
       setMemo("");
-      setReceivedAmount(String(amount));
+      setReceivedAmount("0");
       setApprovalNo("");
       setCardBrand("");
+      setCardApprovedAt("");
       setTransferName("");
-      // datetime-local 기본값 = 지금 (YYYY-MM-DDTHH:MM, 로컬타임존)
-      const now = new Date();
-      const tzOff = now.getTimezoneOffset() * 60000;
-      const localNow = new Date(now.getTime() - tzOff).toISOString().slice(0, 16);
-      setCardApprovedAt(localNow);
-      setTransferAt(localNow);
+      setTransferAt("");
       setBusy(false);
       setMsg(null);
     }
-  }, [open, amount]);
+  }, [open]);
 
-  const receivedNum = Number(receivedAmount.replace(/[^\d-]/g, ""));
-  const amountDiff =
-    Number.isFinite(receivedNum) && receivedAmount !== ""
-      ? receivedNum - amount
-      : 0;
+  const receivedNum = receivedAmount === "" ? 0 : Number(receivedAmount);
+  const amountDiff = receivedNum - amount;
+  const formattedAmount = receivedAmount === "" ? "" : receivedNum.toLocaleString();
+
+  function onReceivedAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
+    // 숫자만 추출 + leading 0 제거 (단 "0" 단독은 유지)
+    const raw = e.target.value.replace(/[^\d]/g, "").replace(/^0+(?=\d)/, "");
+    setReceivedAmount(raw);
+  }
 
   async function payViaPg() {
     if (!storeId || !channelKey) {
@@ -283,12 +283,11 @@ export default function PayInvoiceModal({
 
                     <label style={{ marginBottom: 6 }}>수납 금액 *</label>
                     <input
-                      type="number"
-                      value={receivedAmount}
-                      onChange={(e) => setReceivedAmount(e.target.value)}
-                      min={0}
-                      step={100}
+                      type="text"
+                      value={formattedAmount}
+                      onChange={onReceivedAmountChange}
                       inputMode="numeric"
+                      placeholder="0"
                       style={{ marginBottom: amountDiff !== 0 ? 4 : 12 }}
                     />
                     {amountDiff !== 0 && (
