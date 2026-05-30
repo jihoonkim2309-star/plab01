@@ -9,6 +9,7 @@ import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
 import MonthNav from "../MonthNav";
+import ExportLink from "../ExportLink";
 import PayInvoiceModal from "./PayInvoiceModal";
 import RefundModal from "./RefundModal";
 import { deleteInvoice, requestParentPayment } from "./actions";
@@ -186,6 +187,15 @@ export default async function BillingPage({
             )}
           </p>
           <div className="toolbar">
+            <ExportLink
+              href={`/api/admin/export/billing?${(() => {
+                const p = new URLSearchParams();
+                p.set("ym", period);
+                if (status) p.set("status", status);
+                if (q) p.set("q", q);
+                return p.toString();
+              })()}`}
+            />
             <button
               className="btn"
               type="submit"

@@ -57,7 +57,7 @@ export default function CenterSwitcher({
             <span className="muted">선택한 지점 컨텍스트로 모든 화면이 동작합니다.</span>
           </div>
           {centers.map((c) => (
-            <form action={setActiveCenter} key={c.id}>
+            <form action={setActiveCenter} key={c.id} data-no-loading="true">
               <input type="hidden" name="center_id" value={c.id} />
               <button
                 type="submit"

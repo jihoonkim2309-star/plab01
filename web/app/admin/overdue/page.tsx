@@ -6,6 +6,7 @@ import CheckRowToggle from "../CheckRowToggle";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
+import ExportLink from "../ExportLink";
 import PayInvoiceModal from "../billing/PayInvoiceModal";
 import { requestParentPayment } from "../billing/actions";
 import { bulkOverdueAction } from "./actions";
@@ -135,6 +136,14 @@ export default async function OverduePage({
             </span>
           </p>
           <div className="toolbar">
+            <ExportLink
+              href={`/api/admin/export/overdue?${(() => {
+                const p = new URLSearchParams();
+                if (q) p.set("q", q);
+                if (bucketFilter) p.set("bucket", bucketFilter);
+                return p.toString();
+              })()}`}
+            />
             <button className="btn" name="action" value="재청구" type="submit">
               선택 재청구
             </button>

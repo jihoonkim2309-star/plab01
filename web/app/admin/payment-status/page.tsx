@@ -3,6 +3,7 @@ import { requireCenter } from "@/lib/center";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
+import ExportLink from "../ExportLink";
 import PaymentReceipt from "./PaymentReceipt";
 import { seedDummyPayments } from "./actions";
 
@@ -245,6 +246,16 @@ export default async function PaymentStatusPage({
                   : `${list.length}건`}
               </span>
             </p>
+            <div className="toolbar">
+              <ExportLink
+                href={`/api/admin/export/payment-status?${(() => {
+                  const p = new URLSearchParams();
+                  if (s) p.set("s", s);
+                  if (q) p.set("q", q);
+                  return p.toString();
+                })()}`}
+              />
+            </div>
           </div>
           <div className="panel-body" style={{ paddingBottom: 0 }}>
             <FilterBar>

@@ -8,6 +8,7 @@ import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
+import ExportLink from "../ExportLink";
 import { bulkRenewal, notifyRenewal } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -278,6 +279,15 @@ export default async function RenewalsPage({
             </span>
           </p>
           <div className="toolbar">
+            <ExportLink
+              href={`/api/admin/export/renewals?${(() => {
+                const p = new URLSearchParams();
+                p.set("ym", target);
+                if (q) p.set("q", q);
+                if (status) p.set("status", status);
+                return p.toString();
+              })()}`}
+            />
             <button
               className="btn primary"
               name="status"
