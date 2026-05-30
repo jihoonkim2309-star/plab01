@@ -50,6 +50,7 @@ export default function PayInvoiceModal({
   const [channel, setChannel] = useState<Channel>("offline");
   const [offlineMethod, setOfflineMethod] = useState<OfflineMethod>("offline_cash");
   const [memo, setMemo] = useState("");
+  const [receivedAmount, setReceivedAmount] = useState("");
   const [approvalNo, setApprovalNo] = useState("");
   const [cardBrand, setCardBrand] = useState("");
   const [cardApprovedAt, setCardApprovedAt] = useState("");
@@ -81,6 +82,7 @@ export default function PayInvoiceModal({
       setChannel("offline");
       setOfflineMethod("offline_cash");
       setMemo("");
+      setReceivedAmount(String(amount));
       setApprovalNo("");
       setCardBrand("");
       setTransferName("");
@@ -93,7 +95,13 @@ export default function PayInvoiceModal({
       setBusy(false);
       setMsg(null);
     }
-  }, [open]);
+  }, [open, amount]);
+
+  const receivedNum = Number(receivedAmount.replace(/[^\d-]/g, ""));
+  const amountDiff =
+    Number.isFinite(receivedNum) && receivedAmount !== ""
+      ? receivedNum - amount
+      : 0;
 
   async function payViaPg() {
     if (!storeId || !channelKey) {
@@ -256,7 +264,7 @@ export default function PayInvoiceModal({
                     }}
                   >
                     <label style={{ marginBottom: 6 }}>수납 방법 *</label>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
                       {(Object.keys(OFFLINE_LABELS) as OfflineMethod[]).map((m) => {
                         const on = offlineMethod === m;
                         return (
@@ -272,6 +280,32 @@ export default function PayInvoiceModal({
                         );
                       })}
                     </div>
+
+                    <label style={{ marginBottom: 6 }}>수납 금액 *</label>
+                    <input
+                      type="number"
+                      value={receivedAmount}
+                      onChange={(e) => setReceivedAmount(e.target.value)}
+                      min={0}
+                      step={100}
+                      inputMode="numeric"
+                      style={{ marginBottom: amountDiff !== 0 ? 4 : 12 }}
+                    />
+                    {amountDiff !== 0 && (
+                      <span
+                        className="muted"
+                        style={{
+                          fontSize: 12,
+                          color: "var(--orange)",
+                          marginBottom: 12,
+                          display: "block",
+                        }}
+                      >
+                        ⚠ 청구 금액 ({amount.toLocaleString()}원) 과{" "}
+                        {Math.abs(amountDiff).toLocaleString()}원{" "}
+                        {amountDiff > 0 ? "초과" : "부족"} — 진행은 가능합니다.
+                      </span>
+                    )}
 
                     {offlineMethod === "offline_cash" && (
                       <>
@@ -392,6 +426,7 @@ export default function PayInvoiceModal({
               <form ref={offlineFormRef} action={markOfflinePayment} style={{ display: "none" }}>
                 <input type="hidden" name="invoice_id" value={invoiceId} />
                 <input type="hidden" name="payment_method" value={offlineMethod} />
+                <input type="hidden" name="received_amount" value={receivedAmount} />
                 <input type="hidden" name="memo" value={memo} />
                 <input type="hidden" name="approval_no" value={approvalNo} />
                 <input type="hidden" name="card_brand" value={cardBrand} />

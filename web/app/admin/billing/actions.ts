@@ -30,6 +30,10 @@ export async function markOfflinePayment(formData: FormData) {
   const invoiceId = String(formData.get("invoice_id") ?? "");
   const method = String(formData.get("payment_method") ?? "") as OfflineMethodKey;
   const memo = String(formData.get("memo") ?? "").trim() || null;
+  const receivedAmountRaw = String(formData.get("received_amount") ?? "").trim();
+  const receivedAmountNum = Number(receivedAmountRaw);
+  if (!receivedAmountRaw || !Number.isFinite(receivedAmountNum) || receivedAmountNum < 0)
+    throw new Error("수납 금액이 올바르지 않습니다.");
   // 카드(단말기)용
   const approvalNo = String(formData.get("approval_no") ?? "").trim() || null;
   const cardBrand = String(formData.get("card_brand") ?? "").trim() || null;
@@ -68,6 +72,12 @@ export async function markOfflinePayment(formData: FormData) {
   let payApprovalNo: string | null = null;
   let payPaidAt = now;
   const rawObj: Record<string, unknown> = {};
+  const invoiceAmount = (inv as { amount: number }).amount;
+  // 수납 금액이 청구 금액과 다를 때 추적용
+  if (receivedAmountNum !== invoiceAmount) {
+    rawObj.invoice_amount = invoiceAmount;
+    rawObj.diff = receivedAmountNum - invoiceAmount;
+  }
   if (method === "offline_card") {
     payCardName = cardBrand;
     payApprovalNo = approvalNo;
@@ -87,7 +97,7 @@ export async function markOfflinePayment(formData: FormData) {
   const { error: payErr } = await supabase.from("payments").insert({
     center_id: centerId,
     invoice_id: invoiceId,
-    amount: (inv as { amount: number }).amount,
+    amount: receivedAmountNum,
     status: "성공",
     provider: "offline",
     method: methodLabel,
