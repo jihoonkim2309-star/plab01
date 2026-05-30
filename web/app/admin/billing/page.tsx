@@ -10,6 +10,7 @@ import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
 import MonthNav from "../MonthNav";
 import PayInvoiceModal from "./PayInvoiceModal";
+import RefundModal from "./RefundModal";
 import { deleteInvoice, requestParentPayment } from "./actions";
 
 const CHANNEL_LABELS: Record<string, string> = {
@@ -270,6 +271,16 @@ export default async function BillingPage({
                           dueDate={i.due_date}
                           storeId={pg.storeId}
                           channelKey={pg.channelKey}
+                          backUrl={`/admin/billing?ym=${period}`}
+                        />
+                      )}
+                      {i.status === "결제완료" && (
+                        <RefundModal
+                          invoiceId={i.id}
+                          studentName={i.students?.name ?? "학생"}
+                          amount={Number(i.amount)}
+                          period={period}
+                          paymentMethod={i.payment_method}
                           backUrl={`/admin/billing?ym=${period}`}
                         />
                       )}

@@ -82,6 +82,51 @@ export async function markOfflinePayment(formData: FormData) {
   redirect(back);
 }
 
+// 환불 처리 — 결제완료된 청구서를 환불 상태로 전환 + payments 에 환불 행 기록.
+// PortOne 자동 환불 API 호출은 추후 (Phase 2) — 현재는 상태·기록만.
+export async function refundInvoice(formData: FormData) {
+  const { supabase, centerId } = await requireCenter();
+  const invoiceId = String(formData.get("invoice_id") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim() || null;
+  const back = String(formData.get("back") ?? "/admin/billing");
+  if (!invoiceId) throw new Error("청구서 ID 가 비어 있습니다.");
+
+  const { data: inv, error: getErr } = await supabase
+    .from("invoices")
+    .select("id, amount, status, payment_method")
+    .eq("center_id", centerId)
+    .eq("id", invoiceId)
+    .single();
+  if (getErr || !inv) throw new Error("청구서를 찾을 수 없습니다.");
+  const cur = inv as { status: string; amount: number; payment_method: string | null };
+  if (cur.status !== "결제완료")
+    throw new Error("결제완료된 청구서만 환불 가능합니다.");
+
+  const now = new Date().toISOString();
+
+  const { error: payErr } = await supabase.from("payments").insert({
+    center_id: centerId,
+    invoice_id: invoiceId,
+    amount: cur.amount,
+    status: "환불",
+    provider: cur.payment_method === "pg_in_store" ? "portone" : "offline",
+    paid_at: now,
+    raw: reason ? { refund_reason: reason } : null,
+  });
+  if (payErr) throw new Error("환불 기록 실패: " + payErr.message);
+
+  const { error: updErr } = await supabase
+    .from("invoices")
+    .update({ status: "환불" })
+    .eq("id", invoiceId)
+    .eq("center_id", centerId);
+  if (updErr) throw new Error("청구서 갱신 실패: " + updErr.message);
+
+  revalidatePath("/admin/billing");
+  revalidatePath("/admin/payment-status");
+  redirect(back);
+}
+
 // 학부모 포털 결제 요청 — 알림 큐잉만 (Phase 2 실 전송)
 export async function requestParentPayment(formData: FormData) {
   const { supabase, centerId } = await requireCenter();
