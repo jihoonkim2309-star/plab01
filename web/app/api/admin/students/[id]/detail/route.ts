@@ -1,6 +1,10 @@
 import { type NextRequest } from "next/server";
 import { requireCenter } from "@/lib/center";
 
+// Edge runtime + Seoul region — cold start 0, Supabase Seoul 과 RTT 최소.
+export const runtime = "edge";
+export const preferredRegion = "icn1";
+
 // 학생 상세 — student + linkedParents + currentInvoiceStatus 만 (3 쿼리).
 // 옵션 데이터 (classes/products/routes/stops) 는 page.tsx 가 server-side 에서
 // 한 번 fetch 해서 props 로 전달 — 학생 클릭마다 재호출 없음.
