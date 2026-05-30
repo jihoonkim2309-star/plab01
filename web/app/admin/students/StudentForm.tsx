@@ -320,38 +320,6 @@ export default function StudentForm({
             </div>
           </div>
 
-          <div className="panel">
-            <div className="panel-head">
-              <p className="panel-title">학부모 연결 안내</p>
-              <span className="badge gray">별도 승인</span>
-            </div>
-            <div className="panel-body">
-              <div className="task-list">
-                <div className="task">
-                  <span className="task-mark blue" />
-                  <div>
-                    <strong>학부모 포털 가입</strong>
-                  </div>
-                  <span className="badge blue">Parent</span>
-                </div>
-                <div className="task">
-                  <span className="task-mark" />
-                  <div>
-                    <strong>자녀 검색 후 승인 요청</strong>
-                  </div>
-                  <span className="badge green">요청</span>
-                </div>
-                <div className="task">
-                  <span className="task-mark orange" />
-                  <div>
-                    <strong>Admin 자녀 연결 승인</strong>
-                  </div>
-                  <span className="badge orange">승인</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
     </form>
