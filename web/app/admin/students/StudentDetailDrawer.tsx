@@ -43,6 +43,10 @@ type Detail = {
     status: string;
     parent: { id: string; name: string | null; email: string | null; phone: string | null } | null;
   }[];
+  currentInvoiceStatus: string | null;
+};
+
+export type DrawerOptions = {
   classes: { id: string; name: string; days_of_week: string | null }[];
   products: { id: string; name: string; sessions_per_week: number | null; price: number | null }[];
   routes: {
@@ -52,7 +56,6 @@ type Detail = {
     runs: { weekday: number; start_time: string; end_time: string | null }[] | null;
   }[];
   stops: { id: string; route_id: string; sequence: number | null; name: string }[];
-  currentInvoiceStatus: string | null;
 };
 
 const STATUS_BADGE: Record<string, string> = {
@@ -88,9 +91,13 @@ function fmtFieldValue(key: string, val: unknown): string {
   return String(val);
 }
 
-// 우측 마스터-디테일 패널 (drawer 아님, 일반 panel).
-// 학생 row 클릭 → URL 변경 X → 이 panel 이 자체 fetch (~150ms).
-export default function StudentDetailDrawer() {
+// 우측 마스터-디테일 panel. 옵션 데이터는 server-side 에서 props 로 받음.
+// 학생 클릭 시 3 쿼리만 fetch (student + linkedParents + invoiceStatus).
+export default function StudentDetailDrawer({
+  options,
+}: {
+  options: DrawerOptions;
+}) {
   const { studentId } = useStudentDrawer();
   const [data, setData] = useState<Detail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -139,8 +146,8 @@ export default function StudentDetailDrawer() {
             <AssignEnrollmentModal
               triggerLabel="수강 배정"
               triggerClassName="btn"
-              classes={data.classes}
-              products={data.products}
+              classes={options.classes}
+              products={options.products}
               students={[{ id: selected.id, name: selected.name ?? "" }]}
               fixedStudentId={selected.id}
               backUrl="/admin/students"
@@ -148,13 +155,13 @@ export default function StudentDetailDrawer() {
             <AssignShuttleModal
               triggerLabel="셔틀 배정"
               triggerClassName="btn"
-              routes={data.routes.map((r) => ({
+              routes={options.routes.map((r) => ({
                 id: r.id,
                 name: r.name,
                 direction: r.direction,
                 runs: r.runs ?? [],
               }))}
-              stops={data.stops}
+              stops={options.stops}
               students={[
                 {
                   id: selected.id,

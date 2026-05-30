@@ -109,80 +109,40 @@ export default async function StudentsPage({
   else if (shuttleFilter === "미이용")
     listQuery = listQuery.or("shuttle_use.is.null,shuttle_use.neq.이용");
 
+  // 우측 디테일은 client (StudentDetailDrawer) 가 fetch — 여기선 좌측 목록 + 옵션 데이터만.
   const [
     listRes,
     summaryRes,
-    selectedRes,
-    linkedRes,
     allClassesRes,
     allProductsRes,
     shuttleRoutesRes,
     shuttleStopsRes,
-    selectedInvoiceRes,
   ] = await Promise.all([
     listQuery,
     supabase.from("students").select("status, shuttle_use").eq("center_id", cid),
-    selectedId
-      ? supabase
-          .from("students")
-          .select("*, classes(name, start_time, end_time, days_of_week)")
-          .eq("id", selectedId)
-          .eq("center_id", cid)
-          .single()
-      : Promise.resolve({ data: null }),
-    selectedId
-      ? supabase
-          .from("parent_student_links")
-          .select("status, parent:users(id, name, email, phone)")
-          .eq("center_id", cid)
-          .eq("student_id", selectedId)
-      : Promise.resolve({ data: [] }),
-    selectedId
-      ? supabase
-          .from("classes")
-          .select("id, name, days_of_week")
-          .eq("center_id", cid)
-          .in("status", ["운영", "모집중"])
-          .order("name")
-      : Promise.resolve({ data: [] }),
-    selectedId
-      ? supabase
-          .from("products")
-          .select("id, name, sessions_per_week, price")
-          .eq("center_id", cid)
-          .eq("active", true)
-          .order("sessions_per_week", { ascending: true, nullsFirst: false })
-      : Promise.resolve({ data: [] }),
-    selectedId
-      ? supabase
-          .from("shuttle_routes")
-          .select("id, name, direction, runs:shuttle_runs(weekday, start_time, end_time)")
-          .eq("center_id", cid)
-          .eq("status", "운영")
-          .order("name")
-      : Promise.resolve({ data: [] }),
-    selectedId
-      ? supabase
-          .from("shuttle_stops")
-          .select("id, route_id, sequence, name")
-          .eq("center_id", cid)
-          .order("sequence", { ascending: true })
-      : Promise.resolve({ data: [] }),
-    selectedId
-      ? supabase
-          .from("invoices")
-          .select("status")
-          .eq("center_id", cid)
-          .eq("student_id", selectedId)
-          .eq(
-            "period",
-            (() => {
-              const n = new Date();
-              return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`;
-            })(),
-          )
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
+    supabase
+      .from("classes")
+      .select("id, name, days_of_week")
+      .eq("center_id", cid)
+      .in("status", ["운영", "모집중"])
+      .order("name"),
+    supabase
+      .from("products")
+      .select("id, name, sessions_per_week, price")
+      .eq("center_id", cid)
+      .eq("active", true)
+      .order("sessions_per_week", { ascending: true, nullsFirst: false }),
+    supabase
+      .from("shuttle_routes")
+      .select("id, name, direction, runs:shuttle_runs(weekday, start_time, end_time)")
+      .eq("center_id", cid)
+      .eq("status", "운영")
+      .order("name"),
+    supabase
+      .from("shuttle_stops")
+      .select("id, route_id, sequence, name")
+      .eq("center_id", cid)
+      .order("sequence", { ascending: true }),
   ]);
   const { data: students, error } = listRes;
   const list = students ?? [];
@@ -196,29 +156,6 @@ export default async function StudentsPage({
     leave: allRows.filter((s) => s.status === "휴원").length,
     withdrawn: allRows.filter((s) => s.status === "탈퇴").length,
   };
-  const selected = selectedRes.data;
-  const selectedInvoiceStatus = (
-    selectedInvoiceRes.data as { status: string } | null
-  )?.status;
-  const selectedEnrollmentStatus: "수강중" | "결제대기" | "신규" | "상담중" | null =
-    selected
-      ? selected.status === "상담중"
-        ? "상담중"
-        : selectedInvoiceStatus === "결제완료"
-          ? "수강중"
-          : selectedInvoiceStatus
-            ? "결제대기"
-            : "신규"
-      : null;
-  const linkedParents = (linkedRes.data ?? []) as unknown as {
-    status: string;
-    parent: {
-      id: string;
-      name: string | null;
-      email: string | null;
-      phone: string | null;
-    } | null;
-  }[];
   const allClasses = (allClassesRes.data ?? []) as {
     id: string;
     name: string;
@@ -467,7 +404,14 @@ export default async function StudentsPage({
           </table>
         </div>
 
-        <StudentDetailDrawer />
+        <StudentDetailDrawer
+          options={{
+            classes: allClasses,
+            products: allProducts,
+            routes: shuttleRoutes,
+            stops: shuttleStops,
+          }}
+        />
       </div>
     </StudentDrawerProvider>
   );
