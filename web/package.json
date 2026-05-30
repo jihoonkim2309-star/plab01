@@ -14,11 +14,13 @@
     "@supabase/supabase-js": "^2.105.4",
     "@types/qrcode": "^1.5.6",
     "apexcharts": "^5.12.0",
+    "date-fns": "^4.4.0",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-apexcharts": "^2.1.0",
+    "react-day-picker": "^10.0.1",
     "react-dom": "19.2.4"
   },
   "devDependencies": {

@@ -2450,3 +2450,152 @@
   font-weight: 700;
   color: var(--brand);
 }
+
+/* ========== Date/Month/Time Picker (react-day-picker + custom) ========== */
+.date-picker-root input,
+.month-picker-root input,
+.time-picker-root input {
+  font-variant-numeric: tabular-nums;
+}
+.date-picker-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 1000;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  min-width: 280px;
+}
+.date-picker-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+/* react-day-picker v10 overrides */
+.rdp-root {
+  --rdp-accent-color: var(--brand);
+  --rdp-accent-background-color: var(--green-soft);
+  --rdp-today-color: var(--brand);
+  --rdp-day-font: inherit;
+  --rdp-weekday-font-size: 12px;
+  --rdp-day-height: 36px;
+  --rdp-day-width: 36px;
+  font-size: 13px;
+}
+.rdp-day_button {
+  border-radius: 8px;
+}
+.rdp-day_button:hover:not(.rdp-selected) {
+  background: var(--bg);
+}
+.rdp-selected .rdp-day_button {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+}
+.rdp-today:not(.rdp-selected) .rdp-day_button {
+  color: var(--brand);
+  font-weight: 700;
+}
+.rdp-chevron {
+  fill: var(--brand);
+}
+
+/* Month picker */
+.month-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+.month-picker-nav {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+.month-picker-nav:hover {
+  background: var(--bg);
+}
+.month-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.month-picker-cell {
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.month-picker-cell:hover {
+  background: var(--bg);
+}
+.month-picker-cell.selected {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+  border-color: var(--brand);
+}
+
+/* Time picker */
+.time-picker-popover {
+  min-width: 220px;
+  padding: 8px 8px 12px;
+}
+.time-picker-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.time-picker-col {
+  display: flex;
+  flex-direction: column;
+}
+.time-picker-col-head {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+.time-picker-col-body {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.time-picker-cell {
+  padding: 5px 8px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.time-picker-cell:hover {
+  background: var(--bg);
+}
+.time-picker-cell.selected {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+}
