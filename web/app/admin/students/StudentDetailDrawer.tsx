@@ -88,29 +88,10 @@ function fmtFieldValue(key: string, val: unknown): string {
   return String(val);
 }
 
-// CSS 클래스 충돌 가능성 0 — 모두 inline style.
-const BACKDROP_STYLE: React.CSSProperties = {
-  position: "fixed",
-  top: 0,
-  right: 0,
-  bottom: 0,
-  left: 0,
-  background: "rgba(31, 51, 43, 0.32)",
-  zIndex: 9000,
-  display: "flex",
-  justifyContent: "flex-end",
-};
-
-const PANEL_STYLE: React.CSSProperties = {
-  width: "min(640px, 100%)",
-  height: "100vh",
-  background: "#fff",
-  boxShadow: "-8px 0 32px rgba(31, 51, 43, 0.18)",
-  overflowY: "auto",
-};
-
+// 우측 마스터-디테일 패널 (drawer 아님, 일반 panel).
+// 학생 row 클릭 → URL 변경 X → 이 panel 이 자체 fetch (~150ms).
 export default function StudentDetailDrawer() {
-  const { studentId, setStudentId } = useStudentDrawer();
+  const { studentId } = useStudentDrawer();
   const [data, setData] = useState<Detail | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -137,16 +118,6 @@ export default function StudentDetailDrawer() {
     };
   }, [studentId]);
 
-  useEffect(() => {
-    if (!studentId) return;
-    function onEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") setStudentId(null);
-    }
-    document.addEventListener("keydown", onEsc);
-    return () => document.removeEventListener("keydown", onEsc);
-  }, [studentId, setStudentId]);
-
-  if (!studentId) return null;
   const selected = data?.student;
   const invoiceStatus = data?.currentInvoiceStatus ?? null;
   const enrollmentStatus: "수강중" | "결제대기" | "신규" | "상담중" | null = selected
@@ -160,221 +131,209 @@ export default function StudentDetailDrawer() {
     : null;
 
   return (
-    <div style={BACKDROP_STYLE} onClick={() => setStudentId(null)}>
-      <div
-        style={PANEL_STYLE}
-        role="dialog"
-        aria-label="학생 상세"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="panel-head" style={{ position: "sticky", top: 0, background: "#fff", zIndex: 1 }}>
-          <p className="panel-title">학생 상세</p>
+    <div className="panel">
+      <div className="panel-head">
+        <p className="panel-title">학생 상세</p>
+        {selected && data && (
           <div className="toolbar">
-            {selected && data && (
-              <>
-                <AssignEnrollmentModal
-                  triggerLabel="수강 배정"
-                  triggerClassName="btn"
-                  classes={data.classes}
-                  products={data.products}
-                  students={[{ id: selected.id, name: selected.name ?? "" }]}
-                  fixedStudentId={selected.id}
-                  backUrl="/admin/students"
-                />
-                <AssignShuttleModal
-                  triggerLabel="셔틀 배정"
-                  triggerClassName="btn"
-                  routes={data.routes.map((r) => ({
-                    id: r.id,
-                    name: r.name,
-                    direction: r.direction,
-                    runs: r.runs ?? [],
-                  }))}
-                  stops={data.stops}
-                  students={[
-                    {
-                      id: selected.id,
-                      name: selected.name ?? "",
-                      attendance_days: selected.attendance_days ?? null,
-                      class_name:
-                        selected.classes?.name ?? (selected.class_name ?? null),
-                      class_start_time: selected.classes?.start_time ?? null,
-                      class_end_time: selected.classes?.end_time ?? null,
-                      enrollment_status: enrollmentStatus,
-                    },
-                  ]}
-                  fixedStudentId={selected.id}
-                  backUrl="/admin/students"
-                />
-                <Link
-                  className="btn primary"
-                  href={`/admin/students/${selected.id}/edit?from=${encodeURIComponent("/admin/students")}`}
-                >
-                  수정
-                </Link>
-                <form action={deleteStudent.bind(null, selected.id)}>
-                  <ConfirmButton
-                    message={`'${selected.name ?? "학생"}'을(를) 삭제할까요? 되돌릴 수 없습니다.`}
-                    className="btn danger"
-                    type="submit"
-                  >
-                    삭제
-                  </ConfirmButton>
-                </form>
-              </>
-            )}
-            <button
-              type="button"
-              className="btn"
-              onClick={() => setStudentId(null)}
-              aria-label="닫기"
+            <AssignEnrollmentModal
+              triggerLabel="수강 배정"
+              triggerClassName="btn"
+              classes={data.classes}
+              products={data.products}
+              students={[{ id: selected.id, name: selected.name ?? "" }]}
+              fixedStudentId={selected.id}
+              backUrl="/admin/students"
+            />
+            <AssignShuttleModal
+              triggerLabel="셔틀 배정"
+              triggerClassName="btn"
+              routes={data.routes.map((r) => ({
+                id: r.id,
+                name: r.name,
+                direction: r.direction,
+                runs: r.runs ?? [],
+              }))}
+              stops={data.stops}
+              students={[
+                {
+                  id: selected.id,
+                  name: selected.name ?? "",
+                  attendance_days: selected.attendance_days ?? null,
+                  class_name:
+                    selected.classes?.name ?? (selected.class_name ?? null),
+                  class_start_time: selected.classes?.start_time ?? null,
+                  class_end_time: selected.classes?.end_time ?? null,
+                  enrollment_status: enrollmentStatus,
+                },
+              ]}
+              fixedStudentId={selected.id}
+              backUrl="/admin/students"
+            />
+            <Link
+              className="btn primary"
+              href={`/admin/students/${selected.id}/edit?from=${encodeURIComponent("/admin/students")}`}
             >
-              ✕
-            </button>
+              수정
+            </Link>
+            <form action={deleteStudent.bind(null, selected.id)}>
+              <ConfirmButton
+                message={`'${selected.name ?? "학생"}'을(를) 삭제할까요? 되돌릴 수 없습니다.`}
+                className="btn danger"
+                type="submit"
+              >
+                삭제
+              </ConfirmButton>
+            </form>
           </div>
-        </div>
-
-        <div className="panel-body">
-          {loading && (
-            <div className="empty-state">
-              <div className="muted">불러오는 중...</div>
-            </div>
-          )}
-          {!loading && !selected && (
-            <div className="empty-state">
-              <strong>학생을 찾을 수 없습니다</strong>
-            </div>
-          )}
-          {selected && data && (
-            <>
-              <div className="profile-hero">
-                <div className="avatar">
-                  {selected.photo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={selected.photo_url} alt={selected.name ?? "학생 사진"} />
-                  ) : (
-                    selected.name?.charAt(0)
-                  )}
-                </div>
-                <div>
-                  <strong style={{ fontSize: 20 }}>{selected.name}</strong>
-                  <div className="muted">
-                    {[
-                      selected.class_name,
-                      selected.product,
-                      selected.shuttle_use === "이용" ? "셔틀 이용" : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") || "수강 정보 미입력"}
-                  </div>
-                  <div style={{ marginTop: 9 }}>
-                    <span className={`badge ${STATUS_BADGE[selected.status] ?? "gray"}`}>
-                      {selected.status}
-                    </span>{" "}
-                    <span className="badge gray">{selected.gender}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="detail-block">
-                <p className="detail-title">기본 정보</p>
-                <div className="info-list">
-                  {BASIC.map(([label, key]) => (
-                    <div className="info-row" key={key}>
-                      <span>{label}</span>
-                      <strong>{fmtFieldValue(key, selected[key])}</strong>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="detail-block">
-                <p className="detail-title">수강 / 셔틀</p>
-                <div className="info-list">
-                  {ENROLL.map(([label, key]) => (
-                    <div className="info-row" key={key}>
-                      <span>{label}</span>
-                      <strong>{fmtFieldValue(key, selected[key])}</strong>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="detail-block">
-                <p className="detail-title">보호자 연락처 (어드민 입력)</p>
-                <div className="info-list">
-                  <div className="info-row">
-                    <span>보호자 1</span>
-                    <strong>
-                      {selected.parent1_name || selected.parent1_phone
-                        ? `${selected.parent1_name ?? ""} ${selected.parent1_phone ?? ""}`.trim()
-                        : "-"}
-                    </strong>
-                  </div>
-                  <div className="info-row">
-                    <span>보호자 2</span>
-                    <strong>
-                      {selected.parent2_name || selected.parent2_phone
-                        ? `${selected.parent2_name ?? ""} ${selected.parent2_phone ?? ""}`.trim()
-                        : "-"}
-                    </strong>
-                  </div>
-                </div>
-              </div>
-
-              <div className="detail-block">
-                <p className="detail-title">
-                  연결된 학부모 계정{" "}
-                  <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-                    (포털 가입 + 승인됨)
-                  </span>
-                </p>
-                {data.linkedParents.length === 0 ? (
-                  <div className="muted" style={{ fontSize: 13 }}>
-                    아직 연결된 학부모 계정 없음
-                  </div>
+        )}
+      </div>
+      <div className="panel-body">
+        {!studentId && (
+          <div className="empty-state">
+            <strong>선택된 학생이 없습니다</strong>
+            <p>왼쪽 목록에서 학생을 선택해 주세요.</p>
+          </div>
+        )}
+        {loading && (
+          <div className="empty-state">
+            <div className="muted">불러오는 중...</div>
+          </div>
+        )}
+        {!loading && studentId && !selected && (
+          <div className="empty-state">
+            <strong>학생을 찾을 수 없습니다</strong>
+          </div>
+        )}
+        {selected && data && (
+          <>
+            <div className="profile-hero">
+              <div className="avatar">
+                {selected.photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={selected.photo_url} alt={selected.name ?? "학생 사진"} />
                 ) : (
-                  <div className="info-list">
-                    {data.linkedParents.map((lp, i) => (
-                      <div className="info-row" key={lp.parent?.id ?? i}>
-                        <span>
-                          {lp.parent?.name ?? "(이름없음)"}
-                          <span
-                            className={`badge ${lp.status === "linked" ? "green" : lp.status === "pending" ? "orange" : "gray"}`}
-                            style={{ marginLeft: 6 }}
-                          >
-                            {lp.status === "linked"
-                              ? "연결됨"
-                              : lp.status === "pending"
-                                ? "승인대기"
-                                : lp.status}
-                          </span>
-                        </span>
-                        <strong>
-                          {[lp.parent?.phone, lp.parent?.email].filter(Boolean).join(" · ") || "-"}
-                        </strong>
-                      </div>
-                    ))}
-                  </div>
+                  selected.name?.charAt(0)
                 )}
               </div>
-
-              <div className="detail-block">
-                <p className="detail-title">건강/주의사항</p>
-                <div className="approval-note" style={{ whiteSpace: "pre-wrap" }}>
-                  {selected.caution || "-"}
+              <div>
+                <strong style={{ fontSize: 20 }}>{selected.name}</strong>
+                <div className="muted">
+                  {[
+                    selected.class_name,
+                    selected.product,
+                    selected.shuttle_use === "이용" ? "셔틀 이용" : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || "수강 정보 미입력"}
+                </div>
+                <div style={{ marginTop: 9 }}>
+                  <span className={`badge ${STATUS_BADGE[selected.status] ?? "gray"}`}>
+                    {selected.status}
+                  </span>{" "}
+                  <span className="badge gray">{selected.gender}</span>
                 </div>
               </div>
+            </div>
 
-              <div className="detail-block">
-                <p className="detail-title">운영 메모</p>
-                <div className="approval-note" style={{ whiteSpace: "pre-wrap" }}>
-                  {selected.memo || "-"}
+            <div className="detail-block">
+              <p className="detail-title">기본 정보</p>
+              <div className="info-list">
+                {BASIC.map(([label, key]) => (
+                  <div className="info-row" key={key}>
+                    <span>{label}</span>
+                    <strong>{fmtFieldValue(key, selected[key])}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="detail-block">
+              <p className="detail-title">수강 / 셔틀</p>
+              <div className="info-list">
+                {ENROLL.map(([label, key]) => (
+                  <div className="info-row" key={key}>
+                    <span>{label}</span>
+                    <strong>{fmtFieldValue(key, selected[key])}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="detail-block">
+              <p className="detail-title">보호자 연락처 (어드민 입력)</p>
+              <div className="info-list">
+                <div className="info-row">
+                  <span>보호자 1</span>
+                  <strong>
+                    {selected.parent1_name || selected.parent1_phone
+                      ? `${selected.parent1_name ?? ""} ${selected.parent1_phone ?? ""}`.trim()
+                      : "-"}
+                  </strong>
+                </div>
+                <div className="info-row">
+                  <span>보호자 2</span>
+                  <strong>
+                    {selected.parent2_name || selected.parent2_phone
+                      ? `${selected.parent2_name ?? ""} ${selected.parent2_phone ?? ""}`.trim()
+                      : "-"}
+                  </strong>
                 </div>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+
+            <div className="detail-block">
+              <p className="detail-title">
+                연결된 학부모 계정{" "}
+                <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                  (포털 가입 + 승인됨)
+                </span>
+              </p>
+              {data.linkedParents.length === 0 ? (
+                <div className="muted" style={{ fontSize: 13 }}>
+                  아직 연결된 학부모 계정 없음
+                </div>
+              ) : (
+                <div className="info-list">
+                  {data.linkedParents.map((lp, i) => (
+                    <div className="info-row" key={lp.parent?.id ?? i}>
+                      <span>
+                        {lp.parent?.name ?? "(이름없음)"}
+                        <span
+                          className={`badge ${lp.status === "linked" ? "green" : lp.status === "pending" ? "orange" : "gray"}`}
+                          style={{ marginLeft: 6 }}
+                        >
+                          {lp.status === "linked"
+                            ? "연결됨"
+                            : lp.status === "pending"
+                              ? "승인대기"
+                              : lp.status}
+                        </span>
+                      </span>
+                      <strong>
+                        {[lp.parent?.phone, lp.parent?.email].filter(Boolean).join(" · ") || "-"}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="detail-block">
+              <p className="detail-title">건강/주의사항</p>
+              <div className="approval-note" style={{ whiteSpace: "pre-wrap" }}>
+                {selected.caution || "-"}
+              </div>
+            </div>
+
+            <div className="detail-block">
+              <p className="detail-title">운영 메모</p>
+              <div className="approval-note" style={{ whiteSpace: "pre-wrap" }}>
+                {selected.memo || "-"}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
