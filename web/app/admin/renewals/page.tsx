@@ -439,9 +439,6 @@ export default async function RenewalsPage({
         </CheckRowToggle>
       </form>
 
-      <p className="muted" style={{ marginTop: 10 }}>
-        청구로 이동 <Link href={`/admin/billing?ym=${target}`}>{target} 청구 관리 →</Link>
-      </p>
     </>
   );
 }

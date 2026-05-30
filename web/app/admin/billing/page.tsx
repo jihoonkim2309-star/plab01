@@ -323,11 +323,6 @@ export default async function BillingPage({
         </CheckRowToggle>
       </form>
 
-      <p className="muted" style={{ marginTop: 10 }}>
-        <Link href="/admin/renewals">← 다음 달 수강 확인</Link> ·{" "}
-        <Link href="/admin/payment-status">결제 상태 →</Link> ·{" "}
-        <Link href="/admin/overdue">미납 관리 →</Link>
-      </p>
     </>
   );
 }
