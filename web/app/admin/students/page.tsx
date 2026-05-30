@@ -347,7 +347,7 @@ export default async function StudentsPage({
               {list.map((s) => (
                 <tr
                   key={s.id}
-                  className={`row-link-host ${s.id === selectedId ? "selected" : ""}`}
+                  className="row-link-host"
                 >
                   <td>
                     <StudentRowLink

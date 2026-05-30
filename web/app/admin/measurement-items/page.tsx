@@ -150,7 +150,7 @@ export default async function MeasurementItemsPage({
             </thead>
             <tbody>
               {list.map((i) => (
-                <tr key={i.id} className={`row-link-host ${i.id === selectedId ? "selected" : ""}`}>
+                <tr key={i.id} className="row-link-host">
                   <td><span className={`badge ${CAT_BADGE[i.category] ?? "gray"}`}>{i.category}</span></td>
                   <td>
                     <ItemIcon

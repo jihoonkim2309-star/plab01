@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, type CSSProperties } from "react";
+import { type ReactNode, type CSSProperties, useEffect, useRef } from "react";
 import { useClassDrawer } from "./ClassDrawerContext";
 
 export default function ClassRowLink({
@@ -16,9 +16,21 @@ export default function ClassRowLink({
   style?: CSSProperties;
   children: ReactNode;
 }) {
-  const { setClassId } = useClassDrawer();
+  const { classId: activeId, setClassId } = useClassDrawer();
+  const ref = useRef<HTMLAnchorElement>(null);
+  const isActive = activeId === classId;
+
+  // 부모 tr 의 'selected' 클래스 동기화 (좌측 row 활성 표시)
+  useEffect(() => {
+    const tr = ref.current?.closest("tr");
+    if (!tr) return;
+    if (isActive) tr.classList.add("selected");
+    else tr.classList.remove("selected");
+  }, [isActive]);
+
   return (
     <a
+      ref={ref}
       href={href}
       className={className}
       style={style}

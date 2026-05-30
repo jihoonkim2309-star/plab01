@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, type CSSProperties } from "react";
+import { type ReactNode, type CSSProperties, useEffect, useRef } from "react";
 import { useItemDrawer } from "./ItemDrawerContext";
 
 export default function ItemRowLink({
@@ -16,9 +16,20 @@ export default function ItemRowLink({
   style?: CSSProperties;
   children: ReactNode;
 }) {
-  const { setItemId } = useItemDrawer();
+  const { itemId: activeId, setItemId } = useItemDrawer();
+  const ref = useRef<HTMLAnchorElement>(null);
+  const isActive = activeId === itemId;
+
+  useEffect(() => {
+    const tr = ref.current?.closest("tr");
+    if (!tr) return;
+    if (isActive) tr.classList.add("selected");
+    else tr.classList.remove("selected");
+  }, [isActive]);
+
   return (
     <a
+      ref={ref}
       href={href}
       className={className}
       style={style}

@@ -182,7 +182,7 @@ export default async function ClassesPage({
             </thead>
             <tbody>
               {finalList.map((c) => (
-                <tr key={c.id} className={`row-link-host ${c.id === selectedId ? "selected" : ""}`}>
+                <tr key={c.id} className="row-link-host">
                   <td>
                     <ClassRowLink
                       classId={c.id}
