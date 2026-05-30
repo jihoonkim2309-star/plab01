@@ -1,11 +1,6 @@
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { requireCenter } from "@/lib/center";
-import ChartSkeleton from "./ChartSkeleton";
-
-const RadialRevenueChart = dynamic(() => import("./RadialRevenueChart"), {
-  loading: () => <ChartSkeleton height={240} />,
-});
+import RadialRevenueChart from "./RadialRevenueChart";
 
 const fmtKRW = (n: number) => `${Math.round(n).toLocaleString()}원`;
 

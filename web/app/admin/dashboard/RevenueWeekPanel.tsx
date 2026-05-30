@@ -1,11 +1,6 @@
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { requireCenter } from "@/lib/center";
-import ChartSkeleton from "./ChartSkeleton";
-
-const RevenueAreaChart = dynamic(() => import("./RevenueAreaChart"), {
-  loading: () => <ChartSkeleton height={240} />,
-});
+import RevenueAreaChart from "./RevenueAreaChart";
 
 // 최근 7일 일별 수납액 panel — 자체 payments 쿼리.
 export default async function RevenueWeekPanel() {

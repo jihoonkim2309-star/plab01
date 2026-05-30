@@ -1,11 +1,6 @@
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { requireCenter } from "@/lib/center";
-import ChartSkeleton from "./ChartSkeleton";
-
-const MembersDonutChart = dynamic(() => import("./MembersDonutChart"), {
-  loading: () => <ChartSkeleton height={240} />,
-});
+import MembersDonutChart from "./MembersDonutChart";
 
 // 회원 상태 분포 panel — 자체 students status count 쿼리 (4개 head:true 병렬).
 export default async function MembersPanel() {
