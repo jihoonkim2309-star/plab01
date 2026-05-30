@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
 import BackLink from "../../BackLink";
+import DatePickerInput from "../../DatePickerInput";
 import { createHoliday } from "../actions";
 
 export default async function HolidayNewPage() {
@@ -28,7 +29,7 @@ export default async function HolidayNewPage() {
         <div className="panel-body">
           <div className="field">
             <label>휴강일 *</label>
-            <input name="holiday_date" type="date" min="1900-01-01" max="2100-12-31" required />
+            <DatePickerInput name="holiday_date" required />
           </div>
           <div className="field" style={{ marginTop: 12 }}>
             <label>대상</label>

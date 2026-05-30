@@ -2,6 +2,7 @@ import Link from "next/link";
 import ConfirmButton from "../ConfirmButton";
 import BackLink from "../BackLink";
 import ClassColorPicker from "./ClassColorPicker";
+import TimePickerInput from "../TimePickerInput";
 
 type ClassRow = Record<string, string | number | null> | null;
 
@@ -123,18 +124,16 @@ export default function ClassForm({
             </div>
             <div className="field">
               <label>시작 시간</label>
-              <input
+              <TimePickerInput
                 name="start_time"
-                type="time"
-                defaultValue={v("start_time").slice(0, 5)}
+                value={v("start_time").slice(0, 5)}
               />
             </div>
             <div className="field">
               <label>종료 시간</label>
-              <input
+              <TimePickerInput
                 name="end_time"
-                type="time"
-                defaultValue={v("end_time").slice(0, 5)}
+                value={v("end_time").slice(0, 5)}
               />
             </div>
             <div className="field">

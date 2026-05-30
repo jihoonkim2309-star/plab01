@@ -1,6 +1,7 @@
 import Link from "next/link";
 import BackLink from "../../BackLink";
 import ConfirmButton from "../../ConfirmButton";
+import TimePickerInput from "../../TimePickerInput";
 
 const WEEKDAY_LABEL = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -130,19 +131,17 @@ export default function RunForm({
             </div>
             <div className="field">
               <label>출발 시각 *</label>
-              <input
-                type="time"
+              <TimePickerInput
                 name="start_time"
-                defaultValue={r.start_time ? r.start_time.slice(0, 5) : ""}
+                value={r.start_time ? r.start_time.slice(0, 5) : ""}
                 required
               />
             </div>
             <div className="field">
               <label>종료 시각</label>
-              <input
-                type="time"
+              <TimePickerInput
                 name="end_time"
-                defaultValue={r.end_time ? r.end_time.slice(0, 5) : ""}
+                value={r.end_time ? r.end_time.slice(0, 5) : ""}
               />
             </div>
           </div>

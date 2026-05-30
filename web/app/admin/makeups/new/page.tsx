@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
 import BackLink from "../../BackLink";
+import DatePickerInput from "../../DatePickerInput";
 import { createMakeup } from "../actions";
 
 export default async function MakeupNewPage({
@@ -155,23 +156,14 @@ export default async function MakeupNewPage({
           </div>
           <div className="field" style={{ marginTop: 12 }}>
             <label>원 수업일</label>
-            <input
+            <DatePickerInput
               name="original_date"
-              type="date"
-              min="1900-01-01"
-              max="2100-12-31"
-              defaultValue={preset?.holiday_date ?? ""}
+              value={preset?.holiday_date ?? ""}
             />
           </div>
           <div className="field" style={{ marginTop: 12 }}>
             <label>보강일 *</label>
-            <input
-              name="makeup_date"
-              type="date"
-              min="1900-01-01"
-              max="2100-12-31"
-              required
-            />
+            <DatePickerInput name="makeup_date" required />
           </div>
           <div className="field" style={{ marginTop: 12 }}>
             <label>사유</label>
