@@ -45,9 +45,23 @@ export default function DatePickerInput({
     if (!open) return;
     function reposition() {
       const r = inputRef.current?.getBoundingClientRect();
-      if (r) setCoords({ top: r.bottom + 6, left: r.left });
+      if (!r) return;
+      const popoverH = popoverRef.current?.offsetHeight ?? 380;
+      const popoverW = popoverRef.current?.offsetWidth ?? 320;
+      const margin = 8;
+      let top = r.bottom + 6;
+      if (top + popoverH + margin > window.innerHeight) {
+        top = Math.max(margin, r.top - popoverH - 6);
+      }
+      let left = r.left;
+      if (left + popoverW + margin > window.innerWidth) {
+        left = Math.max(margin, window.innerWidth - popoverW - margin);
+      }
+      setCoords({ top, left });
     }
     reposition();
+    // popover 가 렌더된 후 실제 크기 측정해서 재배치
+    requestAnimationFrame(reposition);
     window.addEventListener("scroll", reposition, true);
     window.addEventListener("resize", reposition);
     return () => {

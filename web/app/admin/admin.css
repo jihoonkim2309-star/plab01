@@ -2459,10 +2459,10 @@
 }
 .date-picker-popover {
   z-index: 9500;
-  background: var(--surface);
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 10px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
   padding: 12px;
   min-width: 280px;
 }
@@ -2534,7 +2534,7 @@
 .month-picker-cell {
   padding: 10px 8px;
   border: 1px solid var(--line);
-  background: var(--surface);
+  background: var(--panel);
   border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
