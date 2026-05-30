@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 // 월 선택 input — popover 안에 [년 ◀ ▶] 헤더 + 12개월 grid.
 // value/onChange = 'YYYY-MM' string.
@@ -21,7 +22,10 @@ export default function MonthPickerInput({
 }) {
   const [internalValue, setInternalValue] = useState(value ?? "");
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   const current = onChange ? (value ?? "") : internalValue;
   const setCurrent = (v: string) => {
@@ -35,6 +39,8 @@ export default function MonthPickerInput({
     return m ? Number(m[1]) : now.getFullYear();
   });
 
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     if (open) {
       const m = current.match(/^(\d{4})-(\d{2})$/);
@@ -42,12 +48,28 @@ export default function MonthPickerInput({
     }
   }, [open, current]);
 
+  useLayoutEffect(() => {
+    if (!open) return;
+    function reposition() {
+      const r = inputRef.current?.getBoundingClientRect();
+      if (r) setCoords({ top: r.bottom + 6, left: r.left });
+    }
+    reposition();
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     function onDocClick(e: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const t = e.target as Node;
+      if (inputRef.current?.contains(t)) return;
+      if (popoverRef.current?.contains(t)) return;
+      setOpen(false);
     }
     function onEsc(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -70,12 +92,9 @@ export default function MonthPickerInput({
   }
 
   return (
-    <div
-      ref={rootRef}
-      className="month-picker-root"
-      style={{ position: "relative" }}
-    >
+    <div className="month-picker-root">
       <input
+        ref={inputRef}
         type="text"
         value={current}
         readOnly
@@ -86,70 +105,76 @@ export default function MonthPickerInput({
         style={{ cursor: disabled ? "not-allowed" : "pointer" }}
       />
       {name && <input type="hidden" name={name} value={current} required={required} />}
-      {open && !disabled && (
-        <div className="date-picker-popover">
-          <div className="month-picker-head">
-            <button
-              type="button"
-              className="month-picker-nav"
-              onClick={() => setYear((y) => y - 1)}
-              aria-label="이전 해"
-            >
-              ‹
-            </button>
-            <strong>{year}년</strong>
-            <button
-              type="button"
-              className="month-picker-nav"
-              onClick={() => setYear((y) => y + 1)}
-              aria-label="다음 해"
-            >
-              ›
-            </button>
-          </div>
-          <div className="month-picker-grid">
-            {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
-              const on = selectedYear === year && selectedMonth === m;
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  className={`month-picker-cell${on ? " selected" : ""}`}
-                  onClick={() => pick(m)}
-                >
-                  {m}월
-                </button>
-              );
-            })}
-          </div>
-          <div className="date-picker-footer">
-            <button
-              type="button"
-              className="btn"
-              style={{ minHeight: 28, padding: "4px 10px" }}
-              onClick={() => {
-                setCurrent("");
-                setOpen(false);
-              }}
-            >
-              비우기
-            </button>
-            <button
-              type="button"
-              className="btn primary"
-              style={{ minHeight: 28, padding: "4px 10px" }}
-              onClick={() => {
-                const y = now.getFullYear();
-                const mm = String(now.getMonth() + 1).padStart(2, "0");
-                setCurrent(`${y}-${mm}`);
-                setOpen(false);
-              }}
-            >
-              이번 달
-            </button>
-          </div>
-        </div>
-      )}
+      {open && !disabled && mounted && coords &&
+        createPortal(
+          <div
+            ref={popoverRef}
+            className="date-picker-popover"
+            style={{ position: "fixed", top: coords.top, left: coords.left }}
+          >
+            <div className="month-picker-head">
+              <button
+                type="button"
+                className="month-picker-nav"
+                onClick={() => setYear((y) => y - 1)}
+                aria-label="이전 해"
+              >
+                ‹
+              </button>
+              <strong>{year}년</strong>
+              <button
+                type="button"
+                className="month-picker-nav"
+                onClick={() => setYear((y) => y + 1)}
+                aria-label="다음 해"
+              >
+                ›
+              </button>
+            </div>
+            <div className="month-picker-grid">
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
+                const on = selectedYear === year && selectedMonth === m;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    className={`month-picker-cell${on ? " selected" : ""}`}
+                    onClick={() => pick(m)}
+                  >
+                    {m}월
+                  </button>
+                );
+              })}
+            </div>
+            <div className="date-picker-footer">
+              <button
+                type="button"
+                className="btn"
+                style={{ minHeight: 28, padding: "4px 10px" }}
+                onClick={() => {
+                  setCurrent("");
+                  setOpen(false);
+                }}
+              >
+                비우기
+              </button>
+              <button
+                type="button"
+                className="btn primary"
+                style={{ minHeight: 28, padding: "4px 10px" }}
+                onClick={() => {
+                  const y = now.getFullYear();
+                  const mm = String(now.getMonth() + 1).padStart(2, "0");
+                  setCurrent(`${y}-${mm}`);
+                  setOpen(false);
+                }}
+              >
+                이번 달
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

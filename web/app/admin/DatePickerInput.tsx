@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { ko } from "date-fns/locale";
@@ -26,7 +27,10 @@ export default function DatePickerInput({
 }) {
   const [internalValue, setInternalValue] = useState(value ?? "");
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const id = useId();
 
   const current = onChange ? (value ?? "") : internalValue;
@@ -35,12 +39,30 @@ export default function DatePickerInput({
     else setInternalValue(v);
   };
 
+  useEffect(() => setMounted(true), []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    function reposition() {
+      const r = inputRef.current?.getBoundingClientRect();
+      if (r) setCoords({ top: r.bottom + 6, left: r.left });
+    }
+    reposition();
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     function onDocClick(e: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const t = e.target as Node;
+      if (inputRef.current?.contains(t)) return;
+      if (popoverRef.current?.contains(t)) return;
+      setOpen(false);
     }
     function onEsc(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -59,12 +81,9 @@ export default function DatePickerInput({
       : undefined;
 
   return (
-    <div
-      ref={rootRef}
-      className="date-picker-root"
-      style={{ position: "relative" }}
-    >
+    <div className="date-picker-root">
       <input
+        ref={inputRef}
         id={id}
         type="text"
         value={current}
@@ -76,56 +95,62 @@ export default function DatePickerInput({
         style={{ cursor: disabled ? "not-allowed" : "pointer" }}
       />
       {name && <input type="hidden" name={name} value={current} required={required} />}
-      {open && !disabled && (
-        <div className="date-picker-popover">
-          <DayPicker
-            mode="single"
-            locale={ko}
-            selected={selected}
-            onSelect={(d) => {
-              if (d) {
-                setCurrent(format(d, "yyyy-MM-dd"));
-                setOpen(false);
-              }
-            }}
-            captionLayout="dropdown"
-            startMonth={new Date(1990, 0)}
-            endMonth={new Date(2050, 11)}
-            showOutsideDays
-            classNames={{
-              root: "rdp-root",
-              day_button: "rdp-day_button",
-              selected: "rdp-selected",
-              today: "rdp-today",
-              chevron: "rdp-chevron",
-            }}
-          />
-          <div className="date-picker-footer">
-            <button
-              type="button"
-              className="btn"
-              style={{ minHeight: 28, padding: "4px 10px" }}
-              onClick={() => {
-                setCurrent("");
-                setOpen(false);
+      {open && !disabled && mounted && coords &&
+        createPortal(
+          <div
+            ref={popoverRef}
+            className="date-picker-popover"
+            style={{ position: "fixed", top: coords.top, left: coords.left }}
+          >
+            <DayPicker
+              mode="single"
+              locale={ko}
+              selected={selected}
+              onSelect={(d) => {
+                if (d) {
+                  setCurrent(format(d, "yyyy-MM-dd"));
+                  setOpen(false);
+                }
               }}
-            >
-              비우기
-            </button>
-            <button
-              type="button"
-              className="btn primary"
-              style={{ minHeight: 28, padding: "4px 10px" }}
-              onClick={() => {
-                setCurrent(format(new Date(), "yyyy-MM-dd"));
-                setOpen(false);
+              captionLayout="dropdown"
+              startMonth={new Date(1990, 0)}
+              endMonth={new Date(2050, 11)}
+              showOutsideDays
+              classNames={{
+                root: "rdp-root",
+                day_button: "rdp-day_button",
+                selected: "rdp-selected",
+                today: "rdp-today",
+                chevron: "rdp-chevron",
               }}
-            >
-              오늘
-            </button>
-          </div>
-        </div>
-      )}
+            />
+            <div className="date-picker-footer">
+              <button
+                type="button"
+                className="btn"
+                style={{ minHeight: 28, padding: "4px 10px" }}
+                onClick={() => {
+                  setCurrent("");
+                  setOpen(false);
+                }}
+              >
+                비우기
+              </button>
+              <button
+                type="button"
+                className="btn primary"
+                style={{ minHeight: 28, padding: "4px 10px" }}
+                onClick={() => {
+                  setCurrent(format(new Date(), "yyyy-MM-dd"));
+                  setOpen(false);
+                }}
+              >
+                오늘
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

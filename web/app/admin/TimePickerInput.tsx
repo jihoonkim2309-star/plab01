@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 // 시간 선택 input — popover 안 [시간 select | 분 select] 또는 grid.
 // value/onChange = 'HH:MM' string.
@@ -24,7 +25,10 @@ export default function TimePickerInput({
 }) {
   const [internalValue, setInternalValue] = useState(value ?? "");
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   const current = onChange ? (value ?? "") : internalValue;
   const setCurrent = (v: string) => {
@@ -32,12 +36,30 @@ export default function TimePickerInput({
     else setInternalValue(v);
   };
 
+  useEffect(() => setMounted(true), []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    function reposition() {
+      const r = inputRef.current?.getBoundingClientRect();
+      if (r) setCoords({ top: r.bottom + 6, left: r.left });
+    }
+    reposition();
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     function onDocClick(e: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const t = e.target as Node;
+      if (inputRef.current?.contains(t)) return;
+      if (popoverRef.current?.contains(t)) return;
+      setOpen(false);
     }
     function onEsc(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -62,12 +84,9 @@ export default function TimePickerInput({
   }
 
   return (
-    <div
-      ref={rootRef}
-      className="time-picker-root"
-      style={{ position: "relative" }}
-    >
+    <div className="time-picker-root">
       <input
+        ref={inputRef}
         type="text"
         value={current}
         readOnly
@@ -78,73 +97,79 @@ export default function TimePickerInput({
         style={{ cursor: disabled ? "not-allowed" : "pointer" }}
       />
       {name && <input type="hidden" name={name} value={current} required={required} />}
-      {open && !disabled && (
-        <div className="date-picker-popover time-picker-popover">
-          <div className="time-picker-columns">
-            <div className="time-picker-col">
-              <div className="time-picker-col-head">시</div>
-              <div className="time-picker-col-body">
-                {Array.from({ length: 24 }, (_, i) => i).map((h) => {
-                  const on = selectedHour === h;
-                  return (
-                    <button
-                      key={h}
-                      type="button"
-                      className={`time-picker-cell${on ? " selected" : ""}`}
-                      onClick={() => set(h, selectedMinute ?? 0)}
-                    >
-                      {String(h).padStart(2, "0")}
-                    </button>
-                  );
-                })}
+      {open && !disabled && mounted && coords &&
+        createPortal(
+          <div
+            ref={popoverRef}
+            className="date-picker-popover time-picker-popover"
+            style={{ position: "fixed", top: coords.top, left: coords.left }}
+          >
+            <div className="time-picker-columns">
+              <div className="time-picker-col">
+                <div className="time-picker-col-head">시</div>
+                <div className="time-picker-col-body">
+                  {Array.from({ length: 24 }, (_, i) => i).map((h) => {
+                    const on = selectedHour === h;
+                    return (
+                      <button
+                        key={h}
+                        type="button"
+                        className={`time-picker-cell${on ? " selected" : ""}`}
+                        onClick={() => set(h, selectedMinute ?? 0)}
+                      >
+                        {String(h).padStart(2, "0")}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="time-picker-col">
+                <div className="time-picker-col-head">분</div>
+                <div className="time-picker-col-body">
+                  {minutes.map((mi) => {
+                    const on = selectedMinute === mi;
+                    return (
+                      <button
+                        key={mi}
+                        type="button"
+                        className={`time-picker-cell${on ? " selected" : ""}`}
+                        onClick={() => set(selectedHour ?? 0, mi)}
+                      >
+                        {String(mi).padStart(2, "0")}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-            <div className="time-picker-col">
-              <div className="time-picker-col-head">분</div>
-              <div className="time-picker-col-body">
-                {minutes.map((mi) => {
-                  const on = selectedMinute === mi;
-                  return (
-                    <button
-                      key={mi}
-                      type="button"
-                      className={`time-picker-cell${on ? " selected" : ""}`}
-                      onClick={() => set(selectedHour ?? 0, mi)}
-                    >
-                      {String(mi).padStart(2, "0")}
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="date-picker-footer">
+              <button
+                type="button"
+                className="btn"
+                style={{ minHeight: 28, padding: "4px 10px" }}
+                onClick={() => {
+                  setCurrent("");
+                  setOpen(false);
+                }}
+              >
+                비우기
+              </button>
+              <button
+                type="button"
+                className="btn primary"
+                style={{ minHeight: 28, padding: "4px 10px" }}
+                onClick={() => {
+                  const now = new Date();
+                  set(now.getHours(), Math.round(now.getMinutes() / step) * step);
+                  setOpen(false);
+                }}
+              >
+                지금
+              </button>
             </div>
-          </div>
-          <div className="date-picker-footer">
-            <button
-              type="button"
-              className="btn"
-              style={{ minHeight: 28, padding: "4px 10px" }}
-              onClick={() => {
-                setCurrent("");
-                setOpen(false);
-              }}
-            >
-              비우기
-            </button>
-            <button
-              type="button"
-              className="btn primary"
-              style={{ minHeight: 28, padding: "4px 10px" }}
-              onClick={() => {
-                const now = new Date();
-                set(now.getHours(), Math.round(now.getMinutes() / step) * step);
-                setOpen(false);
-              }}
-            >
-              지금
-            </button>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
