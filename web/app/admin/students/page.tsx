@@ -323,10 +323,11 @@ export default async function StudentsPage({
                   { value: "탈퇴", label: "탈퇴" },
                 ]}
               />
-              <StatusChips
+              <FilterSelect
                 param="shuttle"
                 current={shuttleFilter}
-                allLabel="셔틀 전체"
+                placeholder="셔틀 전체"
+                ariaLabel="셔틀 필터"
                 options={[
                   { value: "이용", label: "이용" },
                   { value: "미이용", label: "미이용" },
