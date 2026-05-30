@@ -30,6 +30,15 @@ export async function markOfflinePayment(formData: FormData) {
   const invoiceId = String(formData.get("invoice_id") ?? "");
   const method = String(formData.get("payment_method") ?? "") as OfflineMethodKey;
   const memo = String(formData.get("memo") ?? "").trim() || null;
+  // 카드(단말기)용
+  const approvalNo = String(formData.get("approval_no") ?? "").trim() || null;
+  const cardBrand = String(formData.get("card_brand") ?? "").trim() || null;
+  // 계좌이체용
+  const transferName = String(formData.get("transfer_name") ?? "").trim() || null;
+  const transferAtRaw = String(formData.get("transfer_at") ?? "").trim();
+  const transferAt = transferAtRaw
+    ? new Date(transferAtRaw).toISOString()
+    : null;
   const back = String(formData.get("back") ?? "/admin/billing");
   if (!invoiceId) throw new Error("청구서 ID 가 비어 있습니다.");
   if (!(method in OFFLINE_METHODS)) throw new Error("결제 수단이 올바르지 않습니다.");
@@ -47,6 +56,27 @@ export async function markOfflinePayment(formData: FormData) {
   const now = new Date().toISOString();
   const methodLabel = OFFLINE_METHODS[method];
 
+  // 수단별 컬럼·raw 분기:
+  //   현금       → raw.memo
+  //   카드(단말기) → approval_no + card_name 컬럼 + raw.memo
+  //   계좌이체    → raw.transfer_name + raw.transfer_at (+ memo)
+  let payCardName: string | null = null;
+  let payApprovalNo: string | null = null;
+  const rawObj: Record<string, unknown> = {};
+  if (method === "offline_card") {
+    payCardName = cardBrand;
+    payApprovalNo = approvalNo;
+    if (memo) rawObj.memo = memo;
+  } else if (method === "offline_transfer") {
+    if (transferName) rawObj.transfer_name = transferName;
+    if (transferAt) rawObj.transfer_at = transferAt;
+    if (memo) rawObj.memo = memo;
+  } else {
+    // offline_cash
+    if (memo) rawObj.memo = memo;
+  }
+  const payRaw = Object.keys(rawObj).length > 0 ? rawObj : null;
+
   const { error: payErr } = await supabase.from("payments").insert({
     center_id: centerId,
     invoice_id: invoiceId,
@@ -54,8 +84,10 @@ export async function markOfflinePayment(formData: FormData) {
     status: "성공",
     provider: "offline",
     method: methodLabel,
-    paid_at: now,
-    raw: memo ? { memo } : null,
+    card_name: payCardName,
+    approval_no: payApprovalNo,
+    paid_at: method === "offline_transfer" && transferAt ? transferAt : now,
+    raw: payRaw,
   });
   if (payErr) throw new Error("결제 기록 실패: " + payErr.message);
 

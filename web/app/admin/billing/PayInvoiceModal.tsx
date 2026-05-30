@@ -14,11 +14,17 @@ const OFFLINE_LABELS: Record<OfflineMethod, string> = {
   offline_transfer: "계좌이체",
 };
 
-const MEMO_PLACEHOLDER: Record<OfflineMethod, string> = {
-  offline_cash: "영수증 번호 등 (선택)",
-  offline_card: "승인번호 (선택)",
-  offline_transfer: "입금자명 (선택)",
-};
+const CARD_BRANDS = [
+  "신한카드",
+  "삼성카드",
+  "국민카드",
+  "현대카드",
+  "롯데카드",
+  "BC카드",
+  "우리카드",
+  "농협카드",
+  "기타",
+];
 
 export default function PayInvoiceModal({
   invoiceId,
@@ -44,6 +50,10 @@ export default function PayInvoiceModal({
   const [channel, setChannel] = useState<Channel>("offline");
   const [offlineMethod, setOfflineMethod] = useState<OfflineMethod>("offline_cash");
   const [memo, setMemo] = useState("");
+  const [approvalNo, setApprovalNo] = useState("");
+  const [cardBrand, setCardBrand] = useState("");
+  const [transferName, setTransferName] = useState("");
+  const [transferAt, setTransferAt] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -70,6 +80,13 @@ export default function PayInvoiceModal({
       setChannel("offline");
       setOfflineMethod("offline_cash");
       setMemo("");
+      setApprovalNo("");
+      setCardBrand("");
+      setTransferName("");
+      // 입금 일시 기본값 = 지금 (datetime-local 형식: YYYY-MM-DDTHH:MM)
+      const now = new Date();
+      const tzOff = now.getTimezoneOffset() * 60000;
+      setTransferAt(new Date(now.getTime() - tzOff).toISOString().slice(0, 16));
       setBusy(false);
       setMsg(null);
     }
@@ -252,13 +269,81 @@ export default function PayInvoiceModal({
                         );
                       })}
                     </div>
-                    <label style={{ marginBottom: 6 }}>메모</label>
-                    <textarea
-                      value={memo}
-                      onChange={(e) => setMemo(e.target.value)}
-                      rows={2}
-                      placeholder={MEMO_PLACEHOLDER[offlineMethod]}
-                    />
+
+                    {offlineMethod === "offline_cash" && (
+                      <>
+                        <label style={{ marginBottom: 6 }}>메모</label>
+                        <textarea
+                          value={memo}
+                          onChange={(e) => setMemo(e.target.value)}
+                          rows={2}
+                          placeholder="영수증 번호 등 (선택)"
+                        />
+                      </>
+                    )}
+
+                    {offlineMethod === "offline_card" && (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <div>
+                          <label style={{ marginBottom: 6 }}>승인번호</label>
+                          <input
+                            type="text"
+                            value={approvalNo}
+                            onChange={(e) => setApprovalNo(e.target.value)}
+                            placeholder="단말기 영수증 8자리"
+                            inputMode="numeric"
+                          />
+                        </div>
+                        <div>
+                          <label style={{ marginBottom: 6 }}>카드사</label>
+                          <select
+                            value={cardBrand}
+                            onChange={(e) => setCardBrand(e.target.value)}
+                          >
+                            <option value="">선택 안 함</option>
+                            {CARD_BRANDS.map((b) => (
+                              <option key={b} value={b}>
+                                {b}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <span
+                          className="muted"
+                          style={{ fontSize: 12, gridColumn: "1 / -1" }}
+                        >
+                          추후 환불·매출 조회 매칭을 위해 입력 권장 (선택)
+                        </span>
+                      </div>
+                    )}
+
+                    {offlineMethod === "offline_transfer" && (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <div>
+                          <label style={{ marginBottom: 6 }}>입금자명</label>
+                          <input
+                            type="text"
+                            value={transferName}
+                            onChange={(e) => setTransferName(e.target.value)}
+                            placeholder="통장 표시 이름 (학부모 등)"
+                          />
+                        </div>
+                        <div>
+                          <label style={{ marginBottom: 6 }}>입금 일시</label>
+                          <input
+                            type="datetime-local"
+                            value={transferAt}
+                            onChange={(e) => setTransferAt(e.target.value)}
+                          />
+                        </div>
+                        <span
+                          className="muted"
+                          style={{ fontSize: 12, gridColumn: "1 / -1" }}
+                        >
+                          통장 내역 매칭을 위해 입력 권장 (선택)
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -296,6 +381,10 @@ export default function PayInvoiceModal({
                 <input type="hidden" name="invoice_id" value={invoiceId} />
                 <input type="hidden" name="payment_method" value={offlineMethod} />
                 <input type="hidden" name="memo" value={memo} />
+                <input type="hidden" name="approval_no" value={approvalNo} />
+                <input type="hidden" name="card_brand" value={cardBrand} />
+                <input type="hidden" name="transfer_name" value={transferName} />
+                <input type="hidden" name="transfer_at" value={transferAt} />
                 <input type="hidden" name="back" value={backUrl} />
               </form>
             </div>
