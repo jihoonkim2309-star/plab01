@@ -54,7 +54,11 @@ export default async function ClassesPage({
   const [listRes, allRes, studRes, selectedRes, selectedStudentsRes, allStudentsRes, productsRes] = await Promise.all([
     listQuery,
     supabase.from("classes").select("status").eq("center_id", cid),
-    supabase.from("students").select("class_id").eq("center_id", cid),
+    supabase
+      .from("students")
+      .select("class_id")
+      .eq("center_id", cid)
+      .eq("status", "정상"),
     selectedId
       ? supabase
           .from("classes")
@@ -69,6 +73,7 @@ export default async function ClassesPage({
           .select("id, name, attendance_days, status")
           .eq("center_id", cid)
           .eq("class_id", selectedId)
+          .eq("status", "정상")
           .order("name")
       : Promise.resolve({ data: [] }),
     selectedId
@@ -76,6 +81,7 @@ export default async function ClassesPage({
           .from("students")
           .select("id, name")
           .eq("center_id", cid)
+          .eq("status", "정상")
           .order("name")
       : Promise.resolve({ data: [] }),
     selectedId
@@ -328,7 +334,7 @@ export default async function ClassesPage({
                   </div>
                   {selectedStudents.length === 0 ? (
                     <div className="muted" style={{ fontSize: 13 }}>
-                      이 클래스에 배정된 학생이 없습니다.
+                      이 클래스에 배정된 정상 회원이 없습니다 (휴원·탈퇴 제외).
                     </div>
                   ) : (
                     <table>
