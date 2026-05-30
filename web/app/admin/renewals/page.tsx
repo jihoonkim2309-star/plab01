@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
+import { ensureEnrollmentsForCenter } from "@/lib/enrollments";
 import { safeIlike } from "@/lib/db-search";
 import { checkRenewalGate } from "@/lib/renewal";
 import CheckRowToggle from "../CheckRowToggle";
@@ -7,7 +8,7 @@ import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
-import { syncEnrollments, bulkRenewal, notifyRenewal } from "./actions";
+import { bulkRenewal, notifyRenewal } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function nextMonth(ym?: string) {
@@ -47,6 +48,10 @@ export default async function RenewalsPage({
   const gate = checkRenewalGate(
     (center as { renewal_check_day: number | null } | null)?.renewal_check_day,
   );
+
+  // 멱등 enrollment 보충 — 청구·리포트 패턴 일관.
+  // 학생에 상품 지정됐는데 수강중 enrollment 없는 학생 자동 생성.
+  const autoEnrolled = await ensureEnrollmentsForCenter();
 
   // 서버 ilike — q 가 학생명 또는 상품명에 매칭되면 그 ID 들로 enrollments 좁히기
   const qSafe = safeIlike(q);
@@ -162,11 +167,6 @@ export default async function RenewalsPage({
         </div>
         <div className="toolbar">
           <MonthNav ym={target} baseUrl="/admin/renewals" />
-          <form action={syncEnrollments}>
-            <button className="btn" type="submit">
-              수강 등록 동기화
-            </button>
-          </form>
           <form action={notifyRenewal}>
             <input type="hidden" name="target_month" value={target} />
             <button
@@ -198,6 +198,20 @@ export default async function RenewalsPage({
           }}
         >
           학부모·학생 알림 {notified} 건 발송 큐에 등록되었습니다 (FCM/알림톡 라이브 시 자동 전송).
+        </div>
+      )}
+
+      {autoEnrolled > 0 && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--green-soft)",
+            borderColor: "#b8dccb",
+            color: "var(--green)",
+            padding: "12px 16px",
+          }}
+        >
+          상품 지정된 학생 {autoEnrolled}건이 자동으로 수강 등록되었습니다.
         </div>
       )}
 
@@ -426,7 +440,8 @@ export default async function RenewalsPage({
                         <>
                           <strong>수강중 등록이 없습니다</strong>
                           <p>
-                            학생에 수강료 상품을 지정한 뒤 "수강 등록 동기화" 를 누르세요.
+                            <Link href="/admin/students">학생 관리</Link>에서
+                            학생에 수강료 상품을 지정하면 자동으로 여기에 표시됩니다.
                           </p>
                         </>
                       )}

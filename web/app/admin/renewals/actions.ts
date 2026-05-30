@@ -5,42 +5,6 @@ import { redirect } from "next/navigation";
 import { requireCenter } from "@/lib/center";
 import { checkRenewalGate } from "@/lib/renewal";
 
-// 상품이 지정된 학생 중 활성 수강등록(enrollment)이 없는 경우 자동 생성.
-export async function syncEnrollments() {
-  const { supabase, centerId } = await requireCenter();
-
-  const { data: studs } = await supabase
-    .from("students")
-    .select("id, class_id, product_id, attendance_days")
-    .eq("center_id", centerId)
-    .not("product_id", "is", null);
-
-  const { data: existing } = await supabase
-    .from("enrollments")
-    .select("student_id")
-    .eq("center_id", centerId)
-    .eq("status", "수강중");
-  const have = new Set((existing ?? []).map((e) => e.student_id));
-
-  const rows = (studs ?? [])
-    .filter((s) => !have.has(s.id))
-    .map((s) => ({
-      center_id: centerId,
-      student_id: s.id,
-      class_id: s.class_id,
-      product_id: s.product_id,
-      attendance_days: s.attendance_days,
-      status: "수강중",
-    }));
-
-  if (rows.length) {
-    const { error } = await supabase.from("enrollments").insert(rows);
-    if (error) throw new Error("동기화 실패: " + error.message);
-  }
-  revalidatePath("/admin/renewals");
-  redirect("/admin/renewals");
-}
-
 export async function bulkRenewal(formData: FormData) {
   const { supabase, centerId } = await requireCenter();
 
