@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
-import { checkPromotionGate } from "@/lib/promotion";
+import { checkPromotionGate, ensurePromotionsForYear } from "@/lib/promotion";
 import {
   bulkSetStatus,
   setGradePromotionStatus,
@@ -47,6 +47,9 @@ export default async function GradePromotionsPage({
 }) {
   const { sel, status, year, q } = await searchParams;
   const { supabase, centerId: cid } = await requireCenter();
+
+  // 처리일 도래 후 자동 ensure (청구/리포트/수강 패턴 일관)
+  const autoCreated = await ensurePromotionsForYear();
 
   // 필터 무관 카운트 + 학년도 옵션을 위해 전체 한 번 + 필터 적용 목록 한 번
   let listQuery = supabase
@@ -120,27 +123,21 @@ export default async function GradePromotionsPage({
           <h1>진학/학년 승급 관리</h1>
           <p className="subtext">매년 처리일에 학생 학년·학교를 일괄 승급 처리</p>
         </div>
-        <div className="toolbar">
-          {gate.state === "after" ? (
-            <Link className="btn primary" href="/admin/grade-promotions/new">
-              승급 대상 일괄 생성
-            </Link>
-          ) : (
-            <button
-              className="btn primary"
-              type="button"
-              disabled
-              title={
-                gate.state === "not-configured"
-                  ? "설정에서 처리일을 먼저 지정하세요"
-                  : `처리일까지 D-${gate.daysLeft}`
-              }
-            >
-              승급 대상 일괄 생성
-            </button>
-          )}
-        </div>
       </div>
+
+      {autoCreated > 0 && (
+        <div
+          className="panel"
+          style={{
+            background: "var(--green-soft)",
+            borderColor: "#b8dccb",
+            color: "var(--green)",
+            padding: "12px 16px",
+          }}
+        >
+          정상 학생 {autoCreated}건이 자동으로 승급 대상에 추가되었습니다.
+        </div>
+      )}
 
       {gate.state === "not-configured" && (
         <div

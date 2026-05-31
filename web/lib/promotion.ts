@@ -52,3 +52,67 @@ export function checkPromotionGate(
   }
   return { state: "after", targetDate: isoTarget, promotionDay };
 }
+
+// 페이지 진입 시 자동 호출. 처리일 도래 후 그 학년도 승급 행 없는 학생 자동 insert (멱등).
+// 청구/리포트/수강확인 ensure* 패턴과 일관. 반환: 신규 생성된 승급 행 수.
+import { requireCenter } from "./center";
+
+export async function ensurePromotionsForYear(): Promise<number> {
+  const { supabase, centerId } = await requireCenter();
+
+  const { data: center } = await supabase
+    .from("centers")
+    .select("promotion_day")
+    .eq("id", centerId)
+    .maybeSingle();
+  const gate = checkPromotionGate(
+    (center as { promotion_day: string | null } | null)?.promotion_day,
+  );
+  if (gate.state !== "after") return 0;
+
+  const schoolYear = String(new Date().getFullYear());
+
+  // 정상 상태 학생 + 그 학년도 기존 승급 행 — 병렬
+  const [studsRes, existingRes] = await Promise.all([
+    supabase
+      .from("students")
+      .select("id, grade")
+      .eq("center_id", centerId)
+      .eq("status", "정상"),
+    supabase
+      .from("grade_promotions")
+      .select("student_id")
+      .eq("center_id", centerId)
+      .eq("school_year", schoolYear),
+  ]);
+  const studs = (studsRes.data ?? []) as { id: string; grade: string | null }[];
+  if (studs.length === 0) return 0;
+
+  const existingSet = new Set(
+    (existingRes.data ?? []).map((r) => r.student_id),
+  );
+
+  const rows: Array<Record<string, unknown>> = [];
+  for (const s of studs) {
+    if (existingSet.has(s.id)) continue;
+    const to = nextGrade(s.grade);
+    if (!to) continue; // 졸업/대상 아님
+    const meta = promoMeta(to);
+    rows.push({
+      center_id: centerId,
+      student_id: s.id,
+      school_year: schoolYear,
+      from_grade: s.grade ?? null,
+      to_grade: to,
+      to_school: null,
+      promo_type: meta.type,
+      needs_parent_input: meta.needsParentInput,
+      status: meta.needsParentInput ? "학부모 입력 요청" : "진학 확인 필요",
+    });
+  }
+  if (rows.length === 0) return 0;
+
+  const { error } = await supabase.from("grade_promotions").insert(rows);
+  if (error) throw new Error("승급 자동 생성 실패: " + error.message);
+  return rows.length;
+}
