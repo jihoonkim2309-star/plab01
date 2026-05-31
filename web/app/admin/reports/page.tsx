@@ -38,17 +38,12 @@ export default async function ReportsPage({
 }) {
   const { ym, rid, q, status } = await searchParams;
   const target = ym && /^\d{4}-\d{2}$/.test(ym) ? ym : thisMonth();
-  const tP = Date.now();
   const { supabase, centerId: cid } = await requireCenter();
-  console.log("[reports/page] requireCenter", Date.now() - tP, "ms");
 
   // 멱등 리포트 보장 — 청구 관리의 ensureInvoicesForMonth 패턴.
   // 승인된 측정이 있는데 리포트 없으면 자동 생성, 발행 전 리포트는 snapshot 최신화.
-  const tE = Date.now();
   const autoCreated = await ensureReportsForMonth(target);
-  console.log("[reports/page] ensureReports", Date.now() - tE, "ms");
 
-  const tQ = Date.now();
   const [listRes, approvedRes, detailRes] = await Promise.all([
     supabase
       .from("reports")
@@ -76,7 +71,6 @@ export default async function ReportsPage({
           .maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
-  console.log("[reports/page] queries", Date.now() - tQ, "ms");
   const allList = (listRes.data ?? []) as unknown as {
     id: string;
     student_id: string;

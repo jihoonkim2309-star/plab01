@@ -4,11 +4,13 @@ import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
+import BulkSelectAll from "../BulkSelectAll";
+import BulkSubmitButton from "../BulkSubmitButton";
+import CheckRowToggle from "../CheckRowToggle";
 import { MeasurementDrawerProvider } from "./MeasurementDrawerContext";
 import MeasurementDetailDrawer from "./MeasurementDetailDrawer";
 import MeasurementRowLink from "./MeasurementRowLink";
-import { approveAllInputComplete } from "./actions";
-import ConfirmButton from "../ConfirmButton";
+import { bulkMeasurementAction } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function thisMonth() {
@@ -161,17 +163,6 @@ export default async function MeasurementsPage({
           <p className="subtext">월별 측정값 입력 → 승인 시 리포트 관리에서 자동 생성</p>
         </div>
         <div className="toolbar">
-          {cnt("입력완료") > 0 && (
-            <form action={approveAllInputComplete}>
-              <input type="hidden" name="ym" value={target} />
-              <ConfirmButton
-                className="btn primary"
-                message={`${target} 입력완료 ${cnt("입력완료")}건을 모두 승인할까요? 승인 후 리포트가 자동 생성됩니다.`}
-              >
-                입력완료 {cnt("입력완료")}건 일괄 승인
-              </ConfirmButton>
-            </form>
-          )}
           <MonthNav
             ym={target}
             baseUrl="/admin/measurements"
@@ -206,6 +197,8 @@ export default async function MeasurementsPage({
       <div className="grid account-layout">
         {/* 좌: 학생 목록 */}
         <div className="panel elevated">
+         <form action={bulkMeasurementAction}>
+          <input type="hidden" name="ym" value={target} />
           <div className="panel-head">
             <p className="panel-title">
               학생 ({target}){" "}
@@ -215,6 +208,25 @@ export default async function MeasurementsPage({
                   : `${list.length}건`}
               </span>
             </p>
+            <div className="toolbar">
+              <BulkSubmitButton
+                name="action"
+                value="approve"
+                label="승인"
+                emptyLabel="선택 승인"
+                matchSelector='[data-status="입력완료"]'
+                confirmMessage="선택한 측정을 승인할까요? 승인 후 리포트가 자동 생성됩니다."
+              />
+              <BulkSubmitButton
+                name="action"
+                value="reopen"
+                label="대기로"
+                emptyLabel="대기로 되돌리기"
+                variant="default"
+                matchSelector=':is([data-status="입력완료"], [data-status="승인완료"], [data-status="반려"])'
+                confirmMessage="선택한 측정을 대기 상태로 되돌릴까요? (반려 사유·검토 기록 초기화)"
+              />
+            </div>
           </div>
           <div className="panel-body" style={{ paddingBottom: 0 }}>
             <FilterBar>
@@ -240,9 +252,13 @@ export default async function MeasurementsPage({
               )}
             </FilterBar>
           </div>
+          <CheckRowToggle>
           <table>
             <thead>
               <tr>
+                <th className="check-cell">
+                  <BulkSelectAll />
+                </th>
                 <th>학생</th>
                 <th>학교/학년</th>
                 <th>상태</th>
@@ -256,6 +272,14 @@ export default async function MeasurementsPage({
                     key={s.id}
                     className="row-link-host"
                   >
+                    <td className="check-cell">
+                      <input
+                        type="checkbox"
+                        name="ids"
+                        value={s.id}
+                        data-status={st}
+                      />
+                    </td>
                     <td>
                       <MeasurementRowLink
                         studentId={s.id}
@@ -286,7 +310,7 @@ export default async function MeasurementsPage({
               })}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={3}>
+                  <td colSpan={4}>
                     <div className="empty-state">
                       {hasFilter ? (
                         <>
@@ -310,6 +334,8 @@ export default async function MeasurementsPage({
               )}
             </tbody>
           </table>
+          </CheckRowToggle>
+         </form>
         </div>
 
         <MeasurementDetailDrawer ym={target} items={items ?? []} isAdmin={isAdmin} />
