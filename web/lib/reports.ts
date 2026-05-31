@@ -49,7 +49,7 @@ export async function ensureReportsForMonth(ym: string): Promise<number> {
     const ex = existingByStudent.get(m.student_id);
     if (ex?.status === "발행완료") continue;
 
-    const { snapshot } = await buildSnapshot(supabase, m.student_id, ym);
+    const { snapshot } = await buildSnapshot(supabase, m.student_id, ym, centerId);
     if (ex) {
       const { error } = await supabase
         .from("reports")

@@ -108,6 +108,7 @@ export async function buildSnapshot(
   supabase: Supa,
   studentId: string,
   ym: string,
+  centerId: string,
 ): Promise<{ snapshot: Snapshot; measurementId: string | null }> {
   const months = prevMonths(ym);
 
@@ -133,6 +134,7 @@ export async function buildSnapshot(
     .select(
       "id, category, name, unit, icon, icon_url, icon_hidden, sort_order, active",
     )
+    .eq("center_id", centerId)
     .eq("active", true)
     .in("category", REPORT_CATEGORIES)
     .order("sort_order", { ascending: true });

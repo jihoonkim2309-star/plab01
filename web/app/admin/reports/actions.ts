@@ -26,7 +26,7 @@ export async function updateReport(formData: FormData) {
 
 // 발행: 이 시점의 최신 측정값으로 snapshot 다시 빌드해서 저장 → 학부모에게 보이는 동결본.
 export async function publishReport(formData: FormData) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("id 필수");
 
@@ -41,6 +41,7 @@ export async function publishReport(formData: FormData) {
     supabase,
     r.student_id,
     r.report_month,
+    centerId,
   );
 
   const { error } = await supabase
@@ -114,6 +115,7 @@ export async function bulkReportAction(formData: FormData) {
         supabase,
         r.student_id,
         r.report_month,
+        centerId,
       );
       const { error } = await supabase
         .from("reports")

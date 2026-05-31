@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireCenter } from "@/lib/center";
 import PrintButton from "./PrintButton";
 import IconLibrary, { ICON_ID } from "./IconLibrary";
 import RadarChart from "./RadarChart";
@@ -48,7 +48,7 @@ export default async function ReportPreviewPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const { supabase, centerId } = await requireCenter();
   const { data: r } = await supabase
     .from("reports")
     .select(
@@ -64,7 +64,7 @@ export default async function ReportPreviewPage({
   if (r.status === "발행완료" && r.snapshot) {
     snap = r.snapshot as Snapshot;
   } else {
-    const { snapshot } = await buildSnapshot(supabase, r.student_id, r.report_month);
+    const { snapshot } = await buildSnapshot(supabase, r.student_id, r.report_month, centerId);
     snap = snapshot;
   }
   const student = snap?.student;
