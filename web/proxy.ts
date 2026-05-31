@@ -1,6 +1,9 @@
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// cookie 만 검사 (Supabase round trip 없음). 정확한 인증은 requireCenter() 에서.
+// cookie check + 보호 path 에 한해 user/center 정보 fetch → header 로 다음 단계에 전달.
+// requireCenter 가 header 만 읽으면 supabase round trip 0.
+// supabase cookies 갱신은 setAll 누적 후 마지막에 한 번 보존 (무한 redirect 회피).
 export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", request.nextUrl.pathname);
@@ -10,7 +13,6 @@ export async function proxy(request: NextRequest) {
   const isProtected = path.startsWith("/admin") || isProto;
   const isLogin = path === "/login";
 
-  // Supabase ssr 의 cookie 패턴: sb-{ref}-auth-token 또는 chunked (.0 .1 …)
   const hasSession = request.cookies
     .getAll()
     .some((c) => /^sb-.+-auth-token(\.\d+)?$/.test(c.name));
@@ -22,9 +24,60 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
 
-  return NextResponse.next({
-    request: { headers: requestHeaders },
-  });
+  // 보호 path 만 user/center fetch
+  if (!isProtected || !hasSession) {
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
+  const cookiesToSet: {
+    name: string;
+    value: string;
+    options?: Record<string, unknown>;
+  }[] = [];
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(toSet) {
+          toSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value),
+          );
+          cookiesToSet.push(...toSet);
+        },
+      },
+    },
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("center_id, role")
+      .eq("id", user.id)
+      .single();
+    const role = (profile?.role ?? "") as string;
+    const activeCookie = request.cookies.get("active_center")?.value;
+    const effectiveCenter =
+      role === "super_admin"
+        ? activeCookie || profile?.center_id || ""
+        : profile?.center_id || "";
+    requestHeaders.set("x-user-id", user.id);
+    requestHeaders.set("x-user-role", role);
+    requestHeaders.set("x-center-id", effectiveCenter);
+  }
+
+  // 마지막에 한 번 응답 빌드 + 누적된 cookie 모두 보존
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  cookiesToSet.forEach(({ name, value, options }) =>
+    response.cookies.set(name, value, options),
+  );
+  return response;
 }
 
 export const config = {
