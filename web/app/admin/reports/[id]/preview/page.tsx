@@ -414,6 +414,20 @@ export default async function ReportPreviewPage({
                   컨트롤 + 정확도 + 스텝 테스트. 각 항목을 0–100 점으로
                   정규화한 후 평균.
                 </div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: "var(--neutral-text-secondary)",
+                    padding: "8px 16px 12px",
+                    lineHeight: 1.5,
+                    textAlign: "center",
+                    borderTop: "0.5px dashed var(--neutral-border)",
+                    margin: "0 16px",
+                  }}
+                >
+                  ⓘ 참고용 — 학원 자체 기준값으로 환산한 점수이며, 외부 표준(KSAQ 등)이 아닙니다.
+                  연령·성별 기준 데이터 확보 후 정교화될 예정입니다.
+                </div>
               </div>
             </section>
           )}
