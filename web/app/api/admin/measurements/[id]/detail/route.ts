@@ -14,7 +14,10 @@ export async function GET(
   if (!ym || !/^\d{4}-\d{2}$/.test(ym)) {
     return Response.json({ error: "ym 잘못됨" }, { status: 400 });
   }
+  const tA = Date.now();
   const { supabase, centerId } = await requireCenter();
+  console.log("[measurement/detail] requireCenter", Date.now() - tA, "ms");
+  const tQ = Date.now();
 
   const [studentRes, measurementRes] = await Promise.all([
     supabase
@@ -45,6 +48,7 @@ export async function GET(
       .eq("measurement_id", m.id);
     values = (data ?? []) as typeof values;
   }
+  console.log("[measurement/detail] queries", Date.now() - tQ, "ms");
 
   return Response.json({
     student: studentRes.data,

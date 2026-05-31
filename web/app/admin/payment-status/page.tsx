@@ -97,7 +97,9 @@ export default async function PaymentStatusPage({
   }>;
 }) {
   const { s, q, inv, seeded, seed_error } = await searchParams;
+  const tP = Date.now();
   const { supabase, centerId: cid } = await requireCenter();
+  console.log("[payment-status] requireCenter", Date.now() - tP, "ms");
 
   // 목록 쿼리 (상태 필터 적용)
   let listQuery = supabase
@@ -108,6 +110,7 @@ export default async function PaymentStatusPage({
     .limit(300);
   if (s) listQuery = listQuery.eq("status", s);
 
+  const tQ = Date.now();
   const [listRes, totalsRes, detailRes, paymentsRes, itemsRes, centerRes] =
     await Promise.all([
       listQuery,
@@ -146,6 +149,14 @@ export default async function PaymentStatusPage({
         .eq("id", cid)
         .single(),
     ]);
+  console.log(
+    "[payment-status] queries",
+    Date.now() - tQ,
+    "ms — list:",
+    listRes.data?.length ?? 0,
+    "totals:",
+    totalsRes.data?.length ?? 0,
+  );
   const center = (centerRes.data ?? null) as unknown as {
     name: string | null;
     address: string | null;

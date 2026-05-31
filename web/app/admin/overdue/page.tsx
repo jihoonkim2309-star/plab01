@@ -33,7 +33,9 @@ export default async function OverduePage({
   searchParams: Promise<{ q?: string; bucket?: string }>;
 }) {
   const { q, bucket: bucketFilter } = await searchParams;
+  const tP = Date.now();
   const { supabase, centerId: cid } = await requireCenter();
+  console.log("[overdue] requireCenter", Date.now() - tP, "ms");
   const today = new Date().toISOString().slice(0, 10);
 
   // 서버 ilike — q 가 학생명 매칭되면 그 ID 들로 invoices 좁히기
@@ -73,11 +75,20 @@ export default async function OverduePage({
     }
   }
 
+  const tQ = Date.now();
   const [allRes, listRes, pg] = await Promise.all([
     allQuery,
     listQuery,
     getCenterPg(supabase, cid),
   ]);
+  console.log(
+    "[overdue] queries",
+    Date.now() - tQ,
+    "ms — list:",
+    listRes.data?.length ?? 0,
+    "all:",
+    allRes.data?.length ?? 0,
+  );
 
   type Row = {
     id: string;
