@@ -8,7 +8,6 @@ import SearchInput from "../SearchInput";
 import { ReportDrawerProvider } from "./ReportDrawerContext";
 import ReportDetailDrawer from "./ReportDetailDrawer";
 import ReportRowLink from "./ReportRowLink";
-import { bulkReportAction } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function thisMonth() {
@@ -165,8 +164,8 @@ export default async function ReportsPage({
       </div>
 
       <div className="grid account-layout">
-        {/* 좌: 리포트 목록 + 일괄 액션 form */}
-        <form action={bulkReportAction} className="panel elevated">
+        {/* 좌: 리포트 목록 */}
+        <div className="panel elevated">
           <div className="panel-head">
             <p className="panel-title">
               리포트 목록{" "}
@@ -176,44 +175,6 @@ export default async function ReportsPage({
                   : `${list.length}건`}
               </span>
             </p>
-            <div className="toolbar">
-              <button
-                type="submit"
-                name="action"
-                value="publish"
-                className="btn primary"
-                title="생성완료 → 발행완료 + 학부모 공개"
-              >
-                선택 일괄 발행
-              </button>
-              <button
-                type="submit"
-                name="action"
-                value="unpublish"
-                className="btn"
-                title="발행완료 → 생성완료 (학부모 공개 OFF)"
-              >
-                선택 발행 취소
-              </button>
-              <button
-                type="submit"
-                name="action"
-                value="public_on"
-                className="btn"
-                title="학부모 공개 ON"
-              >
-                공개 ON
-              </button>
-              <button
-                type="submit"
-                name="action"
-                value="public_off"
-                className="btn"
-                title="학부모 공개 OFF"
-              >
-                공개 OFF
-              </button>
-            </div>
           </div>
           <div className="panel-body" style={{ paddingBottom: 0 }}>
             <FilterBar>
@@ -249,7 +210,6 @@ export default async function ReportsPage({
           <table>
             <thead>
               <tr>
-                <th style={{ width: 36 }}></th>
                 <th>학생</th>
                 <th>상태</th>
                 <th>공개</th>
@@ -261,14 +221,6 @@ export default async function ReportsPage({
                   key={r.id}
                   className="row-link-host"
                 >
-                  <td onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      name="ids"
-                      value={r.id}
-                      aria-label={`${r.students?.name ?? "리포트"} 선택`}
-                    />
-                  </td>
                   <td>
                     <ReportRowLink
                       reportId={r.id}
@@ -301,7 +253,7 @@ export default async function ReportsPage({
               ))}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={4}>
+                  <td colSpan={3}>
                     <div className="empty-state">
                       {hasFilter ? (
                         <>
@@ -326,7 +278,7 @@ export default async function ReportsPage({
               )}
             </tbody>
           </table>
-        </form>
+        </div>
 
         {/* 우: 디테일 (client drawer) */}
         <ReportDetailDrawer period={target} />

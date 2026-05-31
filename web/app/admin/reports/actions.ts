@@ -114,7 +114,6 @@ export async function bulkReportAction(formData: FormData) {
         supabase,
         r.student_id,
         r.report_month,
-        centerId,
       );
       const { error } = await supabase
         .from("reports")
