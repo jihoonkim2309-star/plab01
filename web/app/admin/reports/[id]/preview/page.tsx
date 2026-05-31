@@ -103,9 +103,9 @@ export default async function ReportPreviewPage({
         .report-container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 32px 36px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
 
         .report-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid var(--brand-green); }
-        .report-header__title-subtitle { margin: 0 0 4px; font-size: 13px; color: var(--neutral-text-secondary); }
-        .report-header__title { margin: 0; font-size: 28px; font-weight: 500; color: var(--brand-green); letter-spacing: -0.5px; }
-        .report-header__tagline { margin: 6px 0 0; font-size: 12px; color: var(--neutral-text-secondary); }
+        .report-header__title-subtitle { margin: 0 0 6px; font-size: 15px; color: var(--neutral-text-secondary); font-weight: 500; }
+        .report-header__title { margin: 0; font-size: 42px; font-weight: 800; color: var(--brand-green); letter-spacing: -1px; line-height: 1.1; }
+        .report-header__tagline { margin: 10px 0 0; font-size: 15px; color: var(--neutral-text-secondary); font-weight: 500; }
         .report-header__brand { text-align: right; }
         .report-header__brand-text { font-size: 11px; color: var(--neutral-text-secondary); font-weight: 500; line-height: 1.4; }
         .report-header__brand-name { font-size: 16px; font-weight: 500; color: var(--brand-green); }

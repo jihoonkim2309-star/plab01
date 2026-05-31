@@ -262,7 +262,12 @@ export default function MeasurementDetailDrawer({
               {m && (
                 <div
                   className="toolbar"
-                  style={{ justifyContent: "flex-start", marginTop: 8 }}
+                  style={{
+                    justifyContent: "flex-start",
+                    marginTop: 12,
+                    flexWrap: "wrap",
+                    gap: 6,
+                  }}
                 >
                   {(m.status === "대기" || m.status === "반려") && (
                     <form action={submitMeasurement}>
@@ -280,15 +285,29 @@ export default function MeasurementDetailDrawer({
                           승인
                         </button>
                       </form>
-                      <form action={rejectMeasurement}>
+                      <form
+                        action={rejectMeasurement}
+                        onSubmit={(e) => {
+                          const reason = window.prompt(
+                            "반려 사유를 입력해주세요 (최소 2자):",
+                          );
+                          if (!reason || reason.trim().length < 2) {
+                            e.preventDefault();
+                            if (reason !== null) {
+                              window.alert("반려 사유는 최소 2자 입력해야 합니다.");
+                            }
+                            return;
+                          }
+                          const input = (
+                            e.currentTarget.elements.namedItem(
+                              "reject_reason",
+                            ) as HTMLInputElement | null
+                          );
+                          if (input) input.value = reason.trim();
+                        }}
+                      >
                         <input type="hidden" name="id" value={m.id} />
-                        <input
-                          name="reject_reason"
-                          placeholder="반려 사유 (필수)"
-                          required
-                          minLength={2}
-                          style={{ width: 200 }}
-                        />
+                        <input type="hidden" name="reject_reason" defaultValue="" />
                         <button className="btn" type="submit">
                           반려
                         </button>
