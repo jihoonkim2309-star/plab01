@@ -108,14 +108,17 @@ export async function buildSnapshot(
   supabase: Supa,
   studentId: string,
   ym: string,
+  centerId?: string,
 ): Promise<{ snapshot: Snapshot; measurementId: string | null }> {
   const months = prevMonths(ym);
 
-  const { data: student } = await supabase
+  // 학생의 center_id 도 함께 가져와 measurement_items 필터에 사용
+  const studentQuery = supabase
     .from("students")
-    .select("id, name, gender, birth, school, grade")
-    .eq("id", studentId)
-    .single();
+    .select("id, name, gender, birth, school, grade, center_id")
+    .eq("id", studentId);
+  const { data: student } = await studentQuery.single();
+  const cid = centerId ?? (student as { center_id?: string } | null)?.center_id ?? null;
 
   const { data: ms } = await supabase
     .from("measurements")
@@ -128,7 +131,7 @@ export async function buildSnapshot(
   >((ms ?? []).map((m) => [m.measurement_month, m]));
   const currentM = msByMonth.get(ym) ?? null;
 
-  const { data: items } = await supabase
+  let itemsQuery = supabase
     .from("measurement_items")
     .select(
       "id, category, name, unit, icon, icon_url, icon_hidden, sort_order, active",
@@ -136,6 +139,8 @@ export async function buildSnapshot(
     .eq("active", true)
     .in("category", REPORT_CATEGORIES)
     .order("sort_order", { ascending: true });
+  if (cid) itemsQuery = itemsQuery.eq("center_id", cid);
+  const { data: items } = await itemsQuery;
 
   const mids = (ms ?? []).map((m) => m.id);
   const { data: vals } = mids.length

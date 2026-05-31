@@ -184,12 +184,14 @@ export default async function ReportPreviewPage({
               <p className="report-header__tagline">땀으로 만든 변화, 데이터로 보는 성장</p>
             </div>
             <div className="report-header__brand">
-              <svg width="44" height="33" viewBox="0 0 32 24" style={{ display: "block", margin: "0 0 4px auto" }}>
-                <use href="#ic4-run" />
-              </svg>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/planb-logo.svg"
+                alt="PlanB"
+                style={{ height: 44, display: "block", margin: "0 0 6px auto" }}
+              />
               <div className="report-header__brand-text">
-                PLAY BETTER, PLAN BIGGER<br />
-                <span className="report-header__brand-name">PlanB</span>
+                PLAY BETTER, PLAN BIGGER
               </div>
             </div>
           </header>
