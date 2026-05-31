@@ -290,14 +290,8 @@ export default async function ReportsPage({
                         >
                           열람 {r.parent_view_count ?? 0}
                         </span>
-                      ) : r.status === "발행완료" ? (
-                        <span className="muted" style={{ fontSize: 12 }}>
-                          미열람
-                        </span>
                       ) : (
-                        <span className="muted" style={{ fontSize: 12 }}>
-                          -
-                        </span>
+                        <span className="badge gray">미열람</span>
                       )}
                     </td>
                   </tr>
