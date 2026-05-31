@@ -83,3 +83,71 @@ export async function deleteReport(formData: FormData) {
   revalidatePath("/admin/reports");
   redirect(`/admin/reports${ym ? `?ym=${ym}` : ""}`);
 }
+
+// 일괄 액션 — 선택한 리포트들 한 번에 처리.
+// action: 'publish' | 'unpublish' | 'public_on' | 'public_off'
+export async function bulkReportAction(formData: FormData) {
+  const { supabase, centerId } = await requireCenter();
+  const ids = formData.getAll("ids").map(String).filter(Boolean);
+  const action = String(formData.get("action") ?? "");
+  if (ids.length === 0) throw new Error("선택된 리포트가 없습니다.");
+  if (!["publish", "unpublish", "public_on", "public_off"].includes(action))
+    throw new Error("잘못된 작업");
+
+  if (action === "publish") {
+    // 생성완료/생성대기 → 발행완료. snapshot 재빌드.
+    const { data: rs } = await supabase
+      .from("reports")
+      .select("id, student_id, report_month, status")
+      .eq("center_id", centerId)
+      .in("id", ids);
+    const rows = (rs ?? []) as {
+      id: string;
+      student_id: string;
+      report_month: string;
+      status: string;
+    }[];
+    const targets = rows.filter((r) => r.status !== "발행완료");
+    const nowIso = new Date().toISOString();
+    for (const r of targets) {
+      const { snapshot, measurementId } = await buildSnapshot(
+        supabase,
+        r.student_id,
+        r.report_month,
+        centerId,
+      );
+      const { error } = await supabase
+        .from("reports")
+        .update({
+          status: "발행완료",
+          published_at: nowIso,
+          public_to_parent: true,
+          snapshot,
+          measurement_id: measurementId,
+        })
+        .eq("id", r.id);
+      if (error) throw new Error(`발행 실패 (${r.id}): ${error.message}`);
+    }
+  } else if (action === "unpublish") {
+    const { error } = await supabase
+      .from("reports")
+      .update({
+        status: "생성완료",
+        published_at: null,
+        public_to_parent: false,
+      })
+      .eq("center_id", centerId)
+      .eq("status", "발행완료")
+      .in("id", ids);
+    if (error) throw new Error("발행 취소 실패: " + error.message);
+  } else if (action === "public_on" || action === "public_off") {
+    const { error } = await supabase
+      .from("reports")
+      .update({ public_to_parent: action === "public_on" })
+      .eq("center_id", centerId)
+      .in("id", ids);
+    if (error) throw new Error("공개 변경 실패: " + error.message);
+  }
+
+  revalidatePath("/admin/reports");
+}
