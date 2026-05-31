@@ -1,56 +1,32 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// 모든 요청에서 Supabase 세션을 갱신하고, 로그인 안 한 사용자가
-// 보호된 경로(/admin, /prototype.html)에 접근하면 로그인 페이지로 보낸다.
+// 매 요청 cookie 존재만 검사 (Supabase round trip X).
+// 정확한 인증·세션 갱신은 RSC 안 requireCenter() (React cache() 적용) 가 처리.
+// 모든 요청에 x-pathname header 주입 (layout 의 super_admin 차단 분기용).
 export async function proxy(request: NextRequest) {
-  // server component 에서 pathname 알 수 있게 custom header 주입
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", request.nextUrl.pathname);
-  let response = NextResponse.next({
-    request: { headers: requestHeaders },
-  });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          response = NextResponse.next({
-            request: { headers: requestHeaders },
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
-          );
-        },
-      },
-    },
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
   const isProto = path === "/prototype.html";
   const isProtected = path.startsWith("/admin") || isProto;
   const isLogin = path === "/login";
 
-  if (isProtected && !user) {
+  // Supabase ssr session cookie 패턴: sb-{project}-auth-token (또는 -code-verifier)
+  const hasSession = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
+
+  if (isProtected && !hasSession) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
-  if (isLogin && user) {
+  if (isLogin && hasSession) {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
 
-  return response;
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 }
 
 export const config = {
