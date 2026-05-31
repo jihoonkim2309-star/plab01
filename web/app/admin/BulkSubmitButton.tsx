@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { usePathname } from "next/navigation";
 
 // 일괄 처리 form 안의 submit 버튼.
 // - 같은 form 안의 `input[name="ids"]:checked` 갯수 자동 카운트
@@ -41,8 +42,14 @@ export default function BulkSubmitButton({
   const [count, setCount] = useState(0);
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => setMounted(true), []);
+
+  // 페이지 navigation 시 modal 자동 close (잔재 방지)
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const btn = ref.current;
@@ -82,13 +89,18 @@ export default function BulkSubmitButton({
   }
 
   function onClick() {
-    if (count === 0) return;
+    if (count === 0) {
+      // disabled 라 보통 도달 X. 안전망.
+      alert("선택된 항목이 없습니다.");
+      return;
+    }
     if (confirmMessage) setOpen(true);
     else doSubmit();
   }
 
   function onConfirm() {
     setOpen(false);
+    if (count === 0) return; // 안전망
     queueMicrotask(doSubmit);
   }
 

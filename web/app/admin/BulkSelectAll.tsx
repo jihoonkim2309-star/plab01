@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 export default function BulkSelectAll() {
   const ref = useRef<HTMLInputElement>(null);
   const [allChecked, setAllChecked] = useState(false);
+  const [hasSelectable, setHasSelectable] = useState(false);
 
   useEffect(() => {
     const cb = ref.current;
@@ -24,6 +25,7 @@ export default function BulkSelectAll() {
       const a = arr.length > 0 && checked.length === arr.length;
       const s = checked.length > 0 && checked.length < arr.length;
       setAllChecked(a);
+      setHasSelectable(arr.length > 0);
       cb!.indeterminate = s;
     }
 
@@ -68,6 +70,7 @@ export default function BulkSelectAll() {
       type="checkbox"
       aria-label="전체 선택"
       checked={allChecked}
+      disabled={!hasSelectable}
       onChange={toggle}
     />
   );
