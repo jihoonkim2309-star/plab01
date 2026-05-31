@@ -12,7 +12,7 @@ type OfflineMethod = "offline_cash" | "offline_card" | "offline_transfer";
 
 const OFFLINE_LABELS: Record<OfflineMethod, string> = {
   offline_cash: "현금",
-  offline_card: "카드(단말기)",
+  offline_card: "단말기 카드",
   offline_transfer: "계좌이체",
 };
 
@@ -254,17 +254,17 @@ export default function PayInvoiceModal({
                       value="parent_portal"
                       current={channel}
                       onChange={setChannel}
-                      label="학부모 포털 결제 요청"
+                      label="학부모앱 결제 요청"
                       desc="학부모 앱에 결제 요청 알림을 보냅니다."
                     />
                     <ChannelRow
                       value="pg_in_store"
                       current={channel}
                       onChange={setChannel}
-                      label="지점 PG"
+                      label="온라인 카드 결제"
                       desc={
                         storeId && channelKey
-                          ? "어드민이 결제창을 열어 카드 결제합니다."
+                          ? "어드민이 결제창을 열어 학부모 카드로 결제 (PortOne)"
                           : "PG 미설정 — 설정 > 결제 연동 필요"
                       }
                       disabled={!storeId || !channelKey}
@@ -274,7 +274,7 @@ export default function PayInvoiceModal({
                       current={channel}
                       onChange={setChannel}
                       label="오프라인 수납"
-                      desc="현금/카드(단말기)/계좌이체 직접 수납"
+                      desc="현금 / 단말기 카드 / 계좌이체 직접 수납"
                     />
                   </div>
                 </div>

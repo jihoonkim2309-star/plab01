@@ -23,11 +23,11 @@ const PSB: Record<string, string> = {
   대기: "gray",
 };
 const CHANNEL_LABELS: Record<string, string> = {
-  parent_portal: "포털",
-  pg_in_store: "PG",
+  parent_portal: "학부모앱 결제",
+  pg_in_store: "온라인 카드 결제",
   offline_cash: "현금",
-  offline_card: "단말",
-  offline_transfer: "이체",
+  offline_card: "단말기 카드",
+  offline_transfer: "계좌이체",
 };
 
 type ListRow = {

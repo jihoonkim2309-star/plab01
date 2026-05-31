@@ -154,9 +154,9 @@ export default async function OverduePage({
               className="btn primary"
               type="submit"
               formAction={requestParentPayment}
-              title="선택한 청구서를 학부모 포털에 결제 요청 알림으로 보냅니다"
+              title="선택한 청구서를 학부모앱에 결제 요청 알림으로 보냅니다"
             >
-              선택 포털 결제 요청
+              선택 학부모앱 결제 요청
             </button>
           </div>
         </div>

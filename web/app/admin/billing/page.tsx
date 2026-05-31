@@ -15,11 +15,11 @@ import RefundModal from "./RefundModal";
 import { deleteInvoice, requestParentPayment } from "./actions";
 
 const CHANNEL_LABELS: Record<string, string> = {
-  parent_portal: "포털",
-  pg_in_store: "PG",
+  parent_portal: "학부모앱 결제",
+  pg_in_store: "온라인 카드 결제",
   offline_cash: "현금",
-  offline_card: "단말",
-  offline_transfer: "이체",
+  offline_card: "단말기 카드",
+  offline_transfer: "계좌이체",
 };
 
 const SB: Record<string, string> = {
@@ -147,7 +147,7 @@ export default async function BillingPage({
             padding: "12px 16px",
           }}
         >
-          학부모 포털에 {requested}건 결제 요청 알림이 큐잉되었습니다.
+          학부모앱에 {requested}건 결제 요청 알림이 큐잉되었습니다.
         </div>
       )}
 
@@ -199,9 +199,9 @@ export default async function BillingPage({
             <button
               className="btn"
               type="submit"
-              title="선택한 청구서를 학부모 포털에 결제 요청 알림으로 보냅니다"
+              title="선택한 청구서를 학부모앱에 결제 요청 알림으로 보냅니다"
             >
-              선택 포털 결제 요청
+              선택 학부모앱 결제 요청
             </button>
           </div>
         </div>
