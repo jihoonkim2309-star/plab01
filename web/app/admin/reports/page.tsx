@@ -245,7 +245,6 @@ export default async function ReportsPage({
                         value={r.id}
                         disabled={isPublished}
                         aria-label="리포트 선택"
-                        onClick={(e) => e.stopPropagation()}
                       />
                     </td>
                     <td>
