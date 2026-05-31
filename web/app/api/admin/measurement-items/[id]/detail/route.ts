@@ -35,5 +35,12 @@ export async function GET(
   const isFirst = ids[0] === id;
   const isLast = ids[ids.length - 1] === id;
 
-  return Response.json({ item, isFirst, isLast });
+  // 연령·성별 기준값 (있으면)
+  const { data: norms } = await supabase
+    .from("measurement_norms")
+    .select("age_band, gender, min_value, max_value")
+    .eq("center_id", centerId)
+    .eq("item_id", id);
+
+  return Response.json({ item, isFirst, isLast, norms: norms ?? [] });
 }

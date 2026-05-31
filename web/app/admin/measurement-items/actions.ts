@@ -4,6 +4,60 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCenter } from "@/lib/center";
 
+// 측정 항목 기준값 일괄 저장 — 6 셀 (3 연령대 × 2 성별) × min/max 입력 받아 upsert.
+const AGE_BANDS = ["초저", "초고", "중등"] as const;
+const GENDERS = ["남", "여"] as const;
+
+export async function saveMeasurementNorms(formData: FormData) {
+  const { supabase, centerId } = await requireCenter();
+  const itemId = String(formData.get("item_id") ?? "");
+  if (!itemId) throw new Error("item_id 필수");
+
+  const rows: {
+    center_id: string;
+    item_id: string;
+    age_band: string;
+    gender: string;
+    min_value: number | null;
+    max_value: number | null;
+  }[] = [];
+
+  for (const band of AGE_BANDS) {
+    for (const g of GENDERS) {
+      const minRaw = String(formData.get(`min_${band}_${g}`) ?? "").trim();
+      const maxRaw = String(formData.get(`max_${band}_${g}`) ?? "").trim();
+      const minV = minRaw === "" ? null : Number(minRaw);
+      const maxV = maxRaw === "" ? null : Number(maxRaw);
+      if (minV == null && maxV == null) continue;
+      if (
+        (minV != null && Number.isNaN(minV)) ||
+        (maxV != null && Number.isNaN(maxV))
+      )
+        throw new Error(`기준값 형식 오류 (${band}/${g})`);
+      rows.push({
+        center_id: centerId,
+        item_id: itemId,
+        age_band: band,
+        gender: g,
+        min_value: minV,
+        max_value: maxV,
+      });
+    }
+  }
+
+  if (rows.length === 0) {
+    revalidatePath("/admin/measurement-items");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("measurement_norms")
+    .upsert(rows, { onConflict: "center_id,item_id,age_band,gender" });
+  if (error) throw new Error("기준값 저장 실패: " + error.message);
+
+  revalidatePath("/admin/measurement-items");
+}
+
 // 'icon'(이모지 컬럼)은 폼에서 더 이상 입력 받지 않음 → 기존 값은 그대로 보존,
 // 새 입력은 icon_url(업로드) 로 받는다.
 const FIELDS = [
