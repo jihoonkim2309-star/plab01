@@ -19,6 +19,7 @@ export async function GET(
   console.log("[measurement/detail] requireCenter", Date.now() - tA, "ms");
   const tQ = Date.now();
 
+  // student + measurement(+ values join) 병렬 — 2 round trip
   const [studentRes, measurementRes] = await Promise.all([
     supabase
       .from("students")
@@ -28,7 +29,9 @@ export async function GET(
       .single(),
     supabase
       .from("measurements")
-      .select("id, status, measured_at, reviewed_at, reject_reason, notes")
+      .select(
+        "id, status, measured_at, reviewed_at, reject_reason, notes, measurement_values(item_id, value_num, value_text)",
+      )
       .eq("center_id", centerId)
       .eq("student_id", id)
       .eq("measurement_month", ym)
@@ -39,20 +42,37 @@ export async function GET(
     return Response.json({ error: "학생을 찾을 수 없습니다." }, { status: 404 });
   }
 
-  let values: { item_id: string; value_num: number | null; value_text: string | null }[] = [];
-  const m = measurementRes.data as { id: string } | null;
-  if (m?.id) {
-    const { data } = await supabase
-      .from("measurement_values")
-      .select("item_id, value_num, value_text")
-      .eq("measurement_id", m.id);
-    values = (data ?? []) as typeof values;
-  }
+  const mRaw = measurementRes.data as
+    | {
+        id: string;
+        status: string;
+        measured_at: string | null;
+        reviewed_at: string | null;
+        reject_reason: string | null;
+        notes: string | null;
+        measurement_values: {
+          item_id: string;
+          value_num: number | null;
+          value_text: string | null;
+        }[] | null;
+      }
+    | null;
+  const values = mRaw?.measurement_values ?? [];
+  const measurement = mRaw
+    ? {
+        id: mRaw.id,
+        status: mRaw.status,
+        measured_at: mRaw.measured_at,
+        reviewed_at: mRaw.reviewed_at,
+        reject_reason: mRaw.reject_reason,
+        notes: mRaw.notes,
+      }
+    : null;
   console.log("[measurement/detail] queries", Date.now() - tQ, "ms");
 
   return Response.json({
     student: studentRes.data,
-    measurement: measurementRes.data,
+    measurement,
     values,
   });
 }
