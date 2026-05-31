@@ -12,6 +12,8 @@ import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import FilterSelect from "../FilterSelect";
 import SearchInput from "../SearchInput";
+import BulkSelectAll from "../BulkSelectAll";
+import BulkSubmitButton from "../BulkSubmitButton";
 
 type GP = {
   id: string;
@@ -200,18 +202,23 @@ export default async function GradePromotionsPage({
               </span>
             </p>
             <div className="toolbar">
-              <ConfirmButton
-                message="선택한 승급 건을 승인 완료로 처리할까요?\n해당 학생들의 학년(학교변경 시 학교)이 실제 반영됩니다."
-                className="btn primary"
-                type="submit"
+              <BulkSubmitButton
                 name="status"
                 value="승인 완료"
-              >
-                선택 승인 완료
-              </ConfirmButton>
-              <button className="btn warn" name="status" value="보류" type="submit">
-                선택 보류
-              </button>
+                label="승인 완료"
+                emptyLabel="선택 승인 완료"
+                matchSelector=':not([data-status="승인 완료"])'
+                confirmMessage="선택한 승급 건을 승인 완료로 처리할까요? 해당 학생들의 학년(학교 변경 시 학교)이 실제 반영됩니다."
+              />
+              <BulkSubmitButton
+                name="status"
+                value="보류"
+                label="보류"
+                emptyLabel="선택 보류"
+                variant="danger"
+                matchSelector=':not([data-status="보류"])'
+                confirmMessage="선택한 승급 건을 보류 상태로 변경할까요?"
+              />
             </div>
           </div>
           <div className="panel-body" style={{ paddingBottom: 0 }}>
@@ -242,7 +249,9 @@ export default async function GradePromotionsPage({
           <table>
             <thead>
               <tr>
-                <th className="check-cell"></th>
+                <th className="check-cell">
+                  <BulkSelectAll />
+                </th>
                 <th>학생</th>
                 <th>학년도</th>
                 <th>현재</th>
@@ -259,7 +268,12 @@ export default async function GradePromotionsPage({
                   className={`row-link-host ${g.id === sel ? "selected" : ""}`}
                 >
                   <td className="check-cell">
-                    <input type="checkbox" name="ids" value={g.id} />
+                    <input
+                      type="checkbox"
+                      name="ids"
+                      value={g.id}
+                      data-status={g.status}
+                    />
                   </td>
                   <td>
                     <Link
