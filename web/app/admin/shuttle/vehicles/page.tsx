@@ -97,6 +97,7 @@ export default async function ShuttleVehiclesPage({
               {hasFilter && <Link className="btn" href="/admin/shuttle/vehicles">초기화</Link>}
             </FilterBar>
           </div>
+          <div className="list-scroll">
           <table className="member-table">
             <thead>
               <tr>
@@ -146,6 +147,7 @@ export default async function ShuttleVehiclesPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="panel">

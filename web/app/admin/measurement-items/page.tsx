@@ -138,6 +138,7 @@ export default async function MeasurementItemsPage({
               {hasFilter && <Link className="btn" href="/admin/measurement-items">초기화</Link>}
             </FilterBar>
           </div>
+          <div className="list-scroll">
           <table className="member-table">
             <thead>
               <tr>
@@ -198,6 +199,7 @@ export default async function MeasurementItemsPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <ItemDetailDrawer />

@@ -99,6 +99,7 @@ export default async function AuditLogsPage({
           </FilterBar>
         </div>
 
+        <div className="list-scroll">
         <table>
           <thead>
             <tr>
@@ -145,6 +146,7 @@ export default async function AuditLogsPage({
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   );

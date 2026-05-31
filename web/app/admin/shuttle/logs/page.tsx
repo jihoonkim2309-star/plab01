@@ -181,6 +181,7 @@ export default async function ShuttleLogsPage({
               {hasFilter && <Link className="btn" href="/admin/shuttle/logs">초기화</Link>}
             </FilterBar>
           </div>
+          <div className="list-scroll">
           <table className="member-table">
             <thead>
               <tr>
@@ -245,6 +246,7 @@ export default async function ShuttleLogsPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="panel">

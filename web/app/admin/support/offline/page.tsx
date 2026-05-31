@@ -195,6 +195,7 @@ export default async function SupportOfflinePage({
               )}
             </FilterBar>
           </div>
+          <div className="list-scroll">
           <table>
             <thead>
               <tr>
@@ -259,6 +260,7 @@ export default async function SupportOfflinePage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="panel">

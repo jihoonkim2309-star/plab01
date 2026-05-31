@@ -117,6 +117,7 @@ export default async function HolidaysPage({
               {hasFilter && <Link className="btn" href="/admin/holidays">초기화</Link>}
             </FilterBar>
           </div>
+          <div className="list-scroll">
           <table className="member-table">
             <thead>
               <tr>
@@ -173,6 +174,7 @@ export default async function HolidaysPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="panel">

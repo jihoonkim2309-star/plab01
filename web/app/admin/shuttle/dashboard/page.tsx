@@ -169,6 +169,7 @@ export default async function ShuttleDashboardPage({
               <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>{runs.length}건</span>
             </p>
           </div>
+          <div className="list-scroll">
           <table className="member-table">
             <thead>
               <tr>
@@ -224,6 +225,7 @@ export default async function ShuttleDashboardPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="panel">

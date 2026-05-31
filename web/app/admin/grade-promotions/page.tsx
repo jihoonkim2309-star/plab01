@@ -246,6 +246,7 @@ export default async function GradePromotionsPage({
               )}
             </FilterBar>
           </div>
+          <div className="list-scroll">
           <table>
             <thead>
               <tr>
@@ -327,6 +328,7 @@ export default async function GradePromotionsPage({
               )}
             </tbody>
           </table>
+          </div>
         </form>
 
         <div className="panel">

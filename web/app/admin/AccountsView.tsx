@@ -85,6 +85,7 @@ export default function AccountsView({
             )}
           </FilterBar>
         </div>
+        <div className="list-scroll">
         <table>
           <thead>
             <tr>
@@ -131,6 +132,7 @@ export default function AccountsView({
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   );

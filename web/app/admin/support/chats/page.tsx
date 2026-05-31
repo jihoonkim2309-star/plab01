@@ -194,6 +194,7 @@ export default async function SupportChatsPage({
               )}
             </FilterBar>
           </div>
+          <div className="list-scroll">
           <table>
             <thead>
               <tr>
@@ -269,6 +270,7 @@ export default async function SupportChatsPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="panel">

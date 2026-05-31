@@ -124,6 +124,7 @@ export default async function NotificationsPage({
           </FilterBar>
         </div>
 
+        <div className="list-scroll">
         <table>
           <thead>
             <tr>
@@ -181,6 +182,7 @@ export default async function NotificationsPage({
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   );

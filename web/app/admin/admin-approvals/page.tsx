@@ -102,6 +102,7 @@ export default async function AdminApprovalsPage() {
         <div className="panel-head">
           <p className="panel-title">대기 목록</p>
         </div>
+        <div className="list-scroll">
         <table>
           <thead>
             <tr>
@@ -224,6 +225,7 @@ export default async function AdminApprovalsPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   );

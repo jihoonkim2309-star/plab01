@@ -281,7 +281,7 @@ export default async function PaymentStatusPage({
               )}
             </FilterBar>
           </div>
-          <div>
+          <div className="list-scroll">
             <table>
               <thead>
                 <tr>

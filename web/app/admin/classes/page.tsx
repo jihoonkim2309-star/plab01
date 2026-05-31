@@ -170,6 +170,7 @@ export default async function ClassesPage({
               {hasFilter && <Link className="btn" href="/admin/classes">초기화</Link>}
             </FilterBar>
           </div>
+          <div className="list-scroll">
           <table className="member-table">
             <thead>
               <tr>
@@ -220,6 +221,7 @@ export default async function ClassesPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <ClassDetailDrawer options={{ allStudents, allProducts }} />

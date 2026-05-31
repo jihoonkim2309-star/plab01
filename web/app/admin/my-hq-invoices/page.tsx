@@ -109,6 +109,7 @@ export default async function MyHqInvoicesPage({
               {hasFilter && <Link className="btn" href="/admin/my-hq-invoices">초기화</Link>}
             </FilterBar>
           </div>
+          <div className="list-scroll">
           <table className="member-table">
             <thead>
               <tr>
@@ -149,6 +150,7 @@ export default async function MyHqInvoicesPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="panel">

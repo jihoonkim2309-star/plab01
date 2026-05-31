@@ -142,6 +142,7 @@ export default async function MakeupsPage({
               {hasFilter && <Link className="btn" href="/admin/makeups">초기화</Link>}
             </FilterBar>
           </div>
+          <div className="list-scroll">
           <table className="member-table">
             <thead>
               <tr>
@@ -191,6 +192,7 @@ export default async function MakeupsPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="panel">

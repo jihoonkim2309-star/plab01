@@ -142,6 +142,7 @@ export default async function ProductsPage({
               <div className="field-error-text">{listRes.error.message}</div>
             </div>
           )}
+          <div className="list-scroll">
           <table className="member-table">
             <thead>
               <tr>
@@ -205,6 +206,7 @@ export default async function ProductsPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="panel">

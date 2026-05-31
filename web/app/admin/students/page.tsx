@@ -298,6 +298,7 @@ export default async function StudentsPage({
             </div>
           )}
 
+          <div className="list-scroll">
           <table className="member-table">
             <thead>
               <tr>
@@ -402,6 +403,7 @@ export default async function StudentsPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <StudentDetailDrawer

@@ -140,6 +140,7 @@ export default async function UsersPage({
           </FilterBar>
         </div>
 
+        <div className="list-scroll">
         <table>
           <thead>
             <tr>
@@ -201,6 +202,7 @@ export default async function UsersPage({
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   );

@@ -176,6 +176,7 @@ export default async function SupportPostsPage({
               )}
             </FilterBar>
           </div>
+          <div className="list-scroll">
           <table>
             <thead>
               <tr>
@@ -231,6 +232,7 @@ export default async function SupportPostsPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="panel">

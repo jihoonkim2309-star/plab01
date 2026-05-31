@@ -107,6 +107,7 @@ export default async function CentersPage({
               </span>
             </p>
           </div>
+          <div className="list-scroll">
           <table className="member-table">
             <thead>
               <tr>
@@ -147,6 +148,7 @@ export default async function CentersPage({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="panel">
