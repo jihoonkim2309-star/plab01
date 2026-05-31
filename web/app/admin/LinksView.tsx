@@ -3,7 +3,9 @@ import { bulkSetLinkStatus } from "./links-actions";
 import FilterBar from "./FilterBar";
 import StatusChips from "./StatusChips";
 import SearchInput from "./SearchInput";
-import ConfirmButton from "./ConfirmButton";
+import BulkSelectAll from "./BulkSelectAll";
+import BulkSubmitButton from "./BulkSubmitButton";
+import CheckRowToggle from "./CheckRowToggle";
 
 const SB: Record<string, string> = {
   pending: "orange",
@@ -92,21 +94,32 @@ export default function LinksView({
             </span>
           </p>
           <div className="toolbar">
-            <button className="btn primary" name="status" value="linked" type="submit">
-              선택 승인
-            </button>
-            <ConfirmButton
-              message="선택한 요청들을 반려할까요?"
-              className="btn warn"
-              type="submit"
+            <BulkSubmitButton
+              name="status"
+              value="linked"
+              label="승인"
+              emptyLabel="선택 승인"
+              matchSelector='[data-status="pending"]'
+              confirmMessage="선택한 요청을 승인할까요? 학부모/학생 앱에서 학생 정보가 노출됩니다."
+            />
+            <BulkSubmitButton
               name="status"
               value="rejected"
-            >
-              선택 반려
-            </ConfirmButton>
-            <button className="btn" name="status" value="pending" type="submit">
-              대기로 되돌리기
-            </button>
+              label="반려"
+              emptyLabel="선택 반려"
+              variant="danger"
+              matchSelector=':is([data-status="pending"], [data-status="linked"])'
+              confirmMessage="선택한 요청을 반려할까요? 연결 완료 상태도 함께 해제됩니다."
+            />
+            <BulkSubmitButton
+              name="status"
+              value="pending"
+              label="되돌리기"
+              emptyLabel="대기로 되돌리기"
+              variant="default"
+              matchSelector=':is([data-status="linked"], [data-status="rejected"])'
+              confirmMessage="선택한 요청을 다시 승인 대기 상태로 되돌릴까요?"
+            />
           </div>
         </div>
         <div className="panel-body" style={{ paddingBottom: 0 }}>
@@ -133,10 +146,13 @@ export default function LinksView({
             )}
           </FilterBar>
         </div>
+        <CheckRowToggle>
         <table>
           <thead>
             <tr>
-              <th className="check-cell"></th>
+              <th className="check-cell">
+                <BulkSelectAll />
+              </th>
               <th>학생</th>
               <th>{whoLabel}</th>
               <th>요청일</th>
@@ -147,7 +163,12 @@ export default function LinksView({
             {rows.map((r) => (
               <tr key={r.id}>
                 <td className="check-cell">
-                  <input type="checkbox" name="ids" value={r.id} />
+                  <input
+                    type="checkbox"
+                    name="ids"
+                    value={r.id}
+                    data-status={r.status}
+                  />
                 </td>
                 <td>
                   {r.studentId && r.studentName ? (
@@ -199,6 +220,7 @@ export default function LinksView({
             )}
           </tbody>
         </table>
+        </CheckRowToggle>
       </form>
     </>
   );

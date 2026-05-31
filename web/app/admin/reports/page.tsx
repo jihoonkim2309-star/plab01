@@ -195,7 +195,7 @@ export default async function ReportsPage({
                 label="발행 취소"
                 emptyLabel="발행 취소"
                 variant="default"
-                matchAttr={{ name: "data-pub", value: "1" }}
+                matchSelector='[data-pub="1"]'
                 confirmMessage="선택한 리포트의 발행을 취소할까요? 학부모 앱에서 숨겨지며, 코멘트·측정값은 보존됩니다."
               />
               <BulkSubmitButton
@@ -203,7 +203,7 @@ export default async function ReportsPage({
                 value="publish"
                 label="발행"
                 emptyLabel="일괄 발행"
-                matchAttr={{ name: "data-pub", value: "0" }}
+                matchSelector='[data-pub="0"]'
                 confirmMessage="선택한 리포트를 발행할까요? 학부모 앱에 공개되며, 측정값은 발행 시점 그대로 고정됩니다. (코멘트는 발행 후에도 수정 가능)"
               />
             </div>
