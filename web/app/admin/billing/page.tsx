@@ -5,6 +5,8 @@ import { safeIlike } from "@/lib/db-search";
 import { ensureInvoicesForMonth, resolveBillingMonth } from "@/lib/billing";
 import CheckRowToggle from "../CheckRowToggle";
 import ConfirmButton from "../ConfirmButton";
+import BulkSelectAll from "../BulkSelectAll";
+import BulkSubmitButton from "../BulkSubmitButton";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
@@ -196,13 +198,14 @@ export default async function BillingPage({
                 return p.toString();
               })()}`}
             />
-            <button
-              className="btn"
-              type="submit"
-              title="선택한 청구서를 학부모앱에 결제 요청 알림으로 보냅니다"
-            >
-              선택 학부모앱 결제 요청
-            </button>
+            <BulkSubmitButton
+              name="action"
+              value="request"
+              label="학부모앱 결제 요청"
+              emptyLabel="학부모앱 결제 요청"
+              matchSelector=':is([data-status="청구"], [data-status="실패"], [data-status="대기"])'
+              confirmMessage="선택한 청구서를 학부모앱에 결제 요청 알림으로 보낼까요? (FCM/알림톡 라이브 시 자동 전송)"
+            />
           </div>
         </div>
         <div className="panel-body" style={{ paddingBottom: 0 }}>
@@ -229,7 +232,9 @@ export default async function BillingPage({
           <table>
             <thead>
               <tr>
-                <th className="check-cell"></th>
+                <th className="check-cell">
+                  <BulkSelectAll />
+                </th>
                 <th>학생</th>
                 <th>금액</th>
                 <th>출처</th>
@@ -242,7 +247,12 @@ export default async function BillingPage({
               {list.map((i) => (
                 <tr key={i.id}>
                   <td className="check-cell">
-                    <input type="checkbox" name="ids" value={i.id} />
+                    <input
+                      type="checkbox"
+                      name="ids"
+                      value={i.id}
+                      data-status={i.status}
+                    />
                   </td>
                   <td>
                     <Link
