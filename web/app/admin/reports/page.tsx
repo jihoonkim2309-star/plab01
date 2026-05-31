@@ -5,11 +5,13 @@ import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
-import ConfirmButton from "../ConfirmButton";
 import { ReportDrawerProvider } from "./ReportDrawerContext";
 import ReportDetailDrawer from "./ReportDetailDrawer";
 import ReportRowLink from "./ReportRowLink";
-import { publishAllGenerated } from "./actions";
+import { ReportSelectionProvider } from "./ReportSelectionContext";
+import ReportRowCheckbox from "./ReportRowCheckbox";
+import SelectAllCheckbox from "./SelectAllCheckbox";
+import BulkPublishButton from "./BulkPublishButton";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function thisMonth() {
@@ -17,10 +19,11 @@ function thisMonth() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
 }
 
-const STATUS_BADGE: Record<string, string> = {
-  생성대기: "gray",
-  생성완료: "blue",
-  발행완료: "green",
+// 발행 유무 라벨 — status 값을 사용자 친화 표현으로.
+const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
+  생성대기: { text: "미발행", cls: "gray" },
+  생성완료: { text: "미발행", cls: "blue" },
+  발행완료: { text: "발행됨", cls: "green" },
 };
 
 export default async function ReportsPage({
@@ -113,25 +116,21 @@ export default async function ReportsPage({
     return `/admin/reports${qs.toString() ? `?${qs}` : ""}`;
   };
 
+  // 선택 가능한 ids — 미발행 (status !== 발행완료)
+  const selectableIds = list
+    .filter((r) => r.status !== "발행완료")
+    .map((r) => r.id);
+
   return (
     <ReportDrawerProvider>
+     <ReportSelectionProvider>
       <div className="page-head">
         <div>
           <h1>리포트 관리</h1>
           <p className="subtext">승인된 측정 기반 자동 생성 → 코멘트 → 발행 (학부모 공개)</p>
         </div>
         <div className="toolbar">
-          {cnt("생성완료") > 0 && (
-            <form action={publishAllGenerated}>
-              <input type="hidden" name="ym" value={target} />
-              <ConfirmButton
-                className="btn primary"
-                message={`${target} 생성완료 ${cnt("생성완료")}건을 모두 발행할까요? 학부모에게 공개되며, snapshot 이 동결됩니다.`}
-              >
-                생성완료 {cnt("생성완료")}건 일괄 발행
-              </ConfirmButton>
-            </form>
-          )}
+          <BulkPublishButton />
           <MonthNav ym={target} baseUrl="/admin/reports" />
         </div>
       </div>
@@ -207,8 +206,11 @@ export default async function ReportsPage({
           <table>
             <thead>
               <tr>
+                <th style={{ width: 36 }}>
+                  <SelectAllCheckbox selectableIds={selectableIds} />
+                </th>
                 <th>학생</th>
-                <th>상태</th>
+                <th>발행</th>
                 <th>코멘트</th>
               </tr>
             </thead>
@@ -216,8 +218,16 @@ export default async function ReportsPage({
               {list.map((r) => {
                 const hasCoach = !!(r.coach_comment && r.coach_comment.trim());
                 const hasAdmin = !!(r.admin_comment && r.admin_comment.trim());
+                const label = STATUS_LABEL[r.status] ?? {
+                  text: r.status,
+                  cls: "gray",
+                };
+                const isPublished = r.status === "발행완료";
                 return (
                   <tr key={r.id} className="row-link-host">
+                    <td style={{ textAlign: "center" }}>
+                      <ReportRowCheckbox reportId={r.id} disabled={isPublished} />
+                    </td>
                     <td>
                       <ReportRowLink
                         reportId={r.id}
@@ -233,11 +243,7 @@ export default async function ReportsPage({
                       </ReportRowLink>
                     </td>
                     <td>
-                      <span
-                        className={`badge ${STATUS_BADGE[r.status] ?? "gray"}`}
-                      >
-                        {r.status}
-                      </span>
+                      <span className={`badge ${label.cls}`}>{label.text}</span>
                     </td>
                     <td>
                       {hasCoach || hasAdmin ? (
@@ -270,7 +276,7 @@ export default async function ReportsPage({
               })}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={3}>
+                  <td colSpan={4}>
                     <div className="empty-state">
                       {hasFilter ? (
                         <>
@@ -300,6 +306,7 @@ export default async function ReportsPage({
         {/* 우: 디테일 (client drawer) */}
         <ReportDetailDrawer period={target} />
       </div>
+     </ReportSelectionProvider>
     </ReportDrawerProvider>
   );
 }
