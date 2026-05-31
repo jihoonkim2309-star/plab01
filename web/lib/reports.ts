@@ -44,28 +44,19 @@ export async function ensureReportsForMonth(ym: string): Promise<number> {
     (existing ?? []).map((r) => [r.student_id, r]),
   );
 
-  // 발행 안 된 리포트만 처리 (발행완료 frozen). 병렬 처리.
-  const todo = approved.filter((m) => {
-    const ex = existingByStudent.get(m.student_id);
-    return ex?.status !== "발행완료";
-  });
+  // 신규 학생만 리포트 insert. 기존 리포트는 snapshot 라이브 빌드 (preview)
+  // 또는 발행 시 재빌드 → 페이지 진입 시 자동 갱신 X (성능).
+  const todo = approved.filter((m) => !existingByStudent.has(m.student_id));
+  if (todo.length === 0) return 0;
+
   const results = await Promise.all(
     todo.map(async (m) => {
-      const ex = existingByStudent.get(m.student_id);
       const { snapshot } = await buildSnapshot(
         supabase,
         m.student_id,
         ym,
         centerId,
       );
-      if (ex) {
-        const { error } = await supabase
-          .from("reports")
-          .update({ snapshot, measurement_id: m.id, status: "생성완료" })
-          .eq("id", ex.id);
-        if (error) throw new Error("리포트 갱신 실패: " + error.message);
-        return 0 as const;
-      }
       const { error } = await supabase.from("reports").insert({
         center_id: centerId,
         student_id: m.student_id,
