@@ -48,7 +48,7 @@ export default async function ReportsPage({
     supabase
       .from("reports")
       .select(
-        "id, student_id, report_month, report_type, status, coach_comment, admin_comment, published_at, students(name)",
+        "id, student_id, report_month, report_type, status, coach_comment, admin_comment, published_at, parent_viewed_at, parent_view_count, students(name)",
       )
       .eq("center_id", cid)
       .eq("report_month", target)
@@ -80,6 +80,8 @@ export default async function ReportsPage({
     coach_comment: string | null;
     admin_comment: string | null;
     published_at: string | null;
+    parent_viewed_at: string | null;
+    parent_view_count: number | null;
     students: { name: string } | null;
   }[];
 
@@ -130,7 +132,6 @@ export default async function ReportsPage({
           <p className="subtext">승인된 측정 기반 자동 생성 → 코멘트 → 발행 (학부모 공개)</p>
         </div>
         <div className="toolbar">
-          <BulkPublishButton />
           <MonthNav ym={target} baseUrl="/admin/reports" />
         </div>
       </div>
@@ -155,12 +156,18 @@ export default async function ReportsPage({
           <strong>{allList.length}</strong>
         </div>
         <div className="summary-card">
-          <span>생성완료</span>
+          <span>미발행</span>
           <strong>{cnt("생성완료")}</strong>
         </div>
         <div className="summary-card">
-          <span>발행완료</span>
+          <span>발행됨</span>
           <strong>{cnt("발행완료")}</strong>
+        </div>
+        <div className="summary-card">
+          <span>학부모 열람</span>
+          <strong>
+            {allList.filter((r) => r.parent_viewed_at).length}
+          </strong>
         </div>
         <div className="summary-card">
           <span>승인된 측정</span>
@@ -180,6 +187,9 @@ export default async function ReportsPage({
                   : `${list.length}건`}
               </span>
             </p>
+            <div className="toolbar">
+              <BulkPublishButton />
+            </div>
           </div>
           <div className="panel-body" style={{ paddingBottom: 0 }}>
             <FilterBar>
@@ -187,8 +197,8 @@ export default async function ReportsPage({
                 param="status"
                 current={status}
                 options={[
-                  { value: "생성완료", label: "생성완료" },
-                  { value: "발행완료", label: "발행완료" },
+                  { value: "생성완료", label: "미발행" },
+                  { value: "발행완료", label: "발행됨" },
                 ]}
               />
               <div style={{ flex: 1 }} />
@@ -212,6 +222,7 @@ export default async function ReportsPage({
                 <th>학생</th>
                 <th>발행</th>
                 <th>코멘트</th>
+                <th>열람</th>
               </tr>
             </thead>
             <tbody>
@@ -271,12 +282,30 @@ export default async function ReportsPage({
                         </span>
                       )}
                     </td>
+                    <td>
+                      {r.parent_viewed_at ? (
+                        <span
+                          className="badge green"
+                          title={`최초 ${r.parent_viewed_at.slice(0, 10).replace(/-/g, ".")} · 누적 ${r.parent_view_count ?? 0}회`}
+                        >
+                          열람 {r.parent_view_count ?? 0}
+                        </span>
+                      ) : r.status === "발행완료" ? (
+                        <span className="muted" style={{ fontSize: 12 }}>
+                          미열람
+                        </span>
+                      ) : (
+                        <span className="muted" style={{ fontSize: 12 }}>
+                          -
+                        </span>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={4}>
+                  <td colSpan={5}>
                     <div className="empty-state">
                       {hasFilter ? (
                         <>
