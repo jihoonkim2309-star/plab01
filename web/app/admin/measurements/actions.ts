@@ -249,6 +249,30 @@ export async function bulkMeasurementAction(formData: FormData) {
   revalidatePath("/admin/measurements");
 }
 
+// 안전한 일괄 액션 — 학생 선택 X, 그 달 입력완료 measurement 전체 승인.
+// toolbar 단일 버튼에서 호출. 체크박스·RowLink 와 충돌 X.
+export async function approveAllInputComplete(formData: FormData) {
+  const { supabase, centerId } = await requireCenter();
+  const ym = String(formData.get("ym") ?? "");
+  if (!ym) throw new Error("측정월 필수");
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("measurements")
+    .update({
+      status: "승인완료",
+      reviewed_by: user?.id ?? null,
+      reviewed_at: new Date().toISOString(),
+      reject_reason: null,
+    })
+    .eq("center_id", centerId)
+    .eq("measurement_month", ym)
+    .eq("status", "입력완료");
+
+  if (error) throw new Error("일괄 승인 실패: " + error.message);
+  revalidatePath("/admin/measurements");
+}
+
 // 데모: 그 달의 모든 활성 학생에 대해 measurement(승인완료) + 항목별 더미값 채움.
 // 어드민 전용. 이미 있으면 값 덮어쓰고 상태 승인완료로 강제.
 const DEMO_VALUES: Record<string, number> = {

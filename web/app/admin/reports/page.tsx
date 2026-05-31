@@ -5,9 +5,11 @@ import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
+import ConfirmButton from "../ConfirmButton";
 import { ReportDrawerProvider } from "./ReportDrawerContext";
 import ReportDetailDrawer from "./ReportDetailDrawer";
 import ReportRowLink from "./ReportRowLink";
+import { publishAllGenerated } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function thisMonth() {
@@ -122,6 +124,17 @@ export default async function ReportsPage({
           <p className="subtext">승인된 측정 기반 자동 생성 → 코멘트 → 발행 (학부모 공개)</p>
         </div>
         <div className="toolbar">
+          {cnt("생성완료") > 0 && (
+            <form action={publishAllGenerated}>
+              <input type="hidden" name="ym" value={target} />
+              <ConfirmButton
+                className="btn primary"
+                message={`${target} 생성완료 ${cnt("생성완료")}건을 모두 발행할까요? 학부모에게 공개되며, snapshot 이 동결됩니다.`}
+              >
+                생성완료 {cnt("생성완료")}건 일괄 발행
+              </ConfirmButton>
+            </form>
+          )}
           <MonthNav ym={target} baseUrl="/admin/reports" />
         </div>
       </div>

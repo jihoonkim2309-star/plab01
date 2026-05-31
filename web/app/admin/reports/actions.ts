@@ -152,3 +152,50 @@ export async function bulkReportAction(formData: FormData) {
 
   revalidatePath("/admin/reports");
 }
+
+// 안전한 일괄 액션 — 학생 선택 X, 그 달 생성완료 리포트 전체 발행.
+// 각 리포트 snapshot 재빌드 후 발행. toolbar 단일 버튼에서 호출.
+export async function publishAllGenerated(formData: FormData) {
+  const { supabase, centerId } = await requireCenter();
+  const ym = String(formData.get("ym") ?? "");
+  if (!ym) throw new Error("리포트 월 필수");
+
+  const { data: rs } = await supabase
+    .from("reports")
+    .select("id, student_id, report_month")
+    .eq("center_id", centerId)
+    .eq("report_month", ym)
+    .eq("status", "생성완료");
+
+  const rows = (rs ?? []) as {
+    id: string;
+    student_id: string;
+    report_month: string;
+  }[];
+  if (rows.length === 0) {
+    revalidatePath("/admin/reports");
+    return;
+  }
+
+  const nowIso = new Date().toISOString();
+  for (const r of rows) {
+    const { snapshot, measurementId } = await buildSnapshot(
+      supabase,
+      r.student_id,
+      r.report_month,
+      centerId,
+    );
+    const { error } = await supabase
+      .from("reports")
+      .update({
+        status: "발행완료",
+        published_at: nowIso,
+        public_to_parent: true,
+        snapshot,
+        measurement_id: measurementId,
+      })
+      .eq("id", r.id);
+    if (error) throw new Error(`발행 실패 (${r.id}): ${error.message}`);
+  }
+  revalidatePath("/admin/reports");
+}

@@ -7,6 +7,8 @@ import SearchInput from "../SearchInput";
 import { MeasurementDrawerProvider } from "./MeasurementDrawerContext";
 import MeasurementDetailDrawer from "./MeasurementDetailDrawer";
 import MeasurementRowLink from "./MeasurementRowLink";
+import { approveAllInputComplete } from "./actions";
+import ConfirmButton from "../ConfirmButton";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function thisMonth() {
@@ -159,6 +161,17 @@ export default async function MeasurementsPage({
           <p className="subtext">월별 측정값 입력 → 승인 시 리포트 관리에서 자동 생성</p>
         </div>
         <div className="toolbar">
+          {cnt("입력완료") > 0 && (
+            <form action={approveAllInputComplete}>
+              <input type="hidden" name="ym" value={target} />
+              <ConfirmButton
+                className="btn primary"
+                message={`${target} 입력완료 ${cnt("입력완료")}건을 모두 승인할까요? 승인 후 리포트가 자동 생성됩니다.`}
+              >
+                입력완료 {cnt("입력완료")}건 일괄 승인
+              </ConfirmButton>
+            </form>
+          )}
           <MonthNav
             ym={target}
             baseUrl="/admin/measurements"
