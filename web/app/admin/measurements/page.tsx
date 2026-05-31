@@ -7,7 +7,6 @@ import SearchInput from "../SearchInput";
 import { MeasurementDrawerProvider } from "./MeasurementDrawerContext";
 import MeasurementDetailDrawer from "./MeasurementDetailDrawer";
 import MeasurementRowLink from "./MeasurementRowLink";
-import { seedDemoMeasurements } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function thisMonth() {
@@ -165,14 +164,6 @@ export default async function MeasurementsPage({
             baseUrl="/admin/measurements"
             extra={{ sid }}
           />
-          {isAdmin && (
-            <form action={seedDemoMeasurements}>
-              <input type="hidden" name="ym" value={target} />
-              <button className="btn" type="submit" title="모든 활성 학생에 더미 측정값 + 승인완료">
-                데모 측정 데이터 채우기
-              </button>
-            </form>
-          )}
         </div>
       </div>
 
