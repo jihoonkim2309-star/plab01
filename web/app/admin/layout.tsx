@@ -164,7 +164,9 @@ export default async function AdminLayout({
         </header>
 
         <section className="content">
-          {isStaff && !activeCenterId && isSuper && (
+          {isStaff && !activeCenterId && isSuper ? (
+            // super_admin 활성 지점 미선택 — children (requireCenter redirect) 차단
+            // 후 안내만 표시 (loading.tsx 무한 표시 회피)
             <div
               className="panel"
               style={{
@@ -177,8 +179,9 @@ export default async function AdminLayout({
               활성 지점이 설정되지 않았습니다. 상단 좌측{" "}
               <b>지점 선택</b>에서 지점을 골라 주세요.
             </div>
+          ) : (
+            children
           )}
-          {children}
         </section>
       </main>
     </div>
