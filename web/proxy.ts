@@ -4,7 +4,12 @@ import { NextResponse, type NextRequest } from "next/server";
 // 모든 요청에서 Supabase 세션을 갱신하고, 로그인 안 한 사용자가
 // 보호된 경로(/admin, /prototype.html)에 접근하면 로그인 페이지로 보낸다.
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  // server component 에서 pathname 알 수 있게 custom header 주입
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+  let response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,7 +23,9 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
-          response = NextResponse.next({ request });
+          response = NextResponse.next({
+            request: { headers: requestHeaders },
+          });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),
           );

@@ -1,6 +1,6 @@
 import "./admin.css";
 import { Suspense } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Sidebar from "./Sidebar";
@@ -18,6 +18,8 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const h = await headers();
+  const pathname = h.get("x-pathname") ?? "/admin";
   const supabase = await createClient();
   const {
     data: { session },
@@ -164,24 +166,27 @@ export default async function AdminLayout({
         </header>
 
         <section className="content">
-          {isStaff && !activeCenterId && isSuper ? (
-            // super_admin 활성 지점 미선택 — children (requireCenter redirect) 차단
-            // 후 안내만 표시 (loading.tsx 무한 표시 회피)
-            <div
-              className="panel"
-              style={{
-                background: "var(--orange-soft)",
-                borderColor: "#f0d19a",
-                color: "var(--orange)",
-                padding: "12px 16px",
-              }}
-            >
-              활성 지점이 설정되지 않았습니다. 상단 좌측{" "}
-              <b>지점 선택</b>에서 지점을 골라 주세요.
-            </div>
-          ) : (
-            children
-          )}
+          {(() => {
+            // super_admin 활성 지점 미선택 시 /admin (메인 대시보드) 만 통과,
+            // 하위 페이지는 차단 (requireCenter redirect → loading 무한 회피)
+            const isBlocked =
+              isStaff && !activeCenterId && isSuper && pathname !== "/admin";
+            if (!isBlocked) return children;
+            return (
+              <div
+                className="panel"
+                style={{
+                  background: "var(--orange-soft)",
+                  borderColor: "#f0d19a",
+                  color: "var(--orange)",
+                  padding: "12px 16px",
+                }}
+              >
+                활성 지점이 설정되지 않았습니다. 상단 좌측{" "}
+                <b>지점 선택</b>에서 지점을 골라 주세요.
+              </div>
+            );
+          })()}
         </section>
       </main>
     </div>
