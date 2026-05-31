@@ -7,6 +7,8 @@ import SearchInput from "../SearchInput";
 import { MeasurementDrawerProvider } from "./MeasurementDrawerContext";
 import MeasurementDetailDrawer from "./MeasurementDetailDrawer";
 import MeasurementRowLink from "./MeasurementRowLink";
+import BulkRejectButton from "./BulkRejectButton";
+import { bulkMeasurementAction } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function thisMonth() {
@@ -191,8 +193,10 @@ export default async function MeasurementsPage({
       </div>
 
       <div className="grid account-layout">
-        {/* 좌: 학생 목록 */}
-        <div className="panel elevated">
+        {/* 좌: 학생 목록 + 일괄 액션 form */}
+        <form action={bulkMeasurementAction} className="panel elevated">
+          <input type="hidden" name="ym" value={target} />
+          <input type="hidden" name="reject_reason" defaultValue="" />
           <div className="panel-head">
             <p className="panel-title">
               학생 ({target}){" "}
@@ -202,6 +206,27 @@ export default async function MeasurementsPage({
                   : `${list.length}건`}
               </span>
             </p>
+            {isAdmin && (
+              <div className="toolbar">
+                <button
+                  type="submit"
+                  name="action"
+                  value="approve"
+                  className="btn primary"
+                >
+                  선택 일괄 승인
+                </button>
+                <BulkRejectButton />
+                <button
+                  type="submit"
+                  name="action"
+                  value="reopen"
+                  className="btn"
+                >
+                  선택 다시 입력으로
+                </button>
+              </div>
+            )}
           </div>
           <div className="panel-body" style={{ paddingBottom: 0 }}>
             <FilterBar>
@@ -230,6 +255,7 @@ export default async function MeasurementsPage({
           <table>
             <thead>
               <tr>
+                <th style={{ width: 36 }}></th>
                 <th>학생</th>
                 <th>학교/학년</th>
                 <th>상태</th>
@@ -243,6 +269,14 @@ export default async function MeasurementsPage({
                     key={s.id}
                     className="row-link-host"
                   >
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        name="ids"
+                        value={s.id}
+                        aria-label={`${s.name} 선택`}
+                      />
+                    </td>
                     <td>
                       <MeasurementRowLink
                         studentId={s.id}
@@ -273,7 +307,7 @@ export default async function MeasurementsPage({
               })}
               {list.length === 0 && (
                 <tr>
-                  <td colSpan={3}>
+                  <td colSpan={4}>
                     <div className="empty-state">
                       {hasFilter ? (
                         <>
@@ -297,7 +331,7 @@ export default async function MeasurementsPage({
               )}
             </tbody>
           </table>
-        </div>
+        </form>
 
         <MeasurementDetailDrawer ym={target} items={items ?? []} isAdmin={isAdmin} />
       </div>

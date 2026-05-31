@@ -175,6 +175,80 @@ export async function reopenMeasurement(formData: FormData) {
   revalidatePath("/admin/measurements");
 }
 
+// 일괄 액션 — 선택한 학생들의 그 달 measurement 를 일괄 처리.
+// action: 'approve' | 'reject' | 'reopen'
+// reject 시 reject_reason 필수 (1회 입력으로 모든 선택 항목에 동일 적용).
+export async function bulkMeasurementAction(formData: FormData) {
+  const { supabase, centerId } = await requireCenter();
+  const studentIds = formData.getAll("ids").map(String).filter(Boolean);
+  const ym = String(formData.get("ym") ?? "");
+  const action = String(formData.get("action") ?? "");
+  const reason = String(formData.get("reject_reason") ?? "").trim() || null;
+
+  if (studentIds.length === 0) throw new Error("선택된 학생이 없습니다.");
+  if (!ym) throw new Error("측정월 필수");
+  if (!["approve", "reject", "reopen"].includes(action))
+    throw new Error("잘못된 작업");
+  if (action === "reject" && (!reason || reason.length < 2))
+    throw new Error("반려 사유 (최소 2자) 필수");
+
+  const { data: ms } = await supabase
+    .from("measurements")
+    .select("id, status")
+    .eq("center_id", centerId)
+    .eq("measurement_month", ym)
+    .in("student_id", studentIds);
+
+  const rows = (ms ?? []) as { id: string; status: string }[];
+  // 액션별 대상 status 필터
+  const targets =
+    action === "approve"
+      ? rows.filter((r) => r.status === "입력완료").map((r) => r.id)
+      : action === "reject"
+        ? rows.filter((r) => r.status === "입력완료").map((r) => r.id)
+        : rows.filter((r) => r.status !== "대기").map((r) => r.id);
+
+  if (targets.length === 0) {
+    revalidatePath("/admin/measurements");
+    return;
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const nowIso = new Date().toISOString();
+
+  let updateFields: Record<string, unknown>;
+  if (action === "approve") {
+    updateFields = {
+      status: "승인완료",
+      reviewed_by: user?.id ?? null,
+      reviewed_at: nowIso,
+      reject_reason: null,
+    };
+  } else if (action === "reject") {
+    updateFields = {
+      status: "반려",
+      reviewed_by: user?.id ?? null,
+      reviewed_at: nowIso,
+      reject_reason: reason,
+    };
+  } else {
+    updateFields = {
+      status: "대기",
+      reviewed_by: null,
+      reviewed_at: null,
+      reject_reason: null,
+    };
+  }
+
+  const { error } = await supabase
+    .from("measurements")
+    .update(updateFields)
+    .in("id", targets);
+
+  if (error) throw new Error("일괄 처리 실패: " + error.message);
+  revalidatePath("/admin/measurements");
+}
+
 // 데모: 그 달의 모든 활성 학생에 대해 measurement(승인완료) + 항목별 더미값 채움.
 // 어드민 전용. 이미 있으면 값 덮어쓰고 상태 승인완료로 강제.
 const DEMO_VALUES: Record<string, number> = {
