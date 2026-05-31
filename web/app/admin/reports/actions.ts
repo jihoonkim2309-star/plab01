@@ -88,12 +88,16 @@ export async function deleteReport(formData: FormData) {
 // 일괄 액션 — 선택한 리포트들 한 번에 처리.
 // action: 'publish' | 'unpublish' | 'public_on' | 'public_off'
 export async function bulkReportAction(formData: FormData) {
+  const tStart = Date.now();
+  console.log("[bulk] start");
   const { supabase, centerId } = await requireCenter();
+  console.log("[bulk] requireCenter", Date.now() - tStart, "ms");
   const ids = formData.getAll("ids").map(String).filter(Boolean);
   const action = String(formData.get("action") ?? "");
   if (ids.length === 0) throw new Error("선택된 리포트가 없습니다.");
   if (!["publish", "unpublish", "public_on", "public_off"].includes(action))
     throw new Error("잘못된 작업");
+  console.log("[bulk]", action, "ids:", ids.length);
 
   if (action === "publish") {
     // 생성완료/생성대기 → 발행완료. snapshot 재빌드. 병렬 처리.
@@ -132,6 +136,7 @@ export async function bulkReportAction(formData: FormData) {
       }),
     );
   } else if (action === "unpublish") {
+    const t = Date.now();
     const { error } = await supabase
       .from("reports")
       .update({
@@ -142,6 +147,7 @@ export async function bulkReportAction(formData: FormData) {
       .eq("center_id", centerId)
       .eq("status", "발행완료")
       .in("id", ids);
+    console.log("[bulk] unpublish update", Date.now() - t, "ms");
     if (error) throw new Error("발행 취소 실패: " + error.message);
   } else if (action === "public_on" || action === "public_off") {
     const { error } = await supabase
@@ -152,7 +158,10 @@ export async function bulkReportAction(formData: FormData) {
     if (error) throw new Error("공개 변경 실패: " + error.message);
   }
 
+  const tRev = Date.now();
   revalidatePath("/admin/reports");
+  console.log("[bulk] revalidatePath", Date.now() - tRev, "ms");
+  console.log("[bulk] total", Date.now() - tStart, "ms");
 }
 
 // 안전한 일괄 액션 — 학생 선택 X, 그 달 생성완료 리포트 전체 발행.
