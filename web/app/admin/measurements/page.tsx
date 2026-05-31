@@ -114,8 +114,8 @@ export default async function MeasurementsPage({
     : null;
   const m = selected ? mByStudent.get(selected.id) ?? null : null;
 
-  // items 는 위 병렬 배치에서 미리 가져와 둠 — selected 가 없으면 그냥 안 그림
-  const items = selected ? (itemsRes.data ?? []) : [];
+  // 측정 항목 — drawer 에 props 로 전달, selectedId 무관 항상 fetch
+  const items = itemsRes.data ?? [];
 
   // values 는 measurement_id 가 정해진 뒤에야 조회 가능 → 마지막 단일 쿼리
   const { data: values } = m
