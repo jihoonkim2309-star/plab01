@@ -23,6 +23,7 @@ export default function BulkSubmitButton({
   confirmMessage,
   variant = "primary",
   matchSelector,
+  formAction,
 }: {
   name: string;
   value: string;
@@ -33,6 +34,8 @@ export default function BulkSubmitButton({
   // 카운트할 체크박스를 좁히는 추가 CSS selector
   // 예: '[data-pub="0"]' 또는 ':is([data-status="pending"], [data-status="linked"])'
   matchSelector?: string;
+  // form 의 default action 외 다른 server action 사용 시 (button 의 formAction override)
+  formAction?: (formData: FormData) => void | Promise<void>;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const [count, setCount] = useState(0);
@@ -105,6 +108,7 @@ export default function BulkSubmitButton({
         type="submit"
         name={name}
         value={value}
+        formAction={formAction}
         className={cls}
         disabled={count === 0}
         onClick={(e) => {

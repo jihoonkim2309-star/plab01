@@ -7,6 +7,8 @@ import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
 import ExportLink from "../ExportLink";
+import BulkSelectAll from "../BulkSelectAll";
+import BulkSubmitButton from "../BulkSubmitButton";
 import PayInvoiceModal from "../billing/PayInvoiceModal";
 import { requestParentPayment } from "../billing/actions";
 import { bulkOverdueAction } from "./actions";
@@ -144,20 +146,30 @@ export default async function OverduePage({
                 return p.toString();
               })()}`}
             />
-            <button className="btn" name="action" value="재청구" type="submit">
-              선택 재청구
-            </button>
-            <button className="btn warn" name="action" value="알림" type="submit">
-              선택 알림 발송
-            </button>
-            <button
-              className="btn primary"
-              type="submit"
+            <BulkSubmitButton
+              name="action"
+              value="재청구"
+              label="재청구"
+              emptyLabel="선택 재청구"
+              variant="default"
+              confirmMessage="선택한 청구서를 다시 '청구' 상태로 되돌릴까요? 학부모가 다시 결제할 수 있게 됩니다."
+            />
+            <BulkSubmitButton
+              name="action"
+              value="알림"
+              label="알림 발송"
+              emptyLabel="선택 알림 발송"
+              variant="danger"
+              confirmMessage="선택한 미납 건에 대해 학부모/학생에게 알림을 발송할까요? (FCM/알림톡 라이브 시 자동 전송)"
+            />
+            <BulkSubmitButton
+              name="action"
+              value="parentapp"
+              label="학부모앱 결제 요청"
+              emptyLabel="학부모앱 결제 요청"
               formAction={requestParentPayment}
-              title="선택한 청구서를 학부모앱에 결제 요청 알림으로 보냅니다"
-            >
-              선택 학부모앱 결제 요청
-            </button>
+              confirmMessage="선택한 청구서를 학부모앱에 결제 요청 알림으로 보낼까요?"
+            />
           </div>
         </div>
 
@@ -188,7 +200,9 @@ export default async function OverduePage({
           <table>
             <thead>
               <tr>
-                <th className="check-cell"></th>
+                <th className="check-cell">
+                  <BulkSelectAll />
+                </th>
                 <th>학생</th>
                 <th>청구월</th>
                 <th>금액</th>
@@ -205,7 +219,12 @@ export default async function OverduePage({
                 return (
                   <tr key={i.id} className="row-link-host">
                     <td className="check-cell">
-                      <input type="checkbox" name="ids" value={i.id} />
+                      <input
+                        type="checkbox"
+                        name="ids"
+                        value={i.id}
+                        data-status={i.status}
+                      />
                     </td>
                     <td>
                       {i.student_id ? (
