@@ -57,7 +57,9 @@ function prevMonths(ym: string): [string, string, string, string] {
   return list as [string, string, string, string];
 }
 
-// 항목별 원값을 0-100 점수로 정규화. 연령대별 기준은 데이터 확보 전 임시값.
+// 항목별 원값을 0-100 점수로 정규화.
+// 1순위: measurement_norms (학원이 입력한 연령·성별 기준값)
+// 2순위: 코드 내 fallback (데이터 확보 전 임시값)
 const HIGHER_BETTER: Record<string, { min: number; max: number }> = {
   "제자리 멀리뛰기": { min: 100, max: 220 },
   "수직 점프": { min: 20, max: 55 },
@@ -70,7 +72,34 @@ const LOWER_BETTER: Record<string, { good: number; bad: number }> = {
   "20m 달리기": { good: 3.0, bad: 5.0 },
   반응속도: { good: 0.3, bad: 0.85 },
 };
-function scoreItem(name: string, value: number): number | null {
+
+type NormBounds = { min: number; max: number };
+
+function scoreItem(
+  name: string,
+  value: number,
+  norm?: NormBounds | null,
+): number | null {
+  const isLower = LOWER_BETTER[name] != null;
+  if (norm) {
+    // norm.min = 0점 기준 (낮을수록 좋음 항목은 100점 기준)
+    // norm.max = 100점 기준 (낮을수록 좋음 항목은 0점 기준)
+    if (isLower) {
+      // 작을수록 좋음 — norm.min = 좋은 값, norm.max = 나쁜 값
+      return Math.max(
+        0,
+        Math.min(
+          100,
+          Math.round(((norm.max - value) / (norm.max - norm.min)) * 100),
+        ),
+      );
+    }
+    return Math.max(
+      0,
+      Math.min(100, Math.round(((value - norm.min) / (norm.max - norm.min)) * 100)),
+    );
+  }
+  // fallback
   const h = HIGHER_BETTER[name];
   if (h)
     return Math.max(
@@ -85,15 +114,36 @@ function scoreItem(name: string, value: number): number | null {
     );
   return null;
 }
+
+function ageFromBirth(birth: string | null | undefined): number | null {
+  if (!birth) return null;
+  const b = new Date(birth);
+  if (Number.isNaN(b.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - b.getFullYear();
+  const m = now.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
+  return age;
+}
+function ageBand(age: number | null): "초저" | "초고" | "중등" | null {
+  if (age == null) return null;
+  if (age >= 7 && age <= 9) return "초저";
+  if (age >= 10 && age <= 12) return "초고";
+  if (age >= 13 && age <= 16) return "중등";
+  return null;
+}
 function avgOfScores(...scores: (number | null)[]): number {
   const valid = scores.filter((x): x is number => x != null);
   if (valid.length === 0) return 0;
   return Math.round(valid.reduce((a, b) => a + b, 0) / valid.length);
 }
-function computeBalance(currentByName: Record<string, number>): BalanceScores {
+function computeBalance(
+  currentByName: Record<string, number>,
+  normsByName: Map<string, NormBounds>,
+): BalanceScores {
   const s = (name: string) => {
     const v = currentByName[name];
-    return v != null ? scoreItem(name, v) : null;
+    return v != null ? scoreItem(name, v, normsByName.get(name) ?? null) : null;
   };
   return {
     파워: avgOfScores(s("제자리 멀리뛰기"), s("수직 점프")),
@@ -209,7 +259,32 @@ export async function buildSnapshot(
     const cell = valByMonthItem.get(`3|${it.id}`);
     if (typeof cell === "number") currentByName[it.name] = cell;
   }
-  const balance = computeBalance(currentByName);
+
+  // 학생의 나이·성별에 맞는 norms fetch → name 기준 lookup
+  const age = ageFromBirth((student as { birth?: string } | null)?.birth);
+  const band = ageBand(age);
+  const gender = (student as { gender?: string } | null)?.gender ?? null;
+  const normsByName = new Map<string, NormBounds>();
+  if (band && (gender === "남" || gender === "여") && cid) {
+    const { data: norms } = await supabase
+      .from("measurement_norms")
+      .select("item_id, min_value, max_value")
+      .eq("center_id", cid)
+      .eq("age_band", band)
+      .eq("gender", gender);
+    const byItemId = new Map<string, NormBounds>();
+    for (const n of (norms ?? []) as { item_id: string; min_value: number | null; max_value: number | null }[]) {
+      if (n.min_value != null && n.max_value != null) {
+        byItemId.set(n.item_id, { min: n.min_value, max: n.max_value });
+      }
+    }
+    for (const it of items ?? []) {
+      const nb = byItemId.get(it.id);
+      if (nb) normsByName.set(it.name, nb);
+    }
+  }
+
+  const balance = computeBalance(currentByName, normsByName);
 
   return {
     snapshot: {
