@@ -5,13 +5,13 @@ import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
+import BulkSelectAll from "../BulkSelectAll";
+import BulkSubmitButton from "../BulkSubmitButton";
+import CheckRowToggle from "../CheckRowToggle";
 import { ReportDrawerProvider } from "./ReportDrawerContext";
 import ReportDetailDrawer from "./ReportDetailDrawer";
 import ReportRowLink from "./ReportRowLink";
-import { ReportSelectionProvider } from "./ReportSelectionContext";
-import ReportRowCheckbox from "./ReportRowCheckbox";
-import SelectAllCheckbox from "./SelectAllCheckbox";
-import BulkPublishButton from "./BulkPublishButton";
+import { bulkReportAction } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function thisMonth() {
@@ -118,14 +118,8 @@ export default async function ReportsPage({
     return `/admin/reports${qs.toString() ? `?${qs}` : ""}`;
   };
 
-  // 선택 가능한 ids — 미발행 (status !== 발행완료)
-  const selectableIds = list
-    .filter((r) => r.status !== "발행완료")
-    .map((r) => r.id);
-
   return (
     <ReportDrawerProvider>
-     <ReportSelectionProvider>
       <div className="page-head">
         <div>
           <h1>리포트 관리</h1>
@@ -187,9 +181,6 @@ export default async function ReportsPage({
                   : `${list.length}건`}
               </span>
             </p>
-            <div className="toolbar">
-              <BulkPublishButton />
-            </div>
           </div>
           <div className="panel-body" style={{ paddingBottom: 0 }}>
             <FilterBar>
@@ -213,11 +204,25 @@ export default async function ReportsPage({
               )}
             </FilterBar>
           </div>
+          <form action={bulkReportAction}>
+          <div
+            className="toolbar"
+            style={{ padding: "8px 16px", justifyContent: "flex-end" }}
+          >
+            <BulkSubmitButton
+              name="action"
+              value="publish"
+              confirmMessage="선택한 리포트를 발행할까요? 학부모 앱에 노출되며 측정값 snapshot 이 동결됩니다."
+            >
+              {(n) => `선택 ${n}건 일괄 발행`}
+            </BulkSubmitButton>
+          </div>
+          <CheckRowToggle>
           <table>
             <thead>
               <tr>
                 <th style={{ width: 36 }}>
-                  <SelectAllCheckbox selectableIds={selectableIds} />
+                  <BulkSelectAll />
                 </th>
                 <th>학생</th>
                 <th>발행</th>
@@ -237,7 +242,14 @@ export default async function ReportsPage({
                 return (
                   <tr key={r.id} className="row-link-host">
                     <td style={{ textAlign: "center" }}>
-                      <ReportRowCheckbox reportId={r.id} disabled={isPublished} />
+                      <input
+                        type="checkbox"
+                        name="ids"
+                        value={r.id}
+                        disabled={isPublished}
+                        aria-label="리포트 선택"
+                        onClick={(e) => e.stopPropagation()}
+                      />
                     </td>
                     <td>
                       <ReportRowLink
@@ -324,12 +336,13 @@ export default async function ReportsPage({
               )}
             </tbody>
           </table>
+          </CheckRowToggle>
+          </form>
         </div>
 
         {/* 우: 디테일 (client drawer) */}
         <ReportDetailDrawer period={target} />
       </div>
-     </ReportSelectionProvider>
     </ReportDrawerProvider>
   );
 }
