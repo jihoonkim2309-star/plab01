@@ -41,7 +41,7 @@ export default function CheckRowToggle({
   }, []);
 
   return (
-    <div ref={ref} className="check-row-host">
+    <div ref={ref} className="check-row-host list-scroll">
       {children}
     </div>
   );

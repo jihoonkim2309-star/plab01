@@ -2696,3 +2696,18 @@
 @keyframes page-loading-spin {
   to { transform: rotate(360deg); }
 }
+
+/* 리스트 영역만 스크롤 — panel-head/filter/thead 고정, tbody 만 세로 스크롤.
+   CheckRowToggle 사용 페이지에 자동 적용 (모든 일괄 처리 페이지 일관). */
+.list-scroll {
+  max-height: calc(100vh - 380px);
+  min-height: 220px;
+  overflow-y: auto;
+}
+.list-scroll table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-paper, #f7f7f4);
+  z-index: 2;
+  box-shadow: 0 1px 0 var(--border, #e3e1d8);
+}
