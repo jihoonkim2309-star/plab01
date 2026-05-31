@@ -230,6 +230,7 @@ export default function MeasurementDetailDrawer({
                               type={it.value_kind === "number" ? "number" : "text"}
                               step="any"
                               defaultValue={dv}
+                              required
                             />
                           </div>
                         );
