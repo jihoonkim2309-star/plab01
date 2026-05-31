@@ -172,6 +172,7 @@ export default async function ReportsPage({
       <div className="grid account-layout">
         {/* 좌: 리포트 목록 */}
         <div className="panel elevated">
+         <form action={bulkReportAction}>
           <div className="panel-head">
             <p className="panel-title">
               리포트 목록{" "}
@@ -181,6 +182,15 @@ export default async function ReportsPage({
                   : `${list.length}건`}
               </span>
             </p>
+            <div className="toolbar">
+              <BulkSubmitButton
+                name="action"
+                value="publish"
+                confirmMessage="선택한 리포트를 발행할까요? 학부모 앱에 공개되며, 측정값은 발행 시점 그대로 고정됩니다. (코멘트는 발행 후에도 수정 가능)"
+              >
+                {(n) => (n === 0 ? "일괄 발행" : `선택 ${n}건 발행`)}
+              </BulkSubmitButton>
+            </div>
           </div>
           <div className="panel-body" style={{ paddingBottom: 0 }}>
             <FilterBar>
@@ -203,19 +213,6 @@ export default async function ReportsPage({
                 </Link>
               )}
             </FilterBar>
-          </div>
-          <form action={bulkReportAction}>
-          <div
-            className="toolbar"
-            style={{ padding: "8px 16px", justifyContent: "flex-end" }}
-          >
-            <BulkSubmitButton
-              name="action"
-              value="publish"
-              confirmMessage="선택한 리포트를 발행할까요? 학부모 앱에 노출되며 측정값 snapshot 이 동결됩니다."
-            >
-              {(n) => `선택 ${n}건 일괄 발행`}
-            </BulkSubmitButton>
           </div>
           <CheckRowToggle>
           <table>
@@ -337,7 +334,7 @@ export default async function ReportsPage({
             </tbody>
           </table>
           </CheckRowToggle>
-          </form>
+         </form>
         </div>
 
         {/* 우: 디테일 (client drawer) */}
