@@ -22,6 +22,7 @@ export default function BulkSubmitButton({
   emptyLabel,
   confirmMessage,
   variant = "primary",
+  matchAttr,
 }: {
   name: string;
   value: string;
@@ -29,6 +30,8 @@ export default function BulkSubmitButton({
   emptyLabel?: string;
   confirmMessage?: string;
   variant?: Variant;
+  // 카운트할 체크박스를 좁히는 attribute (예: data-pub="0" 만)
+  matchAttr?: { name: string; value: string };
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const [count, setCount] = useState(0);
@@ -43,9 +46,12 @@ export default function BulkSubmitButton({
     const form = btn.closest("form");
     if (!form) return;
 
+    const extra = matchAttr
+      ? `[${matchAttr.name}="${matchAttr.value}"]`
+      : "";
     function sync() {
       const checked = form!.querySelectorAll(
-        'input[type="checkbox"][name="ids"]:checked',
+        `input[type="checkbox"][name="ids"]${extra}:checked`,
       ).length;
       setCount(checked);
     }
@@ -63,7 +69,7 @@ export default function BulkSubmitButton({
       form.removeEventListener("change", sync);
       mo.disconnect();
     };
-  }, []);
+  }, [matchAttr?.name, matchAttr?.value]);
 
   function doSubmit() {
     const btn = ref.current;

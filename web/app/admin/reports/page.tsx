@@ -185,9 +185,19 @@ export default async function ReportsPage({
             <div className="toolbar">
               <BulkSubmitButton
                 name="action"
+                value="unpublish"
+                label="발행 취소"
+                emptyLabel="발행 취소"
+                variant="default"
+                matchAttr={{ name: "data-pub", value: "1" }}
+                confirmMessage="선택한 리포트의 발행을 취소할까요? 학부모 앱에서 숨겨지며, 코멘트·측정값은 보존됩니다."
+              />
+              <BulkSubmitButton
+                name="action"
                 value="publish"
                 label="발행"
                 emptyLabel="일괄 발행"
+                matchAttr={{ name: "data-pub", value: "0" }}
                 confirmMessage="선택한 리포트를 발행할까요? 학부모 앱에 공개되며, 측정값은 발행 시점 그대로 고정됩니다. (코멘트는 발행 후에도 수정 가능)"
               />
             </div>
@@ -243,7 +253,7 @@ export default async function ReportsPage({
                         type="checkbox"
                         name="ids"
                         value={r.id}
-                        disabled={isPublished}
+                        data-pub={isPublished ? "1" : "0"}
                         aria-label="리포트 선택"
                       />
                     </td>
