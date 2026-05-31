@@ -96,7 +96,7 @@ export async function bulkReportAction(formData: FormData) {
     throw new Error("잘못된 작업");
 
   if (action === "publish") {
-    // 생성완료/생성대기 → 발행완료. snapshot 재빌드.
+    // 생성완료/생성대기 → 발행완료. snapshot 재빌드. 병렬 처리.
     const { data: rs } = await supabase
       .from("reports")
       .select("id, student_id, report_month, status")
@@ -110,25 +110,27 @@ export async function bulkReportAction(formData: FormData) {
     }[];
     const targets = rows.filter((r) => r.status !== "발행완료");
     const nowIso = new Date().toISOString();
-    for (const r of targets) {
-      const { snapshot, measurementId } = await buildSnapshot(
-        supabase,
-        r.student_id,
-        r.report_month,
-        centerId,
-      );
-      const { error } = await supabase
-        .from("reports")
-        .update({
-          status: "발행완료",
-          published_at: nowIso,
-          public_to_parent: true,
-          snapshot,
-          measurement_id: measurementId,
-        })
-        .eq("id", r.id);
-      if (error) throw new Error(`발행 실패 (${r.id}): ${error.message}`);
-    }
+    await Promise.all(
+      targets.map(async (r) => {
+        const { snapshot, measurementId } = await buildSnapshot(
+          supabase,
+          r.student_id,
+          r.report_month,
+          centerId,
+        );
+        const { error } = await supabase
+          .from("reports")
+          .update({
+            status: "발행완료",
+            published_at: nowIso,
+            public_to_parent: true,
+            snapshot,
+            measurement_id: measurementId,
+          })
+          .eq("id", r.id);
+        if (error) throw new Error(`발행 실패 (${r.id}): ${error.message}`);
+      }),
+    );
   } else if (action === "unpublish") {
     const { error } = await supabase
       .from("reports")

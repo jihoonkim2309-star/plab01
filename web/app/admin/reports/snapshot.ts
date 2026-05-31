@@ -112,32 +112,37 @@ export async function buildSnapshot(
 ): Promise<{ snapshot: Snapshot; measurementId: string | null }> {
   const months = prevMonths(ym);
 
-  const { data: student } = await supabase
-    .from("students")
-    .select("id, name, gender, birth, school, grade")
-    .eq("id", studentId)
-    .single();
+  // student / measurements / items 는 서로 독립 → 병렬
+  const [studentRes, msRes, itemsRes] = await Promise.all([
+    supabase
+      .from("students")
+      .select("id, name, gender, birth, school, grade")
+      .eq("id", studentId)
+      .single(),
+    supabase
+      .from("measurements")
+      .select("id, measurement_month, measured_at")
+      .eq("student_id", studentId)
+      .in("measurement_month", months),
+    supabase
+      .from("measurement_items")
+      .select(
+        "id, category, name, unit, icon, icon_url, icon_hidden, sort_order, active",
+      )
+      .eq("center_id", centerId)
+      .eq("active", true)
+      .in("category", REPORT_CATEGORIES)
+      .order("sort_order", { ascending: true }),
+  ]);
+  const student = studentRes.data;
+  const ms = msRes.data;
+  const items = itemsRes.data;
 
-  const { data: ms } = await supabase
-    .from("measurements")
-    .select("id, measurement_month, measured_at")
-    .eq("student_id", studentId)
-    .in("measurement_month", months);
   const msByMonth = new Map<
     string,
     { id: string; measurement_month: string; measured_at: string | null }
   >((ms ?? []).map((m) => [m.measurement_month, m]));
   const currentM = msByMonth.get(ym) ?? null;
-
-  const { data: items } = await supabase
-    .from("measurement_items")
-    .select(
-      "id, category, name, unit, icon, icon_url, icon_hidden, sort_order, active",
-    )
-    .eq("center_id", centerId)
-    .eq("active", true)
-    .in("category", REPORT_CATEGORIES)
-    .order("sort_order", { ascending: true });
 
   const mids = (ms ?? []).map((m) => m.id);
   const { data: vals } = mids.length
