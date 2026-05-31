@@ -1,31 +1,34 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 // 일괄 처리 form 안의 submit 버튼.
 // - 같은 form 안의 `input[name="ids"]:checked` 갯수 자동 카운트
-// - count === 0 이면 disabled
+// - count === 0 이면 disabled, emptyLabel 표시
+// - count > 0 이면 "선택 N건 {label}" 표시
 // - confirmMessage 있으면 모달 confirm 후 submit
 // - submit 시 name/value 가 formData 에 전달 (action 구분용)
-// 사용: <BulkSubmitButton name="action" value="publish" confirmMessage="...">
-//         {(n) => `선택 ${n}건 발행`}
-//       </BulkSubmitButton>
+// 사용: <BulkSubmitButton name="action" value="publish"
+//         label="발행" emptyLabel="일괄 발행"
+//         confirmMessage="..." />
 
 type Variant = "primary" | "danger" | "default";
 
 export default function BulkSubmitButton({
   name,
   value,
+  label,
+  emptyLabel,
   confirmMessage,
   variant = "primary",
-  children,
 }: {
   name: string;
   value: string;
+  label: string;
+  emptyLabel?: string;
   confirmMessage?: string;
   variant?: Variant;
-  children: ReactNode | ((count: number) => ReactNode);
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const [count, setCount] = useState(0);
@@ -70,7 +73,8 @@ export default function BulkSubmitButton({
     queueMicrotask(doSubmit);
   }
 
-  const label = typeof children === "function" ? children(count) : children;
+  const display =
+    count === 0 ? (emptyLabel ?? label) : `선택 ${count}건 ${label}`;
   const cls =
     variant === "primary"
       ? "btn primary"
@@ -95,7 +99,7 @@ export default function BulkSubmitButton({
           // confirmMessage 없으면 native submit
         }}
       >
-        {label}
+        {display}
       </button>
       {open &&
         mounted &&

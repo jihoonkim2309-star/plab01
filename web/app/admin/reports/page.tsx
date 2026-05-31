@@ -186,10 +186,10 @@ export default async function ReportsPage({
               <BulkSubmitButton
                 name="action"
                 value="publish"
+                label="발행"
+                emptyLabel="일괄 발행"
                 confirmMessage="선택한 리포트를 발행할까요? 학부모 앱에 공개되며, 측정값은 발행 시점 그대로 고정됩니다. (코멘트는 발행 후에도 수정 가능)"
-              >
-                {(n) => (n === 0 ? "일괄 발행" : `선택 ${n}건 발행`)}
-              </BulkSubmitButton>
+              />
             </div>
           </div>
           <div className="panel-body" style={{ paddingBottom: 0 }}>
