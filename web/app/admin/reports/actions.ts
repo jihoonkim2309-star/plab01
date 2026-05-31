@@ -5,19 +5,19 @@ import { redirect } from "next/navigation";
 import { requireCenter } from "@/lib/center";
 import { buildSnapshot } from "./snapshot";
 
+// 코멘트만 저장. 발행/공개 상태는 publishReport/unpublishReport 가 일괄 관리.
+// 발행 후에도 코멘트 수정 허용 (snapshot 수치만 동결, 코멘트는 사후 편집 가능).
 export async function updateReport(formData: FormData) {
   const { supabase } = await requireCenter();
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("id 필수");
   const coach = String(formData.get("coach_comment") ?? "").trim() || null;
   const admin = String(formData.get("admin_comment") ?? "").trim() || null;
-  const pub = formData.get("public_to_parent") === "on";
   const { error } = await supabase
     .from("reports")
     .update({
       coach_comment: coach,
       admin_comment: admin,
-      public_to_parent: pub,
     })
     .eq("id", id);
   if (error) throw new Error("저장 실패: " + error.message);

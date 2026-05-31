@@ -31,10 +31,9 @@ export default async function ReportsPage({
     rid?: string;
     q?: string;
     status?: string;
-    publicTo?: string;
   }>;
 }) {
-  const { ym, rid, q, status, publicTo } = await searchParams;
+  const { ym, rid, q, status } = await searchParams;
   const target = ym && /^\d{4}-\d{2}$/.test(ym) ? ym : thisMonth();
   const { supabase, centerId: cid } = await requireCenter();
 
@@ -46,7 +45,7 @@ export default async function ReportsPage({
     supabase
       .from("reports")
       .select(
-        "id, student_id, report_month, report_type, status, public_to_parent, published_at, students(name)",
+        "id, student_id, report_month, report_type, status, coach_comment, admin_comment, published_at, students(name)",
       )
       .eq("center_id", cid)
       .eq("report_month", target)
@@ -75,7 +74,8 @@ export default async function ReportsPage({
     report_month: string;
     report_type: string;
     status: string;
-    public_to_parent: boolean;
+    coach_comment: string | null;
+    admin_comment: string | null;
     published_at: string | null;
     students: { name: string } | null;
   }[];
@@ -84,17 +84,15 @@ export default async function ReportsPage({
   const cnt = (s: string) => allList.filter((r) => r.status === s).length;
   const approvedCount = approvedRes.count ?? 0;
 
-  // 필터 적용 리스트 (학생명 검색·상태·공개여부)
+  // 필터 적용 리스트 (학생명 검색·상태)
   const needle = q?.toLowerCase() ?? "";
   const list = allList.filter((r) => {
     if (status && r.status !== status) return false;
-    if (publicTo === "public" && !r.public_to_parent) return false;
-    if (publicTo === "private" && r.public_to_parent) return false;
     if (needle && !(r.students?.name ?? "").toLowerCase().includes(needle))
       return false;
     return true;
   });
-  const hasFilter = !!(q || status || publicTo);
+  const hasFilter = !!(q || status);
 
   // 선택된 리포트는 필터에 가려져도 detail 은 표시
   const selected = rid ? allList.find((r) => r.id === rid) ?? null : null;
@@ -111,7 +109,6 @@ export default async function ReportsPage({
     if (p.keepFilter) {
       if (q) qs.set("q", q);
       if (status) qs.set("status", status);
-      if (publicTo) qs.set("publicTo", publicTo);
     }
     return `/admin/reports${qs.toString() ? `?${qs}` : ""}`;
   };
@@ -167,10 +164,6 @@ export default async function ReportsPage({
           <strong>{cnt("발행완료")}</strong>
         </div>
         <div className="summary-card">
-          <span>학부모 공개</span>
-          <strong>{allList.filter((r) => r.public_to_parent).length}</strong>
-        </div>
-        <div className="summary-card">
           <span>승인된 측정</span>
           <strong>{approvedCount}</strong>
         </div>
@@ -199,15 +192,6 @@ export default async function ReportsPage({
                   { value: "발행완료", label: "발행완료" },
                 ]}
               />
-              <StatusChips
-                param="publicTo"
-                current={publicTo}
-                allLabel="공개무관"
-                options={[
-                  { value: "public", label: "공개" },
-                  { value: "private", label: "비공개" },
-                ]}
-              />
               <div style={{ flex: 1 }} />
               <SearchInput param="q" current={q} placeholder="학생명 검색" />
               {hasFilter && (
@@ -225,45 +209,65 @@ export default async function ReportsPage({
               <tr>
                 <th>학생</th>
                 <th>상태</th>
-                <th>공개</th>
+                <th>코멘트</th>
               </tr>
             </thead>
             <tbody>
-              {list.map((r) => (
-                <tr
-                  key={r.id}
-                  className="row-link-host"
-                >
-                  <td>
-                    <ReportRowLink
-                      reportId={r.id}
-                      href={navUrl({
-                        ym: target,
-                        rid: r.id,
-                        keepFilter: true,
-                      })}
-                      className="row-link-stretch"
-                      style={{ color: "inherit" }}
-                    >
-                      <strong>{r.students?.name ?? "-"}</strong>
-                    </ReportRowLink>
-                  </td>
-                  <td>
-                    <span
-                      className={`badge ${STATUS_BADGE[r.status] ?? "gray"}`}
-                    >
-                      {r.status}
-                    </span>
-                  </td>
-                  <td>
-                    {r.public_to_parent ? (
-                      <span className="badge green">공개</span>
-                    ) : (
-                      <span className="badge gray">비공개</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {list.map((r) => {
+                const hasCoach = !!(r.coach_comment && r.coach_comment.trim());
+                const hasAdmin = !!(r.admin_comment && r.admin_comment.trim());
+                return (
+                  <tr key={r.id} className="row-link-host">
+                    <td>
+                      <ReportRowLink
+                        reportId={r.id}
+                        href={navUrl({
+                          ym: target,
+                          rid: r.id,
+                          keepFilter: true,
+                        })}
+                        className="row-link-stretch"
+                        style={{ color: "inherit" }}
+                      >
+                        <strong>{r.students?.name ?? "-"}</strong>
+                      </ReportRowLink>
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${STATUS_BADGE[r.status] ?? "gray"}`}
+                      >
+                        {r.status}
+                      </span>
+                    </td>
+                    <td>
+                      {hasCoach || hasAdmin ? (
+                        <span style={{ display: "inline-flex", gap: 6 }}>
+                          {hasCoach && (
+                            <span
+                              className="badge blue"
+                              title="코치 코멘트 있음"
+                            >
+                              코치
+                            </span>
+                          )}
+                          {hasAdmin && (
+                            <span
+                              className="badge green"
+                              title="관리자 코멘트 있음"
+                            >
+                              관리자
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="muted" style={{ fontSize: 12 }}>
+                          -
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
               {list.length === 0 && (
                 <tr>
                   <td colSpan={3}>

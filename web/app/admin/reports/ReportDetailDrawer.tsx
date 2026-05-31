@@ -111,7 +111,7 @@ export default function ReportDetailDrawer({ period }: { period: string }) {
                 PDF 미리보기 (새 창)
               </Link>
               <span className="muted" style={{ fontSize: 12, alignSelf: "center" }}>
-                발행 전엔 최신 측정값이 자동 반영됩니다. 발행 시점에 동결.
+                발행 = 학부모 앱 노출. 측정값은 발행 시 동결, 코멘트는 발행 후에도 수정 가능.
               </span>
             </div>
 
@@ -132,19 +132,6 @@ export default function ReportDetailDrawer({ period }: { period: string }) {
                   defaultValue={selected.admin_comment ?? ""}
                   rows={3}
                 />
-              </div>
-              <div className="field span-2">
-                <label>학부모 공개</label>
-                <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <input
-                    name="public_to_parent"
-                    type="checkbox"
-                    defaultChecked={selected.public_to_parent}
-                  />
-                  <span className="muted">
-                    체크 시 학부모 앱·링크에 노출 (발행 시 자동 체크됨)
-                  </span>
-                </label>
               </div>
               <div
                 className="span-2 toolbar"
