@@ -10,9 +10,10 @@ export async function proxy(request: NextRequest) {
   const isProtected = path.startsWith("/admin") || isProto;
   const isLogin = path === "/login";
 
+  // Supabase ssr 의 cookie 패턴: sb-{ref}-auth-token 또는 chunked (.0 .1 …)
   const hasSession = request.cookies
     .getAll()
-    .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
+    .some((c) => /^sb-.+-auth-token(\.\d+)?$/.test(c.name));
 
   if (isProtected && !hasSession) {
     return NextResponse.redirect(new URL("/login", request.url));
