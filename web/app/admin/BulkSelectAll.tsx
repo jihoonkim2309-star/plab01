@@ -29,7 +29,18 @@ export default function BulkSelectAll() {
 
     sync();
     form.addEventListener("change", sync);
-    return () => form.removeEventListener("change", sync);
+    // server re-render (revalidatePath) 후 checkbox disabled/checked 변경 감지
+    const mo = new MutationObserver(sync);
+    mo.observe(form, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["disabled", "checked"],
+    });
+    return () => {
+      form.removeEventListener("change", sync);
+      mo.disconnect();
+    };
   }, []);
 
   function toggle() {
