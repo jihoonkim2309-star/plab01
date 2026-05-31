@@ -9,6 +9,8 @@ import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
 import ExportLink from "../ExportLink";
+import BulkSelectAll from "../BulkSelectAll";
+import BulkSubmitButton from "../BulkSubmitButton";
 import { bulkRenewal, notifyRenewal } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -288,32 +290,23 @@ export default async function RenewalsPage({
                 return p.toString();
               })()}`}
             />
-            <button
-              className="btn primary"
+            <BulkSubmitButton
               name="status"
               value="확정"
-              type="submit"
-              disabled={gate.state !== "after"}
-              title={
-                gate.state === "not-configured"
-                  ? "설정에서 수강 확인일을 먼저 지정하세요"
-                  : gate.state === "before"
-                    ? `수강 확인일까지 D-${gate.daysLeft}`
-                    : "선택 학생을 활성으로 전환 + 다음 달 수강 확정"
-              }
-            >
-              수강 확정 (활성)
-            </button>
-            <button
-              className="btn warn"
+              label="수강 확정"
+              emptyLabel="수강 확정 (활성)"
+              matchSelector='[data-status="대기"]'
+              confirmMessage="선택한 학생을 다음 달 수강 확정으로 처리할까요? 활성 상태 + 다음 달 청구 대상이 됩니다."
+            />
+            <BulkSubmitButton
               name="status"
               value="보류"
-              type="submit"
-              disabled={gate.state !== "after"}
-              title="선택 학생을 휴원으로 전환 + 다음 달 청구 제외"
-            >
-              수강 보류 (휴원)
-            </button>
+              label="수강 보류"
+              emptyLabel="수강 보류 (휴원)"
+              variant="danger"
+              matchSelector='[data-status="대기"]'
+              confirmMessage="선택한 학생을 다음 달 수강 보류로 처리할까요? 휴원 상태 + 다음 달 청구 제외됩니다."
+            />
           </div>
         </div>
 
@@ -345,7 +338,9 @@ export default async function RenewalsPage({
           <table>
             <thead>
               <tr>
-                <th className="check-cell"></th>
+                <th className="check-cell">
+                  <BulkSelectAll />
+                </th>
                 <th>학생</th>
                 <th>상품</th>
                 <th>금액</th>
@@ -368,7 +363,13 @@ export default async function RenewalsPage({
                 return (
                   <tr key={e.id} className="row-link-host">
                     <td className="check-cell">
-                      <input type="checkbox" name="ids" value={e.id} />
+                      <input
+                        type="checkbox"
+                        name="ids"
+                        value={e.id}
+                        data-status={currentStatus}
+                        disabled={gate.state !== "after"}
+                      />
                     </td>
                     <td>
                       {e.student_id ? (
