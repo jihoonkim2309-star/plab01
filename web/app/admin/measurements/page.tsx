@@ -1,19 +1,13 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/center";
 import MonthNav from "../MonthNav";
-import ConfirmButton from "../ConfirmButton";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
-import {
-  approveMeasurement,
-  deleteMeasurement,
-  rejectMeasurement,
-  reopenMeasurement,
-  saveMeasurement,
-  seedDemoMeasurements,
-  submitMeasurement,
-} from "./actions";
+import { MeasurementDrawerProvider } from "./MeasurementDrawerContext";
+import MeasurementDetailDrawer from "./MeasurementDetailDrawer";
+import MeasurementRowLink from "./MeasurementRowLink";
+import { seedDemoMeasurements } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function thisMonth() {
@@ -159,7 +153,7 @@ export default async function MeasurementsPage({
   };
 
   return (
-    <>
+    <MeasurementDrawerProvider>
       <div className="page-head">
         <div>
           <h1>측정 데이터 관리</h1>
@@ -256,10 +250,11 @@ export default async function MeasurementsPage({
                 return (
                   <tr
                     key={s.id}
-                    className={`row-link-host ${selected?.id === s.id ? "selected" : ""}`}
+                    className="row-link-host"
                   >
                     <td>
-                      <Link
+                      <MeasurementRowLink
+                        studentId={s.id}
                         href={navUrl({
                           ym: target,
                           sid: s.id,
@@ -272,7 +267,7 @@ export default async function MeasurementsPage({
                         <div className="muted" style={{ fontSize: 12 }}>
                           {s.gender ?? ""} {s.birth ?? ""}
                         </div>
-                      </Link>
+                      </MeasurementRowLink>
                     </td>
                     <td className="muted">
                       {s.school ?? "-"} {s.grade ?? ""}
@@ -313,206 +308,8 @@ export default async function MeasurementsPage({
           </table>
         </div>
 
-        {/* 우: 측정 폼 */}
-        <div className="panel elevated">
-          {!selected ? (
-            <>
-              <div className="panel-head">
-                <p className="panel-title">측정 입력</p>
-              </div>
-              <div className="panel-body">
-                <div className="empty-state">
-                  <strong>학생을 선택하세요</strong>
-                  <p>좌측에서 학생을 선택하면 항목별 측정값을 입력할 수 있습니다.</p>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="panel-head">
-                <p className="panel-title">
-                  <Link
-                    href={`/admin/students?student=${selected.id}`}
-                    style={{ color: "var(--text)" }}
-                  >
-                    {selected.name}
-                  </Link>{" "}
-                  · {target}
-                </p>
-                <span
-                  className={`badge ${STATUS_BADGE[m?.status ?? "대기"] ?? "gray"}`}
-                >
-                  {m?.status ?? "대기"}
-                </span>
-              </div>
-
-              {(items ?? []).length === 0 && (
-                <div className="panel-body">
-                  <div className="empty-state">
-                    <strong>측정 항목이 없습니다</strong>
-                    <p>
-                      먼저{" "}
-                      <Link href="/admin/measurement-items">측정 항목 관리</Link>
-                      에서 항목을 등록(또는 시드 적용)하세요.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {(items ?? []).length > 0 && (
-                <div className="panel-body">
-                  {m?.reject_reason && (
-                    <div
-                      className="panel"
-                      style={{
-                        background: "var(--red-soft, #fdecec)",
-                        borderColor: "#f3b1b1",
-                        padding: "10px 12px",
-                        marginBottom: 12,
-                      }}
-                    >
-                      <strong>반려 사유</strong> · {m.reject_reason}
-                    </div>
-                  )}
-
-                  <form action={saveMeasurement} className="form-grid">
-                    <input type="hidden" name="student_id" value={selected.id} />
-                    <input type="hidden" name="ym" value={target} />
-
-                    {[...groups.entries()].map(([cat, arr]) => (
-                      <div key={cat} className="span-2">
-                        <h3
-                          style={{
-                            margin: "12px 0 8px",
-                            fontSize: 14,
-                            fontWeight: 700,
-                          }}
-                        >
-                          {cat}
-                        </h3>
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: 8,
-                          }}
-                        >
-                          {(arr ?? []).map((it) => {
-                            const v = valById.get(it.id);
-                            const dv =
-                              v?.value_num != null
-                                ? String(v.value_num)
-                                : (v?.value_text ?? "");
-                            return (
-                              <div key={it.id} className="field">
-                                <label>
-                                  {it.name}
-                                  {it.unit ? (
-                                    <span className="muted"> ({it.unit})</span>
-                                  ) : null}
-                                </label>
-                                <input
-                                  name={`v_${it.id}`}
-                                  type={
-                                    it.value_kind === "number"
-                                      ? "number"
-                                      : "text"
-                                  }
-                                  step="any"
-                                  defaultValue={dv}
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-
-                    <div className="field span-2">
-                      <label>메모</label>
-                      <textarea
-                        name="notes"
-                        defaultValue={m?.notes ?? ""}
-                        rows={2}
-                      />
-                    </div>
-
-                    <div
-                      className="span-2 toolbar"
-                      style={{ justifyContent: "flex-start" }}
-                    >
-                      <button className="btn primary" type="submit">
-                        저장
-                      </button>
-                    </div>
-                  </form>
-
-                  {/* 상태 전환 */}
-                  {m && (
-                    <div
-                      className="toolbar"
-                      style={{ justifyContent: "flex-start", marginTop: 8 }}
-                    >
-                      {(m.status === "대기" || m.status === "반려") && (
-                        <form action={submitMeasurement}>
-                          <input type="hidden" name="id" value={m.id} />
-                          <button className="btn" type="submit">
-                            입력 완료로 처리
-                          </button>
-                        </form>
-                      )}
-                      {m.status === "입력완료" && isAdmin && (
-                        <>
-                          <form action={approveMeasurement}>
-                            <input type="hidden" name="id" value={m.id} />
-                            <button className="btn primary" type="submit">
-                              승인
-                            </button>
-                          </form>
-                          <form action={rejectMeasurement}>
-                            <input type="hidden" name="id" value={m.id} />
-                            <input
-                              name="reject_reason"
-                              placeholder="반려 사유 (필수)"
-                              required
-                              minLength={2}
-                              style={{ width: 200 }}
-                            />
-                            <button className="btn" type="submit">
-                              반려
-                            </button>
-                          </form>
-                        </>
-                      )}
-                      {isAdmin && m.status !== "대기" && (
-                        <form action={reopenMeasurement}>
-                          <input type="hidden" name="id" value={m.id} />
-                          <button className="btn" type="submit">
-                            다시 입력으로
-                          </button>
-                        </form>
-                      )}
-                      {isAdmin && (
-                        <form action={deleteMeasurement}>
-                          <input type="hidden" name="id" value={m.id} />
-                          <input type="hidden" name="ym" value={target} />
-                          <ConfirmButton
-                            message={`'${selected.name}'의 ${target} 측정값을 삭제할까요? 입력값이 모두 사라집니다.`}
-                            className="btn danger"
-                            type="submit"
-                          >
-                            삭제
-                          </ConfirmButton>
-                        </form>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        <MeasurementDetailDrawer ym={target} items={items ?? []} isAdmin={isAdmin} />
       </div>
-    </>
+    </MeasurementDrawerProvider>
   );
 }
