@@ -83,6 +83,13 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
+    label: "공지·알림",
+    icon: "Megaphone",
+    items: [
+      { label: "공지사항", slug: "announcements", href: "/admin/announcements", ready: true },
+    ],
+  },
+  {
     label: "상담",
     icon: "MessageSquare",
     items: [

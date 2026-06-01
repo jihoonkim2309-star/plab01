@@ -1328,3 +1328,47 @@ end $$;
 --        center_id = '여기에_위에서_복사한_center_id'
 --  where email = '여기에_본인_어드민_이메일';
 -- =====================================================================
+
+-- =====================================================================
+--  16. 공지사항 (announcements) — 어드민이 학부모/학생에게 보내는 공지
+--  - 마스터: 제목·본문·대상 scope·발행일
+--  - 발행 시점에 notifications 큐로 N행 insert (수신자별)
+--  - 학부모 포털 (Phase 2) 에서 read 정책 추가 예정 — 지금은 어드민 CRUD 만
+-- =====================================================================
+create table if not exists public.announcements (
+  id                 uuid primary key default gen_random_uuid(),
+  center_id          uuid not null references public.centers(id) on delete cascade,
+  title              text not null,
+  body               text not null,
+  scope              text not null default 'all',          -- all | class | students
+  target_class_ids   uuid[],                                -- scope=class 시
+  target_student_ids uuid[],                                -- scope=students 시
+  audience           text not null default 'parent_student', -- parent_only | student_only | parent_student
+  published_at       timestamptz,                            -- null = draft
+  notified_count     integer not null default 0,            -- 발행 시 큐잉된 알림 행 수
+  created_by         uuid references public.users(id) on delete set null,
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now()
+);
+do $$ begin
+  alter table public.announcements add constraint announcements_scope_check
+    check (scope in ('all','class','students'));
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.announcements add constraint announcements_audience_check
+    check (audience in ('parent_only','student_only','parent_student'));
+exception when duplicate_object then null; end $$;
+
+create index if not exists announcements_center_idx
+  on public.announcements (center_id, published_at desc nulls first);
+
+alter table public.announcements enable row level security;
+
+drop policy if exists announcements_admin_all on public.announcements;
+create policy announcements_admin_all on public.announcements
+  for all using (public.is_center_admin(center_id))
+     with check (public.is_center_admin(center_id));
+
+drop trigger if exists announcements_touch on public.announcements;
+create trigger announcements_touch before update on public.announcements
+  for each row execute function public.touch_updated_at();

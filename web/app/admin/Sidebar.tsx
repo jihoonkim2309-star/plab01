@@ -11,6 +11,7 @@ import {
   CalendarDays,
   Circle,
   FileText,
+  Megaphone,
   MessageSquare,
   Settings,
   UserCog,
@@ -29,6 +30,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Wallet,
   FileText,
   Bus,
+  Megaphone,
   MessageSquare,
   Bell,
   Settings,
@@ -78,6 +80,8 @@ function isActive(
     return pathname.startsWith("/admin/support/offline");
   if (hrefPath === "/admin/notifications")
     return pathname.startsWith("/admin/notifications");
+  if (hrefPath === "/admin/announcements")
+    return pathname.startsWith("/admin/announcements");
   if (hrefPath === "/admin/reports") return pathname.startsWith("/admin/reports");
   if (hrefPath === "/admin/measurements")
     return pathname.startsWith("/admin/measurements");
