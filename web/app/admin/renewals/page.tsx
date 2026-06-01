@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireCenter } from "@/lib/center";
 import { ensureEnrollmentsForCenter } from "@/lib/enrollments";
 import { safeIlike } from "@/lib/db-search";
-import { checkRenewalGate } from "@/lib/renewal";
+import { checkRenewalGate, ensureRenewalNotifications } from "@/lib/renewal";
 import CheckRowToggle from "../CheckRowToggle";
 import MonthNav from "../MonthNav";
 import FilterBar from "../FilterBar";
@@ -11,7 +11,7 @@ import SearchInput from "../SearchInput";
 import ExportLink from "../ExportLink";
 import BulkSelectAll from "../BulkSelectAll";
 import BulkSubmitButton from "../BulkSubmitButton";
-import { bulkRenewal, notifyRenewal } from "./actions";
+import { bulkRenewal } from "./actions";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function nextMonth(ym?: string) {
@@ -36,9 +36,9 @@ const STATUS_LABEL: Record<string, string> = {
 export default async function RenewalsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ym?: string; q?: string; status?: string; notified?: string }>;
+  searchParams: Promise<{ ym?: string; q?: string; status?: string }>;
 }) {
-  const { ym, q, status, notified } = await searchParams;
+  const { ym, q, status } = await searchParams;
   const target = nextMonth(ym);
   const { supabase, centerId: cid } = await requireCenter();
 
@@ -55,6 +55,11 @@ export default async function RenewalsPage({
   // 멱등 enrollment 보충 — 청구·리포트 패턴 일관.
   // 학생에 상품 지정됐는데 수강중 enrollment 없는 학생 자동 생성.
   const autoEnrolled = await ensureEnrollmentsForCenter();
+
+  // 게이트 통과 시 — notified_at IS NULL 인 대기 학생에게 알림 자동 큐잉 (멱등).
+  // cron 백업 + 신규 학생 자동 보강. 수동 발송 버튼 폐지.
+  const autoNotified =
+    gate.state === "after" ? await ensureRenewalNotifications(target) : 0;
 
   // 서버 ilike — q 가 학생명 또는 상품명에 매칭되면 그 ID 들로 enrollments 좁히기
   const qSafe = safeIlike(q);
@@ -170,27 +175,10 @@ export default async function RenewalsPage({
         </div>
         <div className="toolbar">
           <MonthNav ym={target} baseUrl="/admin/renewals" />
-          <form action={notifyRenewal}>
-            <input type="hidden" name="target_month" value={target} />
-            <button
-              className="btn primary"
-              type="submit"
-              disabled={gate.state !== "after" || totals.pending === 0}
-              title={
-                gate.state !== "after"
-                  ? "수강 확인일 이후 발송 가능"
-                  : totals.pending === 0
-                    ? "대기 상태 학생이 없습니다"
-                    : `대기 ${totals.pending}명 학부모/학생에게 알림 큐잉`
-              }
-            >
-              학부모 알림 발송 ({totals.pending})
-            </button>
-          </form>
         </div>
       </div>
 
-      {notified && (
+      {autoNotified > 0 && (
         <div
           className="panel"
           style={{
@@ -200,7 +188,7 @@ export default async function RenewalsPage({
             padding: "12px 16px",
           }}
         >
-          학부모·학생 알림 {notified} 건 발송 큐에 등록되었습니다 (FCM/알림톡 라이브 시 자동 전송).
+          대기 학생 {autoNotified} 건에 수강 확인 알림이 자동 큐잉되었습니다 (FCM/알림톡 라이브 시 자동 전송).
         </div>
       )}
 
