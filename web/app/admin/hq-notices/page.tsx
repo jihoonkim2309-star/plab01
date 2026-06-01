@@ -25,7 +25,7 @@ export default async function HqNoticesPage({
   const { id, status, q, published } = await searchParams;
   const { supabase } = await requireSuperAdmin();
 
-  const [listRes, selectedRes, centersRes] = await Promise.all([
+  const [listRes, selectedRes, centersRes, readsRes] = await Promise.all([
     supabase
       .from("hq_notices")
       .select("id, title, scope, target_center_ids, published_at, notified_count, created_at")
@@ -41,6 +41,13 @@ export default async function HqNoticesPage({
           .maybeSingle()
       : Promise.resolve({ data: null }),
     supabase.from("centers").select("id, name").order("name"),
+    id
+      ? supabase
+          .from("hq_notice_reads")
+          .select("center_id, user_id, read_at")
+          .eq("notice_id", id)
+          .order("read_at", { ascending: true })
+      : Promise.resolve({ data: [] }),
   ]);
 
   type Row = {
@@ -211,6 +218,73 @@ export default async function HqNoticesPage({
                     <p className="detail-title">본문</p>
                     <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{selected.body}</p>
                   </div>
+                  {(() => {
+                    const reads = (readsRes.data ?? []) as {
+                      center_id: string;
+                      user_id: string;
+                      read_at: string;
+                    }[];
+                    // 대상 지점 — scope='all' 이면 모든 센터, 'centers' 면 target_center_ids
+                    const targetIds =
+                      selected.scope === "all"
+                        ? centers.map((c) => c.id)
+                        : selected.target_center_ids ?? [];
+                    const firstReadByCenter = new Map<string, string>();
+                    for (const r of reads) {
+                      if (!firstReadByCenter.has(r.center_id))
+                        firstReadByCenter.set(r.center_id, r.read_at);
+                    }
+                    const readCount = targetIds.filter((cid) =>
+                      firstReadByCenter.has(cid),
+                    ).length;
+                    return (
+                      <div className="detail-block">
+                        <p className="detail-title">
+                          지점별 열람 현황{" "}
+                          <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                            {readCount} / {targetIds.length} 지점
+                          </span>
+                        </p>
+                        {targetIds.length === 0 ? (
+                          <span className="muted" style={{ fontSize: 13 }}>
+                            대상 지점이 없습니다.
+                          </span>
+                        ) : (
+                          <table className="member-table" style={{ marginTop: 0 }}>
+                            <thead>
+                              <tr>
+                                <th>지점</th>
+                                <th style={{ width: 100 }}>상태</th>
+                                <th style={{ width: 150 }}>최초 열람</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {targetIds.map((cid) => {
+                                const name =
+                                  centers.find((c) => c.id === cid)?.name ?? "-";
+                                const at = firstReadByCenter.get(cid);
+                                return (
+                                  <tr key={cid}>
+                                    <td>{name}</td>
+                                    <td>
+                                      {at ? (
+                                        <span className="badge green">열람</span>
+                                      ) : (
+                                        <span className="badge gray">미열람</span>
+                                      )}
+                                    </td>
+                                    <td className="muted" style={{ fontSize: 12 }}>
+                                      {at ? at.slice(0, 16).replace("T", " ") : "-"}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <div className="detail-block">
                     <p className="detail-title">위험 영역</p>
                     <form action={deleteHqNotice}>

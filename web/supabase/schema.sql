@@ -1422,3 +1422,48 @@ create policy hq_notices_admin_read on public.hq_notices
 drop trigger if exists hq_notices_touch on public.hq_notices;
 create trigger hq_notices_touch before update on public.hq_notices
   for each row execute function public.touch_updated_at();
+
+-- =====================================================================
+--  17.1 본사 공지 읽음 추적 — admin 이 inbound-notices 상세 진입 시 자동 기록.
+--  본사(super_admin) 가 지점별 열람 현황 확인.
+-- =====================================================================
+create table if not exists public.hq_notice_reads (
+  notice_id uuid not null references public.hq_notices(id) on delete cascade,
+  center_id uuid not null references public.centers(id) on delete cascade,
+  user_id   uuid not null references public.users(id) on delete cascade,
+  read_at   timestamptz not null default now(),
+  primary key (notice_id, user_id)
+);
+
+create index if not exists hq_notice_reads_notice_idx
+  on public.hq_notice_reads (notice_id);
+create index if not exists hq_notice_reads_center_idx
+  on public.hq_notice_reads (center_id);
+
+alter table public.hq_notice_reads enable row level security;
+
+-- super_admin: 모든 행 read (열람 현황 확인용)
+drop policy if exists hq_notice_reads_super_read on public.hq_notice_reads;
+create policy hq_notice_reads_super_read on public.hq_notice_reads
+  for select using (public.is_super_admin());
+
+-- admin: 자기 지점·본인 행 read + insert + update (멱등 upsert)
+drop policy if exists hq_notice_reads_admin_read on public.hq_notice_reads;
+create policy hq_notice_reads_admin_read on public.hq_notice_reads
+  for select using (
+    center_id = public.current_center_id() and public.current_role() = 'admin'
+  );
+
+drop policy if exists hq_notice_reads_admin_write on public.hq_notice_reads;
+create policy hq_notice_reads_admin_write on public.hq_notice_reads
+  for all
+  using (
+    user_id = auth.uid()
+    and center_id = public.current_center_id()
+    and public.current_role() = 'admin'
+  )
+  with check (
+    user_id = auth.uid()
+    and center_id = public.current_center_id()
+    and public.current_role() = 'admin'
+  );

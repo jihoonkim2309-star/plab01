@@ -7,7 +7,17 @@ export default async function InboundNoticesPage({
   searchParams: Promise<{ id?: string }>;
 }) {
   const { id } = await searchParams;
-  const { supabase } = await requireCenter();
+  const { supabase, centerId, userId } = await requireCenter();
+
+  // 상세 진입 시 멱등 mark_read — RLS 가 자기 지점·본인만 허용
+  if (id) {
+    await supabase
+      .from("hq_notice_reads")
+      .upsert(
+        { notice_id: id, center_id: centerId, user_id: userId },
+        { onConflict: "notice_id,user_id" },
+      );
+  }
 
   // RLS 로 자기 지점 대상 + 발행된 공지만 노출됨
   const [listRes, selectedRes] = await Promise.all([
