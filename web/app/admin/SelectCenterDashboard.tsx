@@ -38,24 +38,11 @@ export default function SelectCenterDashboard({
     <>
       <div className="page-head">
         <div>
-          <h1>지점을 선택해 주세요</h1>
-          <p className="subtext">{userName}님, 작업할 지점을 선택하시면 해당 지점 컨텍스트로 진입합니다</p>
-        </div>
-      </div>
-
-      <div className="panel elevated select-center-hero">
-        <div className="select-center-hero-content">
-          <div className="sch-icon" aria-hidden>
-            ◇
-          </div>
-          <div>
-            <h2 className="sch-title">활성 지점 미설정</h2>
-            <p className="sch-sub">
-              아래 지점 중 하나를 선택하시면 좌측 사이드바·대시보드 모두 그
-              지점 기준으로 표시됩니다. 언제든 탑바 좌측 워크스페이스
-              셀렉터에서 다시 전환 가능합니다.
-            </p>
-          </div>
+          <h1>프랜차이즈 관리</h1>
+          <p className="subtext">
+            {userName}님, 전체 지점 현황입니다. 좌측 사이드바에서 본사 작업을
+            진행하거나, 아래 지점 카드를 클릭해 해당 지점 컨텍스트로 진입할 수 있습니다.
+          </p>
         </div>
       </div>
 
