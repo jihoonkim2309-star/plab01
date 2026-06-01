@@ -66,7 +66,7 @@ type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "val
 export default function AddressField({
   name,
   defaultValue,
-  placeholder = "도로명 주소 — 입력 후 Enter 또는 [주소 검색]",
+  placeholder = "도로명 주소 입력 (Enter = 검색)",
   required,
   ...rest
 }: Props) {

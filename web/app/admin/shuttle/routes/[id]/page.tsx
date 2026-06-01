@@ -168,7 +168,6 @@ export default async function ShuttleRouteDetailPage({
                   <AddressField
                     name="address"
                     defaultValue={s.address ?? ""}
-                    placeholder="주소"
                     style={{ minHeight: 30, padding: "4px 8px", fontSize: 12 }}
                   />
                   <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
@@ -292,7 +291,7 @@ export default async function ShuttleRouteDetailPage({
             </div>
             <div className="field" style={{ marginTop: 12 }}>
               <label>주소</label>
-              <AddressField name="address" placeholder="도로명 주소" />
+              <AddressField name="address" />
             </div>
             <div className="field" style={{ marginTop: 12 }}>
               <label>출발지로부터 도착 분 (선택)</label>

@@ -51,7 +51,7 @@ function Field({
         <AddressField
           name={name}
           defaultValue={value ?? ""}
-          placeholder={placeholder ?? "도로명 주소"}
+          placeholder={placeholder}
           required={required}
         />
       ) : type === "date" ? (
