@@ -167,10 +167,28 @@ export default async function AdminLayout({
 
         <section className="content">
           {(() => {
-            // super_admin 활성 지점 미선택 시 /admin (메인 대시보드) 만 통과,
-            // 하위 페이지는 차단 (requireCenter redirect → loading 무한 회피)
+            // super_admin 활성 지점 미선택 ('프랜차이즈 관리' 모드) 시 통과할 경로:
+            //  - /admin (메인 대시보드 — SelectCenterDashboard)
+            //  - 프랜차이즈 관리 메뉴: centers / admin-approvals / hq-invoices / hq-notices / hq-inquiries / hq-chat
+            //  - 글로벌 시스템: users / me
+            // 그 외 지점 컨텍스트 페이지는 차단 (requireCenter redirect 무한루프 회피)
+            const SUPER_OK_PREFIXES = [
+              "/admin/centers",
+              "/admin/admin-approvals",
+              "/admin/hq-invoices",
+              "/admin/hq-notices",
+              "/admin/hq-inquiries",
+              "/admin/hq-chat",
+              "/admin/users",
+              "/admin/me",
+            ];
+            const isSuperOkPath =
+              pathname === "/admin" ||
+              SUPER_OK_PREFIXES.some(
+                (p) => pathname === p || pathname.startsWith(p + "/"),
+              );
             const isBlocked =
-              isStaff && !activeCenterId && isSuper && pathname !== "/admin";
+              isStaff && !activeCenterId && isSuper && !isSuperOkPath;
             if (!isBlocked) return children;
             return (
               <div
@@ -182,8 +200,8 @@ export default async function AdminLayout({
                   padding: "12px 16px",
                 }}
               >
-                활성 지점이 설정되지 않았습니다. 상단 좌측{" "}
-                <b>지점 선택</b>에서 지점을 골라 주세요.
+                이 메뉴는 지점 컨텍스트에서만 접근 가능합니다. 상단 좌측
+                워크스페이스 셀렉터에서 지점을 골라 주세요.
               </div>
             );
           })()}
