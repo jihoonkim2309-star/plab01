@@ -15,17 +15,28 @@ export async function GET(
   const { id } = await params;
   const { supabase } = await requireCenter();
 
-  const { data, error } = await supabase.rpc("get_student_detail", { p_id: id });
+  const [detailRes, notifRes] = await Promise.all([
+    supabase.rpc("get_student_detail", { p_id: id }),
+    supabase
+      .from("notifications")
+      .select("id, kind, template, payload, status, created_at, sent_at, error")
+      .or(`payload->>target_student_id.eq.${id},payload->>student_id.eq.${id}`)
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
 
-  if (error) {
-    if (error.message?.includes("forbidden")) {
+  if (detailRes.error) {
+    const err = detailRes.error;
+    if (err.message?.includes("forbidden")) {
       return Response.json({ error: "권한이 없습니다." }, { status: 403 });
     }
-    if (error.message?.includes("student not found")) {
+    if (err.message?.includes("student not found")) {
       return Response.json({ error: "학생을 찾을 수 없습니다." }, { status: 404 });
     }
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: err.message }, { status: 500 });
   }
 
+  const data = (detailRes.data ?? {}) as Record<string, unknown>;
+  data.recentNotifications = notifRes.data ?? [];
   return Response.json(data);
 }

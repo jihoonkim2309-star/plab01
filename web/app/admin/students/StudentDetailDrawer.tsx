@@ -7,6 +7,7 @@ import { deleteStudent } from "./actions";
 import ConfirmButton from "../ConfirmButton";
 import AssignEnrollmentModal from "../enrollments/AssignEnrollmentModal";
 import AssignShuttleModal from "../shuttle/assignments/AssignShuttleModal";
+import StudentMessageModal from "./StudentMessageModal";
 
 type Student = {
   id: string;
@@ -37,6 +38,17 @@ type Student = {
   classes: { name?: string; start_time?: string; end_time?: string; days_of_week?: string } | null;
 };
 
+type NotificationRow = {
+  id: string;
+  kind: string;
+  template: string | null;
+  payload: Record<string, unknown> | null;
+  status: string;
+  created_at: string;
+  sent_at: string | null;
+  error: string | null;
+};
+
 type Detail = {
   student: Student;
   linkedParents: {
@@ -44,6 +56,7 @@ type Detail = {
     parent: { id: string; name: string | null; email: string | null; phone: string | null } | null;
   }[];
   currentInvoiceStatus: string | null;
+  recentNotifications?: NotificationRow[];
 };
 
 export type DrawerOptions = {
@@ -176,6 +189,10 @@ export default function StudentDetailDrawer({
               ]}
               fixedStudentId={selected.id}
               backUrl="/admin/students"
+            />
+            <StudentMessageModal
+              studentId={selected.id}
+              studentName={selected.name ?? "학생"}
             />
             <Link
               className="btn primary"
@@ -338,6 +355,58 @@ export default function StudentDetailDrawer({
               <div className="approval-note" style={{ whiteSpace: "pre-wrap" }}>
                 {selected.memo || "-"}
               </div>
+            </div>
+
+            <div className="detail-block">
+              <p className="detail-title">
+                최근 알림{" "}
+                <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                  (최근 10건)
+                </span>
+              </p>
+              {(data.recentNotifications?.length ?? 0) === 0 ? (
+                <span className="muted" style={{ fontSize: 13 }}>
+                  발송된 알림이 없습니다.
+                </span>
+              ) : (
+                <table className="member-table" style={{ marginTop: 0 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: 130 }}>일시</th>
+                      <th>내용</th>
+                      <th style={{ width: 60 }}>대상</th>
+                      <th style={{ width: 70 }}>상태</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(data.recentNotifications ?? []).map((n) => {
+                      const role = (n.payload as { target_role?: string } | null)?.target_role;
+                      const roleLabel =
+                        role === "parent" ? "학부모" : role === "student" ? "학생" : "-";
+                      const statusColor =
+                        n.status === "성공"
+                          ? "green"
+                          : n.status === "실패"
+                            ? "red"
+                            : "gray";
+                      return (
+                        <tr key={n.id}>
+                          <td className="muted" style={{ fontSize: 12 }}>
+                            {n.created_at.slice(0, 16).replace("T", " ")}
+                          </td>
+                          <td style={{ fontSize: 13 }}>{n.template ?? "-"}</td>
+                          <td className="muted" style={{ fontSize: 12 }}>
+                            {roleLabel}
+                          </td>
+                          <td>
+                            <span className={`badge ${statusColor}`}>{n.status}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
             </div>
           </>
         )}

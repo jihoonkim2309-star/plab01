@@ -220,6 +220,113 @@ export async function publishAnnouncement(formData: FormData) {
   redirect(`/admin/announcements?id=${id}&published=${rows.length}`);
 }
 
+// 학생 1명에게 즉시 메시지 발송 — 학생 상세 모달에서 호출.
+// announcements 테이블에 scope='students' + 1명 + 즉시 published 로 insert + notifications 큐 N행.
+export async function sendStudentMessage(formData: FormData) {
+  const { supabase, centerId, userId } = await requireCenter();
+  const studentId = String(formData.get("student_id") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  const body = String(formData.get("body") ?? "").trim();
+  const audience = parseAudience(String(formData.get("audience") ?? "parent_student"));
+  if (!studentId) throw new Error("학생 ID 가 비어 있습니다.");
+  if (!title || !body) throw new Error("제목·본문을 입력해 주세요.");
+
+  // 학부모/학생 user 매칭
+  const [{ data: parents }, { data: studAccts }] = await Promise.all([
+    audience === "parent_only" || audience === "parent_student"
+      ? supabase
+          .from("parent_student_links")
+          .select("parent:users(id, phone)")
+          .eq("center_id", centerId)
+          .eq("status", "linked")
+          .eq("student_id", studentId)
+      : Promise.resolve({ data: [] }),
+    audience === "student_only" || audience === "parent_student"
+      ? supabase
+          .from("student_account_links")
+          .select("account:users(id, phone)")
+          .eq("center_id", centerId)
+          .eq("status", "linked")
+          .eq("student_id", studentId)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const now = new Date().toISOString();
+
+  // announcement 행 (즉시 published)
+  const { data: ann, error: annErr } = await supabase
+    .from("announcements")
+    .insert({
+      center_id: centerId,
+      title,
+      body,
+      scope: "students",
+      audience,
+      target_student_ids: [studentId],
+      published_at: now,
+      notified_count: 0,
+      created_by: userId,
+    })
+    .select("id")
+    .single();
+  if (annErr) throw new Error("메시지 생성 실패: " + annErr.message);
+  const annId = (ann as { id: string }).id;
+
+  const rows: Array<Record<string, unknown>> = [];
+  const seen = new Set<string>();
+  function pushFor(
+    u: { id: string; phone: string | null } | null,
+    role: "parent" | "student",
+  ) {
+    if (!u) return;
+    if (seen.has(u.id)) return;
+    seen.add(u.id);
+    rows.push({
+      center_id: centerId,
+      kind: "push",
+      recipient: u.phone ?? u.id,
+      template: `[메시지] ${title}`,
+      payload: {
+        type: "student_message",
+        announcement_id: annId,
+        title,
+        body,
+        target_role: role,
+        target_user_id: u.id,
+        target_student_id: studentId,
+        student_id: studentId,
+      },
+      status: "대기",
+    });
+  }
+  for (const p of (parents ?? []) as unknown as {
+    parent: { id: string; phone: string | null } | null;
+  }[]) {
+    pushFor(p.parent, "parent");
+  }
+  for (const s of (studAccts ?? []) as unknown as {
+    account: { id: string; phone: string | null } | null;
+  }[]) {
+    pushFor(s.account, "student");
+  }
+
+  if (rows.length > 0) {
+    const { error: insErr } = await supabase.from("notifications").insert(rows);
+    if (insErr) throw new Error("알림 큐잉 실패: " + insErr.message);
+  }
+
+  await supabase
+    .from("announcements")
+    .update({ notified_count: rows.length })
+    .eq("id", annId)
+    .eq("center_id", centerId);
+
+  revalidatePath("/admin/students");
+  revalidatePath("/admin/announcements");
+  revalidatePath("/admin/notifications");
+  redirect(`/admin/students?student=${studentId}&msg_sent=${rows.length}`);
+}
+
 export async function deleteAnnouncement(formData: FormData) {
   const { supabase, centerId } = await requireCenter();
   const id = String(formData.get("id") ?? "");
