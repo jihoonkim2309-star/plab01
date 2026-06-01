@@ -292,6 +292,9 @@
   text-transform: inherit;
   letter-spacing: inherit;
   font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
   border-radius: 6px;
   transition: background 120ms ease, color 120ms ease;
 }
