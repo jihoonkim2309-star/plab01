@@ -279,23 +279,30 @@
 }
 .nav-label-toggle:hover .nav-label-icon { color: var(--brand); }
 
-/* collapsible 그룹 라벨 (클릭 시 그룹 접/펼) */
+/* collapsible 그룹 라벨 (클릭 시 그룹 접/펼) — .nav-label (div) 과 동일 시각 */
 .nav-label-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
+  /* .nav-label 의 base 명시 재선언 (button user-agent quirk 무력화) */
+  padding: 10px 10px 4px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #8b9994;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  font-family: inherit;
+  /* button reset */
+  margin: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
   text-align: left;
-  text-transform: inherit;
-  letter-spacing: inherit;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1.2;
-  color: inherit;
+  box-sizing: border-box;
+  vertical-align: baseline;
+  /* layout */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
   border-radius: 6px;
   transition: background 120ms ease, color 120ms ease;
 }
