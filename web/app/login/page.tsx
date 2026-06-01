@@ -97,7 +97,20 @@ export default function LoginPage() {
         },
       });
       if (error) {
-        setMsg("회원가입 실패: " + error.message);
+        const m = (error.message || "").toLowerCase();
+        let friendly: string;
+        if (m.includes("already") || m.includes("registered") || m.includes("user already")) {
+          friendly = "이미 가입된 이메일입니다. 로그인 또는 비밀번호 재설정을 이용하세요.";
+        } else if (m.includes("password") && m.includes("short")) {
+          friendly = "비밀번호가 너무 짧습니다 (최소 8자).";
+        } else if (m.includes("invalid") && m.includes("email")) {
+          friendly = "이메일 형식이 올바르지 않습니다.";
+        } else if (m.includes("rate") || m.includes("too many")) {
+          friendly = "잠시 후 다시 시도해 주세요 (요청이 너무 빈번합니다).";
+        } else {
+          friendly = "회원가입 실패: " + error.message;
+        }
+        setMsg(friendly);
         setLoading(false);
         return;
       }
