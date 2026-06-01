@@ -86,6 +86,10 @@ function isActive(
     return pathname.startsWith("/admin/hq-notices");
   if (hrefPath === "/admin/inbound-notices")
     return pathname.startsWith("/admin/inbound-notices");
+  if (hrefPath === "/admin/branch-inquiries")
+    return pathname.startsWith("/admin/branch-inquiries");
+  if (hrefPath === "/admin/hq-inquiries")
+    return pathname.startsWith("/admin/hq-inquiries");
   if (hrefPath === "/admin/reports") return pathname.startsWith("/admin/reports");
   if (hrefPath === "/admin/measurements")
     return pathname.startsWith("/admin/measurements");

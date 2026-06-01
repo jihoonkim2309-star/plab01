@@ -88,6 +88,7 @@ export const NAV: NavGroup[] = [
     items: [
       { label: "공지사항", slug: "announcements", href: "/admin/announcements", ready: true },
       { label: "본사 공지", slug: "inbound-notices", href: "/admin/inbound-notices", ready: true },
+      { label: "본사에 문의", slug: "branch-inquiries", href: "/admin/branch-inquiries", ready: true },
     ],
   },
   {
@@ -117,6 +118,7 @@ export const NAV: NavGroup[] = [
       { label: "지점 관리", slug: "centers", href: "/admin/centers", ready: true },
       { label: "본사 청구 관리", slug: "hq-invoices", href: "/admin/hq-invoices", ready: true },
       { label: "본사 공지 발송", slug: "hq-notices", href: "/admin/hq-notices", ready: true },
+      { label: "지점 문의", slug: "hq-inquiries", href: "/admin/hq-inquiries", ready: true },
     ],
   },
   {

@@ -1467,3 +1467,18 @@ create policy hq_notice_reads_admin_write on public.hq_notice_reads
     and center_id = public.current_center_id()
     and public.current_role() = 'admin'
   );
+
+-- =====================================================================
+--  18. 지점 ↔ 본사 문의 — inquiries.kind 확장
+--  - kind='branch_to_hq': 지점 admin 작성, super_admin 답변
+--  - support_messages.sender 에 'hq' 추가 가능 (자유 text)
+--  - 기존 kind in ('post','chat','offline') 은 학부모/학생 문의 그대로
+-- =====================================================================
+do $$ begin
+  alter table public.inquiries drop constraint if exists inquiries_kind_check;
+  alter table public.inquiries add constraint inquiries_kind_check
+    check (kind in ('post','chat','offline','branch_to_hq'));
+end $$;
+
+-- super_admin 이 모든 지점의 branch_to_hq 문의 read·답변 가능 (기존 admin_all RLS 통과)
+-- support_messages 도 동일 RLS 적용 — 이미 admin_all 정책 존재
