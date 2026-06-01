@@ -87,6 +87,7 @@ export const NAV: NavGroup[] = [
     icon: "Megaphone",
     items: [
       { label: "공지사항", slug: "announcements", href: "/admin/announcements", ready: true },
+      { label: "본사 공지", slug: "inbound-notices", href: "/admin/inbound-notices", ready: true },
     ],
   },
   {
@@ -115,6 +116,7 @@ export const NAV: NavGroup[] = [
       { label: "지점장 가입 승인", slug: "admin-approvals", href: "/admin/admin-approvals", ready: true },
       { label: "지점 관리", slug: "centers", href: "/admin/centers", ready: true },
       { label: "본사 청구 관리", slug: "hq-invoices", href: "/admin/hq-invoices", ready: true },
+      { label: "본사 공지 발송", slug: "hq-notices", href: "/admin/hq-notices", ready: true },
     ],
   },
   {

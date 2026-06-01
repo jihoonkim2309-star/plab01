@@ -1372,3 +1372,53 @@ create policy announcements_admin_all on public.announcements
 drop trigger if exists announcements_touch on public.announcements;
 create trigger announcements_touch before update on public.announcements
   for each row execute function public.touch_updated_at();
+
+-- =====================================================================
+--  17. 본사 → 지점 공지 (hq_notices) — super_admin 이 지점 admin 에게 발송
+--  - center_id 없음 (글로벌). super_admin CRUD, admin 자기 지점 대상이면 read.
+--  - scope='all' = 모든 지점, 'centers' = target_center_ids 배열.
+--  - 발행 = published_at 채움. draft 는 super_admin 만 수정 가능.
+--  - 읽음 추적은 향후 hq_notice_reads 별도 테이블로 확장 가능.
+-- =====================================================================
+create table if not exists public.hq_notices (
+  id                uuid primary key default gen_random_uuid(),
+  title             text not null,
+  body              text not null,
+  scope             text not null default 'all',  -- all | centers
+  target_center_ids uuid[],                        -- scope=centers 시
+  published_at      timestamptz,                   -- null = draft
+  notified_count    integer not null default 0,    -- 대상 지점 수
+  created_by        uuid references public.users(id) on delete set null,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now()
+);
+do $$ begin
+  alter table public.hq_notices add constraint hq_notices_scope_check
+    check (scope in ('all','centers'));
+exception when duplicate_object then null; end $$;
+
+create index if not exists hq_notices_published_idx
+  on public.hq_notices (published_at desc nulls first);
+
+alter table public.hq_notices enable row level security;
+
+-- super_admin: 모든 CRUD
+drop policy if exists hq_notices_super_all on public.hq_notices;
+create policy hq_notices_super_all on public.hq_notices
+  for all using (public.is_super_admin()) with check (public.is_super_admin());
+
+-- admin: 발행된 공지 중 자기 지점이 대상인 행만 read
+drop policy if exists hq_notices_admin_read on public.hq_notices;
+create policy hq_notices_admin_read on public.hq_notices
+  for select using (
+    published_at is not null
+    and public.current_role() = 'admin'
+    and (
+      scope = 'all'
+      or public.current_center_id() = any(target_center_ids)
+    )
+  );
+
+drop trigger if exists hq_notices_touch on public.hq_notices;
+create trigger hq_notices_touch before update on public.hq_notices
+  for each row execute function public.touch_updated_at();
