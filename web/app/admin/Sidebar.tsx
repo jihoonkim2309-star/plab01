@@ -121,16 +121,27 @@ function groupContainsActive(
 
 export default function Sidebar({
   role,
+  hasActiveCenter,
 }: {
   role: "super_admin" | "admin" | "coach" | "parent" | "student" | "driver" | null;
+  hasActiveCenter?: boolean;
 }) {
   const pathname = usePathname();
   const searchParamsHook = useSearchParams();
   const searchParams = searchParamsHook ?? new URLSearchParams();
 
+  // 프랜차이즈 그룹은 super_admin 이지만 활성 지점을 선택한 경우엔 숨김.
+  // → super_admin 이 특정 지점 컨텍스트에 진입하면 그 지점 admin 과 동일한 사이드바.
+  // 프랜차이즈 관리는 [지점 미선택] 상태에서만 노출.
   const visibleNav = NAV.filter((g) => {
-    if (!g.onlyRoles) return true;
-    return role ? g.onlyRoles.includes(role as never) : false;
+    if (!g.onlyRoles) {
+      // 일반 그룹은 항상 표시
+      return true;
+    }
+    if (!role || !g.onlyRoles.includes(role as never)) return false;
+    // 프랜차이즈 그룹: super_admin 이라도 활성 지점 있으면 숨김
+    if (g.label === "프랜차이즈" && hasActiveCenter) return false;
+    return true;
   });
 
   // 그룹별 펼침 상태. 키 = group.label.

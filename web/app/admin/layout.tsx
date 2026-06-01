@@ -137,7 +137,7 @@ export default async function AdminLayout({
         <GlobalLoading />
       </Suspense>
       <SuppressInvalidTooltip />
-      <Sidebar role={role} />
+      <Sidebar role={role} hasActiveCenter={!!activeCenterId} />
       <div className="drawer-backdrop" />
 
       <main className="main">
