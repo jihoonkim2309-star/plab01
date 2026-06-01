@@ -116,7 +116,7 @@ export default async function AdminLayout({
       : Promise.resolve({ data: [] }),
   ]);
   const activeCenterName =
-    (activeCenterRes.data as { name: string } | null)?.name ?? "지점 미선택";
+    (activeCenterRes.data as { name: string } | null)?.name ?? "프랜차이즈 관리";
   const centersForSwitcher =
     (allCentersRes.data as { id: string; name: string }[] | null) ?? [];
 

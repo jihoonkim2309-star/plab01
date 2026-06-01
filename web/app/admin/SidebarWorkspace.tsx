@@ -77,7 +77,7 @@ export default function SidebarWorkspace({
               title="대시보드의 지점 선택 화면으로 돌아갑니다"
             >
               <span className="muted" style={{ fontSize: 12 }}>
-                지점 미선택 (전체 대시보드)
+                프랜차이즈 관리 (지점 미선택)
               </span>
               {!activeCenterId && (
                 <span className="sw-check" aria-hidden>

@@ -130,18 +130,34 @@ export default function Sidebar({
   const searchParamsHook = useSearchParams();
   const searchParams = searchParamsHook ?? new URLSearchParams();
 
-  // 프랜차이즈 그룹은 super_admin 이지만 활성 지점을 선택한 경우엔 숨김.
-  // → super_admin 이 특정 지점 컨텍스트에 진입하면 그 지점 admin 과 동일한 사이드바.
-  // 프랜차이즈 관리는 [지점 미선택] 상태에서만 노출.
-  const visibleNav = NAV.filter((g) => {
-    if (!g.onlyRoles) {
-      // 일반 그룹은 항상 표시
-      return true;
+  // 모드별 사이드바 필터:
+  //  - super_admin + 지점 미선택 = "프랜차이즈 관리" 모드
+  //      · 일반 운영 그룹 (회원/수업/셔틀/결제/리포트/상담/직원) 숨김
+  //      · 프랜차이즈 그룹 표시 + 시스템 그룹 글로벌 항목만 (지점별 항목은 숨김)
+  //  - super_admin + 지점 선택 = 지점 admin 과 동일한 사이드바 (프랜차이즈 그룹 숨김)
+  //  - 일반 admin = 본인 지점 admin (프랜차이즈 그룹 자체가 onlyRoles 로 가려짐)
+  const isFranchiseMode = role === "super_admin" && !hasActiveCenter;
+  // 시스템 그룹 안에서 지점 컨텍스트가 필요한 항목 (지점 미선택 시 숨김)
+  const CENTER_SCOPED_SYSTEM_SLUGS = new Set(["settings", "my-hq-invoices"]);
+
+  const visibleNav = NAV.flatMap<NavGroup>((g) => {
+    if (g.onlyRoles) {
+      if (!role || !g.onlyRoles.includes(role as never)) return [];
+      // 프랜차이즈 그룹: super_admin 이라도 활성 지점 있으면 숨김
+      if (g.label === "프랜차이즈" && hasActiveCenter) return [];
+      // 시스템 그룹: 지점 미선택 시 지점 컨텍스트 항목 제거
+      if (g.label === "시스템" && isFranchiseMode) {
+        const filtered = g.items.filter(
+          (it) => !CENTER_SCOPED_SYSTEM_SLUGS.has(it.slug),
+        );
+        if (filtered.length === 0) return [];
+        return [{ ...g, items: filtered }];
+      }
+      return [g];
     }
-    if (!role || !g.onlyRoles.includes(role as never)) return false;
-    // 프랜차이즈 그룹: super_admin 이라도 활성 지점 있으면 숨김
-    if (g.label === "프랜차이즈" && hasActiveCenter) return false;
-    return true;
+    // 일반 그룹: 프랜차이즈 관리 모드면 숨김
+    if (isFranchiseMode) return [];
+    return [g];
   });
 
   // 그룹별 펼침 상태. 키 = group.label.
