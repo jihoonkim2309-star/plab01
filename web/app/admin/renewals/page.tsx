@@ -372,19 +372,7 @@ export default async function RenewalsPage({
                         <strong>{e.students?.name ?? "-"}</strong>
                       )}
                     </td>
-                    <td className="muted">
-                      {e.products?.id ? (
-                        <Link
-                          href={`/admin/products/${e.products.id}/edit`}
-                          className="no-row-toggle"
-                          style={{ color: "inherit" }}
-                        >
-                          {e.products.name}
-                        </Link>
-                      ) : (
-                        (e.products?.name ?? "-")
-                      )}
-                    </td>
+                    <td className="muted">{e.products?.name ?? "-"}</td>
                     <td>
                       {e.products
                         ? `${Number(e.products.price).toLocaleString()}원`
