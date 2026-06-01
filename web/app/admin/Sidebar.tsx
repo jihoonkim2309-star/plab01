@@ -138,7 +138,12 @@ export default function Sidebar({
   //  - 일반 admin = 본인 지점 admin (프랜차이즈 그룹 자체가 onlyRoles 로 가려짐)
   const isFranchiseMode = role === "super_admin" && !hasActiveCenter;
   // 시스템 그룹 안에서 지점 컨텍스트가 필요한 항목 (지점 미선택 시 숨김)
-  const CENTER_SCOPED_SYSTEM_SLUGS = new Set(["settings", "my-hq-invoices"]);
+  const CENTER_SCOPED_SYSTEM_SLUGS = new Set([
+    "settings",
+    "my-hq-invoices",
+    "notification-log",
+    "audit-log",
+  ]);
 
   const visibleNav = NAV.flatMap<NavGroup>((g) => {
     if (g.onlyRoles) {

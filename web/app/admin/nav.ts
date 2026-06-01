@@ -118,7 +118,7 @@ export const NAV: NavGroup[] = [
       { label: "설정", slug: "settings", href: "/admin/settings", ready: true },
       { label: "시스템 사용료", slug: "my-hq-invoices", href: "/admin/my-hq-invoices", ready: true },
       { label: "사용자 비밀번호 관리", slug: "users-reset", href: "/admin/users", ready: true },
-      { label: "알림 발송 로그", slug: "notification-log", href: "/admin/notifications", ready: true },
+      { label: "알림 발송 이력", slug: "notification-log", href: "/admin/notifications", ready: true },
       { label: "감사 로그", slug: "audit-log", href: "/admin/audit-logs", ready: true },
     ],
   },
