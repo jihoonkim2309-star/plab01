@@ -51,7 +51,8 @@ export default async function UsersPage({
 
   let listQuery = supabase
     .from("users")
-    .select("id, email, name, phone, role, center_id, centers(name), created_at")
+    // users.center_id + users.applying_center_id 둘 다 centers FK → 명시 필수
+    .select("id, email, name, phone, role, center_id, centers:center_id(name), created_at")
     .not("role", "is", null)
     .order("created_at", { ascending: false });
   // 지점장은 자기 지점 사용자만
