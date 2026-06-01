@@ -70,7 +70,6 @@ export const NAV: NavGroup[] = [
       { label: "청구 관리", slug: "billing-manage", href: "/admin/billing", ready: true },
       { label: "결제 상태", slug: "payment-status", href: "/admin/payment-status", ready: true },
       { label: "미납 관리", slug: "overdue-manage", href: "/admin/overdue", ready: true },
-      { label: "본사 청구서 (받음)", slug: "my-hq-invoices", href: "/admin/my-hq-invoices", ready: true },
     ],
   },
   {
@@ -117,6 +116,7 @@ export const NAV: NavGroup[] = [
     onlyRoles: ["super_admin", "admin"],
     items: [
       { label: "설정", slug: "settings", href: "/admin/settings", ready: true },
+      { label: "시스템 사용료", slug: "my-hq-invoices", href: "/admin/my-hq-invoices", ready: true },
       { label: "사용자 비밀번호 관리", slug: "users-reset", href: "/admin/users", ready: true },
       { label: "알림 발송 로그", slug: "notification-log", href: "/admin/notifications", ready: true },
       { label: "감사 로그", slug: "audit-log", href: "/admin/audit-logs", ready: true },

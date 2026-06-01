@@ -70,8 +70,8 @@ export default async function MyHqInvoicesPage({
     <>
       <div className="page-head">
         <div>
-          <h1>본사 청구서</h1>
-          <p className="subtext">우리 지점에 발행된 본사 사용료 청구 내역 (열람 전용)</p>
+          <h1>시스템 사용료</h1>
+          <p className="subtext">우리 지점에 발행된 월 사용료 청구 내역 (열람 전용)</p>
         </div>
       </div>
 
