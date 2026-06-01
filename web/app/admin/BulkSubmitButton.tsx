@@ -98,6 +98,23 @@ export default function BulkSubmitButton({
     else doSubmit();
   }
 
+  // hover 시 matchSelector 매칭 행만 highlight — 어드민이 어떤 행이 처리될지 시각 확인
+  function highlight(on: boolean) {
+    const btn = ref.current;
+    const form = btn?.closest("form");
+    if (!form) return;
+    const extra = matchSelector ?? "";
+    const boxes = form.querySelectorAll<HTMLInputElement>(
+      `input[type="checkbox"][name="ids"]${extra}:checked`,
+    );
+    boxes.forEach((box) => {
+      const tr = box.closest("tr");
+      if (!tr) return;
+      if (on) tr.setAttribute("data-bulk-hover", "1");
+      else tr.removeAttribute("data-bulk-hover");
+    });
+  }
+
   function onConfirm() {
     setOpen(false);
     if (count === 0) return; // 안전망
@@ -123,7 +140,12 @@ export default function BulkSubmitButton({
         formAction={formAction}
         className={cls}
         disabled={count === 0}
+        onMouseEnter={() => highlight(true)}
+        onMouseLeave={() => highlight(false)}
+        onFocus={() => highlight(true)}
+        onBlur={() => highlight(false)}
         onClick={(e) => {
+          highlight(false);
           if (confirmMessage) {
             e.preventDefault();
             onClick();

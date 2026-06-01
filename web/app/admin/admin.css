@@ -2711,3 +2711,9 @@
   z-index: 2;
   box-shadow: 0 1px 0 var(--border, #e3e1d8);
 }
+
+/* 일괄 액션 버튼 hover 시 실제 처리될 행만 highlight */
+tr[data-bulk-hover] td {
+  background: var(--orange-soft) !important;
+  transition: background 120ms ease;
+}
