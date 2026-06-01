@@ -356,21 +356,10 @@ export default async function RenewalsPage({
                         name="ids"
                         value={e.id}
                         data-status={currentStatus}
-                        disabled={gate.state !== "after"}
                       />
                     </td>
                     <td>
-                      {e.student_id ? (
-                        <Link
-                          href={`/admin/students?student=${e.student_id}`}
-                          className="no-row-toggle"
-                          style={{ color: "var(--text)", fontWeight: 900 }}
-                        >
-                          {e.students?.name ?? "-"}
-                        </Link>
-                      ) : (
-                        <strong>{e.students?.name ?? "-"}</strong>
-                      )}
+                      <strong>{e.students?.name ?? "-"}</strong>
                     </td>
                     <td className="muted">{e.products?.name ?? "-"}</td>
                     <td>

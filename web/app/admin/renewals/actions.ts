@@ -3,27 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCenter } from "@/lib/center";
-import { checkRenewalGate } from "@/lib/renewal";
 
 export async function bulkRenewal(formData: FormData) {
   const { supabase, centerId } = await requireCenter();
 
-  // 서버 측 게이트 (UI 우회 차단)
-  const { data: center } = await supabase
-    .from("centers")
-    .select("renewal_check_day")
-    .eq("id", centerId)
-    .maybeSingle();
-  const gate = checkRenewalGate(
-    (center as { renewal_check_day: number | null } | null)?.renewal_check_day,
-  );
-  if (gate.state !== "after") {
-    throw new Error(
-      gate.state === "not-configured"
-        ? "다음 달 수강 확인일이 설정되지 않았습니다. 설정에서 먼저 지정하세요."
-        : `매월 ${gate.day}일 수강 확인일이 지나야 일괄 처리가 가능합니다 (D-${gate.daysLeft}).`,
-    );
-  }
+  // 게이트(renewal_check_day) 제약은 cron 자동 알림에만 적용.
+  // 어드민이 수동으로 학부모 의사를 미리 받아 일괄 확정/보류 입력하는 것은 게이트 무관.
 
   const ids = formData.getAll("ids").map(String).filter(Boolean);
   const targetMonth = String(formData.get("target_month") ?? "");
