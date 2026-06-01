@@ -1482,3 +1482,18 @@ end $$;
 
 -- super_admin 이 모든 지점의 branch_to_hq 문의 read·답변 가능 (기존 admin_all RLS 통과)
 -- support_messages 도 동일 RLS 적용 — 이미 admin_all 정책 존재
+
+-- =====================================================================
+--  18.1 본사 ↔ 지점 1:1 채팅 — inquiries.kind='branch_chat' 추가
+--  - 지점당 단일 inquiry 행 (subject='본사 채팅' 자동값). 메시지가 계속 누적.
+--  - status 의미 없음 (계속 운영). UI 에서 표시 안 함.
+-- =====================================================================
+do $$ begin
+  alter table public.inquiries drop constraint if exists inquiries_kind_check;
+  alter table public.inquiries add constraint inquiries_kind_check
+    check (kind in ('post','chat','offline','branch_to_hq','branch_chat'));
+end $$;
+
+-- 지점당 1행 보장 (멱등 ensure 용 unique partial index)
+create unique index if not exists inquiries_branch_chat_unique
+  on public.inquiries (center_id) where kind = 'branch_chat';
