@@ -1343,7 +1343,16 @@
 .badge.red { background: var(--red-soft); color: var(--red); }
 .badge.gray { background: var(--gray-soft); color: var(--muted); }
 .badge.cyan { background: var(--cyan-soft); color: var(--cyan); }
-.badge.brand { background: var(--brand-soft); color: var(--brand); }
+/* .brand (사이드바 로고 영역) 와 클래스명 충돌 회피 — badge 기본 사이즈 재선언 */
+.badge.brand {
+  background: var(--brand-soft);
+  color: var(--brand);
+  display: inline-flex;
+  height: auto;
+  min-height: 22px;
+  padding: 3px 10px;
+  gap: 0;
+}
 
 /* 강한 채움 변형 — KPI/하이라이트용 */
 .badge.solid.green  { background: var(--green); color: #fff; }
