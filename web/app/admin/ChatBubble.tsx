@@ -1,23 +1,69 @@
+export type ChatAttachment = {
+  id: string;
+  fileName: string;
+  mimeType: string | null;
+  url: string;
+  sizeBytes?: number | null;
+};
+
+function isImageMime(mime: string | null | undefined) {
+  return !!mime && mime.startsWith("image/");
+}
+
 // 공통 채팅 메시지 — 카톡식. them = 박스 위 발신자명, me = 발신자명 생략.
-// 박스 안 = 본문만, 박스 옆 = 시각 작게.
+// 박스 안 = 첨부 미리보기 + 본문, 박스 옆 = 시각 작게.
 export default function ChatBubble({
   side,
   label,
   time,
   body,
+  attachments,
 }: {
   side: "me" | "them";
   label?: string;
   time: string;
   body: string;
+  attachments?: ChatAttachment[];
 }) {
+  const hasAttach = !!attachments && attachments.length > 0;
   return (
     <div className={`chat-row ${side}`}>
       <div className="chat-bubble-stack">
         {label && side === "them" && (
           <div className="chat-sender">{label}</div>
         )}
-        <div className="chat-bubble">{body}</div>
+        <div className="chat-bubble">
+          {hasAttach && (
+            <div className="chat-bubble-attachments">
+              {attachments!.map((a) =>
+                isImageMime(a.mimeType) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <a
+                    key={a.id}
+                    href={a.url}
+                    target="_blank"
+                    rel="noopener"
+                    className="chat-attach-image"
+                  >
+                    <img src={a.url} alt={a.fileName} />
+                  </a>
+                ) : (
+                  <a
+                    key={a.id}
+                    href={a.url}
+                    target="_blank"
+                    rel="noopener"
+                    className="chat-attach-file"
+                    download={a.fileName}
+                  >
+                    📎 {a.fileName}
+                  </a>
+                ),
+              )}
+            </div>
+          )}
+          {body && <div className="chat-bubble-text">{body}</div>}
+        </div>
       </div>
       <div className="chat-time">{time}</div>
     </div>

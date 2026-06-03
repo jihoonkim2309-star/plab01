@@ -31,6 +31,13 @@ type Message = {
   sender: string;
   body: string;
   created_at: string;
+  attachments?: {
+    id: string;
+    fileName: string;
+    mimeType: string | null;
+    sizeBytes: number | null;
+    url: string;
+  }[];
 };
 
 export default function InquiryDetailPanel() {
@@ -125,6 +132,7 @@ export default function InquiryDetailPanel() {
                     label={m.sender === "hq" ? "본사" : "지점"}
                     time={formatChatTime(m.created_at)}
                     body={m.body}
+                    attachments={m.attachments}
                   />
                 ))}
               </div>

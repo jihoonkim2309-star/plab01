@@ -1,5 +1,5 @@
 import { requireCenter } from "@/lib/center";
-import ChatTextarea from "../ChatTextarea";
+import ChatComposer from "../ChatComposer";
 import RefreshOnce from "../RefreshOnce";
 import ChatScrollAnchor from "../ChatScrollAnchor";
 import ChatBubble, { formatChatTime } from "../ChatBubble";
@@ -30,18 +30,57 @@ export default async function BranchChatPage() {
   const { data: msgs } = inquiryId
     ? await supabase
         .from("support_messages")
-        .select("id, sender, body, created_at")
+        .select(
+          "id, sender, body, created_at, support_message_attachments(id, storage_path, file_name, mime_type, size_bytes)",
+        )
         .eq("inquiry_id", inquiryId)
         .order("created_at", { ascending: true })
         .limit(500)
     : { data: [] };
 
-  const messages = (msgs ?? []) as unknown as {
+  type RawAtt = {
+    id: string;
+    storage_path: string;
+    file_name: string;
+    mime_type: string | null;
+    size_bytes: number | null;
+  };
+  type RawMsg = {
     id: string;
     sender: string;
     body: string;
     created_at: string;
-  }[];
+    support_message_attachments: RawAtt[] | null;
+  };
+  const rawMessages = (msgs ?? []) as unknown as RawMsg[];
+
+  // 첨부 signed URL 일괄 생성 (1시간)
+  const paths = rawMessages.flatMap((m) =>
+    (m.support_message_attachments ?? []).map((a) => a.storage_path),
+  );
+  const urlMap = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await supabase.storage
+      .from("chat-attachments")
+      .createSignedUrls(paths, 3600);
+    for (const s of (signed ?? []) as { path: string | null; signedUrl: string }[]) {
+      if (s.path && s.signedUrl) urlMap.set(s.path, s.signedUrl);
+    }
+  }
+
+  const messages = rawMessages.map((m) => ({
+    id: m.id,
+    sender: m.sender,
+    body: m.body,
+    created_at: m.created_at,
+    attachments: (m.support_message_attachments ?? []).map((a) => ({
+      id: a.id,
+      fileName: a.file_name,
+      mimeType: a.mime_type,
+      sizeBytes: a.size_bytes,
+      url: urlMap.get(a.storage_path) ?? "",
+    })),
+  }));
 
   return (
     <>
@@ -68,6 +107,7 @@ export default async function BranchChatPage() {
                 label={m.sender === "hq" ? "본사" : "우리 지점"}
                 time={formatChatTime(m.created_at)}
                 body={m.body}
+                attachments={m.attachments}
               />
             ))
           )}
@@ -78,8 +118,8 @@ export default async function BranchChatPage() {
           data-no-loading="true"
           className="chat-input-form"
         >
-          <ChatTextarea
-            placeholder="본사에 보낼 메시지를 입력하세요 (Enter = 전송, Shift+Enter = 줄바꿈)"
+          <ChatComposer
+            placeholder="본사에 보낼 메시지 (Enter = 전송, Shift+Enter = 줄바꿈)"
           />
           <button type="submit" className="btn primary" style={{ alignSelf: "flex-end" }}>
             전송

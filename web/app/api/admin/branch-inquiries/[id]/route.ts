@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireCenter } from "@/lib/center";
+import {
+  attachSignedUrls,
+  type RawMessageWithAttachments,
+} from "@/lib/chat-attachments";
 
 // 본사에 문의 1건 (지점 측) — inquiry + messages 한 번에 + mark_read.
 export async function GET(
@@ -26,7 +30,9 @@ export async function GET(
       .maybeSingle(),
     supabase
       .from("support_messages")
-      .select("id, sender, body, created_at")
+      .select(
+        "id, sender, body, created_at, support_message_attachments(id, storage_path, file_name, mime_type, size_bytes)",
+      )
       .eq("inquiry_id", id)
       .order("created_at", { ascending: true }),
   ]);
@@ -36,8 +42,13 @@ export async function GET(
     | null;
   if (!inquiry) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
+  const messages = await attachSignedUrls(
+    supabase,
+    (msgsRes.data ?? []) as unknown as RawMessageWithAttachments[],
+  );
+
   return NextResponse.json(
-    { inquiry, messages: msgsRes.data ?? [] },
+    { inquiry, messages },
     { headers: { "Cache-Control": "no-store" } },
   );
 }
