@@ -21,6 +21,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { NAV, type NavGroup } from "./nav";
+import { playChatDing } from "./chat-sound";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Building2,
@@ -187,7 +188,22 @@ export default function Sidebar({
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "hq_notices" }, debouncedLoad)
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "hq_notices" }, debouncedLoad)
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "hq_notice_reads" }, debouncedLoad)
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages" }, debouncedLoad)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "support_messages" },
+          (payload) => {
+            // 본인 발신 메시지에는 알림음 X
+            // - super_admin 시점: sender 'hq' = 본인
+            // - admin/coach 시점: sender 'admin' / 'coach' = 본인
+            const sender = (payload.new as { sender?: string } | null)?.sender;
+            const isMine =
+              (role === "super_admin" && sender === "hq") ||
+              (role === "admin" && (sender === "admin" || sender === "coach")) ||
+              (role === "coach" && (sender === "admin" || sender === "coach"));
+            if (!isMine) playChatDing();
+            debouncedLoad();
+          },
+        )
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "inquiry_reads" }, debouncedLoad)
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "inquiry_reads" }, debouncedLoad)
         .subscribe();
