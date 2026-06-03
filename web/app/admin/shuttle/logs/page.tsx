@@ -4,6 +4,7 @@ import FilterBar from "../../FilterBar";
 import StatusChips from "../../StatusChips";
 import FilterSelect from "../../FilterSelect";
 import SearchInput from "../../SearchInput";
+import DateFilter from "../../DateFilter";
 
 const ACTION_BADGE: Record<string, string> = {
   승차: "blue",
@@ -161,21 +162,12 @@ export default async function ShuttleLogsPage({
                 ariaLabel="노선 필터"
                 options={routes.map((r) => ({ value: r.id, label: r.name }))}
               />
-              <div className="field" style={{ maxWidth: 160 }}>
-                <input
-                  type="date"
-                  name="date"
-                  defaultValue={targetDate}
-                  form="logs-date-form"
-                  style={{ minHeight: 32, padding: "4px 8px", fontSize: 13 }}
-                />
-              </div>
-              <form id="logs-date-form" method="get" style={{ display: "inline" }}>
-                <button type="submit" className="btn">날짜 적용</button>
-                {action && <input type="hidden" name="action" value={action} />}
-                {route_id && <input type="hidden" name="route_id" value={route_id} />}
-                {q && <input type="hidden" name="q" value={q} />}
-              </form>
+              <DateFilter
+                param="date"
+                current={targetDate}
+                ariaLabel="날짜 필터"
+                style={{ minHeight: 32, padding: "4px 8px", fontSize: 13, maxWidth: 160 }}
+              />
               <div style={{ flex: 1 }} />
               <SearchInput param="q" current={q} placeholder="학생명·학교 검색" />
               {hasFilter && <Link className="btn" href="/admin/shuttle/logs">초기화</Link>}
