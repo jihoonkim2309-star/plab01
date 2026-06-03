@@ -97,6 +97,7 @@ export default async function BranchChatPage() {
         </div>
         <form
           action={sendBranchChatAsAdmin}
+          data-no-loading="true"
           style={{
             display: "flex",
             gap: 8,

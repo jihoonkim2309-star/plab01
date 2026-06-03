@@ -178,6 +178,7 @@ export default async function HqChatPage({
               </div>
               <form
                 action={sendBranchChatAsHq}
+                data-no-loading="true"
                 style={{
                   display: "flex",
                   gap: 8,
