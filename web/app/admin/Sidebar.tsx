@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
 import {
   Bell,
   BookOpen,
@@ -138,15 +139,66 @@ function groupContainsActive(
 export default function Sidebar({
   role,
   hasActiveCenter,
-  unreadCounts,
 }: {
   role: "super_admin" | "admin" | "coach" | "parent" | "student" | "driver" | null;
   hasActiveCenter?: boolean;
-  unreadCounts?: Record<string, number>;
 }) {
   const pathname = usePathname();
   const searchParamsHook = useSearchParams();
   const searchParams = searchParamsHook ?? new URLSearchParams();
+
+  // 사이드바 자체 fetch — layout 에서 빼서 RSC 응답이 빨라짐.
+  // mount 후 1회 fetch + Realtime 이벤트로 재 fetch.
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch("/api/admin/unread-counts", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as Record<string, number>;
+        if (!cancelled) setUnreadCounts(data);
+      } catch {
+        /* ignore */
+      }
+    };
+    load();
+
+    // Realtime 구독 — DB 변경 감지하면 unread 재 fetch
+    const supabase = createClient();
+    type RtChannel = ReturnType<typeof supabase.channel>;
+    let channel: RtChannel | null = null;
+    let pending: ReturnType<typeof setTimeout> | null = null;
+    const debouncedLoad = () => {
+      if (pending) clearTimeout(pending);
+      pending = setTimeout(() => {
+        pending = null;
+        load();
+      }, 300);
+    };
+
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        await supabase.realtime.setAuth(session.access_token);
+      }
+      channel = supabase
+        .channel("admin-unread-badges")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "hq_notices" }, debouncedLoad)
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "hq_notices" }, debouncedLoad)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "hq_notice_reads" }, debouncedLoad)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages" }, debouncedLoad)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "inquiry_reads" }, debouncedLoad)
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "inquiry_reads" }, debouncedLoad)
+        .subscribe();
+    })();
+
+    return () => {
+      cancelled = true;
+      if (pending) clearTimeout(pending);
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [pathname]);
 
   // 모드별 사이드바 필터:
   //  - super_admin + 지점 미선택 = "프랜차이즈 관리" 모드
