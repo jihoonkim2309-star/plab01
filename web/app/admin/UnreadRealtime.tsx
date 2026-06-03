@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -12,6 +12,8 @@ import { createClient } from "@/lib/supabase/client";
 // 평가됨 (안 그러면 anon 으로 평가되어 정책 거부로 이벤트 silent drop).
 export default function UnreadRealtime() {
   const router = useRouter();
+  const [status, setStatus] = useState<string>("CONNECTING");
+  const [lastEvent, setLastEvent] = useState<string>("");
   useEffect(() => {
     const supabase = createClient();
     type RtChannel = ReturnType<typeof supabase.channel>;
@@ -23,41 +25,45 @@ export default function UnreadRealtime() {
         await supabase.realtime.setAuth(session.access_token);
       }
 
+      const log = (label: string) => {
+        const t = new Date().toISOString().slice(11, 19);
+        setLastEvent(`${label} @ ${t}`);
+        router.refresh();
+      };
+
       channel = supabase
         .channel("admin-unread-badges")
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "hq_notices" },
-          () => router.refresh(),
+          () => log("hq_notices INSERT"),
         )
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "hq_notices" },
-          () => router.refresh(),
+          () => log("hq_notices UPDATE"),
         )
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "hq_notice_reads" },
-          () => router.refresh(),
+          () => log("hq_notice_reads INSERT"),
         )
-        // 새 메시지 도착 시 사이드바 뱃지 즉시 갱신 (본사 채팅/문의)
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "support_messages" },
-          () => router.refresh(),
+          () => log("support_messages INSERT"),
         )
-        // 본인 mark_read 후 카운트 감소
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "inquiry_reads" },
-          () => router.refresh(),
+          () => log("inquiry_reads INSERT"),
         )
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "inquiry_reads" },
-          () => router.refresh(),
+          () => log("inquiry_reads UPDATE"),
         )
-        .subscribe();
+        .subscribe((s) => setStatus(s));
     };
 
     setup();
@@ -67,5 +73,39 @@ export default function UnreadRealtime() {
     };
   }, [router]);
 
-  return null;
+  const color =
+    status === "SUBSCRIBED" ? "#22c55e" : status === "CONNECTING" ? "#f59e0b" : "#ef4444";
+  return (
+    <div
+      style={{
+        position: "fixed",
+        right: 12,
+        bottom: 12,
+        zIndex: 9999,
+        background: "#111",
+        color: "#fff",
+        padding: "6px 10px",
+        borderRadius: 8,
+        fontSize: 11,
+        fontFamily: "monospace",
+        opacity: 0.85,
+        pointerEvents: "none",
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+      }}
+    >
+      <span
+        style={{
+          display: "inline-block",
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: color,
+        }}
+      />
+      <span>RT: {status}</span>
+      {lastEvent && <span style={{ opacity: 0.7 }}>· {lastEvent}</span>}
+    </div>
+  );
 }
