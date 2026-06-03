@@ -1,39 +1,19 @@
-import Link from "next/link";
 import { requireCenter } from "@/lib/center";
-import RefreshOnce from "../RefreshOnce";
+import { NoticeDrawerProvider } from "./NoticeDrawerContext";
+import NoticeRowLink from "./NoticeRowLink";
+import NoticeDetailPanel from "./NoticeDetailPanel";
 
-export default async function InboundNoticesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ id?: string }>;
-}) {
-  const { id } = await searchParams;
-  const { supabase, centerId, userId } = await requireCenter();
+export default async function InboundNoticesPage() {
+  const { supabase, userId } = await requireCenter();
 
-  // 상세 진입 시 멱등 mark_read — RLS 가 자기 지점·본인만 허용
-  if (id) {
-    await supabase
-      .from("hq_notice_reads")
-      .upsert(
-        { notice_id: id, center_id: centerId, user_id: userId },
-        { onConflict: "notice_id,user_id" },
-      );
-  }
-
-  // RLS 로 자기 지점 대상 + 발행된 공지만 노출됨
-  const [listRes, selectedRes, readsRes] = await Promise.all([
+  // 좌측 목록 + 본인 readSet 만 server fetch.
+  // 우측 상세는 client (NoticeDetailPanel) 가 클릭 시 자체 fetch + mark_read.
+  const [listRes, readsRes] = await Promise.all([
     supabase
       .from("hq_notices")
       .select("id, title, scope, published_at, notified_count")
       .order("published_at", { ascending: false })
       .limit(200),
-    id
-      ? supabase
-          .from("hq_notices")
-          .select("id, title, body, scope, published_at")
-          .eq("id", id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
     supabase
       .from("hq_notice_reads")
       .select("notice_id")
@@ -48,16 +28,12 @@ export default async function InboundNoticesPage({
     notified_count: number;
   };
   const list = (listRes.data ?? []) as unknown as Row[];
-  const selected = selectedRes.data as
-    | (Row & { body: string })
-    | null;
   const readSet = new Set(
     ((readsRes.data ?? []) as { notice_id: string }[]).map((r) => r.notice_id),
   );
 
   return (
-    <>
-      {id && <RefreshOnce k={id} />}
+    <NoticeDrawerProvider>
       <div className="page-head">
         <div>
           <h1>본사 공지</h1>
@@ -88,12 +64,10 @@ export default async function InboundNoticesPage({
                 {list.map((n) => {
                   const isUnread = !readSet.has(n.id);
                   return (
-                    <tr
-                      key={n.id}
-                      className={`row-link-host ${n.id === id ? "selected" : ""}`}
-                    >
+                    <tr key={n.id} className="row-link-host">
                       <td>
-                        <Link
+                        <NoticeRowLink
+                          noticeId={n.id}
                           href={`/admin/inbound-notices?id=${n.id}`}
                           className="row-link-stretch"
                           style={{
@@ -133,7 +107,7 @@ export default async function InboundNoticesPage({
                               NEW
                             </span>
                           )}
-                        </Link>
+                        </NoticeRowLink>
                       </td>
                       <td className="muted">
                         {n.scope === "all" ? "전체 지점" : "특정 지점"}
@@ -158,46 +132,8 @@ export default async function InboundNoticesPage({
           </div>
         </div>
 
-        <div className="panel">
-          <div className="panel-head">
-            <p className="panel-title">{selected ? selected.title : "공지 상세"}</p>
-          </div>
-          <div className="panel-body">
-            {!selected ? (
-              <div className="empty-state">
-                <strong>선택된 공지가 없습니다</strong>
-                <p>왼쪽 목록에서 본사 공지를 선택해 주세요.</p>
-              </div>
-            ) : (
-              <>
-                <div className="detail-block" style={{ marginTop: 0 }}>
-                  <p className="detail-title">발행 정보</p>
-                  <div className="info-list">
-                    <div className="info-row">
-                      <span>발행일시</span>
-                      <strong>
-                        {selected.published_at?.slice(0, 16).replace("T", " ") ?? "-"}
-                      </strong>
-                    </div>
-                    <div className="info-row">
-                      <span>대상</span>
-                      <strong>
-                        {selected.scope === "all" ? "전체 지점" : "특정 지점"}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-                <div className="detail-block">
-                  <p className="detail-title">본문</p>
-                  <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
-                    {selected.body}
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+        <NoticeDetailPanel />
       </div>
-    </>
+    </NoticeDrawerProvider>
   );
 }
