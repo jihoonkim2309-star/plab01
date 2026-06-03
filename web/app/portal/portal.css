@@ -142,3 +142,133 @@
 }
 .portal-tab.active { color: var(--brand, #1e794e); }
 .portal-tab svg { display: block; }
+
+/* 포털 공통 카드 */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  margin-bottom: 12px;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.card-head strong { font-size: 14px; }
+.card-more {
+  font-size: 11px;
+  color: #6f7d78;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* 자녀 row */
+.child-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  text-decoration: none;
+  color: #111;
+  border-top: 1px solid #f1f5f4;
+}
+.card .child-row:first-of-type { border-top: 0; padding-top: 0; }
+.avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--brand-soft, #d8ecdf);
+  color: var(--brand, #1e794e);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.child-name { font-size: 14px; font-weight: 700; }
+.child-meta { font-size: 11px; color: #6f7d78; font-weight: 500; margin-left: 4px; }
+.child-next { font-size: 12px; color: var(--brand, #1e794e); margin-top: 2px; font-weight: 600; }
+
+/* 빠른 메뉴 grid */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.quick-item {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #374151;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.quick-item:hover { background: var(--brand-soft, #d8ecdf); color: var(--brand, #1e794e); }
+
+/* 알림 row */
+.notice-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  text-decoration: none;
+  color: #111;
+  border-top: 1px solid #f1f5f4;
+}
+.card .notice-row:first-of-type { border-top: 0; padding-top: 0; }
+.notice-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e53935;
+  flex-shrink: 0;
+}
+.notice-title {
+  font-size: 13px;
+  color: #374151;
+}
+.notice-title.unread { font-weight: 800; color: #111; }
+.notice-time { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+
+/* 결제 안내 카드 */
+.billing-card { background: linear-gradient(120deg, var(--brand-soft, #d8ecdf), #e9f5ee); }
+.billing-meta, .billing-amount {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 13px;
+  color: #374151;
+}
+.billing-amount strong { font-size: 18px; color: var(--brand, #1e794e); }
+
+/* 공통 버튼 (포털 안에서 사용) */
+.btn {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #111;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+.btn.primary {
+  background: var(--brand, #1e794e);
+  color: #fff;
+  border-color: var(--brand, #1e794e);
+}
+.btn.primary:hover { opacity: 0.95; }
