@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -11,6 +11,8 @@ import { createClient } from "@/lib/supabase/client";
 // RLS 가 그대로 적용되므로 자기 지점 대상이 아닌 이벤트는 도달 안 함.
 export default function UnreadRealtime() {
   const router = useRouter();
+  const [status, setStatus] = useState<string>("CONNECTING");
+  const [lastEvent, setLastEvent] = useState<string>("");
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
@@ -20,6 +22,7 @@ export default function UnreadRealtime() {
         { event: "INSERT", schema: "public", table: "hq_notices" },
         (payload) => {
           console.log("[Realtime] hq_notices INSERT", payload);
+          setLastEvent(`hq_notices INSERT @ ${new Date().toISOString().slice(11, 19)}`);
           router.refresh();
         },
       )
@@ -28,6 +31,7 @@ export default function UnreadRealtime() {
         { event: "UPDATE", schema: "public", table: "hq_notices" },
         (payload) => {
           console.log("[Realtime] hq_notices UPDATE", payload);
+          setLastEvent(`hq_notices UPDATE @ ${new Date().toISOString().slice(11, 19)}`);
           router.refresh();
         },
       )
@@ -36,15 +40,57 @@ export default function UnreadRealtime() {
         { event: "INSERT", schema: "public", table: "hq_notice_reads" },
         (payload) => {
           console.log("[Realtime] hq_notice_reads INSERT", payload);
+          setLastEvent(`hq_notice_reads INSERT @ ${new Date().toISOString().slice(11, 19)}`);
           router.refresh();
         },
       )
-      .subscribe((status, err) => {
-        console.log("[Realtime] subscribe status:", status, err ?? "");
+      .subscribe((s, err) => {
+        console.log("[Realtime] subscribe status:", s, err ?? "");
+        setStatus(s);
       });
     return () => {
       supabase.removeChannel(channel);
     };
   }, [router]);
-  return null;
+
+  const color =
+    status === "SUBSCRIBED"
+      ? "#22c55e"
+      : status === "CONNECTING"
+        ? "#f59e0b"
+        : "#ef4444";
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        right: 12,
+        bottom: 12,
+        zIndex: 9999,
+        background: "#111",
+        color: "#fff",
+        padding: "6px 10px",
+        borderRadius: 8,
+        fontSize: 11,
+        fontFamily: "monospace",
+        opacity: 0.85,
+        pointerEvents: "none",
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+      }}
+    >
+      <span
+        style={{
+          display: "inline-block",
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: color,
+        }}
+      />
+      <span>RT: {status}</span>
+      {lastEvent && <span style={{ opacity: 0.7 }}>· {lastEvent}</span>}
+    </div>
+  );
 }
