@@ -1,6 +1,7 @@
 import { requireCenter } from "@/lib/center";
 import ChatTextarea from "../ChatTextarea";
 import RefreshOnce from "../RefreshOnce";
+import ChatScrollAnchor from "../ChatScrollAnchor";
 import { sendBranchChatAsAdmin } from "./actions";
 
 export default async function BranchChatPage() {
@@ -94,6 +95,7 @@ export default async function BranchChatPage() {
               );
             })
           )}
+          <ChatScrollAnchor k={`${messages.length}-${messages[messages.length - 1]?.id ?? ""}`} />
         </div>
         <form
           action={sendBranchChatAsAdmin}

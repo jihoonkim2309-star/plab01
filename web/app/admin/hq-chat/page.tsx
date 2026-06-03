@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireSuperAdmin } from "@/lib/center";
 import ChatTextarea from "../ChatTextarea";
 import RefreshOnce from "../RefreshOnce";
+import ChatScrollAnchor from "../ChatScrollAnchor";
 import { sendBranchChatAsHq } from "../branch-chat/actions";
 
 export default async function HqChatPage({
@@ -220,6 +221,7 @@ export default async function HqChatPage({
                     );
                   })
                 )}
+                <ChatScrollAnchor k={`${selectedCenter.id}-${messages.length}-${messages[messages.length - 1]?.id ?? ""}`} />
               </div>
               <form
                 action={sendBranchChatAsHq}
