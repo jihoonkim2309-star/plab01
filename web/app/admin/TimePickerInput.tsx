@@ -88,6 +88,16 @@ export default function TimePickerInput({
   const m = current.match(/^(\d{2}):(\d{2})$/);
   const selectedHour = m ? Number(m[1]) : null;
   const selectedMinute = m ? Number(m[2]) : null;
+  // 5자 완성 + 시 0~23 / 분 0~59 가 아니면 invalid
+  const isInvalid =
+    current.length === 5 &&
+    (!m ||
+      selectedHour === null ||
+      selectedMinute === null ||
+      selectedHour < 0 ||
+      selectedHour > 23 ||
+      selectedMinute < 0 ||
+      selectedMinute > 59);
 
   const minutes: number[] = [];
   for (let i = 0; i < 60; i += step) minutes.push(i);
@@ -102,14 +112,55 @@ export default function TimePickerInput({
         ref={inputRef}
         type="text"
         value={current}
-        readOnly
         disabled={disabled}
         placeholder={placeholder}
-        onClick={() => !disabled && setOpen((v) => !v)}
+        inputMode="numeric"
+        maxLength={5}
+        aria-invalid={isInvalid || undefined}
+        style={
+          isInvalid
+            ? {
+                borderColor: "#ef4444",
+                background: "#fff7f7",
+                boxShadow: "0 0 0 3px rgba(239,68,68,.12)",
+              }
+            : undefined
+        }
+        onKeyDown={(e) => {
+          // 5자 마스크 완성 후 숫자 키 = 덮어쓰기
+          if (current.length < 5) return;
+          if (!/^\d$/.test(e.key)) return;
+          e.preventDefault();
+          const input = e.currentTarget;
+          let pos = input.selectionStart ?? 0;
+          while (pos < 5 && current[pos] === ":") pos++;
+          if (pos >= 5) return;
+          const next = current.substring(0, pos) + e.key + current.substring(pos + 1);
+          setCurrent(next.substring(0, 5));
+          let nextPos = pos + 1;
+          while (nextPos < 5 && next[nextPos] === ":") nextPos++;
+          requestAnimationFrame(() => {
+            input.setSelectionRange(nextPos, nextPos);
+          });
+        }}
+        onChange={(e) => {
+          // 자동 콜론 (HH:MM)
+          const raw = e.target.value.replace(/[^\d:]/g, "");
+          const digits = raw.replace(/:/g, "").slice(0, 4);
+          let formatted = digits;
+          if (digits.length >= 3) formatted = `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+          setCurrent(formatted);
+        }}
+        onClick={() => !disabled && setOpen(true)}
         onFocus={() => !disabled && setOpen(true)}
-        style={{ cursor: disabled ? "not-allowed" : "pointer" }}
+        autoComplete="off"
       />
       {name && <input type="hidden" name={name} value={current} required={required} />}
+      {isInvalid && (
+        <div className="field-error-text" style={{ marginTop: 4 }}>
+          올바른 시간이 아닙니다 (HH:MM)
+        </div>
+      )}
       {open && !disabled && mounted && coords &&
         createPortal(
           <div
