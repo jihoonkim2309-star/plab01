@@ -47,8 +47,9 @@ export default function GlobalLoading() {
       try {
         const url = new URL(href, window.location.href);
         if (url.origin !== window.location.origin) return;
-        // 같은 URL (현재 페이지 자기 자신 클릭) 제외
-        if (url.pathname === window.location.pathname && url.search === window.location.search) return;
+        // 같은 path — 다른 query 만 (마스터-디테일 ?id 변경 등) 는 spinner X.
+        // pathname/search 가 정확히 같은 자기 자신도 X.
+        if (url.pathname === window.location.pathname) return;
       } catch {
         return;
       }
