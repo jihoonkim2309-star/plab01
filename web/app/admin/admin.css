@@ -1671,7 +1671,29 @@
   display: grid;
   grid-template-columns: minmax(620px, 1.25fr) minmax(360px, 0.75fr);
   gap: 14px;
-  align-items: start;
+  align-items: stretch;
+  /* 좌측 리스트 + 우측 상세를 동일 높이로 고정, 페이지 전체 스크롤 X */
+  height: calc(100vh - 240px);
+  min-height: 520px;
+}
+
+/* 두 패널 모두 column flex — head 고정 + content 영역만 내부 스크롤 */
+.member-layout > .panel,
+.member-layout > .panel.elevated {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+.member-layout > .panel > .panel-head {
+  flex-shrink: 0;
+}
+/* panel 의 마지막 자식이 grow + 내부 스크롤. 위 자식 (필터바·헤더 등) 은 자기 높이 유지 */
+.member-layout > .panel > :last-child {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .member-summary {
