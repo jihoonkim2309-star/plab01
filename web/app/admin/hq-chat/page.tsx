@@ -165,7 +165,7 @@ export default async function HqChatPage({
           </div>
         </div>
 
-        <div className="panel" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 220px)" }}>
+        <div className="panel chat-panel" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 220px)" }}>
           <div className="panel-head">
             <p className="panel-title">
               {selectedCenter ? selectedCenter.name : "지점을 선택해 주세요"}

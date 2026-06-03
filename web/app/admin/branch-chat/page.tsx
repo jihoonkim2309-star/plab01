@@ -53,7 +53,7 @@ export default async function BranchChatPage() {
         </div>
       </div>
 
-      <div className="panel" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 220px)" }}>
+      <div className="panel chat-panel" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 220px)" }}>
         <div className="chat-thread">
           {messages.length === 0 ? (
             <div className="empty-state">

@@ -2820,11 +2820,13 @@ tr[data-bulk-hover] td {
   padding: 16px;
   background: var(--bg);
   min-height: 0;
-  /* 메시지 영역 폭 — 너무 넓으면 좌·우 정렬이 어색. 가운데 정렬로 카톡 패턴 */
-  max-width: 760px;
-  width: 100%;
+}
+
+/* 채팅 페이지 panel 전체 폭 — 카톡 스타일 좁은 영역 */
+.chat-panel {
+  max-width: 720px;
   margin: 0 auto;
-  align-self: stretch;
+  width: 100%;
 }
 
 /* chat-row = 박스 + 시각 (좌·우 정렬). me 면 row-reverse 로 박스 우측, 시각 좌측. */
