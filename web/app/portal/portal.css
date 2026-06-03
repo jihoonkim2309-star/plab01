@@ -272,3 +272,50 @@
   border-color: var(--brand, #1e794e);
 }
 .btn.primary:hover { opacity: 0.95; }
+
+/* 정보 row 공통 */
+.info-rows { display: flex; flex-direction: column; gap: 6px; }
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 13px;
+  gap: 12px;
+}
+.info-row > span { color: #6f7d78; flex-shrink: 0; }
+.info-row > strong { color: #111; text-align: right; word-break: keep-all; }
+
+/* 리스트 row */
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid #f1f5f4;
+  text-decoration: none;
+  color: #111;
+}
+.card .list-row:first-of-type { border-top: 0; padding-top: 0; }
+.list-row-title { font-size: 13px; font-weight: 700; }
+.list-row-sub { font-size: 11px; color: #6f7d78; margin-top: 2px; }
+
+/* 폼 (포털 안에서 사용) */
+.portal-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.portal-field label { font-size: 12px; color: #374151; font-weight: 600; }
+.portal-field input,
+.portal-field select,
+.portal-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 14px;
+  font-family: inherit;
+}
+.portal-field input:focus,
+.portal-field select:focus,
+.portal-field textarea:focus {
+  border-color: var(--brand, #1e794e);
+  outline: 2px solid var(--brand-soft, #d8ecdf);
+}
