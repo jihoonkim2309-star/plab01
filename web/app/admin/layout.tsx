@@ -153,7 +153,7 @@ export default async function AdminLayout({
         hasActiveCenter={!!activeCenterId}
         unreadCounts={unreadCounts}
       />
-      <UnreadRealtime />
+      {activeCenterId && <UnreadRealtime />}
       <div className="drawer-backdrop" />
 
       <main className="main">
