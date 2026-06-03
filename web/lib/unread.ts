@@ -38,7 +38,63 @@ export async function getUnreadCounts(
     });
   }
 
+  // 본사 모드 (super_admin + 활성 지점 X) — 모든 지점이 본사에 보낸 메시지 카운트
+  if (!args.centerId && args.role === "super_admin") {
+    counts["hq-chat"] = await countHqChannelUnread(supabase, {
+      userId: args.userId,
+      kind: "branch_chat",
+    });
+    counts["hq-inquiries"] = await countHqChannelUnread(supabase, {
+      userId: args.userId,
+      kind: "branch_to_hq",
+    });
+  }
+
   return counts;
+}
+
+// 본사 측 (super_admin) — 모든 지점의 inquiries 중 sender 가 지점 (admin/coach)
+// 발신인 메시지 가운데 본인 last_read_at 이후 것 카운트.
+async function countHqChannelUnread(
+  supabase: SupabaseClient,
+  args: { userId: string; kind: "branch_chat" | "branch_to_hq" },
+): Promise<number> {
+  const { data: inqs } = await supabase
+    .from("inquiries")
+    .select("id")
+    .eq("kind", args.kind);
+  const list = (inqs ?? []) as { id: string }[];
+  if (list.length === 0) return 0;
+  const ids = list.map((i) => i.id);
+
+  const [readsRes, msgsRes] = await Promise.all([
+    supabase
+      .from("inquiry_reads")
+      .select("inquiry_id, last_read_at")
+      .eq("user_id", args.userId)
+      .in("inquiry_id", ids),
+    supabase
+      .from("support_messages")
+      .select("inquiry_id, created_at, sender")
+      .in("inquiry_id", ids)
+      .neq("sender", "hq"),
+  ]);
+
+  const readMap = new Map(
+    ((readsRes.data ?? []) as { inquiry_id: string; last_read_at: string }[]).map(
+      (r) => [r.inquiry_id, r.last_read_at],
+    ),
+  );
+
+  let unread = 0;
+  for (const m of (msgsRes.data ?? []) as {
+    inquiry_id: string;
+    created_at: string;
+  }[]) {
+    const lastRead = readMap.get(m.inquiry_id);
+    if (!lastRead || lastRead < m.created_at) unread++;
+  }
+  return unread;
 }
 
 // 지점이 본사 채널 (branch_chat / branch_to_hq) 의 inquiry 안에서

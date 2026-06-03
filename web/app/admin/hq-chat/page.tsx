@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireSuperAdmin } from "@/lib/center";
 import ChatTextarea from "../ChatTextarea";
+import RefreshOnce from "../RefreshOnce";
 import { sendBranchChatAsHq } from "../branch-chat/actions";
 
 export default async function HqChatPage({
@@ -9,16 +10,25 @@ export default async function HqChatPage({
   searchParams: Promise<{ center?: string }>;
 }) {
   const { center } = await searchParams;
-  const { supabase } = await requireSuperAdmin();
+  const { supabase, userId } = await requireSuperAdmin();
 
   // 모든 지점 + 각 지점의 branch_chat inquiry (있으면) + 마지막 메시지 시각
-  const [centersRes, chatsRes] = await Promise.all([
+  const [centersRes, chatsRes, readsRes] = await Promise.all([
     supabase.from("centers").select("id, name").order("name"),
     supabase
       .from("inquiries")
       .select("id, center_id, updated_at")
       .eq("kind", "branch_chat"),
+    supabase
+      .from("inquiry_reads")
+      .select("inquiry_id, last_read_at")
+      .eq("user_id", userId),
   ]);
+  const readMap = new Map(
+    ((readsRes.data ?? []) as { inquiry_id: string; last_read_at: string }[]).map(
+      (r) => [r.inquiry_id, r.last_read_at],
+    ),
+  );
 
   const centers = (centersRes.data ?? []) as { id: string; name: string }[];
   const chats = (chatsRes.data ?? []) as {
@@ -49,6 +59,16 @@ export default async function HqChatPage({
     ? chatByCenter.get(selectedCenter.id)?.id ?? null
     : null;
 
+  // 지점 선택 시 멱등 mark_read — RLS 가 본인 행만 허용
+  if (selectedInquiryId) {
+    await supabase
+      .from("inquiry_reads")
+      .upsert(
+        { inquiry_id: selectedInquiryId, user_id: userId, last_read_at: new Date().toISOString() },
+        { onConflict: "inquiry_id,user_id" },
+      );
+  }
+
   const { data: msgs } = selectedInquiryId
     ? await supabase
         .from("support_messages")
@@ -66,6 +86,7 @@ export default async function HqChatPage({
 
   return (
     <>
+      {selectedInquiryId && <RefreshOnce k={selectedInquiryId} />}
       <div className="page-head">
         <div>
           <h1>지점 채팅</h1>
@@ -92,27 +113,51 @@ export default async function HqChatPage({
                 </tr>
               </thead>
               <tbody>
-                {centerList.map((c) => (
-                  <tr
-                    key={c.id}
-                    className={`row-link-host ${c.id === center ? "selected" : ""}`}
-                  >
-                    <td>
-                      <Link
-                        href={`/admin/hq-chat?center=${c.id}`}
-                        className="row-link-stretch"
-                        style={{ fontWeight: 700, color: "var(--text)" }}
-                      >
-                        {c.name}
-                      </Link>
-                    </td>
-                    <td className="muted" style={{ fontSize: 12 }}>
-                      {c.lastAt
-                        ? c.lastAt.slice(0, 16).replace("T", " ")
-                        : "—"}
-                    </td>
-                  </tr>
-                ))}
+                {centerList.map((c) => {
+                  const lastRead = c.inquiryId ? readMap.get(c.inquiryId) : null;
+                  const isUnread =
+                    !!c.lastAt && (!lastRead || lastRead < c.lastAt);
+                  return (
+                    <tr
+                      key={c.id}
+                      className={`row-link-host ${c.id === center ? "selected" : ""}`}
+                    >
+                      <td>
+                        <Link
+                          href={`/admin/hq-chat?center=${c.id}`}
+                          className="row-link-stretch"
+                          style={{
+                            fontWeight: isUnread ? 800 : 600,
+                            color: isUnread ? "var(--text)" : "#6f7d78",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          {isUnread && (
+                            <span
+                              aria-label="새 메시지"
+                              style={{
+                                display: "inline-block",
+                                width: 6,
+                                height: 6,
+                                borderRadius: "50%",
+                                background: "#e53935",
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
+                          {c.name}
+                        </Link>
+                      </td>
+                      <td className="muted" style={{ fontSize: 12 }}>
+                        {c.lastAt
+                          ? c.lastAt.slice(0, 16).replace("T", " ")
+                          : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

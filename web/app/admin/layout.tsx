@@ -122,14 +122,12 @@ export default async function AdminLayout({
   const centersForSwitcher =
     (allCentersRes.data as { id: string; name: string }[] | null) ?? [];
 
-  // 사이드바 미열람 뱃지 — 활성 지점 컨텍스트가 있을 때만 (지점 채널 기준)
-  const unreadCounts = activeCenterId
-    ? await getUnreadCounts(supabase, {
-        userId,
-        centerId: activeCenterId,
-        role,
-      })
-    : {};
+  // 사이드바 미열람 뱃지 — 지점 컨텍스트 (지점 채널) + 본사 모드 (hq 채널) 둘 다
+  const unreadCounts = await getUnreadCounts(supabase, {
+    userId,
+    centerId: activeCenterId,
+    role,
+  });
 
   const initial = (profile?.name ?? userEmail ?? "A").charAt(0).toUpperCase();
   const displayName = profile?.name ?? userEmail ?? "";
@@ -153,7 +151,7 @@ export default async function AdminLayout({
         hasActiveCenter={!!activeCenterId}
         unreadCounts={unreadCounts}
       />
-      {activeCenterId && <UnreadRealtime />}
+      <UnreadRealtime />
       <div className="drawer-backdrop" />
 
       <main className="main">
