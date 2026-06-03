@@ -18,20 +18,30 @@ export default function UnreadRealtime() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "hq_notices" },
-        () => router.refresh(),
+        (payload) => {
+          console.log("[Realtime] hq_notices INSERT", payload);
+          router.refresh();
+        },
       )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "hq_notices" },
-        // draft → published 전환도 잡음
-        () => router.refresh(),
+        (payload) => {
+          console.log("[Realtime] hq_notices UPDATE", payload);
+          router.refresh();
+        },
       )
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "hq_notice_reads" },
-        () => router.refresh(),
+        (payload) => {
+          console.log("[Realtime] hq_notice_reads INSERT", payload);
+          router.refresh();
+        },
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        console.log("[Realtime] subscribe status:", status, err ?? "");
+      });
     return () => {
       supabase.removeChannel(channel);
     };
