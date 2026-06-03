@@ -1,22 +1,20 @@
-// 공통 채팅 메시지 버블. server / client 어디서든 import.
-// side='me' = 우측, brand 톤. 'them' = 좌측, blue 톤.
+// 공통 채팅 메시지 — 카톡식 (박스 안 본문, 박스 옆 시각).
+// 좌/우 정렬만으로 발신자 구분 (본인 me 우측 brand, 상대 them 좌측 blue).
 export default function ChatBubble({
   side,
-  label,
   time,
   body,
 }: {
   side: "me" | "them";
-  label: string;
+  /** label 은 옵션 (그룹/멀티 발신자 케이스에서만 박스 위에 표시) */
+  label?: string;
   time: string;
   body: string;
 }) {
   return (
-    <div className={`chat-bubble ${side}`}>
-      <div className="chat-bubble-meta">
-        {label} · {time}
-      </div>
-      <div className="chat-bubble-body">{body}</div>
+    <div className={`chat-row ${side}`}>
+      <div className="chat-bubble">{body}</div>
+      <div className="chat-time">{time}</div>
     </div>
   );
 }

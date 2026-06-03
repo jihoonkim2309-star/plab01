@@ -2822,34 +2822,45 @@ tr[data-bulk-hover] td {
   min-height: 0;
 }
 
+/* chat-row = 박스 + 시각 (좌·우 정렬). me 면 row-reverse 로 박스 우측, 시각 좌측. */
+.chat-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: min(75%, 520px);
+}
+.chat-row.me {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+.chat-row.them {
+  align-self: flex-start;
+}
 .chat-bubble {
-  width: fit-content;
-  max-width: min(60%, 420px);
-  border-radius: 12px;
-  padding: 6px 10px;
+  border-radius: 14px;
+  padding: 8px 12px;
   border: 1px solid transparent;
   word-break: break-word;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
 }
-.chat-bubble.me {
-  align-self: flex-end;
+.chat-row.me .chat-bubble {
   background: var(--brand-soft);
   border-color: #b8dccb;
+  border-bottom-right-radius: 4px;
 }
-.chat-bubble.them {
-  align-self: flex-start;
+.chat-row.them .chat-bubble {
   background: var(--blue-soft);
   border-color: #b8d0ee;
+  border-bottom-left-radius: 4px;
 }
-.chat-bubble-meta {
-  font-size: 11px;
+.chat-time {
+  font-size: 10px;
   color: var(--muted);
-  margin-bottom: 3px;
-  font-weight: 500;
-}
-.chat-bubble-body {
-  font-size: 13px;
-  white-space: pre-wrap;
-  line-height: 1.45;
+  white-space: nowrap;
+  padding-bottom: 2px;
+  flex-shrink: 0;
 }
 
 /* 채팅 입력 form 공통 */
