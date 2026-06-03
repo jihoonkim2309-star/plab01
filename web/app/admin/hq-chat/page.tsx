@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireSuperAdmin } from "@/lib/center";
+import ChatTextarea from "../ChatTextarea";
 import { sendBranchChatAsHq } from "../branch-chat/actions";
 
 export default async function HqChatPage({
@@ -186,12 +187,8 @@ export default async function HqChatPage({
                 }}
               >
                 <input type="hidden" name="center_id" value={selectedCenter.id} />
-                <textarea
-                  name="body"
-                  required
-                  rows={2}
-                  placeholder={`${selectedCenter.name} 에 보낼 메시지`}
-                  style={{ flex: 1, resize: "vertical" }}
+                <ChatTextarea
+                  placeholder={`${selectedCenter.name} 에 보낼 메시지 (Enter = 전송, Shift+Enter = 줄바꿈)`}
                 />
                 <button type="submit" className="btn primary" style={{ alignSelf: "flex-end" }}>
                   전송

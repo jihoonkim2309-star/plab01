@@ -1,4 +1,5 @@
 import { requireCenter } from "@/lib/center";
+import ChatTextarea from "../ChatTextarea";
 import { sendBranchChatAsAdmin } from "./actions";
 
 export default async function BranchChatPage() {
@@ -92,12 +93,8 @@ export default async function BranchChatPage() {
             background: "var(--panel)",
           }}
         >
-          <textarea
-            name="body"
-            required
-            rows={2}
-            placeholder="본사에 보낼 메시지를 입력하세요"
-            style={{ flex: 1, resize: "vertical" }}
+          <ChatTextarea
+            placeholder="본사에 보낼 메시지를 입력하세요 (Enter = 전송, Shift+Enter = 줄바꿈)"
           />
           <button type="submit" className="btn primary" style={{ alignSelf: "flex-end" }}>
             전송
