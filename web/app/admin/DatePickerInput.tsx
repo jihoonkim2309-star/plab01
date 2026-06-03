@@ -94,6 +94,8 @@ export default function DatePickerInput({
     current && isValid(parse(current, "yyyy-MM-dd", new Date()))
       ? parse(current, "yyyy-MM-dd", new Date())
       : undefined;
+  // 입력 완성 (10자) 후 유효하지 않으면 invalid — 중간 입력은 OK
+  const isInvalid = current.length === 10 && !selected;
 
   // 텍스트 입력으로 유효 날짜 되면 캘린더도 그 달로 자동 이동
   useEffect(() => {
@@ -111,6 +113,16 @@ export default function DatePickerInput({
         placeholder={placeholder}
         inputMode="numeric"
         maxLength={10}
+        aria-invalid={isInvalid || undefined}
+        style={
+          isInvalid
+            ? {
+                borderColor: "#ef4444",
+                background: "#fff7f7",
+                boxShadow: "0 0 0 3px rgba(239,68,68,.12)",
+              }
+            : undefined
+        }
         onKeyDown={(e) => {
           // 완전한 마스크 (YYYY-MM-DD 10자) 일 때만 덮어쓰기 모드.
           // 그 전엔 onChange 의 자동 하이픈 로직이 처리.
@@ -143,6 +155,11 @@ export default function DatePickerInput({
         autoComplete="off"
       />
       {name && <input type="hidden" name={name} value={current} required={required} />}
+      {isInvalid && (
+        <div className="field-error-text" style={{ marginTop: 4 }}>
+          올바른 날짜 형식이 아닙니다 (YYYY-MM-DD)
+        </div>
+      )}
       {open && !disabled && mounted && coords &&
         createPortal(
           <div
@@ -156,11 +173,9 @@ export default function DatePickerInput({
               selected={selected}
               month={month}
               onMonthChange={setMonth}
-              onSelect={(d) => {
-                if (d) {
-                  setCurrent(format(d, "yyyy-MM-dd"));
-                  setOpen(false);
-                }
+              onDayClick={(d) => {
+                setCurrent(format(d, "yyyy-MM-dd"));
+                setOpen(false);
               }}
               captionLayout="dropdown"
               startMonth={new Date(1990, 0)}

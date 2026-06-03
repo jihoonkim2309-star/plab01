@@ -1689,11 +1689,15 @@
 .member-layout > .panel > .panel-head {
   flex-shrink: 0;
 }
-/* panel 의 마지막 자식이 grow + 내부 스크롤. 위 자식 (필터바·헤더 등) 은 자기 높이 유지 */
-.member-layout > .panel > :last-child {
+/* panel 의 마지막 자식이 grow + 내부 스크롤. 위 자식 (필터바·헤더 등) 은 자기 높이 유지.
+   form (채팅 입력창 등) 은 자기 높이 유지 → grow 셀렉터에서 제외 */
+.member-layout > .panel > :last-child:not(form) {
   flex: 1 1 auto;
   overflow-y: auto;
   min-height: 0;
+}
+.member-layout > .panel > form {
+  flex-shrink: 0;
 }
 
 .member-summary {
