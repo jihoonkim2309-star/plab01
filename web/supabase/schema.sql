@@ -1497,3 +1497,16 @@ end $$;
 -- 지점당 1행 보장 (멱등 ensure 용 unique partial index)
 create unique index if not exists inquiries_branch_chat_unique
   on public.inquiries (center_id) where kind = 'branch_chat';
+
+-- =====================================================================
+--  19. Supabase Realtime — 사이드바 라이브 뱃지용 publication
+--  - 클라이언트가 hq_notices INSERT/UPDATE (발행 이벤트)
+--    와 hq_notice_reads INSERT (내 읽음 이벤트) 를 구독.
+--  - RLS 가 그대로 적용되므로 자기 지점 대상 + 본인 데이터만 도달.
+-- =====================================================================
+do $$ begin
+  alter publication supabase_realtime add table public.hq_notices;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table public.hq_notice_reads;
+exception when duplicate_object then null; end $$;

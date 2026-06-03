@@ -9,6 +9,7 @@ import SuppressInvalidTooltip from "./SuppressInvalidTooltip";
 import ProfileMenu from "./ProfileMenu";
 import SidebarWorkspace from "./SidebarWorkspace";
 import DrawerToggle from "./DrawerToggle";
+import UnreadRealtime from "./UnreadRealtime";
 import { ACTIVE_CENTER_COOKIE } from "@/lib/center";
 import { SESSION_COOKIE, isActiveSession } from "@/lib/session";
 import { getUnreadCounts } from "@/lib/unread";
@@ -152,6 +153,7 @@ export default async function AdminLayout({
         hasActiveCenter={!!activeCenterId}
         unreadCounts={unreadCounts}
       />
+      {activeCenterId && <UnreadRealtime />}
       <div className="drawer-backdrop" />
 
       <main className="main">
