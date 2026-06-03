@@ -29,6 +29,8 @@ export default function TimePickerInput({
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const hourColRef = useRef<HTMLDivElement>(null);
+  const minuteColRef = useRef<HTMLDivElement>(null);
 
   const current = onChange ? (value ?? "") : internalValue;
   const setCurrent = (v: string) => {
@@ -88,6 +90,30 @@ export default function TimePickerInput({
   const m = current.match(/^(\d{2}):(\d{2})$/);
   const selectedHour = m ? Number(m[1]) : null;
   const selectedMinute = m ? Number(m[2]) : null;
+
+  // popover 열림 + selected 변경 시 선택된 셀로 자동 스크롤
+  useEffect(() => {
+    if (!open) return;
+    const scroll = (col: HTMLDivElement | null, idx: number | null) => {
+      if (!col || idx === null) return;
+      const cells = col.querySelectorAll<HTMLButtonElement>(".time-picker-cell");
+      if (cells.length === 0) return;
+      const cell = cells[Math.min(idx, cells.length - 1)];
+      if (!cell) return;
+      // 컬럼 안에서 가운데로 스크롤 (전체 페이지 스크롤 영향 없게 직접 scrollTop 조정)
+      const cellOffset = cell.offsetTop;
+      const colHeight = col.clientHeight;
+      const cellHeight = cell.offsetHeight;
+      col.scrollTop = cellOffset - colHeight / 2 + cellHeight / 2;
+    };
+    requestAnimationFrame(() => {
+      scroll(hourColRef.current, selectedHour);
+      // 분은 step 단위이므로 index 변환
+      const minIdx =
+        selectedMinute !== null ? Math.round(selectedMinute / step) : null;
+      scroll(minuteColRef.current, minIdx);
+    });
+  }, [open, selectedHour, selectedMinute, step]);
   // 5자 완성 + 시 0~23 / 분 0~59 가 아니면 invalid
   const isInvalid =
     current.length === 5 &&
@@ -171,7 +197,7 @@ export default function TimePickerInput({
             <div className="time-picker-columns">
               <div className="time-picker-col">
                 <div className="time-picker-col-head">시</div>
-                <div className="time-picker-col-body">
+                <div className="time-picker-col-body" ref={hourColRef}>
                   {Array.from({ length: 24 }, (_, i) => i).map((h) => {
                     const on = selectedHour === h;
                     return (
@@ -189,7 +215,7 @@ export default function TimePickerInput({
               </div>
               <div className="time-picker-col">
                 <div className="time-picker-col-head">분</div>
-                <div className="time-picker-col-body">
+                <div className="time-picker-col-body" ref={minuteColRef}>
                   {minutes.map((mi) => {
                     const on = selectedMinute === mi;
                     return (
