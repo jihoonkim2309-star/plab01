@@ -1,15 +1,10 @@
-import Link from "next/link";
 import { requireSuperAdmin } from "@/lib/center";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
-import ConfirmButton from "../ConfirmButton";
-import RefreshOnce from "../RefreshOnce";
-import {
-  replyBranchInquiry,
-  closeBranchInquiry,
-  reopenBranchInquiry,
-} from "../branch-inquiries/actions";
+import { InquiryDrawerProvider } from "./InquiryDrawerContext";
+import InquiryRowLink from "./InquiryRowLink";
+import InquiryDetailPanel from "./InquiryDetailPanel";
 
 const STATUS_BADGE: Record<string, string> = {
   접수: "orange",
@@ -20,45 +15,18 @@ const STATUS_BADGE: Record<string, string> = {
 export default async function HqInquiriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ id?: string; status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }) {
-  const { id, status, q } = await searchParams;
+  const { status, q } = await searchParams;
   const { supabase, userId } = await requireSuperAdmin();
 
-  // 상세 진입 시 멱등 mark_read
-  if (id) {
-    await supabase
-      .from("inquiry_reads")
-      .upsert(
-        { inquiry_id: id, user_id: userId, last_read_at: new Date().toISOString() },
-        { onConflict: "inquiry_id,user_id" },
-      );
-  }
-
-  const [listRes, selectedRes, messagesRes, readsRes] = await Promise.all([
+  const [listRes, readsRes] = await Promise.all([
     supabase
       .from("inquiries")
       .select("id, subject, status, center_id, centers(name), created_at, updated_at")
       .eq("kind", "branch_to_hq")
       .order("updated_at", { ascending: false })
       .limit(200),
-    id
-      ? supabase
-          .from("inquiries")
-          .select(
-            "id, subject, body, status, center_id, centers(name), created_at",
-          )
-          .eq("kind", "branch_to_hq")
-          .eq("id", id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    id
-      ? supabase
-          .from("support_messages")
-          .select("id, sender, body, created_at")
-          .eq("inquiry_id", id)
-          .order("created_at", { ascending: true })
-      : Promise.resolve({ data: [] }),
     supabase
       .from("inquiry_reads")
       .select("inquiry_id, last_read_at")
@@ -91,15 +59,6 @@ export default async function HqInquiriesPage({
     open: allList.filter((i) => i.status !== "완료").length,
     done: allList.filter((i) => i.status === "완료").length,
   };
-  const selected = selectedRes.data as
-    | (Row & { body: string })
-    | null;
-  const messages = (messagesRes.data ?? []) as unknown as {
-    id: string;
-    sender: string;
-    body: string;
-    created_at: string;
-  }[];
   const readMap = new Map(
     ((readsRes.data ?? []) as { inquiry_id: string; last_read_at: string }[]).map(
       (r) => [r.inquiry_id, r.last_read_at],
@@ -107,8 +66,7 @@ export default async function HqInquiriesPage({
   );
 
   return (
-    <>
-      {id && <RefreshOnce k={id} />}
+    <InquiryDrawerProvider>
       <div className="page-head">
         <div>
           <h1>지점 문의</h1>
@@ -157,13 +115,11 @@ export default async function HqInquiriesPage({
                   const lastRead = readMap.get(i.id);
                   const isUnread = !lastRead || lastRead < i.updated_at;
                   return (
-                    <tr
-                      key={i.id}
-                      className={`row-link-host ${i.id === id ? "selected" : ""}`}
-                    >
+                    <tr key={i.id} className="row-link-host">
                       <td className="muted">{i.centers?.name ?? "-"}</td>
                       <td>
-                        <Link
+                        <InquiryRowLink
+                          inquiryId={i.id}
                           href={`/admin/hq-inquiries?id=${i.id}`}
                           className="row-link-stretch"
                           style={{
@@ -188,7 +144,7 @@ export default async function HqInquiriesPage({
                             />
                           )}
                           {i.subject}
-                        </Link>
+                        </InquiryRowLink>
                       </td>
                       <td>
                         <span className={`badge ${STATUS_BADGE[i.status] ?? "gray"}`}>
@@ -215,110 +171,8 @@ export default async function HqInquiriesPage({
           </div>
         </div>
 
-        <div className="panel">
-          <div className="panel-head">
-            <p className="panel-title">
-              {selected ? selected.subject : "문의 상세"}
-            </p>
-          </div>
-          <div className="panel-body">
-            {!selected ? (
-              <div className="empty-state">
-                <strong>선택된 문의가 없습니다</strong>
-                <p>왼쪽 목록에서 문의를 선택해 주세요.</p>
-              </div>
-            ) : (
-              <>
-                <div className="detail-block" style={{ marginTop: 0 }}>
-                  <div className="info-list">
-                    <div className="info-row">
-                      <span>지점</span>
-                      <strong>{selected.centers?.name ?? "-"}</strong>
-                    </div>
-                    <div className="info-row">
-                      <span>상태</span>
-                      <strong>
-                        <span className={`badge ${STATUS_BADGE[selected.status] ?? "gray"}`}>
-                          {selected.status}
-                        </span>
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="detail-block">
-                  <p className="detail-title">대화 ({messages.length})</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {messages.map((m) => {
-                      const isHq = m.sender === "hq";
-                      return (
-                        <div
-                          key={m.id}
-                          style={{
-                            padding: 10,
-                            borderRadius: 8,
-                            background: isHq ? "var(--blue-soft)" : "var(--bg)",
-                            border: `1px solid ${isHq ? "#b8d0ee" : "var(--line)"}`,
-                            alignSelf: isHq ? "flex-start" : "flex-end",
-                            maxWidth: "85%",
-                          }}
-                        >
-                          <div
-                            className="muted"
-                            style={{ fontSize: 11, marginBottom: 4 }}
-                          >
-                            {isHq ? "본사" : "지점"} · {m.created_at.slice(0, 16).replace("T", " ")}
-                          </div>
-                          <div style={{ whiteSpace: "pre-wrap", fontSize: 13 }}>
-                            {m.body}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {selected.status !== "완료" && (
-                  <div className="detail-block">
-                    <p className="detail-title">본사 답변</p>
-                    <form action={replyBranchInquiry}>
-                      <input type="hidden" name="inquiry_id" value={selected.id} />
-                      <input type="hidden" name="sender_role" value="hq" />
-                      <textarea name="body" rows={3} required placeholder="본사 답변" />
-                      <div className="detail-actions" style={{ marginTop: 8 }}>
-                        <button type="submit" className="btn primary">전송</button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-
-                <div className="detail-block">
-                  {selected.status === "완료" ? (
-                    <form action={reopenBranchInquiry}>
-                      <input type="hidden" name="inquiry_id" value={selected.id} />
-                      <button type="submit" className="btn" style={{ width: "100%" }}>
-                        재오픈
-                      </button>
-                    </form>
-                  ) : (
-                    <form action={closeBranchInquiry}>
-                      <input type="hidden" name="inquiry_id" value={selected.id} />
-                      <ConfirmButton
-                        message="이 문의를 완료 처리할까요?"
-                        className="btn"
-                        type="submit"
-                        style={{ width: "100%" }}
-                      >
-                        완료 처리
-                      </ConfirmButton>
-                    </form>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+        <InquiryDetailPanel />
       </div>
-    </>
+    </InquiryDrawerProvider>
   );
 }

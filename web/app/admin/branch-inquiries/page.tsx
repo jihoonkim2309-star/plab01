@@ -1,16 +1,11 @@
-import Link from "next/link";
 import { requireCenter } from "@/lib/center";
 import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
-import ConfirmButton from "../ConfirmButton";
-import RefreshOnce from "../RefreshOnce";
-import {
-  createBranchInquiry,
-  replyBranchInquiry,
-  closeBranchInquiry,
-  reopenBranchInquiry,
-} from "./actions";
+import { InquiryDrawerProvider } from "./InquiryDrawerContext";
+import InquiryRowLink from "./InquiryRowLink";
+import InquiryDetailPanel from "./InquiryDetailPanel";
+import NewInquiryButton from "./NewInquiryButton";
 
 const STATUS_BADGE: Record<string, string> = {
   접수: "orange",
@@ -21,22 +16,13 @@ const STATUS_BADGE: Record<string, string> = {
 export default async function BranchInquiriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ id?: string; status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }) {
-  const { id, status, q } = await searchParams;
+  const { status, q } = await searchParams;
   const { supabase, centerId: cid, userId } = await requireCenter();
 
-  // 상세 진입 시 멱등 mark_read — 'new' 모드 제외
-  if (id && id !== "new") {
-    await supabase
-      .from("inquiry_reads")
-      .upsert(
-        { inquiry_id: id, user_id: userId, last_read_at: new Date().toISOString() },
-        { onConflict: "inquiry_id,user_id" },
-      );
-  }
-
-  const [listRes, selectedRes, messagesRes, readsRes] = await Promise.all([
+  // 좌측 목록 + 본인 readMap 만 server fetch. 우측 상세는 client.
+  const [listRes, readsRes] = await Promise.all([
     supabase
       .from("inquiries")
       .select("id, subject, status, created_at, updated_at")
@@ -44,22 +30,6 @@ export default async function BranchInquiriesPage({
       .eq("kind", "branch_to_hq")
       .order("updated_at", { ascending: false })
       .limit(200),
-    id
-      ? supabase
-          .from("inquiries")
-          .select("id, subject, body, status, created_at")
-          .eq("center_id", cid)
-          .eq("kind", "branch_to_hq")
-          .eq("id", id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    id && id !== "new"
-      ? supabase
-          .from("support_messages")
-          .select("id, sender, body, created_at")
-          .eq("inquiry_id", id)
-          .order("created_at", { ascending: true })
-      : Promise.resolve({ data: [] }),
     supabase
       .from("inquiry_reads")
       .select("inquiry_id, last_read_at")
@@ -85,15 +55,6 @@ export default async function BranchInquiriesPage({
     open: allList.filter((i) => i.status !== "완료").length,
     done: allList.filter((i) => i.status === "완료").length,
   };
-  const selected = selectedRes.data as
-    | { id: string; subject: string; body: string; status: string; created_at: string }
-    | null;
-  const messages = (messagesRes.data ?? []) as unknown as {
-    id: string;
-    sender: string;
-    body: string;
-    created_at: string;
-  }[];
   const readMap = new Map(
     ((readsRes.data ?? []) as { inquiry_id: string; last_read_at: string }[]).map(
       (r) => [r.inquiry_id, r.last_read_at],
@@ -101,17 +62,14 @@ export default async function BranchInquiriesPage({
   );
 
   return (
-    <>
-      {id && id !== "new" && <RefreshOnce k={id} />}
+    <InquiryDrawerProvider>
       <div className="page-head">
         <div>
           <h1>본사에 문의</h1>
           <p className="subtext">본사 (super_admin) 에게 보내는 1:1 문의 — 답변은 본사가 작성</p>
         </div>
         <div className="toolbar">
-          <Link className="btn primary" href="/admin/branch-inquiries?id=new">
-            새 문의 작성
-          </Link>
+          <NewInquiryButton />
         </div>
       </div>
 
@@ -155,12 +113,10 @@ export default async function BranchInquiriesPage({
                   const lastRead = readMap.get(i.id);
                   const isUnread = !lastRead || lastRead < i.updated_at;
                   return (
-                    <tr
-                      key={i.id}
-                      className={`row-link-host ${i.id === id ? "selected" : ""}`}
-                    >
+                    <tr key={i.id} className="row-link-host">
                       <td>
-                        <Link
+                        <InquiryRowLink
+                          inquiryId={i.id}
                           href={`/admin/branch-inquiries?id=${i.id}`}
                           className="row-link-stretch"
                           style={{
@@ -185,7 +141,7 @@ export default async function BranchInquiriesPage({
                             />
                           )}
                           {i.subject}
-                        </Link>
+                        </InquiryRowLink>
                       </td>
                       <td>
                         <span className={`badge ${STATUS_BADGE[i.status] ?? "gray"}`}>
@@ -213,116 +169,8 @@ export default async function BranchInquiriesPage({
           </div>
         </div>
 
-        <div className="panel">
-          <div className="panel-head">
-            <p className="panel-title">
-              {id === "new" ? "새 본사 문의" : selected ? selected.subject : "문의 상세"}
-            </p>
-          </div>
-          <div className="panel-body">
-            {id === "new" ? (
-              <form action={createBranchInquiry}>
-                <div className="field" style={{ marginBottom: 12 }}>
-                  <label>제목 *</label>
-                  <input name="subject" required maxLength={120} placeholder="예: 본사 결제 시스템 문의" />
-                </div>
-                <div className="field" style={{ marginBottom: 12 }}>
-                  <label>본문 *</label>
-                  <textarea name="body" rows={6} required placeholder="문의 내용을 입력하세요" />
-                </div>
-                <div className="detail-actions">
-                  <button type="submit" className="btn primary">문의 보내기</button>
-                </div>
-              </form>
-            ) : selected ? (
-              <>
-                <div className="detail-block" style={{ marginTop: 0 }}>
-                  <p className="detail-title">
-                    상태{" "}
-                    <span className={`badge ${STATUS_BADGE[selected.status] ?? "gray"}`}>
-                      {selected.status}
-                    </span>
-                  </p>
-                </div>
-
-                <div className="detail-block">
-                  <p className="detail-title">대화 ({messages.length})</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {messages.map((m) => {
-                      const isHq = m.sender === "hq";
-                      return (
-                        <div
-                          key={m.id}
-                          style={{
-                            padding: 10,
-                            borderRadius: 8,
-                            background: isHq ? "var(--blue-soft)" : "var(--bg)",
-                            border: `1px solid ${isHq ? "#b8d0ee" : "var(--line)"}`,
-                            alignSelf: isHq ? "flex-start" : "flex-end",
-                            maxWidth: "85%",
-                          }}
-                        >
-                          <div
-                            className="muted"
-                            style={{ fontSize: 11, marginBottom: 4 }}
-                          >
-                            {isHq ? "본사" : "지점"} · {m.created_at.slice(0, 16).replace("T", " ")}
-                          </div>
-                          <div style={{ whiteSpace: "pre-wrap", fontSize: 13 }}>
-                            {m.body}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {selected.status !== "완료" && (
-                  <div className="detail-block">
-                    <p className="detail-title">답글 작성</p>
-                    <form action={replyBranchInquiry}>
-                      <input type="hidden" name="inquiry_id" value={selected.id} />
-                      <input type="hidden" name="sender_role" value="admin" />
-                      <textarea name="body" rows={3} required placeholder="답글 내용" />
-                      <div className="detail-actions" style={{ marginTop: 8 }}>
-                        <button type="submit" className="btn primary">전송</button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-
-                <div className="detail-block">
-                  {selected.status === "완료" ? (
-                    <form action={reopenBranchInquiry}>
-                      <input type="hidden" name="inquiry_id" value={selected.id} />
-                      <button type="submit" className="btn" style={{ width: "100%" }}>
-                        재오픈
-                      </button>
-                    </form>
-                  ) : (
-                    <form action={closeBranchInquiry}>
-                      <input type="hidden" name="inquiry_id" value={selected.id} />
-                      <ConfirmButton
-                        message="이 문의를 완료 처리할까요?"
-                        className="btn"
-                        type="submit"
-                        style={{ width: "100%" }}
-                      >
-                        완료 처리
-                      </ConfirmButton>
-                    </form>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="empty-state">
-                <strong>선택된 문의가 없습니다</strong>
-                <p>왼쪽 목록에서 선택하거나 [새 문의 작성] 을 누르세요.</p>
-              </div>
-            )}
-          </div>
-        </div>
+        <InquiryDetailPanel />
       </div>
-    </>
+    </InquiryDrawerProvider>
   );
 }
