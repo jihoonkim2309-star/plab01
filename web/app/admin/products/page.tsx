@@ -5,6 +5,9 @@ import StatusChips from "../StatusChips";
 import FilterSelect from "../FilterSelect";
 import SearchInput from "../SearchInput";
 import SortHeader from "../SortHeader";
+import { ProductDrawerProvider } from "./ProductDrawerContext";
+import ProductRowLink from "./ProductRowLink";
+import ProductDetailPanel from "./ProductDetailPanel";
 
 const SORT_WHITELIST = new Set([
   "name",
@@ -31,10 +34,9 @@ export default async function ProductsPage({
     kind?: string;
     sort?: string;
     dir?: string;
-    product?: string;
   }>;
 }) {
-  const { q, status, kind, sort, dir, product: selectedId } = await searchParams;
+  const { q, status, kind, sort, dir } = await searchParams;
   const { supabase, centerId: cid } = await requireCenter();
 
   const sortKey = sort && SORT_WHITELIST.has(sort) ? sort : "created_at";
@@ -50,20 +52,9 @@ export default async function ProductsPage({
   if (status === "active") listQuery = listQuery.eq("active", true);
   else if (status === "inactive") listQuery = listQuery.eq("active", false);
 
-  const [listRes, allRes, selectedRes, usageRes] = await Promise.all([
+  const [listRes, allRes] = await Promise.all([
     listQuery,
     supabase.from("products").select("kind, active").eq("center_id", cid),
-    selectedId
-      ? supabase
-          .from("products")
-          .select("id, name, kind, sessions_per_week, price, billing_cycle, active, created_at")
-          .eq("id", selectedId)
-          .eq("center_id", cid)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    selectedId
-      ? supabase.from("students").select("id").eq("center_id", cid).eq("product_id", selectedId)
-      : Promise.resolve({ data: [] as { id: string }[] }),
   ]);
 
   const list = listRes.data ?? [];
@@ -75,12 +66,10 @@ export default async function ProductsPage({
     special: all.filter((p) => p.kind === "특강").length,
     personal: all.filter((p) => p.kind === "개인레슨").length,
   };
-  const selected = selectedRes.data;
-  const usageCount = (usageRes.data ?? []).length;
   const hasFilter = !!(q || status || kind);
 
   return (
-    <>
+    <ProductDrawerProvider>
       <div className="page-head">
         <div>
           <h1>수강료 상품</h1>
@@ -155,15 +144,16 @@ export default async function ProductsPage({
             </thead>
             <tbody>
               {list.map((p) => (
-                <tr key={p.id} className={`row-link-host ${p.id === selectedId ? "selected" : ""}`}>
+                <tr key={p.id} className="row-link-host">
                   <td>
-                    <Link
+                    <ProductRowLink
+                      productId={p.id}
                       href={`/admin/products?product=${p.id}`}
                       className="row-link-stretch"
                       style={{ fontWeight: 900, color: "var(--text)" }}
                     >
                       {p.name}
-                    </Link>
+                    </ProductRowLink>
                   </td>
                   <td>
                     <span className={`badge ${KIND_BADGE[p.kind] ?? "gray"}`}>{p.kind}</span>
@@ -209,68 +199,8 @@ export default async function ProductsPage({
           </div>
         </div>
 
-        <div className="panel">
-          <div className="panel-head">
-            <p className="panel-title">수강료 상품 상세</p>
-            {selected && (
-              <div className="toolbar">
-                <Link className="btn primary" href={`/admin/products/${selected.id}/edit`}>수정</Link>
-              </div>
-            )}
-          </div>
-          <div className="panel-body">
-            {!selected ? (
-              <div className="empty-state">
-                <strong>선택된 수강료 상품이 없습니다</strong>
-                <p>왼쪽 목록에서 항목을 선택해 주세요.</p>
-              </div>
-            ) : (
-              <>
-                <div className="profile-hero" style={{ alignItems: "center" }}>
-                  <div>
-                    <strong style={{ fontSize: 20 }}>{selected.name}</strong>
-                    <div style={{ marginTop: 8 }}>
-                      <span className={`badge ${KIND_BADGE[selected.kind] ?? "gray"}`}>{selected.kind}</span>{" "}
-                      {selected.active ? (
-                        <span className="badge green">활성</span>
-                      ) : (
-                        <span className="badge gray">비활성</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="detail-block">
-                  <p className="detail-title">수강료 정보</p>
-                  <div className="info-list">
-                    <div className="info-row"><span>유형</span><strong>{selected.kind}</strong></div>
-                    <div className="info-row"><span>가격</span><strong style={{ color: "var(--brand)", fontSize: 16 }}>{fmt(Number(selected.price))}</strong></div>
-                    <div className="info-row"><span>주간 횟수</span><strong>{selected.sessions_per_week ? `주 ${selected.sessions_per_week}회` : "-"}</strong></div>
-                    <div className="info-row"><span>청구 주기</span><strong>{selected.billing_cycle}</strong></div>
-                    <div className="info-row"><span>등록일</span><strong>{selected.created_at?.slice(0, 10) ?? "-"}</strong></div>
-                  </div>
-                </div>
-
-                <div className="detail-block">
-                  <p className="detail-title">사용 현황</p>
-                  <div className="info-list">
-                    <div className="info-row">
-                      <span>이 수강료 적용 학생</span>
-                      <strong>
-                        {usageCount > 0 ? (
-                          <Link href={`/admin/students?product=${selected.id}`} style={{ color: "var(--brand)" }}>
-                            {usageCount}명 →
-                          </Link>
-                        ) : "0명"}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+        <ProductDetailPanel />
       </div>
-    </>
+    </ProductDrawerProvider>
   );
 }
