@@ -4,6 +4,7 @@ import FilterBar from "../FilterBar";
 import StatusChips from "../StatusChips";
 import SearchInput from "../SearchInput";
 import ConfirmButton from "../ConfirmButton";
+import RefreshOnce from "../RefreshOnce";
 import {
   createBranchInquiry,
   replyBranchInquiry,
@@ -23,9 +24,19 @@ export default async function BranchInquiriesPage({
   searchParams: Promise<{ id?: string; status?: string; q?: string }>;
 }) {
   const { id, status, q } = await searchParams;
-  const { supabase, centerId: cid } = await requireCenter();
+  const { supabase, centerId: cid, userId } = await requireCenter();
 
-  const [listRes, selectedRes, messagesRes] = await Promise.all([
+  // 상세 진입 시 멱등 mark_read — 'new' 모드 제외
+  if (id && id !== "new") {
+    await supabase
+      .from("inquiry_reads")
+      .upsert(
+        { inquiry_id: id, user_id: userId, last_read_at: new Date().toISOString() },
+        { onConflict: "inquiry_id,user_id" },
+      );
+  }
+
+  const [listRes, selectedRes, messagesRes, readsRes] = await Promise.all([
     supabase
       .from("inquiries")
       .select("id, subject, status, created_at, updated_at")
@@ -42,13 +53,17 @@ export default async function BranchInquiriesPage({
           .eq("id", id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
-    id
+    id && id !== "new"
       ? supabase
           .from("support_messages")
           .select("id, sender, body, created_at")
           .eq("inquiry_id", id)
           .order("created_at", { ascending: true })
       : Promise.resolve({ data: [] }),
+    supabase
+      .from("inquiry_reads")
+      .select("inquiry_id, last_read_at")
+      .eq("user_id", userId),
   ]);
 
   type Row = {
@@ -79,9 +94,15 @@ export default async function BranchInquiriesPage({
     body: string;
     created_at: string;
   }[];
+  const readMap = new Map(
+    ((readsRes.data ?? []) as { inquiry_id: string; last_read_at: string }[]).map(
+      (r) => [r.inquiry_id, r.last_read_at],
+    ),
+  );
 
   return (
     <>
+      {id && id !== "new" && <RefreshOnce k={id} />}
       <div className="page-head">
         <div>
           <h1>본사에 문의</h1>
@@ -130,30 +151,53 @@ export default async function BranchInquiriesPage({
                 </tr>
               </thead>
               <tbody>
-                {list.map((i) => (
-                  <tr
-                    key={i.id}
-                    className={`row-link-host ${i.id === id ? "selected" : ""}`}
-                  >
-                    <td>
-                      <Link
-                        href={`/admin/branch-inquiries?id=${i.id}`}
-                        className="row-link-stretch"
-                        style={{ fontWeight: 700, color: "var(--text)" }}
-                      >
-                        {i.subject}
-                      </Link>
-                    </td>
-                    <td>
-                      <span className={`badge ${STATUS_BADGE[i.status] ?? "gray"}`}>
-                        {i.status}
-                      </span>
-                    </td>
-                    <td className="muted" style={{ fontSize: 12 }}>
-                      {i.updated_at.slice(0, 16).replace("T", " ")}
-                    </td>
-                  </tr>
-                ))}
+                {list.map((i) => {
+                  const lastRead = readMap.get(i.id);
+                  const isUnread = !lastRead || lastRead < i.updated_at;
+                  return (
+                    <tr
+                      key={i.id}
+                      className={`row-link-host ${i.id === id ? "selected" : ""}`}
+                    >
+                      <td>
+                        <Link
+                          href={`/admin/branch-inquiries?id=${i.id}`}
+                          className="row-link-stretch"
+                          style={{
+                            fontWeight: isUnread ? 800 : 600,
+                            color: isUnread ? "var(--text)" : "#6f7d78",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          {isUnread && (
+                            <span
+                              aria-label="새 메시지"
+                              style={{
+                                display: "inline-block",
+                                width: 6,
+                                height: 6,
+                                borderRadius: "50%",
+                                background: "#e53935",
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
+                          {i.subject}
+                        </Link>
+                      </td>
+                      <td>
+                        <span className={`badge ${STATUS_BADGE[i.status] ?? "gray"}`}>
+                          {i.status}
+                        </span>
+                      </td>
+                      <td className="muted" style={{ fontSize: 12 }}>
+                        {i.updated_at.slice(0, 16).replace("T", " ")}
+                      </td>
+                    </tr>
+                  );
+                })}
                 {list.length === 0 && (
                   <tr>
                     <td colSpan={3}>

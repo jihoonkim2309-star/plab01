@@ -40,6 +40,23 @@ export default function UnreadRealtime() {
           { event: "INSERT", schema: "public", table: "hq_notice_reads" },
           () => router.refresh(),
         )
+        // 새 메시지 도착 시 사이드바 뱃지 즉시 갱신 (본사 채팅/문의)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "support_messages" },
+          () => router.refresh(),
+        )
+        // 본인 mark_read 후 카운트 감소
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "inquiry_reads" },
+          () => router.refresh(),
+        )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "inquiry_reads" },
+          () => router.refresh(),
+        )
         .subscribe();
     };
 

@@ -1,9 +1,10 @@
 import { requireCenter } from "@/lib/center";
 import ChatTextarea from "../ChatTextarea";
+import RefreshOnce from "../RefreshOnce";
 import { sendBranchChatAsAdmin } from "./actions";
 
 export default async function BranchChatPage() {
-  const { supabase, centerId } = await requireCenter();
+  const { supabase, centerId, userId } = await requireCenter();
 
   // 자기 지점 branch_chat inquiry 가 있으면 그 id 로 메시지 조회. 없으면 빈 채팅.
   const { data: inq } = await supabase
@@ -13,6 +14,16 @@ export default async function BranchChatPage() {
     .eq("kind", "branch_chat")
     .maybeSingle();
   const inquiryId = (inq as { id: string } | null)?.id ?? null;
+
+  // 진입 시 멱등 mark_read (last_read_at = now) — RLS 가 본인 행만 허용
+  if (inquiryId) {
+    await supabase
+      .from("inquiry_reads")
+      .upsert(
+        { inquiry_id: inquiryId, user_id: userId, last_read_at: new Date().toISOString() },
+        { onConflict: "inquiry_id,user_id" },
+      );
+  }
 
   const { data: msgs } = inquiryId
     ? await supabase
@@ -32,6 +43,7 @@ export default async function BranchChatPage() {
 
   return (
     <>
+      {inquiryId && <RefreshOnce k={inquiryId} />}
       <div className="page-head">
         <div>
           <h1>본사 채팅</h1>

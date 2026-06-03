@@ -1499,9 +1499,35 @@ create unique index if not exists inquiries_branch_chat_unique
   on public.inquiries (center_id) where kind = 'branch_chat';
 
 -- =====================================================================
+--  18.2 통합 inquiry_reads — 본사 채팅 / 본사에 문의 / 학부모 상담 read 추적
+--  - 1 user × 1 inquiry = 1 row, last_read_at 만 갱신 (멱등 upsert)
+--  - unread 판정: support_messages.created_at > last_read_at 인 메시지 존재
+--  - 어드민·코치·슈퍼어드민·학부모·학생 모두 동일 테이블 공유 (user_id 기준)
+-- =====================================================================
+create table if not exists public.inquiry_reads (
+  inquiry_id   uuid not null references public.inquiries(id) on delete cascade,
+  user_id      uuid not null references public.users(id) on delete cascade,
+  last_read_at timestamptz not null default now(),
+  primary key (inquiry_id, user_id)
+);
+
+create index if not exists inquiry_reads_user_idx
+  on public.inquiry_reads (user_id);
+
+alter table public.inquiry_reads enable row level security;
+
+-- 본인 행만 read / write (멱등 upsert)
+drop policy if exists inquiry_reads_own_all on public.inquiry_reads;
+create policy inquiry_reads_own_all on public.inquiry_reads
+  for all
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+-- =====================================================================
 --  19. Supabase Realtime — 사이드바 라이브 뱃지용 publication
 --  - 클라이언트가 hq_notices INSERT/UPDATE (발행 이벤트)
 --    와 hq_notice_reads INSERT (내 읽음 이벤트) 를 구독.
+--  - 18.2 inquiry_reads / support_messages INSERT 도 구독 (채팅·문의 뱃지).
 --  - RLS 가 그대로 적용되므로 자기 지점 대상 + 본인 데이터만 도달.
 -- =====================================================================
 do $$ begin
@@ -1509,4 +1535,10 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 do $$ begin
   alter publication supabase_realtime add table public.hq_notice_reads;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table public.inquiry_reads;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table public.support_messages;
 exception when duplicate_object then null; end $$;

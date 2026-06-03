@@ -22,9 +22,60 @@ export async function getUnreadCounts(
       userId: args.userId,
       centerId: args.centerId,
     });
+
+    // 본사 채팅 — branch_chat inquiry 의 안 읽은 메시지 1+ 건 = unread 1
+    counts["branch-chat"] = await countBranchChannelUnread(supabase, {
+      userId: args.userId,
+      centerId: args.centerId,
+      kind: "branch_chat",
+    });
+
+    // 본사에 문의 — branch_to_hq 중 안 읽은 메시지 있는 inquiry 수
+    counts["branch-inquiries"] = await countBranchChannelUnread(supabase, {
+      userId: args.userId,
+      centerId: args.centerId,
+      kind: "branch_to_hq",
+    });
   }
 
   return counts;
+}
+
+// 지점이 본사 채널 (branch_chat / branch_to_hq) 의 inquiry 안에서
+// 본인이 안 읽은 메시지가 있는 inquiry 수를 카운트.
+// last_read_at 없으면 inquiry.updated_at (마지막 메시지 시각) > epoch 라 unread.
+async function countBranchChannelUnread(
+  supabase: SupabaseClient,
+  args: { userId: string; centerId: string; kind: "branch_chat" | "branch_to_hq" },
+): Promise<number> {
+  const { data: inqs } = await supabase
+    .from("inquiries")
+    .select("id, updated_at")
+    .eq("center_id", args.centerId)
+    .eq("kind", args.kind);
+  const list = (inqs ?? []) as { id: string; updated_at: string }[];
+  if (list.length === 0) return 0;
+
+  const { data: reads } = await supabase
+    .from("inquiry_reads")
+    .select("inquiry_id, last_read_at")
+    .eq("user_id", args.userId)
+    .in(
+      "inquiry_id",
+      list.map((i) => i.id),
+    );
+  const readMap = new Map(
+    ((reads ?? []) as { inquiry_id: string; last_read_at: string }[]).map(
+      (r) => [r.inquiry_id, r.last_read_at],
+    ),
+  );
+
+  let unread = 0;
+  for (const i of list) {
+    const lastRead = readMap.get(i.id);
+    if (!lastRead || lastRead < i.updated_at) unread++;
+  }
+  return unread;
 }
 
 async function countInboundNoticesUnread(
