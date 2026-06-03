@@ -11,6 +11,7 @@ import SidebarWorkspace from "./SidebarWorkspace";
 import DrawerToggle from "./DrawerToggle";
 import { ACTIVE_CENTER_COOKIE } from "@/lib/center";
 import { SESSION_COOKIE, isActiveSession } from "@/lib/session";
+import { getUnreadCounts } from "@/lib/unread";
 import PendingApproval from "./PendingApproval";
 
 export default async function AdminLayout({
@@ -120,6 +121,15 @@ export default async function AdminLayout({
   const centersForSwitcher =
     (allCentersRes.data as { id: string; name: string }[] | null) ?? [];
 
+  // 사이드바 미열람 뱃지 — 활성 지점 컨텍스트가 있을 때만 (지점 채널 기준)
+  const unreadCounts = activeCenterId
+    ? await getUnreadCounts(supabase, {
+        userId,
+        centerId: activeCenterId,
+        role,
+      })
+    : {};
+
   const initial = (profile?.name ?? userEmail ?? "A").charAt(0).toUpperCase();
   const displayName = profile?.name ?? userEmail ?? "";
   const displayRole =
@@ -137,7 +147,11 @@ export default async function AdminLayout({
         <GlobalLoading />
       </Suspense>
       <SuppressInvalidTooltip />
-      <Sidebar role={role} hasActiveCenter={!!activeCenterId} />
+      <Sidebar
+        role={role}
+        hasActiveCenter={!!activeCenterId}
+        unreadCounts={unreadCounts}
+      />
       <div className="drawer-backdrop" />
 
       <main className="main">

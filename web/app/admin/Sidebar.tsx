@@ -138,9 +138,11 @@ function groupContainsActive(
 export default function Sidebar({
   role,
   hasActiveCenter,
+  unreadCounts,
 }: {
   role: "super_admin" | "admin" | "coach" | "parent" | "student" | "driver" | null;
   hasActiveCenter?: boolean;
+  unreadCounts?: Record<string, number>;
 }) {
   const pathname = usePathname();
   const searchParamsHook = useSearchParams();
@@ -257,6 +259,11 @@ export default function Sidebar({
           const collapsible = isCollapsible(group);
           const open = !collapsible || !!openGroups[group.label ?? ""];
           const GroupIcon = group.icon ? ICON_MAP[group.icon] : null;
+          // 그룹 내 미열람 합 — 접혀 있어도 헤더에 표시
+          const groupUnread = group.items.reduce(
+            (s, it) => s + (unreadCounts?.[it.slug] ?? 0),
+            0,
+          );
 
           return (
             <div className="nav-group" key={gi}>
@@ -274,6 +281,14 @@ export default function Sidebar({
                       </span>
                     )}
                     {group.label}
+                    {groupUnread > 0 && (
+                      <span
+                        className="nav-badge nav-badge-group"
+                        aria-label={`미열람 ${groupUnread}건`}
+                      >
+                        {groupUnread > 99 ? "99+" : groupUnread}
+                      </span>
+                    )}
                   </span>
                   <span className="nav-label-caret" aria-hidden>▾</span>
                 </button>
@@ -286,31 +301,47 @@ export default function Sidebar({
                     </span>
                   )}
                   {group.label}
+                  {groupUnread > 0 && (
+                    <span
+                      className="nav-badge nav-badge-group"
+                      aria-label={`미열람 ${groupUnread}건`}
+                    >
+                      {groupUnread > 99 ? "99+" : groupUnread}
+                    </span>
+                  )}
                 </div>
               )}
 
-              {group.items.map((item) => (
-                <Link
-                  key={item.slug}
-                  href={item.href}
-                  className={[
-                    "sub",
-                    isActive(pathname, item.href, searchParams) ? "active" : "",
-                    item.needsCheck ? "needs-check" : "",
-                    !open ? "collapsed" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  title={item.needsCheck ? "수정 체크 필요" : undefined}
-                  tabIndex={open ? 0 : -1}
-                  aria-hidden={!open}
-                >
-                  <span className="ico ico-dot" aria-hidden>
-                    <Circle size={6} strokeWidth={2} />
-                  </span>
-                  {item.label}
-                </Link>
-              ))}
+              {group.items.map((item) => {
+                const unread = unreadCounts?.[item.slug] ?? 0;
+                return (
+                  <Link
+                    key={item.slug}
+                    href={item.href}
+                    className={[
+                      "sub",
+                      isActive(pathname, item.href, searchParams) ? "active" : "",
+                      item.needsCheck ? "needs-check" : "",
+                      !open ? "collapsed" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    title={item.needsCheck ? "수정 체크 필요" : undefined}
+                    tabIndex={open ? 0 : -1}
+                    aria-hidden={!open}
+                  >
+                    <span className="ico ico-dot" aria-hidden>
+                      <Circle size={6} strokeWidth={2} />
+                    </span>
+                    <span className="sub-label">{item.label}</span>
+                    {unread > 0 && (
+                      <span className="nav-badge" aria-label={`미열람 ${unread}건`}>
+                        {unread > 99 ? "99+" : unread}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
           );
         })}

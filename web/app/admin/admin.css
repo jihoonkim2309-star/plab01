@@ -355,6 +355,46 @@
   font-size: 13px;
 }
 
+/* sub-label 은 flex 자식으로 가운데 차지, .nav-badge 는 우측 정렬 */
+.nav a.sub .sub-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 사이드바 메뉴 옆 미열람 카운트 뱃지 — 빨강. */
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  margin-left: 8px;
+  border-radius: 9px;
+  background: #e53935;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.nav a.sub.active .nav-badge {
+  background: #fff;
+  color: #e53935;
+}
+
+/* 그룹 헤더 합계 뱃지 — sub 뱃지보다 살짝 작고 톤다운 */
+.nav-badge-group {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  font-size: 10px;
+  margin-left: 6px;
+}
+
 .nav a.sub .ico { color: #b8c5c0; }
 .nav a.sub:hover .ico { color: var(--brand); }
 .nav a.sub.active .ico { color: #ffffff; }

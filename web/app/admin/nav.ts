@@ -87,6 +87,12 @@ export const NAV: NavGroup[] = [
     icon: "Megaphone",
     items: [
       { label: "공지사항", slug: "announcements", href: "/admin/announcements", ready: true },
+    ],
+  },
+  {
+    label: "본사",
+    icon: "Building2",
+    items: [
       { label: "본사 공지", slug: "inbound-notices", href: "/admin/inbound-notices", ready: true },
       { label: "본사에 문의", slug: "branch-inquiries", href: "/admin/branch-inquiries", ready: true },
       { label: "본사 채팅", slug: "branch-chat", href: "/admin/branch-chat", ready: true },

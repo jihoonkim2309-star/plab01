@@ -20,7 +20,7 @@ export default async function InboundNoticesPage({
   }
 
   // RLS 로 자기 지점 대상 + 발행된 공지만 노출됨
-  const [listRes, selectedRes] = await Promise.all([
+  const [listRes, selectedRes, readsRes] = await Promise.all([
     supabase
       .from("hq_notices")
       .select("id, title, scope, published_at, notified_count")
@@ -33,6 +33,10 @@ export default async function InboundNoticesPage({
           .eq("id", id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase
+      .from("hq_notice_reads")
+      .select("notice_id")
+      .eq("user_id", userId),
   ]);
 
   type Row = {
@@ -46,6 +50,9 @@ export default async function InboundNoticesPage({
   const selected = selectedRes.data as
     | (Row & { body: string })
     | null;
+  const readSet = new Set(
+    ((readsRes.data ?? []) as { notice_id: string }[]).map((r) => r.notice_id),
+  );
 
   return (
     <>
@@ -76,28 +83,65 @@ export default async function InboundNoticesPage({
                 </tr>
               </thead>
               <tbody>
-                {list.map((n) => (
-                  <tr
-                    key={n.id}
-                    className={`row-link-host ${n.id === id ? "selected" : ""}`}
-                  >
-                    <td>
-                      <Link
-                        href={`/admin/inbound-notices?id=${n.id}`}
-                        className="row-link-stretch"
-                        style={{ fontWeight: 700, color: "var(--text)" }}
-                      >
-                        {n.title}
-                      </Link>
-                    </td>
-                    <td className="muted">
-                      {n.scope === "all" ? "전체 지점" : "특정 지점"}
-                    </td>
-                    <td className="muted">
-                      {n.published_at ? n.published_at.slice(0, 10) : "-"}
-                    </td>
-                  </tr>
-                ))}
+                {list.map((n) => {
+                  const isUnread = !readSet.has(n.id);
+                  return (
+                    <tr
+                      key={n.id}
+                      className={`row-link-host ${n.id === id ? "selected" : ""}`}
+                    >
+                      <td>
+                        <Link
+                          href={`/admin/inbound-notices?id=${n.id}`}
+                          className="row-link-stretch"
+                          style={{
+                            fontWeight: isUnread ? 800 : 600,
+                            color: isUnread ? "var(--text)" : "#6f7d78",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          {isUnread && (
+                            <span
+                              aria-label="새 공지"
+                              style={{
+                                display: "inline-block",
+                                width: 6,
+                                height: 6,
+                                borderRadius: "50%",
+                                background: "#e53935",
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
+                          {n.title}
+                          {isUnread && (
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontWeight: 800,
+                                color: "#e53935",
+                                background: "#fde7e7",
+                                padding: "1px 6px",
+                                borderRadius: 4,
+                                lineHeight: 1.4,
+                              }}
+                            >
+                              NEW
+                            </span>
+                          )}
+                        </Link>
+                      </td>
+                      <td className="muted">
+                        {n.scope === "all" ? "전체 지점" : "특정 지점"}
+                      </td>
+                      <td className="muted">
+                        {n.published_at ? n.published_at.slice(0, 10) : "-"}
+                      </td>
+                    </tr>
+                  );
+                })}
                 {list.length === 0 && (
                   <tr>
                     <td colSpan={3}>
