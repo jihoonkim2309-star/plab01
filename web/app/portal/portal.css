@@ -1,6 +1,16 @@
 /* 학부모/학생/코치/기사 포털 공통 — PC 웹에서 모바일 mockup frame 안에 표시.
    추후 Capacitor 패키징 시 .mockup-stage 의 frame CSS 만 제거하면 됨. */
 
+/* embed 모드 (/preview iframe 안) — 이중 frame 회피, 콘텐츠만 full-screen */
+.portal-embed {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: "Pretendard Variable", Pretendard, -apple-system, "Noto Sans KR", "Segoe UI", Roboto, Arial, sans-serif;
+  background: #fff;
+}
+
 .portal-shell {
   min-height: 100vh;
   background: #e5e7eb;
