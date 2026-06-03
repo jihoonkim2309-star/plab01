@@ -68,15 +68,41 @@ export async function replyMessage(inquiryId: string, formData: FormData) {
   );
 
   const body = String(formData.get("body") ?? "").trim();
-  if (!body) return redirect(dest);
+  const files = formData.getAll("files") as File[];
+  const realFiles = files.filter((f): f is File => f instanceof File && f.size > 0);
+  if (!body && realFiles.length === 0) return redirect(dest);
 
-  const { error } = await supabase.from("support_messages").insert({
-    center_id: centerId,
-    inquiry_id: inquiryId,
-    sender: "admin",
-    body,
-  });
+  const { data: msgIns, error } = await supabase
+    .from("support_messages")
+    .insert({
+      center_id: centerId,
+      inquiry_id: inquiryId,
+      sender: "admin",
+      body: body || "",
+    })
+    .select("id")
+    .single();
   if (error) throw new Error("전송 실패: " + error.message);
+  const messageId = (msgIns as { id: string }).id;
+
+  // 첨부 업로드 + attachment row
+  for (const file of realFiles) {
+    if (file.size > 10 * 1024 * 1024) continue;
+    const safeName = file.name.replace(/[\\/]/g, "_");
+    const path = `${messageId}/${crypto.randomUUID()}-${safeName}`;
+    const { error: upErr } = await supabase.storage
+      .from("chat-attachments")
+      .upload(path, file, { contentType: file.type || undefined });
+    if (upErr) continue;
+    await supabase.from("support_message_attachments").insert({
+      message_id: messageId,
+      center_id: centerId,
+      storage_path: path,
+      file_name: file.name,
+      mime_type: file.type || null,
+      size_bytes: file.size,
+    });
+  }
 
   // 답변하면 상태를 '처리중'으로
   await supabase

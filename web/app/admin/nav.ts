@@ -83,22 +83,6 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
-    label: "공지·알림",
-    icon: "Megaphone",
-    items: [
-      { label: "공지사항", slug: "announcements", href: "/admin/announcements", ready: true },
-    ],
-  },
-  {
-    label: "본사",
-    icon: "Building2",
-    items: [
-      { label: "본사 공지", slug: "inbound-notices", href: "/admin/inbound-notices", ready: true },
-      { label: "본사에 문의", slug: "branch-inquiries", href: "/admin/branch-inquiries", ready: true },
-      { label: "본사 채팅", slug: "branch-chat", href: "/admin/branch-chat", ready: true },
-    ],
-  },
-  {
     label: "상담",
     icon: "MessageSquare",
     items: [
@@ -108,12 +92,28 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
+    label: "공지·알림",
+    icon: "Megaphone",
+    items: [
+      { label: "공지사항", slug: "announcements", href: "/admin/announcements", ready: true },
+    ],
+  },
+  {
     label: "직원",
     icon: "UserCog",
     items: [
       { label: "직원 가입 승인", slug: "staff-approvals", href: "/admin/admin-approvals", ready: true },
       { label: "코치 계정 관리", slug: "coach-accounts", href: "/admin/coach-accounts", ready: true },
       { label: "기사 계정 관리", slug: "driver-accounts", href: "/admin/driver-accounts", ready: true },
+    ],
+  },
+  {
+    label: "본사",
+    icon: "Building2",
+    items: [
+      { label: "본사 공지", slug: "inbound-notices", href: "/admin/inbound-notices", ready: true },
+      { label: "본사에 문의", slug: "branch-inquiries", href: "/admin/branch-inquiries", ready: true },
+      { label: "본사 채팅", slug: "branch-chat", href: "/admin/branch-chat", ready: true },
     ],
   },
   {

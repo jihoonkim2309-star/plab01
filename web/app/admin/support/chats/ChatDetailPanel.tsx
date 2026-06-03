@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useChatDrawer } from "./ChatDrawerContext";
 import ConfirmButton from "../../ConfirmButton";
+import ChatBubble, { formatChatTime } from "../../ChatBubble";
+import ChatComposer from "../../ChatComposer";
 import {
   replyMessage,
   setInquiryStatus,
@@ -26,7 +28,19 @@ type Inquiry = {
   status: string;
   created_at: string;
 };
-type Message = { id: string; sender: string; body: string; created_at: string };
+type Message = {
+  id: string;
+  sender: string;
+  body: string;
+  created_at: string;
+  attachments?: {
+    id: string;
+    fileName: string;
+    mimeType: string | null;
+    sizeBytes: number | null;
+    url: string;
+  }[];
+};
 
 export default function ChatDetailPanel() {
   const { chatId } = useChatDrawer();
@@ -102,31 +116,28 @@ export default function ChatDetailPanel() {
           </div>
           <div className="panel-body">
             <div className="detail-block" style={{ marginTop: 0 }}>
-              <div className="message-list">
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {messages.length === 0 && <div className="muted">아직 메시지가 없습니다.</div>}
                 {messages.map((m) => (
-                  <div key={m.id} className={`msg${m.sender === "admin" ? " me" : ""}`}>
-                    {m.body}
-                    <small>{m.created_at.slice(0, 16).replace("T", " ")}</small>
-                  </div>
+                  <ChatBubble
+                    key={m.id}
+                    side={m.sender === "admin" ? "me" : "them"}
+                    label={m.sender === "admin" ? undefined : selected.requester_name ?? "요청자"}
+                    time={formatChatTime(m.created_at)}
+                    body={m.body}
+                    attachments={m.attachments}
+                  />
                 ))}
               </div>
               <form
                 action={replyMessage.bind(null, selected.id)}
-                style={{ marginTop: 10, display: "flex", gap: 8 }}
+                data-no-loading="true"
+                className="chat-input-form"
+                style={{ marginTop: 10, border: "1px solid var(--line)", borderRadius: 8 }}
               >
                 <input type="hidden" name="back" value={back} />
-                <input
-                  name="body"
-                  placeholder="메시지 입력..."
-                  style={{
-                    flex: 1,
-                    border: "1px solid var(--line-strong)",
-                    borderRadius: 8,
-                    padding: "9px 10px",
-                  }}
-                />
-                <button className="btn primary">전송</button>
+                <ChatComposer placeholder="메시지 입력 (Enter = 전송, Shift+Enter = 줄바꿈)" />
+                <button className="btn primary" type="submit">전송</button>
               </form>
             </div>
 
