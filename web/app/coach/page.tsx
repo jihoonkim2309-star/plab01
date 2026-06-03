@@ -1,4 +1,11 @@
-import { Bell, CheckSquare, Home, MessageSquare, Ruler } from "lucide-react";
+import { Bell, ChevronRight, Clock, Users } from "lucide-react";
+import CoachTabbar from "./Tabbar";
+
+const MOCK_CLASSES = [
+  { id: "c1", name: "정규반 A", time: "16:00 - 17:00", count: 12 },
+  { id: "c2", name: "정규반 B", time: "17:30 - 18:30", count: 10 },
+  { id: "c3", name: "고급반", time: "19:00 - 20:00", count: 8 },
+];
 
 export default function CoachHome() {
   return (
@@ -8,43 +15,23 @@ export default function CoachHome() {
         <Bell size={20} />
       </div>
       <div className="portal-content">
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 12,
-            padding: 20,
-            boxShadow: "0 1px 2px rgba(0,0,0,.04)",
-          }}
-        >
-          <strong style={{ fontSize: 16 }}>오늘의 클래스</strong>
-          <div style={{ marginTop: 12, color: "#6f7d78", fontSize: 14 }}>
-            아직 정보가 없습니다.
-          </div>
-        </div>
-      </div>
-      <CoachTabbar active="home" />
-    </>
-  );
-}
-
-function CoachTabbar({ active }: { active: "home" | "attend" | "measure" | "chat" }) {
-  const tabs = [
-    { key: "home", label: "홈", href: "/coach", icon: Home },
-    { key: "attend", label: "출석", href: "/coach/attendance", icon: CheckSquare },
-    { key: "measure", label: "측정", href: "/coach/measurements", icon: Ruler },
-    { key: "chat", label: "문의", href: "/coach/chat", icon: MessageSquare },
-  ] as const;
-  return (
-    <nav className="portal-tabbar" style={{ ["--tabs" as never]: tabs.length }}>
-      {tabs.map((t) => {
-        const Icon = t.icon;
-        return (
-          <a key={t.key} href={t.href} className={`portal-tab${active === t.key ? " active" : ""}`}>
-            <Icon size={22} />
-            {t.label}
+        <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 8 }}>오늘의 클래스</h2>
+        {MOCK_CLASSES.map((c) => (
+          <a key={c.id} href={`/coach/attendance?class=${c.id}`} className="card" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "#111" }}>
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: "var(--brand-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand)" }}>
+              <Clock size={22} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <strong style={{ fontSize: 15 }}>{c.name}</strong>
+              <div style={{ fontSize: 12, color: "#6f7d78", marginTop: 2, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Clock size={12} /> {c.time} · <Users size={12} /> {c.count}명
+              </div>
+            </div>
+            <ChevronRight size={18} color="#9ca3af" />
           </a>
-        );
-      })}
-    </nav>
+        ))}
+      </div>
+      <CoachTabbar />
+    </>
   );
 }

@@ -1,4 +1,5 @@
-import { Bell, Calendar, Home, QrCode, User } from "lucide-react";
+import { Bell, Calendar, Clock, FileText, QrCode } from "lucide-react";
+import StudentTabbar from "./Tabbar";
 
 export default function StudentHome() {
   return (
@@ -8,57 +9,35 @@ export default function StudentHome() {
         <Bell size={20} />
       </div>
       <div className="portal-content">
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 12,
-            padding: 16,
-            boxShadow: "0 1px 2px rgba(0,0,0,.04)",
-          }}
-        >
-          <strong style={{ fontSize: 14 }}>오늘의 수업</strong>
-          <div style={{ marginTop: 12, color: "#6f7d78", fontSize: 13 }}>
-            아직 정보가 없습니다.
+        <section className="card">
+          <strong>오늘의 수업</strong>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, padding: 10, background: "var(--brand-soft, #d8ecdf)", borderRadius: 8 }}>
+            <Clock size={18} color="#1e794e" />
+            <div style={{ flex: 1 }}>
+              <strong style={{ fontSize: 14 }}>정규반 A</strong>
+              <div style={{ fontSize: 11, color: "#6f7d78", marginTop: 2 }}>16:00 - 17:00 · 박코치</div>
+            </div>
           </div>
-        </div>
-        <div
-          style={{
-            marginTop: 16,
-            background: "#fff",
-            borderRadius: 12,
-            padding: 16,
-            boxShadow: "0 1px 2px rgba(0,0,0,.04)",
-          }}
-        >
-          <strong style={{ fontSize: 14 }}>셔틀 QR</strong>
-          <p style={{ fontSize: 12, color: "#6f7d78", marginTop: 8 }}>
-            차량 QR 을 스캔해 승·하차를 기록합니다.
-          </p>
-        </div>
-      </div>
-      <StudentTabbar active="home" />
-    </>
-  );
-}
+        </section>
 
-function StudentTabbar({ active }: { active: "home" | "schedule" | "shuttle" | "me" }) {
-  const tabs = [
-    { key: "home", label: "홈", href: "/student", icon: Home },
-    { key: "schedule", label: "시간표", href: "/student/schedule", icon: Calendar },
-    { key: "shuttle", label: "셔틀", href: "/student/shuttle", icon: QrCode },
-    { key: "me", label: "나", href: "/student/me", icon: User },
-  ] as const;
-  return (
-    <nav className="portal-tabbar" style={{ ["--tabs" as never]: tabs.length }}>
-      {tabs.map((t) => {
-        const Icon = t.icon;
-        return (
-          <a key={t.key} href={t.href} className={`portal-tab${active === t.key ? " active" : ""}`}>
-            <Icon size={20} />
-            {t.label}
+        <section className="quick-grid">
+          <a href="/student/schedule" className="quick-item"><Calendar size={22} /><span>시간표</span></a>
+          <a href="/student/shuttle" className="quick-item"><QrCode size={22} /><span>셔틀 QR</span></a>
+          <a href="/student/reports" className="quick-item"><FileText size={22} /><span>내 리포트</span></a>
+        </section>
+
+        <section className="card">
+          <strong>알림</strong>
+          <a href="#" className="notice-row">
+            <span className="notice-dot" />
+            <div style={{ flex: 1 }}>
+              <div className="notice-title unread">코치 메모: 폼이 많이 좋아졌어요</div>
+              <div className="notice-time">오늘 14:20</div>
+            </div>
           </a>
-        );
-      })}
-    </nav>
+        </section>
+      </div>
+      <StudentTabbar />
+    </>
   );
 }
