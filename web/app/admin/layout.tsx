@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import Sidebar from "./Sidebar";
 import GlobalLoading from "./GlobalLoading";
 import SuppressInvalidTooltip from "./SuppressInvalidTooltip";
+import SuppressAutofill from "./SuppressAutofill";
 import ProfileMenu from "./ProfileMenu";
 import SidebarWorkspace from "./SidebarWorkspace";
 import DrawerToggle from "./DrawerToggle";
@@ -138,6 +139,7 @@ export default async function AdminLayout({
         <GlobalLoading />
       </Suspense>
       <SuppressInvalidTooltip />
+      <SuppressAutofill />
       <Sidebar role={role} hasActiveCenter={!!activeCenterId} />
       <div className="drawer-backdrop" />
 
