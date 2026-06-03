@@ -2807,3 +2807,56 @@ tr[data-bulk-hover] td {
   background: var(--orange-soft) !important;
   transition: background 120ms ease;
 }
+
+/* ============================================================
+   채팅 스레드·버블 — branch-chat / hq-chat / 문의·상담 detail 등 공통
+   ============================================================ */
+.chat-thread {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--bg);
+  min-height: 0;
+}
+
+.chat-bubble {
+  max-width: 70%;
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  word-break: break-word;
+}
+.chat-bubble.me {
+  align-self: flex-end;
+  background: var(--brand-soft);
+  border-color: #b8dccb;
+}
+.chat-bubble.them {
+  align-self: flex-start;
+  background: var(--blue-soft);
+  border-color: #b8d0ee;
+}
+.chat-bubble-meta {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 3px;
+  font-weight: 500;
+}
+.chat-bubble-body {
+  font-size: 13px;
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+/* 채팅 입력 form 공통 */
+.chat-input-form {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  align-items: flex-end;
+}

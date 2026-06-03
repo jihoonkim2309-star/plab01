@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useInquiryDrawer } from "./InquiryDrawerContext";
 import ConfirmButton from "../ConfirmButton";
+import ChatBubble, { formatChatTime } from "../ChatBubble";
 import {
   replyBranchInquiry,
   closeBranchInquiry,
@@ -105,28 +106,16 @@ export default function InquiryDetailPanel() {
 
             <div className="detail-block">
               <p className="detail-title">대화 ({messages.length})</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {messages.map((m) => {
-                  const isHq = m.sender === "hq";
-                  return (
-                    <div
-                      key={m.id}
-                      style={{
-                        padding: 10,
-                        borderRadius: 8,
-                        background: isHq ? "var(--blue-soft)" : "var(--bg)",
-                        border: `1px solid ${isHq ? "#b8d0ee" : "var(--line)"}`,
-                        alignSelf: isHq ? "flex-start" : "flex-end",
-                        maxWidth: "85%",
-                      }}
-                    >
-                      <div className="muted" style={{ fontSize: 11, marginBottom: 4 }}>
-                        {isHq ? "본사" : "지점"} · {m.created_at.slice(0, 16).replace("T", " ")}
-                      </div>
-                      <div style={{ whiteSpace: "pre-wrap", fontSize: 13 }}>{m.body}</div>
-                    </div>
-                  );
-                })}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {messages.map((m) => (
+                  <ChatBubble
+                    key={m.id}
+                    side={m.sender === "hq" ? "me" : "them"}
+                    label={m.sender === "hq" ? "본사" : "지점"}
+                    time={formatChatTime(m.created_at)}
+                    body={m.body}
+                  />
+                ))}
               </div>
             </div>
 

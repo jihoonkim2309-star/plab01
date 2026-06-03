@@ -2,6 +2,7 @@ import { requireCenter } from "@/lib/center";
 import ChatTextarea from "../ChatTextarea";
 import RefreshOnce from "../RefreshOnce";
 import ChatScrollAnchor from "../ChatScrollAnchor";
+import ChatBubble, { formatChatTime } from "../ChatBubble";
 import { sendBranchChatAsAdmin } from "./actions";
 
 export default async function BranchChatPage() {
@@ -53,60 +54,29 @@ export default async function BranchChatPage() {
       </div>
 
       <div className="panel" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 220px)" }}>
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: 16,
-            display: "flex",
-            flexDirection: "column",
-            gap: 10,
-            background: "var(--bg)",
-          }}
-        >
+        <div className="chat-thread">
           {messages.length === 0 ? (
             <div className="empty-state">
               <strong>아직 메시지가 없습니다</strong>
               <p>아래 입력창에 첫 메시지를 보내보세요.</p>
             </div>
           ) : (
-            messages.map((m) => {
-              const isHq = m.sender === "hq";
-              return (
-                <div
-                  key={m.id}
-                  style={{
-                    padding: 10,
-                    borderRadius: 10,
-                    background: isHq ? "var(--blue-soft)" : "var(--brand-soft)",
-                    border: `1px solid ${isHq ? "#b8d0ee" : "#b8dccb"}`,
-                    alignSelf: isHq ? "flex-start" : "flex-end",
-                    maxWidth: "70%",
-                  }}
-                >
-                  <div className="muted" style={{ fontSize: 11, marginBottom: 4 }}>
-                    {isHq ? "본사" : "우리 지점"} ·{" "}
-                    {m.created_at.slice(0, 16).replace("T", " ")}
-                  </div>
-                  <div style={{ whiteSpace: "pre-wrap", fontSize: 13 }}>
-                    {m.body}
-                  </div>
-                </div>
-              );
-            })
+            messages.map((m) => (
+              <ChatBubble
+                key={m.id}
+                side={m.sender === "hq" ? "them" : "me"}
+                label={m.sender === "hq" ? "본사" : "우리 지점"}
+                time={formatChatTime(m.created_at)}
+                body={m.body}
+              />
+            ))
           )}
           <ChatScrollAnchor k={`${messages.length}-${messages[messages.length - 1]?.id ?? ""}`} />
         </div>
         <form
           action={sendBranchChatAsAdmin}
           data-no-loading="true"
-          style={{
-            display: "flex",
-            gap: 8,
-            padding: 12,
-            borderTop: "1px solid var(--line)",
-            background: "var(--panel)",
-          }}
+          className="chat-input-form"
         >
           <ChatTextarea
             placeholder="본사에 보낼 메시지를 입력하세요 (Enter = 전송, Shift+Enter = 줄바꿈)"
