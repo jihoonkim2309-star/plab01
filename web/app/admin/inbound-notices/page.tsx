@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
+import RefreshOnce from "../RefreshOnce";
 
 export default async function InboundNoticesPage({
   searchParams,
@@ -56,6 +57,7 @@ export default async function InboundNoticesPage({
 
   return (
     <>
+      {id && <RefreshOnce k={id} />}
       <div className="page-head">
         <div>
           <h1>본사 공지</h1>
