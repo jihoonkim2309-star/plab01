@@ -15,8 +15,19 @@ export default function UnreadRealtime() {
   const [lastEvent, setLastEvent] = useState<string>("");
   useEffect(() => {
     const supabase = createClient();
-    const channel = supabase
-      .channel("admin-unread-badges")
+    type RtChannel = ReturnType<typeof supabase.channel>;
+    let channel: RtChannel | null = null;
+
+    const setup = async () => {
+      // 1) JWT 를 realtime socket 에 명시 attach — postgres_changes RLS 가
+      //    anon 으로 평가되어 이벤트가 silent drop 되는 케이스 방지.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        await supabase.realtime.setAuth(session.access_token);
+      }
+
+      channel = supabase
+        .channel("admin-unread-badges")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "hq_notices" },
@@ -44,12 +55,16 @@ export default function UnreadRealtime() {
           router.refresh();
         },
       )
-      .subscribe((s, err) => {
-        console.log("[Realtime] subscribe status:", s, err ?? "");
-        setStatus(s);
-      });
+        .subscribe((s, err) => {
+          console.log("[Realtime] subscribe status:", s, err ?? "");
+          setStatus(s);
+        });
+    };
+
+    setup();
+
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [router]);
 
