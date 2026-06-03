@@ -29,6 +29,7 @@ export default function DatePickerInput({
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const [month, setMonth] = useState<Date | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const id = useId();
@@ -94,6 +95,11 @@ export default function DatePickerInput({
       ? parse(current, "yyyy-MM-dd", new Date())
       : undefined;
 
+  // 텍스트 입력으로 유효 날짜 되면 캘린더도 그 달로 자동 이동
+  useEffect(() => {
+    if (selected) setMonth(selected);
+  }, [selected?.getTime()]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="date-picker-root">
       <input
@@ -105,8 +111,29 @@ export default function DatePickerInput({
         placeholder={placeholder}
         inputMode="numeric"
         maxLength={10}
+        onKeyDown={(e) => {
+          // 값이 비어 있으면 일반 onChange (자동 하이픈) 로 처리
+          if (!current) return;
+          // 숫자 키만 덮어쓰기 모드 — 기존 자리 문자 대체
+          if (!/^\d$/.test(e.key)) return;
+          e.preventDefault();
+          const input = e.currentTarget;
+          let pos = input.selectionStart ?? 0;
+          // 하이픈 위치면 다음 숫자 자리로 건너뜀
+          while (pos < 10 && current[pos] === "-") pos++;
+          if (pos >= 10) return;
+          // 그 자리 한 글자 대체
+          const next = current.substring(0, pos) + e.key + current.substring(pos + 1);
+          setCurrent(next.substring(0, 10));
+          // cursor 다음 자리 (하이픈 건너뜀)
+          let nextPos = pos + 1;
+          while (nextPos < 10 && next[nextPos] === "-") nextPos++;
+          requestAnimationFrame(() => {
+            input.setSelectionRange(nextPos, nextPos);
+          });
+        }}
         onChange={(e) => {
-          // 키보드 입력 — 숫자만 받고 자동 하이픈 (YYYY-MM-DD)
+          // 빈 값에서 시작하는 일반 입력 — 자동 하이픈 (YYYY-MM-DD)
           const raw = e.target.value.replace(/[^\d-]/g, "");
           const digits = raw.replace(/-/g, "").slice(0, 8);
           let formatted = digits;
@@ -130,6 +157,8 @@ export default function DatePickerInput({
               mode="single"
               locale={ko}
               selected={selected}
+              month={month}
+              onMonthChange={setMonth}
               onSelect={(d) => {
                 if (d) {
                   setCurrent(format(d, "yyyy-MM-dd"));
