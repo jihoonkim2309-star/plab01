@@ -1542,3 +1542,84 @@ exception when duplicate_object then null; end $$;
 do $$ begin
   alter publication supabase_realtime add table public.support_messages;
 exception when duplicate_object then null; end $$;
+
+-- =====================================================================
+--  20. 채팅·문의 메시지 첨부 파일 (support_message_attachments)
+--  - 1 message : N attachments
+--  - 실제 파일은 Storage 버킷 'chat-attachments' 에 저장, 여기엔 메타만
+--  - storage_path = bucket 내 경로 (예: '<message_id>/<uuid>-<filename>')
+-- =====================================================================
+create table if not exists public.support_message_attachments (
+  id           uuid primary key default gen_random_uuid(),
+  message_id   uuid not null references public.support_messages(id) on delete cascade,
+  center_id    uuid references public.centers(id) on delete set null,
+  storage_path text not null,
+  file_name    text not null,
+  mime_type    text,
+  size_bytes   bigint,
+  created_at   timestamptz not null default now()
+);
+
+create index if not exists support_message_attachments_message_idx
+  on public.support_message_attachments (message_id);
+
+alter table public.support_message_attachments enable row level security;
+
+-- super_admin 전체 + 같은 센터 staff(admin/coach) 전체
+drop policy if exists smatt_super_all on public.support_message_attachments;
+create policy smatt_super_all on public.support_message_attachments
+  for all using (public.is_super_admin()) with check (public.is_super_admin());
+
+drop policy if exists smatt_admin_all on public.support_message_attachments;
+create policy smatt_admin_all on public.support_message_attachments
+  for all
+  using (center_id is null or public.is_center_admin(center_id))
+  with check (center_id is null or public.is_center_admin(center_id));
+
+-- Realtime publication
+do $$ begin
+  alter publication supabase_realtime add table public.support_message_attachments;
+exception when duplicate_object then null; end $$;
+
+-- Storage 버킷 (private, 10MB 제한). 멱등.
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('chat-attachments', 'chat-attachments', false, 10485760)
+on conflict (id) do nothing;
+
+-- Storage 객체 RLS — staff (super_admin / admin / coach) 만 read·write·delete
+drop policy if exists chat_att_staff_select on storage.objects;
+create policy chat_att_staff_select on storage.objects for select
+  using (
+    bucket_id = 'chat-attachments'
+    and (
+      public.is_super_admin()
+      or exists (
+        select 1 from public.users u
+        where u.id = auth.uid() and u.role in ('admin','coach')
+      )
+    )
+  );
+drop policy if exists chat_att_staff_insert on storage.objects;
+create policy chat_att_staff_insert on storage.objects for insert
+  with check (
+    bucket_id = 'chat-attachments'
+    and (
+      public.is_super_admin()
+      or exists (
+        select 1 from public.users u
+        where u.id = auth.uid() and u.role in ('admin','coach')
+      )
+    )
+  );
+drop policy if exists chat_att_staff_delete on storage.objects;
+create policy chat_att_staff_delete on storage.objects for delete
+  using (
+    bucket_id = 'chat-attachments'
+    and (
+      public.is_super_admin()
+      or exists (
+        select 1 from public.users u
+        where u.id = auth.uid() and u.role in ('admin','coach')
+      )
+    )
+  );
