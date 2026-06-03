@@ -21,6 +21,17 @@ export default function ChatBubble({
   );
 }
 
+// 같은 날 = HH:MM, 다른 날 = M/D HH:MM (카톡식 짧은 라벨)
 export function formatChatTime(iso: string): string {
-  return iso.slice(0, 16).replace("T", " ");
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso.slice(0, 16).replace("T", " ");
+  const now = new Date();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const sameDay =
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+  if (sameDay) return `${hh}:${mm}`;
+  return `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`;
 }

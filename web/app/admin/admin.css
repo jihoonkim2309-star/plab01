@@ -2823,9 +2823,10 @@ tr[data-bulk-hover] td {
 }
 
 .chat-bubble {
-  max-width: 70%;
+  width: fit-content;
+  max-width: min(60%, 420px);
   border-radius: 12px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 1px solid transparent;
   word-break: break-word;
 }
