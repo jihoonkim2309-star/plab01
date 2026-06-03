@@ -1,4 +1,5 @@
 import { ArrowLeft } from "lucide-react";
+import { submitParentLink } from "./actions";
 
 export default function ParentChildLink() {
   return (
@@ -15,7 +16,7 @@ export default function ParentChildLink() {
           학생 정보를 입력하면 지점 어드민이 확인 후 승인합니다.
           승인까지는 일반적으로 1영업일 이내 처리됩니다.
         </p>
-        <form className="card" style={{ display: "block" }}>
+        <form action={submitParentLink} className="card" style={{ display: "block" }}>
           <div className="portal-field">
             <label>지점</label>
             <select name="center_id" required>

@@ -1581,6 +1581,26 @@ do $$ begin
   alter publication supabase_realtime add table public.support_message_attachments;
 exception when duplicate_object then null; end $$;
 
+-- =====================================================================
+--  21. parent_student_links 확장 — 학부모 앱에서 자녀 정보 입력 후 신청
+--  (admin 이 매칭되는 students row 찾아 student_id 채우면서 승인)
+-- =====================================================================
+alter table public.parent_student_links
+  alter column student_id drop not null;
+alter table public.parent_student_links
+  add column if not exists requested_name text,
+  add column if not exists requested_school text,
+  add column if not exists requested_grade text,
+  add column if not exists requested_birth date,
+  add column if not exists relation text;
+
+-- 학부모 본인 신청만 read·write (admin 은 기존 admin_all 정책으로 통합)
+drop policy if exists psl_parent_own on public.parent_student_links;
+create policy psl_parent_own on public.parent_student_links
+  for all
+  using (parent_id = auth.uid())
+  with check (parent_id = auth.uid());
+
 -- Storage 버킷 (private, 10MB 제한). 멱등.
 insert into storage.buckets (id, name, public, file_size_limit)
 values ('chat-attachments', 'chat-attachments', false, 10485760)
