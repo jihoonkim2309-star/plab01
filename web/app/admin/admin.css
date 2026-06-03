@@ -2816,10 +2816,15 @@ tr[data-bulk-hover] td {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   padding: 16px;
   background: var(--bg);
   min-height: 0;
+  /* 메시지 영역 폭 — 너무 넓으면 좌·우 정렬이 어색. 가운데 정렬로 카톡 패턴 */
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  align-self: stretch;
 }
 
 /* chat-row = 박스 + 시각 (좌·우 정렬). me 면 row-reverse 로 박스 우측, 시각 좌측. */
@@ -2861,6 +2866,20 @@ tr[data-bulk-hover] td {
   white-space: nowrap;
   padding-bottom: 2px;
   flex-shrink: 0;
+}
+
+/* 박스 + 발신자명 묶음 (them 메시지 위에 작은 라벨) */
+.chat-bubble-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.chat-sender {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0 4px;
 }
 
 /* 채팅 입력 form 공통 */
