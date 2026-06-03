@@ -33,6 +33,7 @@ export default function ItemRowLink({
       href={href}
       className={className}
       style={style}
+      data-no-loading="true"
       onClick={(e) => {
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         if (e.button !== 0) return;
