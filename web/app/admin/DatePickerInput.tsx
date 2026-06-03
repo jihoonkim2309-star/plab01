@@ -101,12 +101,22 @@ export default function DatePickerInput({
         id={id}
         type="text"
         value={current}
-        readOnly
         disabled={disabled}
         placeholder={placeholder}
-        onClick={() => !disabled && setOpen((v) => !v)}
+        inputMode="numeric"
+        maxLength={10}
+        onChange={(e) => {
+          // 키보드 입력 — 숫자만 받고 자동 하이픈 (YYYY-MM-DD)
+          const raw = e.target.value.replace(/[^\d-]/g, "");
+          const digits = raw.replace(/-/g, "").slice(0, 8);
+          let formatted = digits;
+          if (digits.length >= 5) formatted = `${digits.slice(0, 4)}-${digits.slice(4, 6)}`;
+          if (digits.length >= 7) formatted = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
+          setCurrent(formatted);
+        }}
+        onClick={() => !disabled && setOpen(true)}
         onFocus={() => !disabled && setOpen(true)}
-        style={{ cursor: disabled ? "not-allowed" : "pointer" }}
+        autoComplete="off"
       />
       {name && <input type="hidden" name={name} value={current} required={required} />}
       {open && !disabled && mounted && coords &&
