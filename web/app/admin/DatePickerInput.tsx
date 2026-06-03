@@ -112,20 +112,17 @@ export default function DatePickerInput({
         inputMode="numeric"
         maxLength={10}
         onKeyDown={(e) => {
-          // 값이 비어 있으면 일반 onChange (자동 하이픈) 로 처리
-          if (!current) return;
-          // 숫자 키만 덮어쓰기 모드 — 기존 자리 문자 대체
+          // 완전한 마스크 (YYYY-MM-DD 10자) 일 때만 덮어쓰기 모드.
+          // 그 전엔 onChange 의 자동 하이픈 로직이 처리.
+          if (current.length < 10) return;
           if (!/^\d$/.test(e.key)) return;
           e.preventDefault();
           const input = e.currentTarget;
           let pos = input.selectionStart ?? 0;
-          // 하이픈 위치면 다음 숫자 자리로 건너뜀
           while (pos < 10 && current[pos] === "-") pos++;
           if (pos >= 10) return;
-          // 그 자리 한 글자 대체
           const next = current.substring(0, pos) + e.key + current.substring(pos + 1);
           setCurrent(next.substring(0, 10));
-          // cursor 다음 자리 (하이픈 건너뜀)
           let nextPos = pos + 1;
           while (nextPos < 10 && next[nextPos] === "-") nextPos++;
           requestAnimationFrame(() => {
