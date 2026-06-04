@@ -5,23 +5,26 @@ import { createClient } from "@/lib/supabase/server";
 export type PortalRole = "parent" | "student" | "coach" | "driver";
 
 // /preview iframe 안에서 호출인지 판별.
-// 우선순위: x-search-params 의 embed=1 > raw cookie header > cookies() helper > referer.
+// 가장 신뢰: middleware 가 set 한 x-portal-embed 헤더.
 async function isPreviewEmbed(): Promise<boolean> {
   const h = await headers();
 
-  // 1) middleware 가 set 한 x-search-params 헤더 검사
+  // 1) middleware 가 set 한 단일 헤더
+  if (h.get("x-portal-embed") === "1") return true;
+
+  // 2) x-search-params 의 embed=1
   const search = h.get("x-search-params") ?? "";
   if (search.includes("embed=1")) return true;
 
-  // 2) raw cookie header 직접 검사 — middleware 가 modify 한 cookie 헤더 그대로 봄
+  // 3) raw cookie header
   const cookieHeader = h.get("cookie") ?? "";
   if (/(?:^|;\s*)portal_embed=1(?:;|$)/.test(cookieHeader)) return true;
 
-  // 3) cookies() helper
+  // 4) cookies() helper
   const jar = await cookies();
   if (jar.get("portal_embed")?.value === "1") return true;
 
-  // 4) referer fallback
+  // 5) referer fallback
   const ref = h.get("referer") ?? "";
   try {
     const u = new URL(ref);
