@@ -62,6 +62,13 @@ export default function LoginPage() {
     const p = new URLSearchParams(window.location.search);
     const m = p.get("msg");
     if (m && MSG_MAP[m]) setMsg(MSG_MAP[m]);
+    const next = p.get("next");
+    if (next === "parent" || next === "student") {
+      setMsg("회원 로그인이 필요합니다. 계정이 없으면 회원가입을 진행해 주세요.");
+    }
+    if (m === "no-access") {
+      setMsg("이 페이지에 접근할 권한이 없습니다. 적합한 계정으로 다시 로그인해 주세요.");
+    }
   }, []);
 
   async function onSubmit(e: React.FormEvent) {
