@@ -1,4 +1,4 @@
-import { ArrowLeft, Bell, ChevronRight } from "lucide-react";
+import { ArrowLeft, Bell, ChevronRight, CreditCard } from "lucide-react";
 import PortalTabbar from "../PortalTabbar";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -26,6 +26,23 @@ export default function ParentBilling() {
         <Bell size={20} />
       </div>
       <div className="portal-content">
+        <a
+          href="/parent/billing/cards"
+          className="card"
+          style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", color: "#111" }}
+        >
+          <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--brand-soft)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <CreditCard size={18} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <strong style={{ fontSize: 14 }}>결제 카드</strong>
+            <div style={{ fontSize: 11, color: "#6f7d78", marginTop: 2 }}>
+              자동 결제용 카드 등록·관리
+            </div>
+          </div>
+          <ChevronRight size={16} color="#9ca3af" />
+        </a>
+
         <section className="card billing-card">
           <div className="billing-meta"><span>다음 결제일</span><strong>2026.06.25</strong></div>
           <div className="billing-amount"><span>예상 금액</span><strong>₩ 320,000</strong></div>

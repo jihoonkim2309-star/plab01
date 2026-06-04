@@ -39,6 +39,56 @@ export type PortOnePayment = {
   raw: unknown;
 };
 
+// PortOne V2: 빌링키로 결제 (정기결제 청구).
+// paymentId 는 우리 측 식별자 (보통 invoice.id 사용).
+export async function chargeWithBillingKey(
+  apiSecret: string,
+  args: {
+    paymentId: string;
+    billingKey: string;
+    amount: number;
+    orderName: string;
+    customerId?: string;
+  },
+): Promise<{ ok: boolean; status?: string; pgTxId?: string; raw?: unknown; error?: string }> {
+  try {
+    const res = await fetch(
+      `https://api.portone.io/payments/${encodeURIComponent(args.paymentId)}/billing-key`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `PortOne ${apiSecret}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          billingKey: args.billingKey,
+          orderName: args.orderName,
+          amount: { total: args.amount },
+          currency: "KRW",
+          customer: args.customerId ? { customerId: args.customerId } : undefined,
+        }),
+        cache: "no-store",
+      },
+    );
+    const j = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: ((j.message as string) ?? `HTTP ${res.status}`),
+        raw: j,
+      };
+    }
+    return {
+      ok: true,
+      status: (j.status as string) ?? "PAID",
+      pgTxId: (j.id as string) ?? undefined,
+      raw: j,
+    };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
 // PortOne V2: 단건 결제 조회로 서버 검증.
 // 응답에서 카드 정보·승인번호·영수증 URL 등 풍부한 메타데이터 추출 (POS 매출조회 스타일 상세에 사용).
 export async function fetchPortOnePayment(

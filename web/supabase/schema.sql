@@ -1601,6 +1601,53 @@ create policy psl_parent_own on public.parent_student_links
   using (parent_id = auth.uid())
   with check (parent_id = auth.uid());
 
+-- =====================================================================
+--  22. billing_keys — PortOne 정기결제 빌링키 저장
+--  학부모가 PortOne 결제창에서 카드 등록 → 빌링키(customer_uid) 발급
+--  서버에 빌링키만 저장 (카드정보 X). 매월 cron 으로 빌링키로 자동 청구.
+-- =====================================================================
+create table if not exists public.billing_keys (
+  id                  uuid primary key default gen_random_uuid(),
+  center_id           uuid not null references public.centers(id) on delete cascade,
+  parent_id           uuid not null references public.users(id) on delete cascade,
+  customer_uid        text not null,         -- PortOne 빌링키 식별자
+  card_name           text,                  -- 예: 신한카드
+  card_number_masked  text,                  -- 예: 1234-****-****-5678
+  pg_provider         text,                  -- 예: kcp, tosspayments
+  status              text not null default 'active',  -- active|expired|revoked
+  is_default          boolean not null default true,
+  raw                 jsonb,                 -- PortOne 응답 원본
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now()
+);
+
+create index if not exists billing_keys_parent_idx on public.billing_keys (parent_id);
+create index if not exists billing_keys_center_idx on public.billing_keys (center_id);
+
+alter table public.billing_keys enable row level security;
+
+-- 학부모 본인 카드만 read·write
+drop policy if exists bk_parent_own on public.billing_keys;
+create policy bk_parent_own on public.billing_keys
+  for all
+  using (parent_id = auth.uid())
+  with check (parent_id = auth.uid());
+
+-- 같은 센터 admin/coach 도 가능 (운영 화면에서 조회·관리)
+drop policy if exists bk_admin_all on public.billing_keys;
+create policy bk_admin_all on public.billing_keys
+  for all
+  using (public.is_center_admin(center_id))
+  with check (public.is_center_admin(center_id));
+
+drop trigger if exists billing_keys_touch on public.billing_keys;
+create trigger billing_keys_touch before update on public.billing_keys
+  for each row execute function public.touch_updated_at();
+
+-- invoices 에 청구 시 사용한 빌링키 ref
+alter table public.invoices
+  add column if not exists billing_key_id uuid references public.billing_keys(id) on delete set null;
+
 -- Storage 버킷 (private, 10MB 제한). 멱등.
 insert into storage.buckets (id, name, public, file_size_limit)
 values ('chat-attachments', 'chat-attachments', false, 10485760)
