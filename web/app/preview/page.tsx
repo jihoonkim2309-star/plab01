@@ -4,12 +4,14 @@ import { useState } from "react";
 import { Users, GraduationCap, ClipboardList, Bus, Shield } from "lucide-react";
 import "../portal/portal.css";
 
+// 각 앱은 처음 진입 = 로그인 화면.
+// 사용자가 mockup 안에서 로그인·가입 흐름 그대로 체험 가능.
 const APPS = [
-  { key: "parent", label: "학부모", path: "/parent", icon: Users, color: "#1e794e" },
-  { key: "student", label: "학생", path: "/student", icon: GraduationCap, color: "#2563eb" },
-  { key: "coach", label: "코치", path: "/coach", icon: ClipboardList, color: "#d97706" },
-  { key: "driver", label: "기사", path: "/driver", icon: Bus, color: "#7c3aed" },
-  { key: "admin", label: "어드민", path: "/admin", icon: Shield, color: "#111" },
+  { key: "parent", label: "학부모", path: "/user/login", icon: Users, color: "#1e794e" },
+  { key: "student", label: "학생", path: "/user/login", icon: GraduationCap, color: "#2563eb" },
+  { key: "coach", label: "코치", path: "/staff/login", icon: ClipboardList, color: "#d97706" },
+  { key: "driver", label: "기사", path: "/staff/login", icon: Bus, color: "#7c3aed" },
+  { key: "admin", label: "어드민", path: "/login", icon: Shield, color: "#111" },
 ] as const;
 
 type AppKey = (typeof APPS)[number]["key"];
