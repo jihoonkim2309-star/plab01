@@ -18,7 +18,7 @@ type Device = "phone" | "tablet" | "desktop";
 const DEVICE_SIZE: Record<Device, { w: number; h: number }> = {
   phone: { w: 340, h: 700 },
   tablet: { w: 720, h: 1024 },
-  desktop: { w: 1280, h: 720 },
+  desktop: { w: 1536, h: 960 },
 };
 
 export default function PreviewPage() {
@@ -135,7 +135,7 @@ export default function PreviewPage() {
                 cursor: "pointer",
               }}
             >
-              {d === "phone" ? "📱 폰 (340×700)" : d === "tablet" ? "📲 태블릿 (720×1024)" : "🖥️ 데스크톱 (1280×720)"}
+              {d === "phone" ? "📱 폰 (340×700)" : d === "tablet" ? "📲 태블릿 (720×1024)" : "🖥️ 데스크톱 (1536×960)"}
             </button>
           ))}
         </div>
