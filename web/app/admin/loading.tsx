@@ -1,30 +1,19 @@
 import { SkeletonBox, SkeletonCard } from "./Skeleton";
 
+// generic admin skeleton — 자체 loading.tsx 없는 모든 페이지에 fallback.
+// 페이지 구조 가정 안 함 (단순 head + 큰 콘텐츠 placeholder).
 export default function Loading() {
   return (
     <>
       <div className="page-head">
         <div>
-          <SkeletonBox height={22} width={120} />
+          <SkeletonBox height={22} width={180} />
           <div style={{ marginTop: 6 }}>
-            <SkeletonBox height={14} width={300} />
+            <SkeletonBox height={14} width={280} />
           </div>
         </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14 }}>
-        <SkeletonCard height={180} />
-        <SkeletonCard height={180} />
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginTop: 14 }}>
-        <SkeletonCard height={100} />
-        <SkeletonCard height={100} />
-        <SkeletonCard height={100} />
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginTop: 14 }}>
-        <SkeletonCard height={240} />
-        <SkeletonCard height={240} />
-        <SkeletonCard height={240} />
-      </div>
+      <SkeletonCard height={520} />
     </>
   );
 }
