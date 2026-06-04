@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export type PortalRole = "parent" | "student" | "coach" | "driver";
 
 // /preview iframe 안에서 호출인지 판별.
-// 우선 search params 에 embed=1 이 있으면 embed.
-// fallback: referer 의 pathname 이 /preview.
+// 우선순위: portal_embed cookie (middleware 가 set) > x-search-params 의 embed=1 > referer.
 async function isPreviewEmbed(): Promise<boolean> {
+  const jar = await cookies();
+  if (jar.get("portal_embed")?.value === "1") return true;
   const h = await headers();
   const search = h.get("x-search-params") ?? "";
   if (search.includes("embed=1")) return true;

@@ -6,7 +6,19 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", request.nextUrl.pathname);
   requestHeaders.set("x-search-params", request.nextUrl.search);
-  return NextResponse.next({ request: { headers: requestHeaders } });
+
+  const res = NextResponse.next({ request: { headers: requestHeaders } });
+
+  // /preview iframe 안에서 embed=1 진입 시 cookie set → 같은 origin 내
+  // 후속 navigation 도 embed 모드 유지
+  if (request.nextUrl.searchParams.get("embed") === "1") {
+    res.cookies.set("portal_embed", "1", {
+      maxAge: 60 * 60,
+      path: "/",
+      sameSite: "lax",
+    });
+  }
+  return res;
 }
 
 export const config = {
