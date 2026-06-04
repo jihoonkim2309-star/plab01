@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Users, GraduationCap, ClipboardList, Bus } from "lucide-react";
+import { Users, GraduationCap, ClipboardList, Bus, Shield } from "lucide-react";
 import "../portal/portal.css";
 
 const APPS = [
@@ -9,19 +9,28 @@ const APPS = [
   { key: "student", label: "학생", path: "/student", icon: GraduationCap, color: "#2563eb" },
   { key: "coach", label: "코치", path: "/coach", icon: ClipboardList, color: "#d97706" },
   { key: "driver", label: "기사", path: "/driver", icon: Bus, color: "#7c3aed" },
+  { key: "admin", label: "어드민", path: "/admin", icon: Shield, color: "#111" },
 ] as const;
 
 type AppKey = (typeof APPS)[number]["key"];
-type Device = "phone" | "tablet";
+type Device = "phone" | "tablet" | "desktop";
 
 const DEVICE_SIZE: Record<Device, { w: number; h: number }> = {
   phone: { w: 340, h: 700 },
   tablet: { w: 720, h: 1024 },
+  desktop: { w: 1280, h: 720 },
 };
 
 export default function PreviewPage() {
   const [activeApp, setActiveApp] = useState<AppKey>("parent");
   const [device, setDevice] = useState<Device>("phone");
+
+  function onPickApp(k: AppKey) {
+    setActiveApp(k);
+    if (k === "admin") setDevice("desktop");
+    else if (k === "coach") setDevice("tablet");
+    else setDevice("phone");
+  }
 
   const app = APPS.find((a) => a.key === activeApp)!;
   const size = DEVICE_SIZE[device];
@@ -71,7 +80,7 @@ export default function PreviewPage() {
               <button
                 key={a.key}
                 type="button"
-                onClick={() => setActiveApp(a.key)}
+                onClick={() => onPickApp(a.key)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -104,7 +113,12 @@ export default function PreviewPage() {
             justifyContent: "center",
           }}
         >
-          {(["phone", "tablet"] as Device[]).map((d) => (
+          {(activeApp === "admin"
+            ? (["desktop"] as Device[])
+            : activeApp === "coach"
+              ? (["tablet", "phone"] as Device[])
+              : (["phone", "tablet"] as Device[])
+          ).map((d) => (
             <button
               key={d}
               type="button"
@@ -121,7 +135,7 @@ export default function PreviewPage() {
                 cursor: "pointer",
               }}
             >
-              {d === "phone" ? "📱 폰 (340×700)" : "📲 태블릿 (720×1024)"}
+              {d === "phone" ? "📱 폰 (340×700)" : d === "tablet" ? "📲 태블릿 (720×1024)" : "🖥️ 데스크톱 (1280×720)"}
             </button>
           ))}
         </div>

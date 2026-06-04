@@ -47,6 +47,11 @@
   border-radius: 30px;
   padding: 16px;
 }
+.mockup-desktop {
+  border-radius: 14px;
+  padding: 10px 10px 22px;
+  background: #2a2a2a;
+}
 
 .mockup-notch {
   position: absolute;
@@ -60,6 +65,7 @@
   z-index: 2;
 }
 .mockup-tablet .mockup-notch { display: none; }
+.mockup-desktop .mockup-notch { display: none; }
 
 .mockup-home {
   position: absolute;
@@ -74,6 +80,13 @@
   z-index: 2;
 }
 .mockup-tablet .mockup-home { display: none; }
+.mockup-desktop .mockup-home {
+  width: 80px;
+  height: 14px;
+  background: #444;
+  border-radius: 2px;
+  bottom: 4px;
+}
 
 .mockup-screen {
   width: 100%;
@@ -86,6 +99,7 @@
   flex-direction: column;
 }
 .mockup-tablet .mockup-screen { border-radius: 18px; }
+.mockup-desktop .mockup-screen { border-radius: 4px; }
 
 /* 모바일 너비 (실 디바이스) — frame 제거 */
 @media (max-width: 480px) {
