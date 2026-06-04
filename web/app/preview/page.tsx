@@ -115,9 +115,7 @@ export default function PreviewPage() {
         >
           {(activeApp === "admin"
             ? (["desktop"] as Device[])
-            : activeApp === "coach"
-              ? (["tablet", "phone"] as Device[])
-              : (["phone", "tablet"] as Device[])
+            : (["phone", "tablet"] as Device[])
           ).map((d) => (
             <button
               key={d}
