@@ -18,6 +18,8 @@ const LABEL: Record<string, string> = {
   rejected: "반려",
 };
 
+import type { ReactNode } from "react";
+
 export type LinkRow = {
   id: string;
   status: string;
@@ -25,6 +27,8 @@ export type LinkRow = {
   studentName: string | null;
   /** 학생 매칭 안 됨 (학부모 신청 정보) — 학생 이름 아래에 작게 표시 */
   studentNote?: string | null;
+  /** 학생 이름 옆 inline 액션 (예: 매칭 모달 버튼) */
+  studentAction?: ReactNode;
   whoName: string | null;
   whoSub: string | null;
   createdAt?: string | null;
@@ -173,21 +177,26 @@ export default function LinksView({
                   />
                 </td>
                 <td>
-                  {r.studentId && r.studentName ? (
-                    <Link
-                      href={`/admin/students?student=${r.studentId}`}
-                      style={{ color: "var(--text)", fontWeight: 900 }}
-                    >
-                      {r.studentName}
-                    </Link>
-                  ) : (
-                    <strong>{r.studentName ?? "-"}</strong>
-                  )}
-                  {r.studentNote && (
-                    <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>
-                      {r.studentNote}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ flex: 1 }}>
+                      {r.studentId && r.studentName ? (
+                        <Link
+                          href={`/admin/students?student=${r.studentId}`}
+                          style={{ color: "var(--text)", fontWeight: 900 }}
+                        >
+                          {r.studentName}
+                        </Link>
+                      ) : (
+                        <strong>{r.studentName ?? "-"}</strong>
+                      )}
+                      {r.studentNote && (
+                        <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>
+                          {r.studentNote}
+                        </div>
+                      )}
                     </div>
-                  )}
+                    {r.studentAction}
+                  </div>
                 </td>
                 <td>
                   {r.whoName ?? "-"}

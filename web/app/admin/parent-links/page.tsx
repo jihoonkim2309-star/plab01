@@ -1,5 +1,6 @@
 import { requireCenter } from "@/lib/center";
 import LinksView, { type LinkRow } from "../LinksView";
+import MatchModal from "./MatchModal";
 
 export default async function ParentLinksPage({
   searchParams,
@@ -49,7 +50,6 @@ export default async function ParentLinksPage({
   }
 
   const rows: LinkRow[] = raw.map((r) => {
-    // 학생이 매칭 안 됨 → 학부모 신청 정보 표시
     const reqMeta = !r.student_id && (r.requested_school || r.requested_grade)
       ? `${r.requested_school ?? ""}${r.requested_school && r.requested_grade ? " · " : ""}${r.requested_grade ?? ""}`
       : null;
@@ -61,6 +61,14 @@ export default async function ParentLinksPage({
       studentNote: !r.student_id
         ? `매칭 필요${reqMeta ? ` · ${reqMeta}` : ""}${r.relation ? ` · (${r.relation})` : ""}`
         : null,
+      studentAction: !r.student_id ? (
+        <MatchModal
+          linkId={r.id}
+          initialName={r.requested_name}
+          initialSchool={r.requested_school}
+          initialGrade={r.requested_grade}
+        />
+      ) : null,
       whoName: r.parent?.name ?? null,
       whoSub: r.parent?.email ?? null,
       createdAt: r.created_at,

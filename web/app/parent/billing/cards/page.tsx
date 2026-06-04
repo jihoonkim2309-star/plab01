@@ -1,4 +1,4 @@
-import { ArrowLeft, Bell, CreditCard, Plus, Star, Trash2 } from "lucide-react";
+import { ArrowLeft, Bell, CheckCircle2, CreditCard, Plus, Star, Trash2 } from "lucide-react";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import PortalTabbar from "../../PortalTabbar";
@@ -32,7 +32,12 @@ async function fetchCards(): Promise<Card[]> {
   return (data ?? []) as Card[];
 }
 
-export default async function ParentCards() {
+export default async function ParentCards({
+  searchParams,
+}: {
+  searchParams: Promise<{ msg?: string }>;
+}) {
+  const { msg } = await searchParams;
   const cards = await fetchCards();
   return (
     <>
@@ -47,6 +52,17 @@ export default async function ParentCards() {
         <Bell size={20} />
       </div>
       <div className="portal-content">
+        {msg === "registered" && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: 12, background: "var(--brand-soft, #d8ecdf)",
+            color: "var(--brand, #1e794e)", borderRadius: 10,
+            marginBottom: 12, fontSize: 13, fontWeight: 600,
+          }}>
+            <CheckCircle2 size={18} />
+            카드가 등록되었습니다. 다음 청구일부터 자동 결제됩니다.
+          </div>
+        )}
         <p style={{ fontSize: 12, color: "#6f7d78", marginBottom: 10 }}>
           등록된 카드로 매월 자동 결제됩니다. 카드 정보는 PortOne 이 안전하게 보관하며, 우리는 토큰만 갖습니다.
         </p>
