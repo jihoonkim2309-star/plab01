@@ -41,7 +41,8 @@ export async function setActiveCenter(formData: FormData) {
     maxAge: 60 * 60 * 24 * 365,
   });
   revalidatePath("/admin", "layout");
-  redirect("/admin");
+  // search 변경 → 클라이언트 GlobalLoading 의 useEffect 가 발화 → spinner 즉시 해제
+  redirect(`/admin?t=${Date.now()}`);
 }
 
 // 슈퍼어드민 — 활성 지점 해제 (대시보드 빈 상태로 돌아감)
@@ -62,5 +63,6 @@ export async function unsetActiveCenter() {
   const jar = await cookies();
   jar.delete(ACTIVE_CENTER_COOKIE);
   revalidatePath("/admin", "layout");
-  redirect("/admin");
+  // search 변경 → 클라이언트 GlobalLoading 의 useEffect 가 발화 → spinner 즉시 해제
+  redirect(`/admin?t=${Date.now()}`);
 }

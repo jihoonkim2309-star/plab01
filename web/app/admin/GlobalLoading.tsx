@@ -61,10 +61,11 @@ export default function GlobalLoading() {
     };
   }, []);
 
-  // 너무 오래 걸리면 사용자가 다른 동작도 못 하니 30초 후 자동 해제 (안전장치)
+  // 같은 path redirect 등 useEffect 발화 안 되는 케이스를 위해 3초 자동 해제.
+  // 더 길어도 사용자 입장에선 spinner 무한 — 짧게 잡고 stale 화면 노출이 낫다.
   useEffect(() => {
     if (!show) return;
-    const t = setTimeout(() => setShow(false), 30000);
+    const t = setTimeout(() => setShow(false), 3000);
     return () => clearTimeout(t);
   }, [show]);
 
