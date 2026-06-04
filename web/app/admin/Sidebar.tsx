@@ -208,16 +208,8 @@ export default function Sidebar({
             router.refresh();
           },
         )
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "inquiry_reads" },
-          () => { debouncedLoad(); router.refresh(); },
-        )
-        .on(
-          "postgres_changes",
-          { event: "UPDATE", schema: "public", table: "inquiry_reads" },
-          () => { debouncedLoad(); router.refresh(); },
-        )
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "inquiry_reads" }, debouncedLoad)
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "inquiry_reads" }, debouncedLoad)
         .subscribe();
     })();
 
