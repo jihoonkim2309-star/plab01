@@ -48,14 +48,33 @@ export default function UserLogin() {
   return (
     <>
       <div style={{
-        flex: 1, padding: "24px",
-        display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
+        flex: 1, padding: "20px 24px 24px",
+        display: "flex", flexDirection: "column", alignItems: "center",
         background: "linear-gradient(180deg, #f6faf8 0%, #fff 60%)",
+        position: "relative",
       }}>
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <ShuttleCockIllust />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/planb-logo.svg" alt="PlanB" style={{ height: 22, marginBottom: 4 }} />
+        <div style={{ position: "relative", width: 200, height: 160, marginBottom: 4 }}>
+          <div style={{
+            position: "absolute", inset: "-15%",
+            background: "radial-gradient(circle, rgba(40,199,111,0.18) 0%, rgba(40,199,111,0.06) 40%, transparent 70%)",
+            filter: "blur(14px)",
+          }} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/planb-logo.svg" alt="PlanB" style={{ height: 26, marginBottom: 10, marginTop: 6 }} />
+          <img
+            src="/login-hero.svg"
+            alt=""
+            aria-hidden
+            style={{
+              position: "relative",
+              width: "100%", height: "100%", objectFit: "contain",
+              WebkitMaskImage: "radial-gradient(ellipse 70% 60% at center, black 55%, transparent 95%)",
+              maskImage: "radial-gradient(ellipse 70% 60% at center, black 55%, transparent 95%)",
+            }}
+          />
+        </div>
+        <div style={{ textAlign: "center", marginBottom: 18 }}>
           <h1 style={{ fontSize: 17, fontWeight: 800 }}>학부모·학생 로그인</h1>
           <p style={{ fontSize: 12, color: "#6f7d78", marginTop: 4 }}>
             자녀(본인) 수강·결제·리포트 확인
@@ -100,29 +119,6 @@ export default function UserLogin() {
         </form>
       </div>
     </>
-  );
-}
-
-// 셔틀콕 일러스트 (인라인 SVG, lucide 에 없음). 그라데이션 원 + 셔틀콕.
-function ShuttleCockIllust() {
-  return (
-    <svg width="76" height="76" viewBox="0 0 80 80" fill="none" style={{ display: "block", margin: "0 auto" }}>
-      <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#d8ecdf" />
-          <stop offset="100%" stopColor="#a5d6b8" />
-        </linearGradient>
-      </defs>
-      <circle cx="40" cy="40" r="38" fill="url(#bg)" />
-      {/* 셔틀콕 — 코르크 (하단) */}
-      <ellipse cx="40" cy="56" rx="9" ry="6.5" fill="#fff" stroke="#1e794e" strokeWidth="2" />
-      {/* 깃털 (콘 모양) */}
-      <path d="M 31 54 L 22 28 L 27 32 L 31 52 Z" fill="#fff" stroke="#1e794e" strokeWidth="1.6" strokeLinejoin="round" />
-      <path d="M 35 54 L 32 22 L 36 26 L 36.5 53 Z" fill="#fff" stroke="#1e794e" strokeWidth="1.6" strokeLinejoin="round" />
-      <path d="M 40 54 L 40 18 L 44 22 L 44 53 Z" fill="#fff" stroke="#1e794e" strokeWidth="1.6" strokeLinejoin="round" />
-      <path d="M 45 54 L 48 22 L 52 26 L 48.5 53 Z" fill="#fff" stroke="#1e794e" strokeWidth="1.6" strokeLinejoin="round" />
-      <path d="M 49 54 L 58 28 L 53 32 L 49 52 Z" fill="#fff" stroke="#1e794e" strokeWidth="1.6" strokeLinejoin="round" />
-    </svg>
   );
 }
 
