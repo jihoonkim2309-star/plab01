@@ -67,7 +67,7 @@ export default function SelectCenterDashboard({
               revenue: 0,
             };
             return (
-              <form action={setActiveCenter} key={c.id} className="select-center-card-form">
+              <form action={setActiveCenter} key={c.id} className="select-center-card-form" data-no-loading="true">
                 <input type="hidden" name="center_id" value={c.id} />
                 <button type="submit" className="select-center-card">
                   <div className="scc-head">
