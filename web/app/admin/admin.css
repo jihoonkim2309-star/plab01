@@ -2979,3 +2979,10 @@ tr[data-bulk-hover] td {
   display: inline-flex;
   align-items: center;
 }
+
+/* Skeleton pulse 애니메이션 */
+@keyframes sk-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.sk-pulse { animation: sk-pulse 1.4s ease-in-out infinite; }
