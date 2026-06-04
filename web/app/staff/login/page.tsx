@@ -48,17 +48,22 @@ export default function StaffLogin() {
   }
 
   return (
-    <div style={{ flex: 1, padding: "40px 24px", display: "flex", flexDirection: "column", justifyContent: "center", background: "#fff" }}>
-      <div style={{ textAlign: "center", marginBottom: 28 }}>
+    <div style={{
+      flex: 1, padding: "24px",
+      display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
+      background: "linear-gradient(180deg, #fef8eb 0%, #fff 60%)",
+    }}>
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <ShuttleCockIllust />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/planb-logo.svg" alt="PlanB" style={{ height: 28, marginBottom: 14 }} />
-        <h1 style={{ fontSize: 18, fontWeight: 800 }}>관리자 로그인</h1>
+        <img src="/planb-logo.svg" alt="PlanB" style={{ height: 26, marginBottom: 10, marginTop: 6 }} />
+        <h1 style={{ fontSize: 17, fontWeight: 800 }}>관리자 로그인</h1>
         <p style={{ fontSize: 12, color: "#6f7d78", marginTop: 4 }}>
           지점관리자·코치·기사
         </p>
       </div>
 
-      <form onSubmit={onSubmit}>
+      <form onSubmit={onSubmit} style={{ width: "100%" }}>
         <Field label="이메일">
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="email@example.com" />
         </Field>
@@ -91,6 +96,26 @@ export default function StaffLogin() {
         </div>
       </form>
     </div>
+  );
+}
+
+function ShuttleCockIllust() {
+  return (
+    <svg width="76" height="76" viewBox="0 0 80 80" fill="none" style={{ display: "block", margin: "0 auto" }}>
+      <defs>
+        <linearGradient id="bg-staff" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#fde68a" />
+          <stop offset="100%" stopColor="#fbbf24" />
+        </linearGradient>
+      </defs>
+      <circle cx="40" cy="40" r="38" fill="url(#bg-staff)" />
+      <ellipse cx="40" cy="56" rx="9" ry="6.5" fill="#fff" stroke="#92400e" strokeWidth="2" />
+      <path d="M 31 54 L 22 28 L 27 32 L 31 52 Z" fill="#fff" stroke="#92400e" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M 35 54 L 32 22 L 36 26 L 36.5 53 Z" fill="#fff" stroke="#92400e" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M 40 54 L 40 18 L 44 22 L 44 53 Z" fill="#fff" stroke="#92400e" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M 45 54 L 48 22 L 52 26 L 48.5 53 Z" fill="#fff" stroke="#92400e" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M 49 54 L 58 28 L 53 32 L 49 52 Z" fill="#fff" stroke="#92400e" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
   );
 }
 
