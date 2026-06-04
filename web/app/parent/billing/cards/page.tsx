@@ -1,19 +1,46 @@
-import { ArrowLeft, Bell, ChevronRight, CreditCard, Plus } from "lucide-react";
+import { ArrowLeft, Bell, CreditCard, Plus, Star, Trash2 } from "lucide-react";
+import { headers } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import PortalTabbar from "../../PortalTabbar";
+import { revokeCard, setDefaultCard } from "./actions";
 
-// Phase 1: mock 카드 목록 (실 DB 연동은 다음 phase)
-const MOCK_CARDS: {
+type Card = {
   id: string;
-  cardName: string;
-  cardNumberMasked: string;
-  isDefault: boolean;
-}[] = [];
+  card_name: string | null;
+  card_number_masked: string | null;
+  is_default: boolean;
+  status: string;
+  created_at: string;
+};
 
-export default function ParentCards() {
+async function fetchCards(): Promise<Card[]> {
+  const h = await headers();
+  const ref = h.get("referer") ?? "";
+  if (ref.includes("/preview")) return []; // embed → mock 빈 상태
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return [];
+  const { data } = await supabase
+    .from("billing_keys")
+    .select("id, card_name, card_number_masked, is_default, status, created_at")
+    .eq("parent_id", session.user.id)
+    .neq("status", "revoked")
+    .order("is_default", { ascending: false })
+    .order("created_at", { ascending: false });
+  return (data ?? []) as Card[];
+}
+
+export default async function ParentCards() {
+  const cards = await fetchCards();
   return (
     <>
       <div className="portal-topbar">
-        <a href="/parent/billing" style={{ color: "#fff", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", fontSize: 14 }}>
+        <a
+          href="/parent/billing"
+          style={{ color: "#fff", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", fontSize: 14 }}
+        >
           <ArrowLeft size={18} /> 뒤로
         </a>
         <h1 style={{ flex: 1, textAlign: "center" }}>결제 카드</h1>
@@ -21,10 +48,10 @@ export default function ParentCards() {
       </div>
       <div className="portal-content">
         <p style={{ fontSize: 12, color: "#6f7d78", marginBottom: 10 }}>
-          등록된 카드로 매월 자동 결제됩니다. 카드 번호는 PortOne 이 안전하게 보관하며, 우리는 토큰만 갖습니다.
+          등록된 카드로 매월 자동 결제됩니다. 카드 정보는 PortOne 이 안전하게 보관하며, 우리는 토큰만 갖습니다.
         </p>
 
-        {MOCK_CARDS.length === 0 ? (
+        {cards.length === 0 ? (
           <section className="card" style={{ padding: 24, textAlign: "center" }}>
             <CreditCard size={42} color="#9ca3af" style={{ margin: "0 auto 10px" }} />
             <strong style={{ display: "block", fontSize: 14 }}>등록된 카드가 없습니다</strong>
@@ -34,22 +61,36 @@ export default function ParentCards() {
           </section>
         ) : (
           <section className="card" style={{ padding: 0 }}>
-            {MOCK_CARDS.map((c) => (
-              <a key={c.id} href={`/parent/billing/cards/${c.id}`} className="list-row" style={{ padding: "14px 16px" }}>
-                <div style={{ width: 44, height: 30, borderRadius: 4, background: "linear-gradient(120deg, #1e794e, #2a9162)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700 }}>
+            {cards.map((c) => (
+              <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderTop: "1px solid #f1f5f4" }}>
+                <div style={{ width: 44, height: 30, borderRadius: 4, background: c.is_default ? "linear-gradient(120deg, #1e794e, #2a9162)" : "#9ca3af", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700 }}>
                   CARD
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div className="list-row-title">{c.cardName}</div>
-                  <div className="list-row-sub">{c.cardNumberMasked}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="list-row-title">{c.card_name ?? "카드"}</div>
+                  <div className="list-row-sub" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {c.card_number_masked ?? "**** **** **** ****"}
+                  </div>
                 </div>
-                {c.isDefault && (
-                  <span style={{ fontSize: 10, fontWeight: 800, color: "var(--brand)", padding: "2px 6px", background: "var(--brand-soft)", borderRadius: 4 }}>
-                    기본
+                {c.is_default ? (
+                  <span style={{ fontSize: 10, fontWeight: 800, color: "var(--brand)", padding: "2px 6px", background: "var(--brand-soft)", borderRadius: 4, display: "inline-flex", alignItems: "center", gap: 2 }}>
+                    <Star size={10} /> 기본
                   </span>
+                ) : (
+                  <form action={setDefaultCard}>
+                    <input type="hidden" name="id" value={c.id} />
+                    <button type="submit" style={{ background: "transparent", border: 0, color: "#6f7d78", fontSize: 10, fontWeight: 700, cursor: "pointer", padding: "4px 8px" }}>
+                      기본으로
+                    </button>
+                  </form>
                 )}
-                <ChevronRight size={14} color="#9ca3af" />
-              </a>
+                <form action={revokeCard}>
+                  <input type="hidden" name="id" value={c.id} />
+                  <button type="submit" aria-label="해지" style={{ background: "transparent", border: 0, color: "#b42318", cursor: "pointer", padding: 4 }}>
+                    <Trash2 size={14} />
+                  </button>
+                </form>
+              </div>
             ))}
           </section>
         )}
@@ -57,16 +98,7 @@ export default function ParentCards() {
         <a
           href="/parent/billing/cards/new"
           className="card"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            color: "var(--brand)",
-            textDecoration: "none",
-            fontWeight: 700,
-            justifyContent: "center",
-            marginTop: 12,
-          }}
+          style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--brand)", textDecoration: "none", fontWeight: 700, justifyContent: "center", marginTop: 12 }}
         >
           <Plus size={18} />
           카드 등록
