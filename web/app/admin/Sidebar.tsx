@@ -20,6 +20,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { NAV, type NavGroup } from "./nav";
 import { playChatDing } from "./chat-sound";
 
@@ -145,6 +146,7 @@ export default function Sidebar({
   hasActiveCenter?: boolean;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParamsHook = useSearchParams();
   const searchParams = searchParamsHook ?? new URLSearchParams();
 
@@ -202,10 +204,20 @@ export default function Sidebar({
               (role === "coach" && (sender === "admin" || sender === "coach"));
             if (!isMine) playChatDing();
             debouncedLoad();
+            // 새 메시지 도착 시 현재 페이지 RSC 도 재실행 → 채팅·문의 페이지가 stale 안 됨
+            router.refresh();
           },
         )
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "inquiry_reads" }, debouncedLoad)
-        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "inquiry_reads" }, debouncedLoad)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "inquiry_reads" },
+          () => { debouncedLoad(); router.refresh(); },
+        )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "inquiry_reads" },
+          () => { debouncedLoad(); router.refresh(); },
+        )
         .subscribe();
     })();
 
