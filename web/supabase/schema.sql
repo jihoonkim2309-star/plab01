@@ -1648,6 +1648,61 @@ create trigger billing_keys_touch before update on public.billing_keys
 alter table public.invoices
   add column if not exists billing_key_id uuid references public.billing_keys(id) on delete set null;
 
+-- =====================================================================
+--  23. 회원 (parent/student) 가입 즉시 role 부여
+--  관리자 (admin/coach/driver) 는 기존대로 applying_role 만 저장 → super_admin 승인 후 role.
+--  회원은 admin 승인 불필요 — 가입 시점에 role 즉시 부여.
+-- =====================================================================
+alter table public.users drop constraint if exists users_applying_role_check;
+alter table public.users add constraint users_applying_role_check
+  check (applying_role is null or applying_role in ('admin','coach','driver','parent','student'));
+
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_apply uuid;
+  v_apply_role text;
+  v_immediate user_role;
+begin
+  begin
+    v_apply := nullif(new.raw_user_meta_data->>'applying_center_id', '')::uuid;
+  exception when others then
+    v_apply := null;
+  end;
+  v_apply_role := nullif(new.raw_user_meta_data->>'applying_role', '');
+  if v_apply_role not in ('admin','coach','driver','parent','student') then v_apply_role := null; end if;
+
+  -- 회원 (parent/student) 은 즉시 role + center_id 부여. admin 승인 X.
+  if v_apply_role in ('parent','student') then
+    v_immediate := v_apply_role::user_role;
+  end if;
+
+  insert into public.users (id, email, name, phone, applying_center_id, applying_role, role, center_id)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'name', new.email),
+    new.raw_user_meta_data->>'phone',
+    case when v_immediate is null then v_apply else null end,
+    case when v_immediate is null then v_apply_role else null end,
+    v_immediate,
+    case when v_immediate is not null then v_apply else null end
+  )
+  on conflict (id) do update
+    set name = coalesce(public.users.name, excluded.name),
+        phone = coalesce(public.users.phone, excluded.phone),
+        applying_center_id = coalesce(public.users.applying_center_id, excluded.applying_center_id),
+        applying_role = coalesce(public.users.applying_role, excluded.applying_role),
+        role = coalesce(public.users.role, excluded.role),
+        center_id = coalesce(public.users.center_id, excluded.center_id);
+
+  update auth.users
+     set email_confirmed_at = coalesce(email_confirmed_at, now())
+   where id = new.id;
+
+  return new;
+end $$;
+
 -- Storage 버킷 (private, 10MB 제한). 멱등.
 insert into storage.buckets (id, name, public, file_size_limit)
 values ('chat-attachments', 'chat-attachments', false, 10485760)

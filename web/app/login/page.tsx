@@ -9,6 +9,27 @@ const MSG_MAP: Record<string, string> = {
   inactive: "오랫동안 활동이 없어 자동 로그아웃되었습니다. 다시 로그인해 주세요.",
 };
 
+// 로그인 후 사용자의 role 에 따라 적합한 랜딩 경로 결정.
+async function landingForCurrentUser(
+  supabase: ReturnType<typeof createClient>,
+): Promise<string> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return "/login";
+  const { data } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", session.user.id)
+    .single();
+  const role = (data as { role?: string } | null)?.role ?? null;
+  if (role === "parent") return "/parent";
+  if (role === "student") return "/student";
+  if (role === "coach") return "/coach";
+  if (role === "driver") return "/driver";
+  return "/admin";
+}
+
 export default function LoginPage() {
   const supabase = createClient();
 
@@ -55,17 +76,15 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      // 다른 곳 활성 세션 있나 확인
       const check = await fetch("/api/auth/take-session").then((r) => r.json());
       if (check.needs_confirm) {
         setConfirmTakeover(true);
         setLoading(false);
         return;
       }
-      // 세션 발급 + admin 으로
       await fetch("/api/auth/take-session?force=1", { method: "POST" });
       document.cookie = "active_center=; max-age=0; path=/";
-      window.location.assign("/admin");
+      window.location.assign(await landingForCurrentUser(supabase));
     } else if (mode === "reset") {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
@@ -126,7 +145,7 @@ export default function LoginPage() {
     setLoading(true);
     await fetch("/api/auth/take-session?force=1", { method: "POST" });
     document.cookie = "active_center=; max-age=0; path=/";
-    window.location.assign("/admin");
+    window.location.assign(await landingForCurrentUser(supabase));
   }
 
   async function onTakeoverCancel() {
@@ -492,13 +511,13 @@ export default function LoginPage() {
                   비밀번호를 잊으셨나요?{" "}
                   <span className="font-semibold text-[#1e794e]">재설정</span>
                 </button>
-                <button
-                  onClick={() => { setMode("signup"); setMsg(null); }}
+                <a
+                  href="/signup"
                   className="text-sm text-zinc-500 hover:text-[#1e794e] transition"
                 >
-                  관리자 계정이 없으신가요?{" "}
+                  계정이 없으신가요?{" "}
                   <span className="font-semibold text-[#1e794e]">회원가입</span>
-                </button>
+                </a>
               </>
             )}
             {mode === "signup" && (
