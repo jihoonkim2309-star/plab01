@@ -49,7 +49,9 @@ export default function StaffLogin() {
 
   return (
     <div style={{
-      flex: 1, padding: "56px 24px 24px",
+      flex: 1,
+      paddingTop: "calc(var(--safe-top, 44px) + 24px)",
+      paddingLeft: 24, paddingRight: 24, paddingBottom: 24,
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start",
       background: "linear-gradient(180deg, #fef8eb 0%, #fff 60%)",
       overflowY: "auto",

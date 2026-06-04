@@ -97,7 +97,11 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  /* 노치 영역 safe — 콘텐츠가 노치 아래에서 시작 (CSS 변수로 페이지가 활용) */
+  --safe-top: 44px;
 }
+.mockup-tablet .mockup-screen,
+.mockup-desktop .mockup-screen { --safe-top: 0px; }
 .mockup-tablet .mockup-screen { border-radius: 18px; }
 .mockup-desktop .mockup-screen { border-radius: 4px; }
 
