@@ -22,16 +22,22 @@ async function isPreviewEmbed(): Promise<boolean> {
 }
 
 // 포털 페이지 인증 가드. embed (preview iframe) 면 가드 skip — mock 그대로.
-// 미인증 → /login (또는 /signup 안내). role 불일치 → /login?msg=no-access.
+// 미인증 시 role 따라 redirect:
+//   parent/student → /user/login
+//   coach/driver → /staff/login
+// role 불일치 → /user/login or /staff/login (해당 그룹 안내)
 export async function requirePortal(role: PortalRole) {
   const embed = await isPreviewEmbed();
   if (embed) return { isEmbed: true as const };
+
+  const loginPath =
+    role === "parent" || role === "student" ? "/user/login" : "/staff/login";
 
   const supabase = await createClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (!session) redirect(`/login?next=${role}`);
+  if (!session) redirect(loginPath);
 
   const { data: profile } = await supabase
     .from("users")
@@ -40,7 +46,7 @@ export async function requirePortal(role: PortalRole) {
     .single();
   const userRole = (profile as { role?: string } | null)?.role ?? null;
   if (userRole !== role) {
-    redirect("/login?msg=no-access");
+    redirect(`${loginPath}?msg=no-access`);
   }
   return {
     isEmbed: false as const,
