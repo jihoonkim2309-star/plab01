@@ -4,9 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 
 export type PortalRole = "parent" | "student" | "coach" | "driver";
 
-// /preview iframe 안에서 호출인지 판별 — referer 의 path 가 /preview 면 embed.
+// /preview iframe 안에서 호출인지 판별.
+// 우선 search params 에 embed=1 이 있으면 embed.
+// fallback: referer 의 pathname 이 /preview.
 async function isPreviewEmbed(): Promise<boolean> {
   const h = await headers();
+  const search = h.get("x-search-params") ?? "";
+  if (search.includes("embed=1")) return true;
   const ref = h.get("referer") ?? "";
   try {
     const u = new URL(ref);

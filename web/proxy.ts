@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", request.nextUrl.pathname);
+  requestHeaders.set("x-search-params", request.nextUrl.search);
   return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
