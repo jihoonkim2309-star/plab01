@@ -23,6 +23,8 @@ export type LinkRow = {
   status: string;
   studentId?: string | null;
   studentName: string | null;
+  /** 학생 매칭 안 됨 (학부모 신청 정보) — 학생 이름 아래에 작게 표시 */
+  studentNote?: string | null;
   whoName: string | null;
   whoSub: string | null;
   createdAt?: string | null;
@@ -180,6 +182,11 @@ export default function LinksView({
                     </Link>
                   ) : (
                     <strong>{r.studentName ?? "-"}</strong>
+                  )}
+                  {r.studentNote && (
+                    <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>
+                      {r.studentNote}
+                    </div>
                   )}
                 </td>
                 <td>

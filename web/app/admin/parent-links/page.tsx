@@ -13,7 +13,7 @@ export default async function ParentLinksPage({
   let listQuery = supabase
     .from("parent_student_links")
     .select(
-      "id, status, created_at, student_id, students(name), parent:users!parent_id(name, email)",
+      "id, status, created_at, student_id, requested_name, requested_school, requested_grade, relation, students(name), parent:users!parent_id(name, email)",
     )
     .eq("center_id", cid)
     .order("created_at", { ascending: false });
@@ -29,31 +29,43 @@ export default async function ParentLinksPage({
     status: string;
     created_at: string | null;
     student_id: string | null;
+    requested_name: string | null;
+    requested_school: string | null;
+    requested_grade: string | null;
+    relation: string | null;
     students: { name: string } | null;
     parent: { name: string | null; email: string | null } | null;
   };
 
-  // 검색은 클라이언트(서버) JS 측에서 join 결과로 필터 — Supabase or() 가 nested 관계에는 안 먹힘
   let raw = (listRes.data ?? []) as unknown as RawRow[];
   if (q) {
     const needle = q.toLowerCase();
     raw = raw.filter((r) => {
-      const s = (r.students?.name ?? "").toLowerCase();
+      const s = (r.students?.name ?? r.requested_name ?? "").toLowerCase();
       const pn = (r.parent?.name ?? "").toLowerCase();
       const pe = (r.parent?.email ?? "").toLowerCase();
       return s.includes(needle) || pn.includes(needle) || pe.includes(needle);
     });
   }
 
-  const rows: LinkRow[] = raw.map((r) => ({
-    id: r.id,
-    status: r.status,
-    studentId: r.student_id,
-    studentName: r.students?.name ?? null,
-    whoName: r.parent?.name ?? null,
-    whoSub: r.parent?.email ?? null,
-    createdAt: r.created_at,
-  }));
+  const rows: LinkRow[] = raw.map((r) => {
+    // 학생이 매칭 안 됨 → 학부모 신청 정보 표시
+    const reqMeta = !r.student_id && (r.requested_school || r.requested_grade)
+      ? `${r.requested_school ?? ""}${r.requested_school && r.requested_grade ? " · " : ""}${r.requested_grade ?? ""}`
+      : null;
+    return {
+      id: r.id,
+      status: r.status,
+      studentId: r.student_id,
+      studentName: r.students?.name ?? r.requested_name ?? null,
+      studentNote: !r.student_id
+        ? `매칭 필요${reqMeta ? ` · ${reqMeta}` : ""}${r.relation ? ` · (${r.relation})` : ""}`
+        : null,
+      whoName: r.parent?.name ?? null,
+      whoSub: r.parent?.email ?? null,
+      createdAt: r.created_at,
+    };
+  });
 
   const all = (totalsRes.data ?? []) as { status: string }[];
   const totals = {
