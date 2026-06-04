@@ -69,7 +69,7 @@ export default function SidebarWorkspace({
       </button>
       {open && (
         <div className="sidebar-workspace-dropdown" role="menu">
-          <form action={unsetActiveCenter}>
+          <form action={unsetActiveCenter} data-no-loading="true">
             <button
               type="submit"
               className={`sw-item${!activeCenterId ? " sw-item-active" : ""}`}
@@ -88,7 +88,7 @@ export default function SidebarWorkspace({
           </form>
           <div className="profile-dropdown-divider" />
           {centers.map((c) => (
-            <form action={setActiveCenter} key={c.id}>
+            <form action={setActiveCenter} data-no-loading="true" key={c.id}>
               <input type="hidden" name="center_id" value={c.id} />
               <button
                 type="submit"
