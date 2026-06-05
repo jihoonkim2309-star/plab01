@@ -1,7 +1,18 @@
 import { ArrowLeft } from "lucide-react";
+import { requirePortal } from "@/lib/portal-auth";
 import { submitParentLink } from "./actions";
 
-export default function ParentChildLink() {
+export default async function ParentChildLink() {
+  const guard = await requirePortal("parent");
+  let centerName: string | null = null;
+  if (!guard.isEmbed && guard.centerId) {
+    const { data } = await guard.supabase
+      .from("centers")
+      .select("name")
+      .eq("id", guard.centerId)
+      .maybeSingle();
+    centerName = (data as { name?: string } | null)?.name ?? null;
+  }
   return (
     <>
       <div className="portal-topbar">
@@ -17,15 +28,14 @@ export default function ParentChildLink() {
           승인까지는 일반적으로 1영업일 이내 처리됩니다.
         </p>
         <form action={submitParentLink} className="card" style={{ display: "block" }}>
-          <div className="portal-field">
-            <label>지점</label>
-            <select name="center_id" required>
-              <option value="">지점 선택</option>
-              <option value="planb-main">플랜비 본점</option>
-              <option value="planb-gn">플랜비 강남점</option>
-              <option value="planb-gg">플랜비 광교점</option>
-            </select>
-          </div>
+          {centerName && (
+            <div className="portal-field">
+              <label>신청 지점</label>
+              <div style={{ padding: "10px 12px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#f9fafb", fontSize: 14, color: "#374151" }}>
+                {centerName}
+              </div>
+            </div>
+          )}
           <div className="portal-field">
             <label>학생 이름 *</label>
             <input name="name" required placeholder="예: 박도윤" />

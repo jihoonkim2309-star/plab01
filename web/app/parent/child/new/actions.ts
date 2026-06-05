@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 // 자녀 연결 신청 — pending 상태로 row 생성. admin 이 승인하면 linked.
+// center_id 는 로그인 학부모의 users.center_id 를 자동 사용.
 // embed=1 (preview iframe) 이거나 미인증이면 mock 처리.
 export async function submitParentLink(formData: FormData) {
   const supabase = await createClient();
@@ -12,18 +13,26 @@ export async function submitParentLink(formData: FormData) {
   } = await supabase.auth.getSession();
 
   if (!session) {
-    // 미인증 (preview/embed 등) — mock 성공
     redirect("/parent/child?msg=submitted");
   }
 
-  const centerId = String(formData.get("center_id") ?? "");
+  const { data: profile } = await supabase
+    .from("users")
+    .select("center_id")
+    .eq("id", session.user.id)
+    .single();
+  const centerId = (profile as { center_id?: string } | null)?.center_id;
+  if (!centerId) {
+    redirect("/parent/child/new?error=no-center");
+  }
+
   const studentName = String(formData.get("name") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
   const grade = String(formData.get("grade") ?? "").trim();
   const birth = String(formData.get("birth") ?? "").trim() || null;
   const relation = String(formData.get("relation") ?? "").trim() || null;
 
-  if (!centerId || !studentName || !school || !grade) {
+  if (!studentName || !school || !grade) {
     redirect("/parent/child/new?error=missing");
   }
 
