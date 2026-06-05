@@ -34,15 +34,13 @@ async function isPreviewEmbed(): Promise<boolean> {
   }
 }
 
-// 포털 페이지 인증 가드. embed (preview iframe) 면 가드 skip — mock 그대로.
-// 미인증 시 role 따라 redirect:
-//   parent/student → /user/login
-//   coach/driver → /staff/login
-// role 불일치 → /user/login or /staff/login (해당 그룹 안내)
+// 포털 페이지 인증 가드.
+// 우선순위:
+//   1) 정상 session 이 있으면 항상 real DB 모드 (embed 신호 무시 — 쿠키 잔존 케이스 회피)
+//   2) session 없고 embed 면 mock
+//   3) session 없고 일반 접근이면 role 별 login 으로 redirect
+//      parent/student → /user/login,  coach/driver → /staff/login
 export async function requirePortal(role: PortalRole) {
-  const embed = await isPreviewEmbed();
-  if (embed) return { isEmbed: true as const };
-
   const loginPath =
     role === "parent" || role === "student" ? "/user/login" : "/staff/login";
 
@@ -50,22 +48,28 @@ export async function requirePortal(role: PortalRole) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (!session) redirect(loginPath);
 
-  const { data: profile } = await supabase
-    .from("users")
-    .select("role, center_id")
-    .eq("id", session.user.id)
-    .single();
-  const userRole = (profile as { role?: string } | null)?.role ?? null;
-  if (userRole !== role) {
-    redirect(`${loginPath}?msg=no-access`);
+  if (session) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role, center_id")
+      .eq("id", session.user.id)
+      .single();
+    const userRole = (profile as { role?: string } | null)?.role ?? null;
+    if (userRole !== role) {
+      redirect(`${loginPath}?msg=no-access`);
+    }
+    return {
+      isEmbed: false as const,
+      supabase,
+      userId: session.user.id,
+      role: userRole as PortalRole,
+      centerId: (profile as { center_id?: string } | null)?.center_id ?? null,
+    };
   }
-  return {
-    isEmbed: false as const,
-    supabase,
-    userId: session.user.id,
-    role: userRole as PortalRole,
-    centerId: (profile as { center_id?: string } | null)?.center_id ?? null,
-  };
+
+  const embed = await isPreviewEmbed();
+  if (embed) return { isEmbed: true as const };
+
+  redirect(loginPath);
 }
