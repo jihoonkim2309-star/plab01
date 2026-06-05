@@ -1864,3 +1864,46 @@ create policy smsg_parent_own_insert on public.support_messages
     )
   );
 
+
+-------------------------------------------------------------------------------
+--  28. 학부모 포털 — invoices + invoice_items 읽기 정책 (자녀 결제 내역)
+-------------------------------------------------------------------------------
+drop policy if exists invoices_parent_read on public.invoices;
+create policy invoices_parent_read on public.invoices
+  for select using (
+    exists (
+      select 1 from public.parent_student_links psl
+      where psl.parent_id = auth.uid()
+        and psl.student_id = public.invoices.student_id
+        and psl.status = 'linked'
+    )
+  );
+
+drop policy if exists invoice_items_parent_read on public.invoice_items;
+create policy invoice_items_parent_read on public.invoice_items
+  for select using (
+    exists (
+      select 1 from public.invoices i
+      join public.parent_student_links psl
+        on psl.student_id = i.student_id
+       and psl.parent_id = auth.uid()
+       and psl.status = 'linked'
+      where i.id = public.invoice_items.invoice_id
+    )
+  );
+
+-------------------------------------------------------------------------------
+--  29. 학부모 포털 — students 읽기 정책 (자녀 본인 + parent_student_links 매칭)
+--     (이미 자녀 home 에서 students(name, school, grade, class_*) join 으로 fetch)
+-------------------------------------------------------------------------------
+drop policy if exists students_parent_read on public.students;
+create policy students_parent_read on public.students
+  for select using (
+    exists (
+      select 1 from public.parent_student_links psl
+      where psl.parent_id = auth.uid()
+        and psl.student_id = public.students.id
+        and psl.status = 'linked'
+    )
+  );
+
