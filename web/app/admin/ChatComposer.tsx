@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Paperclip, X } from "lucide-react";
 
 // 채팅 입력 = textarea + 클립(파일첨부) + 첨부 미리보기.
@@ -21,6 +21,11 @@ export default function ChatComposer({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // 첫 mount + server action 후 remount 시 자동 focus (사용자가 매번 클릭 안 해도 입력 가능).
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
@@ -31,6 +36,9 @@ export default function ChatComposer({
         setBody("");
         setFiles([]);
         if (fileInputRef.current) fileInputRef.current.value = "";
+        // server action 후 같은 component 면 setTimeout 으로 focus 회복.
+        // remount 면 위 useEffect 가 처리.
+        setTimeout(() => textareaRef.current?.focus(), 50);
       }
     }
   }
