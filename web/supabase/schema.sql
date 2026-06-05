@@ -1745,3 +1745,130 @@ create policy chat_att_staff_delete on storage.objects for delete
       )
     )
   );
+
+
+-------------------------------------------------------------------------------
+--  24. 학부모/학생 포털 — announcements 읽기 정책 (멱등)
+--     - 자기 center 의 published 만, audience 매칭 시 read 허용
+-------------------------------------------------------------------------------
+drop policy if exists announcements_parent_read on public.announcements;
+create policy announcements_parent_read on public.announcements
+  for select using (
+    published_at is not null
+    and audience in ('parent_only', 'parent_student')
+    and exists (
+      select 1 from public.users u
+      where u.id = auth.uid()
+        and u.role = 'parent'
+        and u.center_id = public.announcements.center_id
+    )
+  );
+
+drop policy if exists announcements_student_read on public.announcements;
+create policy announcements_student_read on public.announcements
+  for select using (
+    published_at is not null
+    and audience in ('student_only', 'parent_student')
+    and exists (
+      select 1 from public.users u
+      where u.id = auth.uid()
+        and u.role = 'student'
+        and u.center_id = public.announcements.center_id
+    )
+  );
+
+
+-------------------------------------------------------------------------------
+--  25. 학부모 포털 — reports 읽기 정책 (멱등)
+--     발행완료 + public_to_parent + 본인 자녀 리포트만 read
+-------------------------------------------------------------------------------
+drop policy if exists reports_parent_read on public.reports;
+create policy reports_parent_read on public.reports
+  for select using (
+    status = '발행완료'
+    and public_to_parent = true
+    and exists (
+      select 1 from public.parent_student_links psl
+      where psl.parent_id = auth.uid()
+        and psl.student_id = public.reports.student_id
+        and psl.status = 'linked'
+    )
+  );
+
+
+-------------------------------------------------------------------------------
+--  26. 학부모 포털 — enrollments + classes 읽기 정책 (자녀 시간표)
+-------------------------------------------------------------------------------
+drop policy if exists enrollments_parent_read on public.enrollments;
+create policy enrollments_parent_read on public.enrollments
+  for select using (
+    exists (
+      select 1 from public.parent_student_links psl
+      where psl.parent_id = auth.uid()
+        and psl.student_id = public.enrollments.student_id
+        and psl.status = 'linked'
+    )
+  );
+
+drop policy if exists classes_parent_read on public.classes;
+create policy classes_parent_read on public.classes
+  for select using (
+    exists (
+      select 1 from public.students s
+      join public.parent_student_links psl
+        on psl.student_id = s.id
+       and psl.parent_id = auth.uid()
+       and psl.status = 'linked'
+      where s.class_id = public.classes.id
+    )
+  );
+
+
+-------------------------------------------------------------------------------
+--  27. 학부모/학생 포털 — inquiries 작성자 식별 + RLS
+--     created_by 컬럼 = 학부모(또는 학생) user_id. 자기 글만 read/insert.
+-------------------------------------------------------------------------------
+alter table public.inquiries add column if not exists created_by uuid references public.users(id) on delete set null;
+create index if not exists inquiries_created_by_idx on public.inquiries (created_by, created_at desc);
+
+drop policy if exists inquiries_parent_own_read on public.inquiries;
+create policy inquiries_parent_own_read on public.inquiries
+  for select using (
+    created_by = auth.uid()
+    and exists (
+      select 1 from public.users u
+      where u.id = auth.uid() and u.role in ('parent', 'student')
+    )
+  );
+
+drop policy if exists inquiries_parent_insert on public.inquiries;
+create policy inquiries_parent_insert on public.inquiries
+  for insert with check (
+    created_by = auth.uid()
+    and kind in ('post', 'chat')
+    and exists (
+      select 1 from public.users u
+      where u.id = auth.uid() and u.role in ('parent', 'student') and u.center_id = public.inquiries.center_id
+    )
+  );
+
+-- support_messages: 학부모/학생 자기 inquiry 한정 read/insert
+drop policy if exists smsg_parent_own_read on public.support_messages;
+create policy smsg_parent_own_read on public.support_messages
+  for select using (
+    exists (
+      select 1 from public.inquiries i
+      where i.id = public.support_messages.inquiry_id and i.created_by = auth.uid()
+    )
+  );
+
+drop policy if exists smsg_parent_own_insert on public.support_messages;
+create policy smsg_parent_own_insert on public.support_messages
+  for insert with check (
+    sender = 'customer'
+    and exists (
+      select 1 from public.inquiries i
+      where i.id = public.support_messages.inquiry_id and i.created_by = auth.uid()
+    )
+  );
+
