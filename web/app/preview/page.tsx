@@ -30,7 +30,6 @@ export default function PreviewPage() {
   function onPickApp(k: AppKey) {
     setActiveApp(k);
     if (k === "admin") setDevice("desktop");
-    else if (k === "coach") setDevice("tablet");
     else setDevice("phone");
   }
 
