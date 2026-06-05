@@ -97,10 +97,30 @@ export default function ChatImage({
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    // Supabase signed URL 에 ?download=파일명 추가 시
-                    // Content-Disposition: attachment 헤더로 응답 → 브라우저가 다운로드 다이얼로그.
+                  onClick={async () => {
+                    // Chrome/Edge: File System Access API 로 "다른 이름으로 저장" 다이얼로그.
+                    // Firefox/Safari: fallback 으로 ?download 쿼리 = 기본 다운로드 폴더.
                     try {
+                      if ("showSaveFilePicker" in window) {
+                        const handle = await (
+                          window as unknown as {
+                            showSaveFilePicker: (opts: {
+                              suggestedName: string;
+                            }) => Promise<{
+                              createWritable: () => Promise<{
+                                write: (b: Blob) => Promise<void>;
+                                close: () => Promise<void>;
+                              }>;
+                            }>;
+                          }
+                        ).showSaveFilePicker({ suggestedName: fileName });
+                        const res = await fetch(url);
+                        const blob = await res.blob();
+                        const writable = await handle.createWritable();
+                        await writable.write(blob);
+                        await writable.close();
+                        return;
+                      }
                       const dl = new URL(url);
                       dl.searchParams.set("download", fileName);
                       const a = document.createElement("a");
@@ -109,7 +129,8 @@ export default function ChatImage({
                       document.body.appendChild(a);
                       a.click();
                       document.body.removeChild(a);
-                    } catch {
+                    } catch (e) {
+                      if ((e as { name?: string })?.name === "AbortError") return;
                       window.open(url, "_blank");
                     }
                   }}
