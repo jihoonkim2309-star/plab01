@@ -94,10 +94,14 @@ export default function ChatImage({
               alt={fileName}
               onClick={(e) => e.stopPropagation()}
               style={{
-                maxWidth: "100%", maxHeight: "100%",
+                maxWidth: "min(720px, 80vw)",
+                maxHeight: "80vh",
+                width: "auto",
+                height: "auto",
                 objectFit: "contain",
-                borderRadius: 6,
+                borderRadius: 8,
                 cursor: "default",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
               }}
             />
           </div>,
