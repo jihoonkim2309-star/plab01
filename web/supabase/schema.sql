@@ -624,12 +624,9 @@ create table if not exists public.inquiries (
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
 );
--- 문의 유형: 게시글(post, 제목+내용) | 1:1 채팅(chat, subject 자동값) | 오프라인(offline, 전화·방문 어드민 기록)
+-- 문의 유형: 게시글(post) | 1:1 채팅(chat) | 오프라인(offline) | 본사↔지점(branch_to_hq, branch_chat)
+-- 아래 18, 18.1 섹션에서 확장된 set 으로 마지막에 다시 갱신됨. 여기는 신규 컬럼 추가만 (constraint X).
 alter table public.inquiries add column if not exists kind text not null default 'post';
-do $$ begin
-  alter table public.inquiries drop constraint if exists inquiries_kind_check;
-  alter table public.inquiries add constraint inquiries_kind_check check (kind in ('post','chat','offline'));
-end $$;
 create table if not exists public.support_messages (
   id         uuid primary key default gen_random_uuid(),
   center_id  uuid not null references public.centers(id) on delete cascade,
