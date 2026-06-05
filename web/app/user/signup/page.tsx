@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatPhone, PHONE_PLACEHOLDER } from "@/lib/phone";
 
 export default function UserSignup() {
+  const router = useRouter();
   const supabase = createClient();
   const [role, setRole] = useState<"parent" | "student">("parent");
   const [email, setEmail] = useState("");
@@ -31,7 +33,7 @@ export default function UserSignup() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -49,7 +51,28 @@ export default function UserSignup() {
       setLoading(false);
       return;
     }
-    setMsg("가입이 완료되었습니다! 로그인해 주세요.");
+
+    // 이메일 확인 OFF 면 signUp 자체가 session 반환 → 즉시 진입.
+    // ON 이면 session 없음 → signInWithPassword 시도. 그래도 실패면 메일 확인 안내.
+    const home = role === "parent" ? "/parent" : "/student";
+    if (signUpData.session) {
+      setMsg("가입이 완료되었습니다. 잠시만요...");
+      router.replace(home);
+      router.refresh();
+      return;
+    }
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (signInData.session && !signInError) {
+      setMsg("가입이 완료되었습니다. 잠시만요...");
+      router.replace(home);
+      router.refresh();
+      return;
+    }
+    // 이메일 확인 필요 케이스
+    setMsg("가입 신청이 접수되었습니다. 등록한 이메일을 확인 후 로그인해 주세요.");
     setLoading(false);
   }
 
