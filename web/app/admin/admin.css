@@ -2986,3 +2986,11 @@ tr[data-bulk-hover] td {
   50% { opacity: 0.55; }
 }
 .sk-pulse { animation: sk-pulse 1.4s ease-in-out infinite; }
+
+/* skeleton wrapper — 첫 300ms 는 안 보이고 그 후 fade-in.
+   짧은 fetch (<300ms) 는 깜빡임 없이 콘텐츠 바로 표시됨. */
+@keyframes sk-wrapper-fade {
+  0%, 60% { opacity: 0; }
+  100% { opacity: 1; }
+}
+.sk-wrapper { animation: sk-wrapper-fade 500ms ease-out both; }

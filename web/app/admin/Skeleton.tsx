@@ -72,7 +72,7 @@ export function SkeletonMasterDetail({
   summaryCount?: number;
 }) {
   return (
-    <>
+    <div className="sk-wrapper">
       <div className="page-head">
         <div>
           <SkeletonBox height={22} width={180} />
@@ -112,6 +112,6 @@ export function SkeletonMasterDetail({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
