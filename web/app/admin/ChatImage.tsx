@@ -49,7 +49,7 @@ export default function ChatImage({
             onClick={() => setOpen(false)}
             style={{
               position: "fixed", inset: 0,
-              background: "rgba(0,0,0,0.88)",
+              background: "rgba(15,23,42,0.45)",
               display: "flex", alignItems: "center", justifyContent: "center",
               zIndex: 10000,
               padding: 24,
@@ -58,52 +58,98 @@ export default function ChatImage({
             role="dialog"
             aria-modal="true"
           >
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setOpen(false); }}
-              aria-label="닫기"
-              style={{
-                position: "fixed", top: 16, right: 16,
-                width: 40, height: 40, borderRadius: "50%",
-                background: "rgba(255,255,255,0.12)", color: "#fff",
-                border: 0, cursor: "pointer",
-                display: "inline-flex", alignItems: "center", justifyContent: "center",
-              }}
-            >
-              <X size={22} />
-            </button>
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener"
-              download={fileName}
+            <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                position: "fixed", top: 16, left: 16,
-                padding: "8px 14px", borderRadius: 20,
-                background: "rgba(255,255,255,0.12)", color: "#fff",
-                fontSize: 12, fontWeight: 600,
-                textDecoration: "none",
-              }}
-            >
-              원본 다운로드
-            </a>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={url}
-              alt={fileName}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                maxWidth: "min(520px, 80vw)",
-                maxHeight: "min(640px, 75vh)",
-                width: "auto",
-                height: "auto",
-                objectFit: "contain",
-                borderRadius: 8,
+                background: "#fff",
+                borderRadius: 12,
+                boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+                maxWidth: "min(560px, 92vw)",
+                maxHeight: "min(720px, 86vh)",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
                 cursor: "default",
-                boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
               }}
-            />
+            >
+              <div
+                style={{
+                  display: "flex", alignItems: "center",
+                  padding: "10px 12px 10px 16px",
+                  borderBottom: "1px solid #e5e7eb",
+                  gap: 8,
+                  flex: "0 0 auto",
+                }}
+              >
+                <div
+                  style={{
+                    flex: 1,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "#374151",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                  title={fileName}
+                >
+                  {fileName}
+                </div>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener"
+                  download={fileName}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    background: "#f3f4f6",
+                    color: "#374151",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    textDecoration: "none",
+                  }}
+                >
+                  원본 다운로드
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="닫기"
+                  style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    background: "transparent", color: "#6b7280",
+                    border: 0, cursor: "pointer",
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  padding: 16,
+                  background: "#f4f6f5",
+                  minHeight: 0,
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt={fileName}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    width: "auto",
+                    height: "auto",
+                    objectFit: "contain",
+                    borderRadius: 4,
+                  }}
+                />
+              </div>
+            </div>
           </div>,
           document.body,
         )}
