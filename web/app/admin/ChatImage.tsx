@@ -97,18 +97,18 @@ export default function ChatImage({
                 </div>
                 <button
                   type="button"
-                  onClick={async () => {
+                  onClick={() => {
+                    // Supabase signed URL 에 ?download=파일명 추가 시
+                    // Content-Disposition: attachment 헤더로 응답 → 브라우저가 다운로드 다이얼로그.
                     try {
-                      const res = await fetch(url);
-                      const blob = await res.blob();
-                      const blobUrl = URL.createObjectURL(blob);
+                      const dl = new URL(url);
+                      dl.searchParams.set("download", fileName);
                       const a = document.createElement("a");
-                      a.href = blobUrl;
+                      a.href = dl.toString();
                       a.download = fileName;
                       document.body.appendChild(a);
                       a.click();
                       document.body.removeChild(a);
-                      URL.revokeObjectURL(blobUrl);
                     } catch {
                       window.open(url, "_blank");
                     }
