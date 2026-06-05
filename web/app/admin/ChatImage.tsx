@@ -95,11 +95,24 @@ export default function ChatImage({
                 >
                   {fileName}
                 </div>
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener"
-                  download={fileName}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(url);
+                      const blob = await res.blob();
+                      const blobUrl = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = blobUrl;
+                      a.download = fileName;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(blobUrl);
+                    } catch {
+                      window.open(url, "_blank");
+                    }
+                  }}
                   style={{
                     padding: "6px 12px",
                     borderRadius: 8,
@@ -107,11 +120,12 @@ export default function ChatImage({
                     color: "#374151",
                     fontSize: 12,
                     fontWeight: 600,
-                    textDecoration: "none",
+                    border: 0,
+                    cursor: "pointer",
                   }}
                 >
                   원본 다운로드
-                </a>
+                </button>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
