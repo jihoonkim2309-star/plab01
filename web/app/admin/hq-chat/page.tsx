@@ -243,6 +243,7 @@ export default async function HqChatPage({
                 action={sendBranchChatAsHq}
                 data-no-loading="true"
                 className="chat-input-form"
+                encType="multipart/form-data"
               >
                 <input type="hidden" name="center_id" value={selectedCenter.id} />
                 <ChatComposer
