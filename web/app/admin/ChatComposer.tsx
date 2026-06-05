@@ -26,19 +26,31 @@ export default function ChatComposer({
     textareaRef.current?.focus();
   }, []);
 
+  // form 의 submit 이벤트 listen — Enter 와 [전송] 버튼 둘 다 cover.
+  // 전송 직후 입력값/첨부 초기화 + focus 회복.
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const form = ta.form;
+    if (!form) return;
+    function onSubmit() {
+      setBody("");
+      setFiles([]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setTimeout(() => textareaRef.current?.focus(), 50);
+    }
+    form.addEventListener("submit", onSubmit);
+    return () => form.removeEventListener("submit", onSubmit);
+  }, []);
+
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       const form = e.currentTarget.form;
       // 본문 비어도 첨부만 있으면 전송 허용
       if (form && (body.trim() || files.length > 0)) {
+        // submit 이벤트 listener 가 input/files clear + focus 회복까지 처리.
         form.requestSubmit();
-        setBody("");
-        setFiles([]);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        // server action 후 같은 component 면 setTimeout 으로 focus 회복.
-        // remount 면 위 useEffect 가 처리.
-        setTimeout(() => textareaRef.current?.focus(), 50);
       }
     }
   }
