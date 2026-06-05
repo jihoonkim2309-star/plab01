@@ -99,28 +99,36 @@ export default function ChatImage({
                   type="button"
                   onClick={async () => {
                     // Chrome/Edge: File System Access API 로 "다른 이름으로 저장" 다이얼로그.
-                    // Firefox/Safari: fallback 으로 ?download 쿼리 = 기본 다운로드 폴더.
-                    try {
-                      if ("showSaveFilePicker" in window) {
-                        const handle = await (
-                          window as unknown as {
-                            showSaveFilePicker: (opts: {
-                              suggestedName: string;
-                            }) => Promise<{
-                              createWritable: () => Promise<{
-                                write: (b: Blob) => Promise<void>;
-                                close: () => Promise<void>;
-                              }>;
-                            }>;
-                          }
-                        ).showSaveFilePicker({ suggestedName: fileName });
+                    // 미지원/실패 시 fallback = ?download 쿼리 (기본 다운로드 폴더).
+                    const pickFn = (
+                      window as unknown as {
+                        showSaveFilePicker?: (opts: {
+                          suggestedName: string;
+                        }) => Promise<{
+                          createWritable: () => Promise<{
+                            write: (b: Blob) => Promise<void>;
+                            close: () => Promise<void>;
+                          }>;
+                        }>;
+                      }
+                    ).showSaveFilePicker;
+                    if (typeof pickFn === "function") {
+                      try {
+                        const handle = await pickFn.call(window, {
+                          suggestedName: fileName,
+                        });
                         const res = await fetch(url);
                         const blob = await res.blob();
                         const writable = await handle.createWritable();
                         await writable.write(blob);
                         await writable.close();
                         return;
+                      } catch (e) {
+                        if ((e as { name?: string })?.name === "AbortError") return;
+                        // 그 외 에러 (보안 제한 등) 는 fallback 으로 진행
                       }
+                    }
+                    try {
                       const dl = new URL(url);
                       dl.searchParams.set("download", fileName);
                       const a = document.createElement("a");
@@ -129,8 +137,7 @@ export default function ChatImage({
                       document.body.appendChild(a);
                       a.click();
                       document.body.removeChild(a);
-                    } catch (e) {
-                      if ((e as { name?: string })?.name === "AbortError") return;
+                    } catch {
                       window.open(url, "_blank");
                     }
                   }}
