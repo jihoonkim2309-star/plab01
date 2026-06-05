@@ -1,11 +1,13 @@
 import { ArrowLeft } from "lucide-react";
 import { requirePortal } from "@/lib/portal-auth";
-import { submitParentLink } from "./actions";
+import PickerForm from "./PickerForm";
 
 export default async function ParentChildLink() {
   const guard = await requirePortal("parent");
   let centerName: string | null = null;
+  let centerId: string | null = null;
   if (!guard.isEmbed && guard.centerId) {
+    centerId = guard.centerId;
     const { data } = await guard.supabase
       .from("centers")
       .select("name")
@@ -24,52 +26,17 @@ export default async function ParentChildLink() {
       </div>
       <div className="portal-content">
         <p style={{ fontSize: 12, color: "#6f7d78", marginBottom: 12, lineHeight: 1.5 }}>
-          학생 정보를 입력하면 지점 어드민이 확인 후 승인합니다.
-          승인까지는 일반적으로 1영업일 이내 처리됩니다.
+          자녀를 선택하면 지점 어드민이 확인 후 승인합니다. 학생 이름은 개인정보 보호를 위해 일부 마스킹됩니다.
         </p>
-        <form action={submitParentLink} className="card" style={{ display: "block" }}>
-          {centerName && (
-            <div className="portal-field">
-              <label>신청 지점</label>
-              <div style={{ padding: "10px 12px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#f9fafb", fontSize: 14, color: "#374151" }}>
-                {centerName}
-              </div>
-            </div>
-          )}
-          <div className="portal-field">
-            <label>학생 이름 *</label>
-            <input name="name" required placeholder="예: 박도윤" />
-          </div>
-          <div className="portal-field">
-            <label>학교 *</label>
-            <input name="school" required placeholder="예: 한빛초등학교" />
-          </div>
-          <div className="portal-field">
-            <label>학년 *</label>
-            <select name="grade" required>
-              <option value="">학년 선택</option>
-              <option>초1</option><option>초2</option><option>초3</option>
-              <option>초4</option><option>초5</option><option>초6</option>
-              <option>중1</option><option>중2</option><option>중3</option>
-            </select>
-          </div>
-          <div className="portal-field">
-            <label>생년월일</label>
-            <input name="birth" placeholder="YYYY-MM-DD" />
-          </div>
-          <div className="portal-field">
-            <label>본인 관계</label>
-            <select name="relation">
-              <option>부</option>
-              <option>모</option>
-              <option>조부모</option>
-              <option>기타 보호자</option>
-            </select>
-          </div>
-          <button type="submit" className="btn primary" style={{ width: "100%", marginTop: 6 }}>
-            연결 신청
-          </button>
-        </form>
+        {centerId && centerName ? (
+          <PickerForm centerId={centerId} centerName={centerName} />
+        ) : (
+          <section className="card">
+            <p style={{ fontSize: 13, color: "#b42318", textAlign: "center", padding: "20px 0" }}>
+              지점 정보를 확인할 수 없습니다. 로그인 후 다시 시도해 주세요.
+            </p>
+          </section>
+        )}
       </div>
     </>
   );
