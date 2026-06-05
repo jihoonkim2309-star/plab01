@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { requireCenter, requireSuperAdmin } from "@/lib/center";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -90,7 +89,6 @@ export async function sendBranchChatAsAdmin(formData: FormData) {
 
   revalidatePath("/admin/branch-chat");
   revalidatePath("/admin/hq-chat");
-  redirect("/admin/branch-chat");
 }
 
 export async function sendBranchChatAsHq(formData: FormData) {
@@ -127,5 +125,4 @@ export async function sendBranchChatAsHq(formData: FormData) {
 
   revalidatePath("/admin/hq-chat");
   revalidatePath("/admin/branch-chat");
-  redirect(`/admin/hq-chat?center=${centerId}`);
 }
