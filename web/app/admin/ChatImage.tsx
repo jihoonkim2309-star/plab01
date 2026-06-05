@@ -94,8 +94,8 @@ export default function ChatImage({
               alt={fileName}
               onClick={(e) => e.stopPropagation()}
               style={{
-                maxWidth: "min(720px, 80vw)",
-                maxHeight: "80vh",
+                maxWidth: "min(520px, 80vw)",
+                maxHeight: "min(640px, 75vh)",
                 width: "auto",
                 height: "auto",
                 objectFit: "contain",
