@@ -1,3 +1,5 @@
+import ChatImage from "./ChatImage";
+
 export type ChatAttachment = {
   id: string;
   fileName: string;
@@ -37,16 +39,7 @@ export default function ChatBubble({
             <div className="chat-bubble-attachments">
               {attachments!.map((a) =>
                 isImageMime(a.mimeType) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <a
-                    key={a.id}
-                    href={a.url}
-                    target="_blank"
-                    rel="noopener"
-                    className="chat-attach-image"
-                  >
-                    <img src={a.url} alt={a.fileName} />
-                  </a>
+                  <ChatImage key={a.id} url={a.url} fileName={a.fileName} />
                 ) : (
                   <a
                     key={a.id}
