@@ -2089,3 +2089,31 @@ begin
 end;
 $$;
 grant execute on function public.list_link_students_masked_for_student(uuid, text, text) to authenticated;
+
+-------------------------------------------------------------------------------
+--  34. 학생 본인 → student_account_links insert/read RLS
+--     본인 (user_id = auth.uid()) + status='pending' + role='student' 만 insert
+--     본인 row read 가능 (어드민 측 sal_admin_all 와 별개)
+-------------------------------------------------------------------------------
+drop policy if exists sal_student_own_insert on public.student_account_links;
+create policy sal_student_own_insert on public.student_account_links
+  for insert with check (
+    user_id = auth.uid()
+    and status = 'pending'
+    and exists (
+      select 1 from public.users u
+      where u.id = auth.uid()
+        and u.role = 'student'
+        and u.center_id = public.student_account_links.center_id
+    )
+  );
+
+drop policy if exists sal_student_own_read on public.student_account_links;
+create policy sal_student_own_read on public.student_account_links
+  for select using (
+    user_id = auth.uid()
+    and exists (
+      select 1 from public.users u
+      where u.id = auth.uid() and u.role = 'student'
+    )
+  );
