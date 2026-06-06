@@ -45,7 +45,13 @@ export default function PayButton({
         totalAmount: amount,
         currency: "KRW",
         payMethod: "CARD",
-      } as Parameters<typeof PortOne.requestPayment>[0];
+        // 모바일 = 전체 페이지로 redirect (iframe 모달이 화면 폭 넘는 문제 회피)
+        windowType: {
+          iframe: "POPUP",
+          mobile: "REDIRECTION",
+        },
+        redirectUrl: `${window.location.origin}/parent/billing/${invoiceId}?paid=1`,
+      } as unknown as Parameters<typeof PortOne.requestPayment>[0];
       const r = await PortOne.requestPayment(req);
       if (r?.code) {
         setMsg("결제 취소/실패: " + (r.message ?? r.code));
