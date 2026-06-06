@@ -28,16 +28,20 @@ export default function ChatComposer({
 
   // form 의 submit 이벤트 listen — Enter 와 [전송] 버튼 둘 다 cover.
   // 전송 직후 입력값/첨부 초기화 + focus 회복.
+  // ⚠️ setBody("") 등 state 변경을 setTimeout(0) 으로 미루지 않으면
+  // React 가 server action 의 formData 추출 전에 textarea 값을 비워 메시지가 빈 값으로 전송됨.
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
     const form = ta.form;
     if (!form) return;
     function onSubmit() {
-      setBody("");
-      setFiles([]);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      setTimeout(() => textareaRef.current?.focus(), 50);
+      setTimeout(() => {
+        setBody("");
+        setFiles([]);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        textareaRef.current?.focus();
+      }, 0);
     }
     form.addEventListener("submit", onSubmit);
     return () => form.removeEventListener("submit", onSubmit);
