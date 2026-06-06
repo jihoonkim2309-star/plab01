@@ -10,11 +10,11 @@ const MOCK_MSGS: Msg[] = [
   { id: "m3", sender: "admin", body: "네, 수요일 16시 보강 자리 있습니다. 진행해 드릴까요?", created_at: "2026-06-03T14:25:00" },
 ];
 
-async function fetchOrCreateChat(): Promise<{ messages: Msg[]; inquiryId: string | null }> {
+async function fetchOrCreateChat(): Promise<{ messages: Msg[]; inquiryId: string | null; debugError?: string }> {
   const guard = await requirePortal("parent");
   if (guard.isEmbed) return { messages: MOCK_MSGS, inquiryId: "mock" };
   const { supabase, userId, centerId } = guard;
-  if (!centerId) return { messages: [], inquiryId: null };
+  if (!centerId) return { messages: [], inquiryId: null, debugError: "centerId 없음 — 사용자 가입 시 지점 선택 누락" };
 
   // 기존 chat inquiry 찾기 — created_by = 본인. RLS inquiries_parent_own_read 도 동일 기준.
   const { data: profile } = await supabase
@@ -34,6 +34,7 @@ async function fetchOrCreateChat(): Promise<{ messages: Msg[]; inquiryId: string
     .maybeSingle();
   let inquiryId = (existing as { id: string } | null)?.id ?? null;
 
+  let debugError: string | undefined;
   if (!inquiryId) {
     const { data: created, error: createErr } = await supabase
       .from("inquiries")
@@ -50,13 +51,13 @@ async function fetchOrCreateChat(): Promise<{ messages: Msg[]; inquiryId: string
       .select("id")
       .single();
     if (createErr) {
-      // RLS 또는 schema 문제 → 로그 출력 후 빈 채팅 표시
-      console.error("학부모 1:1 inquiry 생성 실패:", createErr.message);
+      debugError = `inquiry insert 실패: ${createErr.message} (code: ${createErr.code ?? "?"})`;
+      console.error("학부모 1:1 inquiry 생성 실패:", createErr);
     }
     inquiryId = (created as { id: string } | null)?.id ?? null;
   }
 
-  if (!inquiryId) return { messages: [], inquiryId: null };
+  if (!inquiryId) return { messages: [], inquiryId: null, debugError };
 
   const { data: msgs } = await supabase
     .from("support_messages")
@@ -65,11 +66,11 @@ async function fetchOrCreateChat(): Promise<{ messages: Msg[]; inquiryId: string
     .order("created_at", { ascending: true })
     .limit(500);
 
-  return { messages: (msgs ?? []) as Msg[], inquiryId };
+  return { messages: (msgs ?? []) as Msg[], inquiryId, debugError };
 }
 
 export default async function ParentChat1on1() {
-  const { messages, inquiryId } = await fetchOrCreateChat();
+  const { messages, inquiryId, debugError } = await fetchOrCreateChat();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#f6f7f9" }}>
@@ -82,6 +83,11 @@ export default async function ParentChat1on1() {
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+        {debugError && (
+          <div style={{ padding: 12, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, fontSize: 12, color: "#b42318", whiteSpace: "pre-wrap" }}>
+            ⚠️ {debugError}
+          </div>
+        )}
         {messages.length === 0 ? (
           <p style={{ fontSize: 12, color: "#9ca3af", textAlign: "center", marginTop: 40 }}>
             첫 메시지를 보내 보세요.
