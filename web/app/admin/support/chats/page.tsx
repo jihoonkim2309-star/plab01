@@ -166,7 +166,7 @@ export default async function SupportChatsPage({
       </div>
 
       <div className="grid member-layout">
-        <div className="panel elevated">
+        <div className="panel elevated" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 320px)", minHeight: 520, overflow: "hidden" }}>
           <div className="panel-head">
             <p className="panel-title">
               채팅 목록{" "}
@@ -264,7 +264,7 @@ export default async function SupportChatsPage({
           </div>
         </div>
 
-        <div className="panel chat-panel">
+        <div className="panel chat-panel" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 320px)", minHeight: 520 }}>
           <div className="panel-head">
             <p className="panel-title">
               {selected ? (selected.requester_name ?? "익명") : "채팅을 선택해 주세요"}
