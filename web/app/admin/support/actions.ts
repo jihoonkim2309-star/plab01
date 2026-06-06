@@ -60,17 +60,12 @@ export async function createOfflineInquiry(formData: FormData) {
 
 export async function replyMessage(inquiryId: string, formData: FormData) {
   const { supabase, centerId } = await requireCenter();
-  const back = formData.get("back");
   const basePath = await pathForInquiry(supabase, inquiryId);
-  const dest = safeBack(
-    typeof back === "string" ? back : null,
-    `${basePath}?sel=${inquiryId}`,
-  );
 
   const body = String(formData.get("body") ?? "").trim();
   const files = formData.getAll("files") as File[];
   const realFiles = files.filter((f): f is File => f instanceof File && f.size > 0);
-  if (!body && realFiles.length === 0) return redirect(dest);
+  if (!body && realFiles.length === 0) return;
 
   const { data: msgIns, error } = await supabase
     .from("support_messages")
@@ -112,8 +107,10 @@ export async function replyMessage(inquiryId: string, formData: FormData) {
     .eq("center_id", centerId)
     .eq("status", "접수");
 
+  // redirect 제거 — revalidatePath 만 으로 same-path 깜박임 회피. ChatLive realtime 으로 즉시 반영.
   revalidatePath(basePath);
-  redirect(dest);
+  revalidatePath(`/parent/chat/1on1`);
+  revalidatePath(`/parent/chat/post/${inquiryId}`);
 }
 
 export async function setInquiryStatus(
