@@ -264,7 +264,7 @@ export default async function SupportChatsPage({
           </div>
         </div>
 
-        <div className="panel chat-panel" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 220px)" }}>
+        <div className="panel chat-panel">
           <div className="panel-head">
             <p className="panel-title">
               {selected ? (selected.requester_name ?? "익명") : "채팅을 선택해 주세요"}
@@ -280,7 +280,7 @@ export default async function SupportChatsPage({
             </div>
           ) : (
             <>
-              <div className="chat-thread">
+              <div className="chat-thread" style={{ flex: 1, minHeight: 0 }}>
                 {messages.length === 0 ? (
                   <div className="empty-state">
                     <strong>아직 메시지가 없습니다</strong>
@@ -300,17 +300,9 @@ export default async function SupportChatsPage({
                 )}
                 <ChatScrollAnchor k={`${selected.id}-${messages.length}-${messages[messages.length - 1]?.id ?? ""}`} />
               </div>
-              <form
-                action={replyMessage.bind(null, selected.id)}
-                data-no-loading="true"
-                className="chat-input-form"
-              >
-                <ChatComposer placeholder="메시지 입력 (Enter = 전송, Shift+Enter = 줄바꿈)" />
-                <button type="submit" className="btn primary" style={{ alignSelf: "flex-end" }}>전송</button>
-              </form>
-              <div className="panel-body" style={{ borderTop: "1px solid var(--line)" }}>
-                <p className="detail-title" style={{ marginTop: 0 }}>상태 처리</p>
-                <div className="action-grid">
+              <div style={{ borderTop: "1px solid var(--line)", padding: "10px 12px", flexShrink: 0 }}>
+                <p className="detail-title" style={{ marginTop: 0, marginBottom: 8, fontSize: 12 }}>상태 처리</p>
+                <div className="action-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
                   {["접수", "처리중", "완료"].map((x) => (
                     <form key={x} action={setInquiryStatus.bind(null, selected.id, x)}>
                       <input type="hidden" name="back" value={`${BASE}?sel=${selected.id}`} />
@@ -336,6 +328,14 @@ export default async function SupportChatsPage({
                   </form>
                 </div>
               </div>
+              <form
+                action={replyMessage.bind(null, selected.id)}
+                data-no-loading="true"
+                className="chat-input-form"
+              >
+                <ChatComposer placeholder="메시지 입력 (Enter = 전송, Shift+Enter = 줄바꿈)" />
+                <button type="submit" className="btn primary" style={{ alignSelf: "flex-end" }}>전송</button>
+              </form>
             </>
           )}
         </div>
