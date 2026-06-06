@@ -105,10 +105,13 @@ export default async function StudentHome() {
       <div className="portal-content">
         {!linked ? (
           <section className="card" style={{ padding: 24, textAlign: "center" }}>
-            <strong style={{ fontSize: 14 }}>학생 계정 연결 대기 중</strong>
-            <p style={{ fontSize: 12, color: "#6f7d78", marginTop: 8, lineHeight: 1.5 }}>
-              지점에서 본인 계정과 학생을 연결한 후 이용 가능합니다.
+            <strong style={{ fontSize: 14, display: "block" }}>본인 정보 연결이 필요합니다</strong>
+            <p style={{ fontSize: 12, color: "#6f7d78", marginTop: 8, lineHeight: 1.5, marginBottom: 16 }}>
+              본인을 선택해 연결 신청하면 지점 어드민이 확인 후 승인합니다.
             </p>
+            <a href="/student/connect/new" className="btn primary" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
+              본인 연결 신청
+            </a>
           </section>
         ) : (
           <>
