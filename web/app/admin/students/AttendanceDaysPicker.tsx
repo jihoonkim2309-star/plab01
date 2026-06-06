@@ -94,18 +94,24 @@ export default function AttendanceDaysPicker({
     .sort((a, b) => ALL_DAYS.indexOf(a) - ALL_DAYS.indexOf(b))
     .join(",");
 
-  // 현재 선택된 상품 정보 (mismatch 안내용)
+  // 현재 선택된 상품 정보 (mismatch / match 안내용)
   const selectedProduct = useMemo(
     () => products.find((p) => p.id === productId) ?? null,
     [products, productId],
   );
   // 회수 mismatch — 선택된 상품의 sessions_per_week 와 현재 참여 요일 수가 안 맞으면 경고.
-  // touched 여부 무관 (자동 추천이 따라잡지 못한 케이스 = 해당 회수 상품 자체가 없는 경우도 cover).
   const productMismatch =
     !!productId &&
     !!selectedProduct &&
     selectedProduct.sessions_per_week != null &&
     selectedProduct.sessions_per_week !== days.length;
+  // 정상 매칭 — 상품 회수와 참여 요일 회수 일치
+  const productMatchOk =
+    !!productId &&
+    !!selectedProduct &&
+    selectedProduct.sessions_per_week != null &&
+    selectedProduct.sessions_per_week === days.length &&
+    days.length > 0;
 
   return (
     <>
@@ -209,19 +215,19 @@ export default function AttendanceDaysPicker({
             등록된 수강료 상품이 없습니다 — "수업 운영 → 수강료 상품"에서 먼저 생성하세요.
           </span>
         )}
-        {!touched && matchedProduct && (
-          <span className="muted" style={{ fontSize: 12 }}>
-            주 {days.length}회 매칭 자동 선택: {matchedProduct.name}
-          </span>
-        )}
-        {!touched && !matchedProduct && days.length > 0 && (
-          <span className="muted" style={{ fontSize: 12, color: "var(--orange)" }}>
-            ⚠ 주 {days.length}회 수강료 상품이 없습니다 — "수업 운영 → 수강료 상품"에서 추가하세요.
+        {productMatchOk && (
+          <span style={{ fontSize: 12, color: "var(--brand, #1e794e)", fontWeight: 600 }}>
+            ✓ 주 {days.length}회 매칭 OK
           </span>
         )}
         {productMismatch && (
           <span className="muted" style={{ fontSize: 12, color: "var(--orange)" }}>
             ⚠ 참여 요일은 주 {days.length}회 인데 선택된 상품은 주 {selectedProduct?.sessions_per_week}회 입니다.
+          </span>
+        )}
+        {!productId && days.length > 0 && (
+          <span className="muted" style={{ fontSize: 12, color: "var(--orange)" }}>
+            ⚠ 주 {days.length}회 수강료 상품이 없습니다 — "수업 운영 → 수강료 상품"에서 추가하거나 상품을 직접 선택하세요.
           </span>
         )}
       </div>
