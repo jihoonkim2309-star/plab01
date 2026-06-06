@@ -24,10 +24,18 @@ function relativeTime(iso: string | null): string {
 const MOCK_TODAY: TodayClass | null = { name: "정규반 A", time: "16:00 - 17:00", coach: "박코치", color: "green" };
 const MOCK_NOTICES: Notice[] = [{ id: "n1", title: "코치 메모: 폼이 많이 좋아졌어요", time: "오늘 14:20" }];
 
-async function fetchHome(): Promise<{ studentName: string | null; today: TodayClass | null; notices: Notice[]; linked: boolean }> {
+async function fetchHome(): Promise<{ studentName: string | null; today: TodayClass | null; notices: Notice[]; linked: boolean; pendingCount: number }> {
   const guard = await requirePortal("student");
-  if (guard.isEmbed) return { studentName: "박도윤", today: MOCK_TODAY, notices: MOCK_NOTICES, linked: true };
+  if (guard.isEmbed) return { studentName: "박도윤", today: MOCK_TODAY, notices: MOCK_NOTICES, linked: true, pendingCount: 0 };
   const { supabase, userId } = guard;
+
+  // pending 신청 개수
+  const { data: pendingRows } = await supabase
+    .from("student_account_links")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("status", "pending");
+  const pendingCount = (pendingRows ?? []).length;
 
   // 본인 student
   const { data: link } = await supabase
@@ -39,7 +47,7 @@ async function fetchHome(): Promise<{ studentName: string | null; today: TodayCl
     .maybeSingle();
   type LR = { student_id: string; students: { id: string; name: string; class_id: string | null } | null };
   const linkRow = link as unknown as LR | null;
-  if (!linkRow?.students) return { studentName: null, today: null, notices: [], linked: false };
+  if (!linkRow?.students) return { studentName: null, today: null, notices: [], linked: false, pendingCount };
 
   const student = linkRow.students;
 
@@ -82,7 +90,7 @@ async function fetchHome(): Promise<{ studentName: string | null; today: TodayCl
     time: relativeTime(n.published_at),
   }));
 
-  return { studentName: student.name, today, notices, linked: true };
+  return { studentName: student.name, today, notices, linked: true, pendingCount };
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -95,7 +103,7 @@ const COLOR_MAP: Record<string, string> = {
 };
 
 export default async function StudentHome() {
-  const { studentName, today, notices, linked } = await fetchHome();
+  const { studentName, today, notices, linked, pendingCount } = await fetchHome();
   return (
     <>
       <div className="portal-topbar">
@@ -105,13 +113,26 @@ export default async function StudentHome() {
       <div className="portal-content">
         {!linked ? (
           <section className="card" style={{ padding: 24, textAlign: "center" }}>
-            <strong style={{ fontSize: 14, display: "block" }}>본인 정보 연결이 필요합니다</strong>
-            <p style={{ fontSize: 12, color: "#6f7d78", marginTop: 8, lineHeight: 1.5, marginBottom: 16 }}>
-              본인을 선택해 연결 신청하면 지점 어드민이 확인 후 승인합니다.
-            </p>
-            <a href="/student/connect/new" className="btn primary" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
-              본인 연결 신청
-            </a>
+            {pendingCount > 0 ? (
+              <>
+                <div style={{ padding: "12px 14px", background: "#fef3c7", color: "#d97706", borderRadius: 10, fontSize: 13, fontWeight: 600, marginBottom: 14, lineHeight: 1.5 }}>
+                  ⏳ 본인 연결 신청 {pendingCount}건이 어드민 승인 대기 중입니다.
+                </div>
+                <a href="/student/connect" className="btn" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
+                  신청 상태 보기
+                </a>
+              </>
+            ) : (
+              <>
+                <strong style={{ fontSize: 14, display: "block" }}>본인 정보 연결이 필요합니다</strong>
+                <p style={{ fontSize: 12, color: "#6f7d78", marginTop: 8, lineHeight: 1.5, marginBottom: 16 }}>
+                  본인을 선택해 연결 신청하면 지점 어드민이 확인 후 승인합니다.
+                </p>
+                <a href="/student/connect/new" className="btn primary" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
+                  본인 연결 신청
+                </a>
+              </>
+            )}
           </section>
         ) : (
           <>

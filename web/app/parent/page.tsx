@@ -67,12 +67,21 @@ async function fetchHome(): Promise<{
   children: HomeChild[];
   notices: HomeNotice[];
   billing: HomeBilling;
+  pendingCount: number;
 }> {
   const guard = await requirePortal("parent");
   if (guard.isEmbed) {
-    return { children: MOCK_CHILDREN, notices: MOCK_NOTICES, billing: MOCK_BILLING };
+    return { children: MOCK_CHILDREN, notices: MOCK_NOTICES, billing: MOCK_BILLING, pendingCount: 0 };
   }
   const { supabase, userId } = guard;
+
+  // pending 신청 개수 (홈 상단 안내용)
+  const { data: pendingRows } = await supabase
+    .from("parent_student_links")
+    .select("id")
+    .eq("parent_id", userId)
+    .eq("status", "pending");
+  const pendingCount = (pendingRows ?? []).length;
 
   // 1. 자녀 (parent_student_links + students + class)
   const { data: linkRows } = await supabase
@@ -184,11 +193,11 @@ async function fetchHome(): Promise<{
     }
   }
 
-  return { children, notices, billing };
+  return { children, notices, billing, pendingCount };
 }
 
 export default async function ParentHome() {
-  const { children, notices, billing } = await fetchHome();
+  const { children, notices, billing, pendingCount } = await fetchHome();
   return (
     <>
       <div className="portal-topbar">
@@ -211,12 +220,25 @@ export default async function ParentHome() {
           </div>
           {children.length === 0 ? (
             <div style={{ padding: "8px 0" }}>
-              <p style={{ fontSize: 12, color: "#6f7d78", marginBottom: 8 }}>
-                아직 연결된 자녀가 없습니다.
-              </p>
-              <a href="/parent/child/new" className="btn primary" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
-                자녀 연결 신청
-              </a>
+              {pendingCount > 0 ? (
+                <>
+                  <div style={{ padding: "12px 14px", background: "#fef3c7", color: "#d97706", borderRadius: 10, fontSize: 12, fontWeight: 600, marginBottom: 10, lineHeight: 1.5 }}>
+                    ⏳ 자녀 연결 신청 {pendingCount}건이 어드민 승인 대기 중입니다.
+                  </div>
+                  <a href="/parent/child" className="btn" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
+                    신청 상태 보기
+                  </a>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: 12, color: "#6f7d78", marginBottom: 8 }}>
+                    아직 연결된 자녀가 없습니다.
+                  </p>
+                  <a href="/parent/child/new" className="btn primary" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
+                    자녀 연결 신청
+                  </a>
+                </>
+              )}
             </div>
           ) : (
             children.map((c) => (
