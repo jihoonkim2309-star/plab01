@@ -1,4 +1,4 @@
-import { ArrowLeft, Bell, Plus, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Bell, Plus, Clock, CheckCircle, XCircle } from "lucide-react";
 import StudentTabbar from "../Tabbar";
 import { requirePortal } from "@/lib/portal-auth";
 
@@ -51,16 +51,12 @@ export default async function StudentConnectList({
     "already-applied": { text: "⚠ 이미 같은 본인으로 신청한 기록이 있습니다.", bg: "#fef3c7", color: "#d97706" },
   };
   const toast = msg ? toastMap[msg] : null;
-  const hasPending = list.some((l) => l.status === "pending");
   const hasLinked = list.some((l) => l.status === "linked");
 
   return (
     <>
       <div className="portal-topbar">
-        <a href="/student" style={{ color: "#fff", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", fontSize: 14 }}>
-          <ArrowLeft size={18} /> 뒤로
-        </a>
-        <h1 style={{ flex: 1, textAlign: "center" }}>본인 연결</h1>
+        <h1>본인</h1>
         <Bell size={20} />
       </div>
       <div className="portal-content">
@@ -118,10 +114,10 @@ export default async function StudentConnectList({
           <a
             href="/student/connect/new"
             className="card"
-            style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--brand, #1e794e)", textDecoration: "none", fontWeight: 700, justifyContent: "center", marginTop: hasPending ? 4 : 0 }}
+            style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--brand, #1e794e)", textDecoration: "none", fontWeight: 700, justifyContent: "center" }}
           >
             <Plus size={18} />
-            {hasPending ? "다른 본인으로 신청" : "본인 연결 신청"}
+            본인 연결 신청
           </a>
         )}
       </div>
