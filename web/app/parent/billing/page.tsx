@@ -2,17 +2,30 @@ import { ArrowLeft, Bell, ChevronRight, CreditCard } from "lucide-react";
 import PortalTabbar from "../PortalTabbar";
 import { requirePortal } from "@/lib/portal-auth";
 
-const STATUS_COLOR: Record<string, string> = {
-  paid: "#1e794e",
-  overdue: "#b42318",
-  failed: "#b42318",
-  pending: "#9ca3af",
-};
+// DB 값 (한국어) 기준 라벨/색상
 const STATUS_LABEL: Record<string, string> = {
-  paid: "완납",
-  pending: "대기",
-  overdue: "연체",
-  failed: "실패",
+  결제완료: "결제완료",
+  환불: "환불",
+  청구: "미결제",
+  대기: "대기",
+  실패: "실패",
+  연체: "연체",
+};
+const STATUS_COLOR: Record<string, string> = {
+  결제완료: "#1e794e",
+  환불: "#6b7280",
+  청구: "#d97706",
+  대기: "#d97706",
+  실패: "#b42318",
+  연체: "#b42318",
+};
+const STATUS_BG: Record<string, string> = {
+  결제완료: "#dcfce7",
+  환불: "#f3f4f6",
+  청구: "#fef3c7",
+  대기: "#fef3c7",
+  실패: "#fee2e2",
+  연체: "#fee2e2",
 };
 
 type Invoice = {
@@ -59,7 +72,7 @@ async function fetchInvoices(): Promise<{ invoices: Invoice[]; nextDue: Invoice 
     .limit(24);
   const invoices = (data ?? []) as Invoice[];
   const nextDue = invoices
-    .filter((i) => i.status === "pending" || i.status === "overdue")
+    .filter((i) => i.status !== "결제완료" && i.status !== "환불")
     .sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""))[0] ?? null;
   return { invoices, nextDue };
 }
@@ -121,25 +134,41 @@ export default async function ParentBilling() {
                 내역이 없습니다.
               </p>
             ) : (
-              invoices.map((inv) => (
-                <a key={inv.id} href={`/parent/billing/${inv.id}`} className="list-row">
-                  <div style={{ flex: 1 }}>
-                    <div className="list-row-title">{ym(inv.due_date)} 수강료</div>
-                    <div className="list-row-sub">
-                      {inv.status === "paid"
-                        ? `${inv.paid_at?.slice(0, 10) ?? ""} 완납`
-                        : `납부 마감 ${inv.due_date ?? "-"}`}
+              invoices.map((inv) => {
+                const c = STATUS_COLOR[inv.status] ?? "#6f7d78";
+                const bg = STATUS_BG[inv.status] ?? "#f3f4f6";
+                const label = STATUS_LABEL[inv.status] ?? inv.status;
+                return (
+                  <a key={inv.id} href={`/parent/billing/${inv.id}`} className="list-row">
+                    <div style={{ flex: 1 }}>
+                      <div className="list-row-title">{ym(inv.due_date)} 수강료</div>
+                      <div className="list-row-sub">
+                        {inv.status === "결제완료"
+                          ? `${inv.paid_at?.slice(0, 10) ?? ""} 완납`
+                          : `납부 마감 ${inv.due_date ?? "-"}`}
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <strong style={{ fontSize: 14 }}>{fmt(inv.amount)}</strong>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: STATUS_COLOR[inv.status] ?? "#6f7d78", marginTop: 2 }}>
-                      {STATUS_LABEL[inv.status] ?? inv.status}
+                    <div style={{ textAlign: "right" }}>
+                      <strong style={{ fontSize: 14 }}>{fmt(inv.amount)}</strong>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 800,
+                          color: c,
+                          background: bg,
+                          padding: "2px 8px",
+                          borderRadius: 6,
+                          marginTop: 4,
+                          display: "inline-block",
+                        }}
+                      >
+                        {label}
+                      </div>
                     </div>
-                  </div>
-                  <ChevronRight size={14} color="#9ca3af" />
-                </a>
-              ))
+                    <ChevronRight size={14} color="#9ca3af" />
+                  </a>
+                );
+              })
             )}
           </div>
         </section>
