@@ -1974,3 +1974,15 @@ begin
 end;
 $$;
 grant execute on function public.list_link_students_masked(uuid, text, text) to authenticated;
+
+-------------------------------------------------------------------------------
+--  31. 학부모/학생 알림 설정 — users 알림 on/off 컬럼
+--     채널 (FCM 푸시 / 카카오 알림톡) + 카테고리 (결제/출결/리포트/보강/공지)
+-------------------------------------------------------------------------------
+alter table public.users add column if not exists notify_push        boolean not null default true;
+alter table public.users add column if not exists notify_alimtalk    boolean not null default true;
+alter table public.users add column if not exists notify_payment     boolean not null default true;
+alter table public.users add column if not exists notify_attendance  boolean not null default true;
+alter table public.users add column if not exists notify_report      boolean not null default true;
+alter table public.users add column if not exists notify_makeup      boolean not null default true;
+alter table public.users add column if not exists notify_notice      boolean not null default true;
