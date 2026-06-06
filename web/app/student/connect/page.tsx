@@ -39,8 +39,18 @@ async function fetchLinks(): Promise<LinkItem[]> {
   }));
 }
 
-export default async function StudentConnectList() {
+export default async function StudentConnectList({
+  searchParams,
+}: {
+  searchParams: Promise<{ msg?: string }>;
+}) {
   const list = await fetchLinks();
+  const { msg } = await searchParams;
+  const toastMap: Record<string, { text: string; bg: string; color: string }> = {
+    submitted: { text: "연결 신청이 접수되었습니다. 지점 어드민 승인 후 활성화됩니다.", bg: "#d8ecdf", color: "#1e794e" },
+    "already-applied": { text: "이미 같은 본인으로 신청한 기록이 있습니다.", bg: "#fef3c7", color: "#d97706" },
+  };
+  const toast = msg ? toastMap[msg] : null;
   return (
     <>
       <div className="portal-topbar">
@@ -51,6 +61,11 @@ export default async function StudentConnectList() {
         <Bell size={20} />
       </div>
       <div className="portal-content">
+        {toast && (
+          <div style={{ padding: "10px 14px", background: toast.bg, color: toast.color, borderRadius: 8, fontSize: 12, fontWeight: 600, marginBottom: 12 }}>
+            {toast.text}
+          </div>
+        )}
         {list.length === 0 ? (
           <section className="card" style={{ padding: 24, textAlign: "center" }}>
             <strong style={{ display: "block", fontSize: 14 }}>아직 연결된 본인 정보가 없습니다</strong>
