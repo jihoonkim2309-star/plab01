@@ -111,11 +111,16 @@ export default async function StudentHome() {
         <Bell size={20} />
       </div>
       <div className="portal-content">
-        {!linked ? (
-          <section className="card" style={{ padding: 24, textAlign: "center" }}>
-            {pendingCount > 0 ? (
+        {/* 오늘의 수업 / 본인 연결 카드 */}
+        <section className="card">
+          <div className="card-head">
+            <strong>오늘의 수업</strong>
+            <a href="/student/connect" className="card-more">본인 연결 <ChevronRight size={14} /></a>
+          </div>
+          {!linked ? (
+            pendingCount > 0 ? (
               <>
-                <div style={{ padding: "12px 14px", background: "#fef3c7", color: "#d97706", borderRadius: 10, fontSize: 13, fontWeight: 600, marginBottom: 14, lineHeight: 1.5 }}>
+                <div style={{ padding: "12px 14px", background: "#fef3c7", color: "#d97706", borderRadius: 10, fontSize: 13, fontWeight: 600, marginBottom: 10, lineHeight: 1.5 }}>
                   ⏳ 본인 연결 신청 {pendingCount}건이 어드민 승인 대기 중입니다.
                 </div>
                 <a href="/student/connect" className="btn" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
@@ -123,66 +128,60 @@ export default async function StudentHome() {
                 </a>
               </>
             ) : (
-              <>
-                <strong style={{ fontSize: 14, display: "block" }}>본인 정보 연결이 필요합니다</strong>
-                <p style={{ fontSize: 12, color: "#6f7d78", marginTop: 8, lineHeight: 1.5, marginBottom: 16 }}>
-                  본인을 선택해 연결 신청하면 지점 어드민이 확인 후 승인합니다.
+              <div style={{ padding: "8px 0" }}>
+                <p style={{ fontSize: 12, color: "#6f7d78", marginBottom: 8 }}>
+                  본인 정보를 연결하면 오늘 수업이 표시됩니다.
                 </p>
                 <a href="/student/connect/new" className="btn primary" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
                   본인 연결 신청
                 </a>
-              </>
-            )}
-          </section>
-        ) : (
-          <>
-            <section className="card">
-              <strong>오늘의 수업</strong>
-              {today ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, padding: 10, background: "var(--brand-soft, #d8ecdf)", borderRadius: 8 }}>
-                  <Clock size={18} color={today.color ? COLOR_MAP[today.color] ?? "#1e794e" : "#1e794e"} />
-                  <div style={{ flex: 1 }}>
-                    <strong style={{ fontSize: 14 }}>{today.name}</strong>
-                    <div style={{ fontSize: 11, color: "#6f7d78", marginTop: 2 }}>
-                      {today.time}{today.coach && ` · ${today.coach}`}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <p style={{ fontSize: 12, color: "#6f7d78", marginTop: 8 }}>오늘 수업이 없습니다.</p>
-              )}
-              {studentName && (
-                <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 8, textAlign: "right" }}>{studentName}</div>
-              )}
-            </section>
-
-            <section className="quick-grid">
-              <a href="/student/schedule" className="quick-item"><Calendar size={22} /><span>시간표</span></a>
-              <a href="/student/shuttle" className="quick-item"><QrCode size={22} /><span>셔틀 QR</span></a>
-              <a href="/student/reports" className="quick-item"><FileText size={22} /><span>내 리포트</span></a>
-            </section>
-
-            <section className="card">
-              <div className="card-head">
-                <strong>알림</strong>
-                <a href="/student/notices" className="card-more">전체 보기 <ChevronRight size={14} /></a>
               </div>
-              {notices.length === 0 ? (
-                <p style={{ fontSize: 12, color: "#6f7d78", padding: "8px 0" }}>새 알림이 없습니다.</p>
-              ) : (
-                notices.map((n) => (
-                  <a key={n.id} href={`/student/notices/${n.id}`} className="notice-row">
-                    <div style={{ flex: 1 }}>
-                      <div className="notice-title">{n.title}</div>
-                      <div className="notice-time">{n.time}</div>
-                    </div>
-                    <ChevronRight size={14} color="#9ca3af" />
-                  </a>
-                ))
-              )}
-            </section>
-          </>
-        )}
+            )
+          ) : today ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, padding: 10, background: "var(--brand-soft, #d8ecdf)", borderRadius: 8 }}>
+              <Clock size={18} color={today.color ? COLOR_MAP[today.color] ?? "#1e794e" : "#1e794e"} />
+              <div style={{ flex: 1 }}>
+                <strong style={{ fontSize: 14 }}>{today.name}</strong>
+                <div style={{ fontSize: 11, color: "#6f7d78", marginTop: 2 }}>
+                  {today.time}{today.coach && ` · ${today.coach}`}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p style={{ fontSize: 12, color: "#6f7d78", marginTop: 8 }}>오늘 수업이 없습니다.</p>
+          )}
+          {studentName && (
+            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 8, textAlign: "right" }}>{studentName}</div>
+          )}
+        </section>
+
+        {/* 빠른 메뉴 */}
+        <section className="quick-grid">
+          <a href="/student/schedule" className="quick-item"><Calendar size={22} /><span>시간표</span></a>
+          <a href="/student/shuttle" className="quick-item"><QrCode size={22} /><span>셔틀 QR</span></a>
+          <a href="/student/reports" className="quick-item"><FileText size={22} /><span>내 리포트</span></a>
+        </section>
+
+        {/* 알림 */}
+        <section className="card">
+          <div className="card-head">
+            <strong>알림</strong>
+            <a href="/student/notices" className="card-more">전체 보기 <ChevronRight size={14} /></a>
+          </div>
+          {notices.length === 0 ? (
+            <p style={{ fontSize: 12, color: "#6f7d78", padding: "8px 0" }}>새 알림이 없습니다.</p>
+          ) : (
+            notices.map((n) => (
+              <a key={n.id} href={`/student/notices/${n.id}`} className="notice-row">
+                <div style={{ flex: 1 }}>
+                  <div className="notice-title">{n.title}</div>
+                  <div className="notice-time">{n.time}</div>
+                </div>
+                <ChevronRight size={14} color="#9ca3af" />
+              </a>
+            ))
+          )}
+        </section>
       </div>
       <StudentTabbar />
     </>
