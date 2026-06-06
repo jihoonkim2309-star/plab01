@@ -16,12 +16,7 @@ async function fetchOrCreateChat(): Promise<{ messages: Msg[]; inquiryId: string
   const { supabase, userId, centerId } = guard;
   if (!centerId) return { messages: [], inquiryId: null };
 
-  // 기존 chat inquiry 찾기 (kind='chat', 학부모 = parent_id 같은 row)
-  // inquiries 에는 parent_id 컬럼이 없음. requester 식별을 위해 user_metadata 또는 별도 추적 필요.
-  // 단순화: 학부모 자녀 student_id → inquiries (kind='chat', requester_name=학부모이름?) — 의미 약함.
-  //
-  // 임시: 학부모 자녀 1명의 student 의 center 의 'chat' 중 학부모 본인 발신 메시지가 있는 첫 inquiry 사용.
-  // 정식 구현은 inquiries 에 parent_id 컬럼 추가 권장 — 다음 phase.
+  // 기존 chat inquiry 찾기 — created_by = 본인. RLS inquiries_parent_own_read 도 동일 기준.
   const { data: profile } = await supabase
     .from("users")
     .select("name")
@@ -32,16 +27,15 @@ async function fetchOrCreateChat(): Promise<{ messages: Msg[]; inquiryId: string
   const { data: existing } = await supabase
     .from("inquiries")
     .select("id")
-    .eq("center_id", centerId)
     .eq("kind", "chat")
-    .eq("requester_name", parentName ?? "")
+    .eq("created_by", userId)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
   let inquiryId = (existing as { id: string } | null)?.id ?? null;
 
   if (!inquiryId) {
-    const { data: created } = await supabase
+    const { data: created, error: createErr } = await supabase
       .from("inquiries")
       .insert({
         center_id: centerId,
@@ -51,9 +45,14 @@ async function fetchOrCreateChat(): Promise<{ messages: Msg[]; inquiryId: string
         body: "",
         requester_name: parentName,
         status: "접수",
+        created_by: userId,
       })
       .select("id")
       .single();
+    if (createErr) {
+      // RLS 또는 schema 문제 → 로그 출력 후 빈 채팅 표시
+      console.error("학부모 1:1 inquiry 생성 실패:", createErr.message);
+    }
     inquiryId = (created as { id: string } | null)?.id ?? null;
   }
 

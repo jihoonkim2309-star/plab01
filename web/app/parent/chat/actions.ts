@@ -83,10 +83,12 @@ export async function sendParentChat(formData: FormData) {
   } = await supabase.auth.getSession();
   if (!session) redirect("/login");
 
+  // RLS inquiries_parent_own_read 로 본인 created_by 만 select 가능
   const { data: inq } = await supabase
     .from("inquiries")
     .select("center_id")
     .eq("id", inquiryId)
+    .eq("created_by", session.user.id)
     .single();
   const centerId = (inq as { center_id?: string } | null)?.center_id;
   if (!centerId) return;
