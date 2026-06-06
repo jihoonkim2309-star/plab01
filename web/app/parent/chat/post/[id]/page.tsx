@@ -158,7 +158,6 @@ export default async function ParentChatPostDetail({
         action={sendParentPostReply}
         data-no-loading="true"
         className="chat-input-form"
-        encType="multipart/form-data"
       >
         <input type="hidden" name="inquiry_id" value={detail.id} />
         <ChatComposer placeholder="추가 메시지 (Enter = 전송, Shift+Enter = 줄바꿈)" />

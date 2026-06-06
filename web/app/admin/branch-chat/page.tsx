@@ -117,7 +117,6 @@ export default async function BranchChatPage() {
           action={sendBranchChatAsAdmin}
           data-no-loading="true"
           className="chat-input-form"
-          encType="multipart/form-data"
         >
           <ChatComposer
             placeholder="본사에 보낼 메시지 (Enter = 전송, Shift+Enter = 줄바꿈)"

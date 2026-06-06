@@ -183,7 +183,6 @@ export default async function ParentChat1on1() {
           action={sendParentChat}
           data-no-loading="true"
           className="chat-input-form"
-          encType="multipart/form-data"
         >
           <input type="hidden" name="inquiry_id" value={inquiryId} />
           <ChatComposer placeholder="지점에 보낼 메시지 (Enter = 전송, Shift+Enter = 줄바꿈)" />
