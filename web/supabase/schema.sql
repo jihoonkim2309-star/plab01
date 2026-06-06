@@ -1986,3 +1986,67 @@ alter table public.users add column if not exists notify_attendance  boolean not
 alter table public.users add column if not exists notify_report      boolean not null default true;
 alter table public.users add column if not exists notify_makeup      boolean not null default true;
 alter table public.users add column if not exists notify_notice      boolean not null default true;
+
+-------------------------------------------------------------------------------
+--  32. 학생 본인 포털 — students/enrollments/classes/reports/invoices RLS
+--     student_account_links (status='linked') 의 student_id 가 본인 자녀
+-------------------------------------------------------------------------------
+drop policy if exists students_student_read on public.students;
+create policy students_student_read on public.students
+  for select using (
+    exists (
+      select 1 from public.student_account_links sal
+      where sal.user_id = auth.uid()
+        and sal.student_id = public.students.id
+        and sal.status = 'linked'
+    )
+  );
+
+drop policy if exists enrollments_student_read on public.enrollments;
+create policy enrollments_student_read on public.enrollments
+  for select using (
+    exists (
+      select 1 from public.student_account_links sal
+      where sal.user_id = auth.uid()
+        and sal.student_id = public.enrollments.student_id
+        and sal.status = 'linked'
+    )
+  );
+
+drop policy if exists classes_student_read on public.classes;
+create policy classes_student_read on public.classes
+  for select using (
+    exists (
+      select 1 from public.students s
+      join public.student_account_links sal
+        on sal.student_id = s.id
+       and sal.user_id = auth.uid()
+       and sal.status = 'linked'
+      where s.class_id = public.classes.id
+    )
+  );
+
+drop policy if exists reports_student_read on public.reports;
+create policy reports_student_read on public.reports
+  for select using (
+    status = '발행완료'
+    and public_to_parent = true
+    and exists (
+      select 1 from public.student_account_links sal
+      where sal.user_id = auth.uid()
+        and sal.student_id = public.reports.student_id
+        and sal.status = 'linked'
+    )
+  );
+
+-- 셔틀 배정 (학생 본인 것만)
+drop policy if exists ssa_student_read on public.student_stop_assignments;
+create policy ssa_student_read on public.student_stop_assignments
+  for select using (
+    exists (
+      select 1 from public.student_account_links sal
+      where sal.user_id = auth.uid()
+        and sal.student_id = public.student_stop_assignments.student_id
+        and sal.status = 'linked'
+    )
+  );
