@@ -116,7 +116,8 @@ export async function assignShuttle(formData: FormData) {
       const { error } = await supabase
         .from("student_stop_assignments")
         .update(payload)
-        .eq("id", (existing as { id: string }).id);
+        .eq("id", (existing as { id: string }).id)
+        .eq("center_id", cid);
       if (error) throw new Error("배정 갱신 실패: " + error.message);
     } else {
       const { error } = await supabase
@@ -139,7 +140,8 @@ export async function assignShuttle(formData: FormData) {
       await supabase
         .from("student_stop_assignments")
         .update({ status: "중지" })
-        .eq("id", (existing as { id: string }).id);
+        .eq("id", (existing as { id: string }).id)
+        .eq("center_id", cid);
     }
     await supabase
       .from("students")

@@ -109,6 +109,7 @@ export async function replyMessage(inquiryId: string, formData: FormData) {
     .from("inquiries")
     .update({ status: "처리중" })
     .eq("id", inquiryId)
+    .eq("center_id", centerId)
     .eq("status", "접수");
 
   revalidatePath(basePath);
@@ -120,7 +121,7 @@ export async function setInquiryStatus(
   status: string,
   formData: FormData,
 ) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const back = formData.get("back");
   const basePath = await pathForInquiry(supabase, id);
   const dest = safeBack(
@@ -131,19 +132,24 @@ export async function setInquiryStatus(
   const { error } = await supabase
     .from("inquiries")
     .update({ status })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("처리 실패: " + error.message);
   revalidatePath(basePath);
   redirect(dest);
 }
 
 export async function deleteInquiry(id: string, formData: FormData) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const back = formData.get("back");
   const basePath = await pathForInquiry(supabase, id);
   const dest = safeBack(typeof back === "string" ? back : null, basePath);
 
-  const { error } = await supabase.from("inquiries").delete().eq("id", id);
+  const { error } = await supabase
+    .from("inquiries")
+    .delete()
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("삭제 실패: " + error.message);
   revalidatePath(basePath);
   redirect(dest);

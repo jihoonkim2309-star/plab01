@@ -24,8 +24,12 @@ export async function createHoliday(formData: FormData) {
 }
 
 export async function deleteHoliday(id: string) {
-  const { supabase } = await requireCenter();
-  const { error } = await supabase.from("holidays").delete().eq("id", id);
+  const { supabase, centerId } = await requireCenter();
+  const { error } = await supabase
+    .from("holidays")
+    .delete()
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("삭제 실패: " + error.message);
   revalidatePath("/admin/holidays");
   redirect("/admin/holidays");

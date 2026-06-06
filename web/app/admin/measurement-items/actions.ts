@@ -143,13 +143,14 @@ export async function createItem(formData: FormData) {
 }
 
 export async function updateItem(id: string, formData: FormData) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const row = readForm(formData);
   if (!row.category || !row.name) throw new Error("카테고리·항목명은 필수입니다.");
   const { error } = await supabase
     .from("measurement_items")
     .update(row)
-    .eq("id", id);
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("수정 실패: " + error.message);
 
   await applyIconChanges(supabase, id, formData);
@@ -161,11 +162,12 @@ export async function updateItem(id: string, formData: FormData) {
 // 아이콘 완전 숨기기: 업로드본 제거 + 기본 SVG 매핑도 가리도록 icon_hidden=true.
 // 다시 업로드하면 icon_hidden=false 로 자동 복귀.
 export async function removeItemIcon(id: string) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const { error } = await supabase
     .from("measurement_items")
     .update({ icon_url: null, icon_hidden: true })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("아이콘 제거 실패: " + error.message);
   revalidatePath("/admin/measurement-items");
 }
@@ -173,17 +175,19 @@ export async function removeItemIcon(id: string) {
 // 같은 카테고리 안에서 sort_order 위/아래 이웃과 swap.
 // 카테고리 안에서 sort_order 가 unique 하다고 가정 (시드 10/20/30… 간격).
 async function swapWithNeighbor(id: string, direction: "up" | "down") {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const { data: cur } = await supabase
     .from("measurement_items")
     .select("id, category, sort_order")
     .eq("id", id)
+    .eq("center_id", centerId)
     .single();
   if (!cur) return;
   const q = supabase
     .from("measurement_items")
     .select("id, sort_order")
-    .eq("category", cur.category);
+    .eq("category", cur.category)
+    .eq("center_id", centerId);
   const { data: neighbor } =
     direction === "up"
       ? await q
@@ -200,11 +204,13 @@ async function swapWithNeighbor(id: string, direction: "up" | "down") {
   await supabase
     .from("measurement_items")
     .update({ sort_order: neighbor.sort_order })
-    .eq("id", cur.id);
+    .eq("id", cur.id)
+    .eq("center_id", centerId);
   await supabase
     .from("measurement_items")
     .update({ sort_order: cur.sort_order })
-    .eq("id", neighbor.id);
+    .eq("id", neighbor.id)
+    .eq("center_id", centerId);
   revalidatePath("/admin/measurement-items");
 }
 export async function moveItemUp(id: string) {
@@ -216,18 +222,23 @@ export async function moveItemDown(id: string) {
 
 // 명시적 "기본 아이콘으로 복귀" (icon_hidden=false, icon_url 유지).
 export async function restoreItemIcon(id: string) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const { error } = await supabase
     .from("measurement_items")
     .update({ icon_hidden: false })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("기본 아이콘 복귀 실패: " + error.message);
   revalidatePath("/admin/measurement-items");
 }
 
 export async function deleteItem(id: string) {
-  const { supabase } = await requireCenter();
-  const { error } = await supabase.from("measurement_items").delete().eq("id", id);
+  const { supabase, centerId } = await requireCenter();
+  const { error } = await supabase
+    .from("measurement_items")
+    .delete()
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("삭제 실패: " + error.message);
   revalidatePath("/admin/measurement-items");
   redirect("/admin/measurement-items");

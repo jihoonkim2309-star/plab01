@@ -55,6 +55,7 @@ export default async function ReportPreviewPage({
       "id, student_id, report_month, report_type, status, snapshot, coach_comment, admin_comment, published_at, public_to_parent",
     )
     .eq("id", id)
+    .eq("center_id", centerId)
     .single();
   if (!r) notFound();
 

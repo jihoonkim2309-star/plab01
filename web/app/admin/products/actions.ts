@@ -30,18 +30,26 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function updateProduct(id: string, formData: FormData) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const row = readForm(formData);
   if (!row.name) throw new Error("상품명은 필수입니다.");
-  const { error } = await supabase.from("products").update(row).eq("id", id);
+  const { error } = await supabase
+    .from("products")
+    .update(row)
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("수정 실패: " + error.message);
   revalidatePath("/admin/products");
   redirect("/admin/products");
 }
 
 export async function deleteProduct(id: string) {
-  const { supabase } = await requireCenter();
-  const { error } = await supabase.from("products").delete().eq("id", id);
+  const { supabase, centerId } = await requireCenter();
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("삭제 실패: " + error.message);
   revalidatePath("/admin/products");
   redirect("/admin/products");

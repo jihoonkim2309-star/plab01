@@ -55,11 +55,15 @@ export async function createClass(formData: FormData) {
 }
 
 export async function updateClass(id: string, formData: FormData) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const row = readForm(formData);
   if (!row.name) throw new Error("클래스명은 필수입니다.");
 
-  const { error } = await supabase.from("classes").update(row).eq("id", id);
+  const { error } = await supabase
+    .from("classes")
+    .update(row)
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("수정 실패: " + error.message);
 
   revalidatePath("/admin/classes");
@@ -67,8 +71,12 @@ export async function updateClass(id: string, formData: FormData) {
 }
 
 export async function deleteClass(id: string) {
-  const { supabase } = await requireCenter();
-  const { error } = await supabase.from("classes").delete().eq("id", id);
+  const { supabase, centerId } = await requireCenter();
+  const { error } = await supabase
+    .from("classes")
+    .delete()
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("삭제 실패: " + error.message);
 
   revalidatePath("/admin/classes");

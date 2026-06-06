@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import ClassForm from "../../ClassForm";
 import { updateClass, deleteClass } from "../../actions";
+import { requireCenter } from "@/lib/center";
 
 export default async function EditClassPage({
   params,
@@ -9,11 +9,12 @@ export default async function EditClassPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const { supabase, centerId } = await requireCenter();
   const { data: c } = await supabase
     .from("classes")
     .select("*")
     .eq("id", id)
+    .eq("center_id", centerId)
     .single();
 
   if (!c) notFound();
@@ -22,6 +23,7 @@ export default async function EditClassPage({
     .from("users")
     .select("id, name")
     .eq("role", "coach")
+    .eq("center_id", centerId)
     .order("name");
 
   return (

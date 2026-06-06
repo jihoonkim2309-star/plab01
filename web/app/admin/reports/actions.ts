@@ -8,7 +8,7 @@ import { buildSnapshot } from "./snapshot";
 // 코멘트만 저장. 발행/공개 상태는 publishReport/unpublishReport 가 일괄 관리.
 // 발행 후에도 코멘트 수정 허용 (snapshot 수치만 동결, 코멘트는 사후 편집 가능).
 export async function updateReport(formData: FormData) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("id 필수");
   const coach = String(formData.get("coach_comment") ?? "").trim() || null;
@@ -19,7 +19,8 @@ export async function updateReport(formData: FormData) {
       coach_comment: coach,
       admin_comment: admin,
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("저장 실패: " + error.message);
   revalidatePath("/admin/reports");
 }
@@ -34,6 +35,7 @@ export async function publishReport(formData: FormData) {
     .from("reports")
     .select("student_id, report_month")
     .eq("id", id)
+    .eq("center_id", centerId)
     .single();
   if (!r) throw new Error("리포트 없음");
 
@@ -53,13 +55,14 @@ export async function publishReport(formData: FormData) {
       snapshot,
       measurement_id: measurementId,
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("발행 실패: " + error.message);
   revalidatePath("/admin/reports");
 }
 
 export async function unpublishReport(formData: FormData) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("id 필수");
   const { error } = await supabase
@@ -69,17 +72,22 @@ export async function unpublishReport(formData: FormData) {
       published_at: null,
       public_to_parent: false,
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("발행 취소 실패: " + error.message);
   revalidatePath("/admin/reports");
 }
 
 export async function deleteReport(formData: FormData) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const id = String(formData.get("id") ?? "");
   const ym = String(formData.get("ym") ?? "");
   if (!id) throw new Error("id 필수");
-  const { error } = await supabase.from("reports").delete().eq("id", id);
+  const { error } = await supabase
+    .from("reports")
+    .delete()
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("삭제 실패: " + error.message);
   revalidatePath("/admin/reports");
   redirect(`/admin/reports${ym ? `?ym=${ym}` : ""}`);
@@ -127,7 +135,8 @@ export async function bulkReportAction(formData: FormData) {
             snapshot,
             measurement_id: measurementId,
           })
-          .eq("id", r.id);
+          .eq("id", r.id)
+          .eq("center_id", centerId);
         if (error) throw new Error(`발행 실패 (${r.id}): ${error.message}`);
       }),
     );
@@ -196,7 +205,8 @@ export async function publishAllGenerated(formData: FormData) {
         snapshot,
         measurement_id: measurementId,
       })
-      .eq("id", r.id);
+      .eq("id", r.id)
+      .eq("center_id", centerId);
     if (error) throw new Error(`발행 실패 (${r.id}): ${error.message}`);
   }
   revalidatePath("/admin/reports");

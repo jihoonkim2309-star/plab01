@@ -23,19 +23,24 @@ export async function createMakeup(formData: FormData) {
 }
 
 export async function setMakeupStatus(id: string, status: string) {
-  const { supabase } = await requireCenter();
+  const { supabase, centerId } = await requireCenter();
   const { error } = await supabase
     .from("makeups")
     .update({ status })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("처리 실패: " + error.message);
   revalidatePath("/admin/makeups");
   redirect("/admin/makeups");
 }
 
 export async function deleteMakeup(id: string) {
-  const { supabase } = await requireCenter();
-  const { error } = await supabase.from("makeups").delete().eq("id", id);
+  const { supabase, centerId } = await requireCenter();
+  const { error } = await supabase
+    .from("makeups")
+    .delete()
+    .eq("id", id)
+    .eq("center_id", centerId);
   if (error) throw new Error("삭제 실패: " + error.message);
   revalidatePath("/admin/makeups");
   redirect("/admin/makeups");

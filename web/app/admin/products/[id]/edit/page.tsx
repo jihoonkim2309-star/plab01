@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import ProductForm from "../../ProductForm";
 import { updateProduct, deleteProduct } from "../../actions";
+import { requireCenter } from "@/lib/center";
 
 export default async function EditProductPage({
   params,
@@ -9,11 +9,12 @@ export default async function EditProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const { supabase, centerId } = await requireCenter();
   const { data: p } = await supabase
     .from("products")
     .select("*")
     .eq("id", id)
+    .eq("center_id", centerId)
     .single();
 
   if (!p) notFound();

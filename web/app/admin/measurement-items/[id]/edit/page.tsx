@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { deleteItem, updateItem } from "../../actions";
 import ItemForm from "../../ItemForm";
+import { requireCenter } from "@/lib/center";
 
 export default async function EditMeasurementItemPage({
   params,
@@ -9,13 +9,14 @@ export default async function EditMeasurementItemPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const { supabase, centerId } = await requireCenter();
   const { data: item } = await supabase
     .from("measurement_items")
     .select(
       "id, category, name, unit, value_kind, sort_order, active, icon, icon_url, icon_hidden",
     )
     .eq("id", id)
+    .eq("center_id", centerId)
     .single();
   if (!item) notFound();
 
