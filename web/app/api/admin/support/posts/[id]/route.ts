@@ -10,7 +10,15 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { supabase, centerId } = await requireCenter();
+  const { supabase, centerId, userId } = await requireCenter();
+
+  // 진입 시 자동 mark_read — 사이드바 뱃지 자동 감소
+  await supabase
+    .from("inquiry_reads")
+    .upsert(
+      { inquiry_id: id, user_id: userId, last_read_at: new Date().toISOString() },
+      { onConflict: "inquiry_id,user_id" },
+    );
 
   const [inqRes, msgsRes] = await Promise.all([
     supabase

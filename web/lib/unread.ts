@@ -36,6 +36,20 @@ export async function getUnreadCounts(
       centerId: args.centerId,
       kind: "branch_to_hq",
     });
+
+    // 학부모/학생 1:1 채팅 — chat inquiry 의 customer 메시지 중 본인 미열람
+    counts["support-chats"] = await countSupportInquiryUnread(supabase, {
+      userId: args.userId,
+      centerId: args.centerId,
+      kind: "chat",
+    });
+
+    // 학부모/학생 게시글 문의 — post inquiry 의 customer 메시지 중 본인 미열람
+    counts["support-posts"] = await countSupportInquiryUnread(supabase, {
+      userId: args.userId,
+      centerId: args.centerId,
+      kind: "post",
+    });
   }
 
   // 본사 모드 (super_admin + 활성 지점 X) — 모든 지점이 본사에 보낸 메시지 카운트
@@ -136,6 +150,47 @@ async function countBranchChannelUnread(
     inquiry_id: string;
     created_at: string;
   }[]) {
+    const lastRead = readMap.get(m.inquiry_id);
+    if (!lastRead || lastRead < m.created_at) unread++;
+  }
+  return unread;
+}
+
+// 어드민이 학부모/학생 inquiry (kind='chat'/'post') 의 customer 메시지를
+// 본인 last_read_at 이후 안 읽은 메시지 수 카운트 (카톡식 N건).
+async function countSupportInquiryUnread(
+  supabase: SupabaseClient,
+  args: { userId: string; centerId: string; kind: "chat" | "post" },
+): Promise<number> {
+  const { data: inqs } = await supabase
+    .from("inquiries")
+    .select("id")
+    .eq("center_id", args.centerId)
+    .eq("kind", args.kind);
+  const list = (inqs ?? []) as { id: string }[];
+  if (list.length === 0) return 0;
+  const ids = list.map((i) => i.id);
+
+  const [readsRes, msgsRes] = await Promise.all([
+    supabase
+      .from("inquiry_reads")
+      .select("inquiry_id, last_read_at")
+      .eq("user_id", args.userId)
+      .in("inquiry_id", ids),
+    supabase
+      .from("support_messages")
+      .select("inquiry_id, created_at")
+      .in("inquiry_id", ids)
+      .eq("sender", "customer"),
+  ]);
+
+  const readMap = new Map(
+    ((readsRes.data ?? []) as { inquiry_id: string; last_read_at: string }[]).map(
+      (r) => [r.inquiry_id, r.last_read_at],
+    ),
+  );
+  let unread = 0;
+  for (const m of (msgsRes.data ?? []) as { inquiry_id: string; created_at: string }[]) {
     const lastRead = readMap.get(m.inquiry_id);
     if (!lastRead || lastRead < m.created_at) unread++;
   }

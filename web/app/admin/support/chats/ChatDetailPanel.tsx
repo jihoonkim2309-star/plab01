@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useChatDrawer } from "./ChatDrawerContext";
 import ConfirmButton from "../../ConfirmButton";
 import ChatBubble, { formatChatTime } from "../../ChatBubble";
 import ChatComposer from "../../ChatComposer";
+import ChatScrollAnchor from "../../ChatScrollAnchor";
+import { createClient } from "@/lib/supabase/client";
 import {
   replyMessage,
   setInquiryStatus,
@@ -48,32 +50,69 @@ export default function ChatDetailPanel() {
   const [data, setData] = useState<{ inquiry: Inquiry; messages: Message[] } | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const fetchData = useCallback(async (id: string, signal?: AbortSignal) => {
+    const res = await fetch(`/api/admin/support/chats/${id}`, {
+      cache: "no-store",
+      signal,
+    });
+    if (!res.ok) throw new Error("fetch_failed");
+    return res.json();
+  }, []);
+
   useEffect(() => {
     if (!chatId) {
       setData(null);
       return;
     }
-    let cancelled = false;
+    const ctl = new AbortController();
     setLoading(true);
-    fetch(`/api/admin/support/chats/${chatId}`, { cache: "no-store" })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("fetch_failed");
-        return res.json();
-      })
+    fetchData(chatId, ctl.signal)
       .then((d) => {
-        if (!cancelled) {
+        if (!ctl.signal.aborted) {
           setData(d);
           setLoading(false);
           router.refresh();
         }
       })
       .catch(() => {
-        if (!cancelled) setLoading(false);
+        if (!ctl.signal.aborted) setLoading(false);
       });
+    return () => ctl.abort();
+  }, [chatId, router, fetchData]);
+
+  // Realtime — 선택된 inquiry 의 새 메시지 INSERT 시 자동 refetch + 사이드바 뱃지 갱신
+  const debouncedRefetchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!chatId) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`admin-chat-${chatId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "support_messages",
+          filter: `inquiry_id=eq.${chatId}`,
+        },
+        () => {
+          if (debouncedRefetchRef.current) clearTimeout(debouncedRefetchRef.current);
+          debouncedRefetchRef.current = setTimeout(() => {
+            fetchData(chatId)
+              .then((d) => {
+                setData(d);
+                router.refresh();
+              })
+              .catch(() => {});
+          }, 200);
+        },
+      )
+      .subscribe();
     return () => {
-      cancelled = true;
+      if (debouncedRefetchRef.current) clearTimeout(debouncedRefetchRef.current);
+      supabase.removeChannel(channel);
     };
-  }, [chatId, router]);
+  }, [chatId, fetchData, router]);
 
   const selected = data?.inquiry ?? null;
   const messages = data?.messages ?? [];
@@ -116,7 +155,7 @@ export default function ChatDetailPanel() {
           </div>
           <div className="panel-body">
             <div className="detail-block" style={{ marginTop: 0 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="chat-thread" style={{ background: "transparent", padding: 0, maxHeight: 480 }}>
                 {messages.length === 0 && <div className="muted">아직 메시지가 없습니다.</div>}
                 {messages.map((m) => (
                   <ChatBubble
@@ -128,6 +167,7 @@ export default function ChatDetailPanel() {
                     attachments={m.attachments}
                   />
                 ))}
+                <ChatScrollAnchor k={`${messages.length}-${messages[messages.length - 1]?.id ?? ""}`} />
               </div>
               <form
                 action={replyMessage.bind(null, selected.id)}

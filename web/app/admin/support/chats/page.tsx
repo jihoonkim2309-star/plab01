@@ -120,7 +120,7 @@ export default async function SupportChatsPage({
         </strong></div>
       </div>
 
-      <div className="grid account-layout">
+      <div className="chats-layout">
         <div className="panel elevated">
           <div className="panel-head">
             <p className="panel-title">

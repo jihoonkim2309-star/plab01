@@ -1967,6 +1967,19 @@
   align-items: start;
 }
 
+/* 채팅 마스터-디테일 — 좌우 패널 높이 정렬 (목록 패널이 채팅 패널 높이 따라가도록) */
+.chats-layout {
+  display: grid;
+  grid-template-columns: minmax(680px, 1.25fr) minmax(360px, 0.75fr);
+  gap: 14px;
+  align-items: stretch;
+}
+.chats-layout > .panel { height: 100%; display: flex; flex-direction: column; }
+.chats-layout > .panel > .panel-body { flex: 1; }
+@media (max-width: 1380px) {
+  .chats-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
 @media (max-width: 1380px) {
   .app { grid-template-columns: 238px 1fr; }
   .content { padding: 32px 18px 18px; }
