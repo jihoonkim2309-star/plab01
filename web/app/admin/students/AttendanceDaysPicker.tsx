@@ -130,7 +130,7 @@ export default function AttendanceDaysPicker({
       <div className="field">
         <label>
           참여 요일{" "}
-          {classId && (
+          {classId && operatingDays.length > 0 && (
             <span className="muted" style={{ fontWeight: 400 }}>
               ({days.length}회/주) — 클래스 운영 요일 자동 적용, 참여 안 하는 요일은 클릭해 해제
             </span>
