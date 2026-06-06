@@ -33,9 +33,9 @@ function fmtTime(iso: string | null | undefined) {
 export default async function SupportChatsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ s?: string; q?: string }>;
+  searchParams: Promise<{ s?: string; q?: string; sel?: string }>;
 }) {
-  const { s, q } = await searchParams;
+  const { s, q, sel } = await searchParams;
   const { supabase, centerId: cid } = await requireCenter();
 
   let listQuery = supabase
@@ -102,7 +102,7 @@ export default async function SupportChatsPage({
   const hasFilter = !!(q || s);
 
   return (
-    <ChatDrawerProvider>
+    <ChatDrawerProvider initialId={sel ?? null}>
       <div className="page-head">
         <div>
           <h1>1:1 채팅</h1>

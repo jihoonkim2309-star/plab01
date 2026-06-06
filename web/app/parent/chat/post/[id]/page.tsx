@@ -7,6 +7,7 @@ import ChatComposer from "@/app/admin/ChatComposer";
 import ChatScrollAnchor from "@/app/admin/ChatScrollAnchor";
 import ChatBubble, { formatChatTime } from "@/app/admin/ChatBubble";
 import RefreshOnce from "@/app/admin/RefreshOnce";
+import ChatLive from "../../ChatLive";
 
 const STATUS_COLOR: Record<string, string> = {
   접수: "#d97706",
@@ -103,6 +104,7 @@ export default async function ParentChatPostDetail({
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#f6f7f9" }}>
       <RefreshOnce k={detail.id} />
+      <ChatLive inquiryId={detail.id} />
       <div className="portal-topbar">
         <a href="/parent/chat/post" style={{ color: "#fff", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", fontSize: 14 }}>
           <ArrowLeft size={18} /> 뒤로

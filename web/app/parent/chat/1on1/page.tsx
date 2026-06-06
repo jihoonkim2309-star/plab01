@@ -5,6 +5,7 @@ import ChatComposer from "@/app/admin/ChatComposer";
 import ChatScrollAnchor from "@/app/admin/ChatScrollAnchor";
 import ChatBubble, { formatChatTime } from "@/app/admin/ChatBubble";
 import RefreshOnce from "@/app/admin/RefreshOnce";
+import ChatLive from "../ChatLive";
 
 type RawAtt = {
   id: string;
@@ -137,6 +138,7 @@ export default async function ParentChat1on1() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#f6f7f9" }}>
       {inquiryId && !isEmbed && <RefreshOnce k={inquiryId} />}
+      {inquiryId && !isEmbed && <ChatLive inquiryId={inquiryId} />}
       <div className="portal-topbar">
         <a href="/parent/chat" style={{ color: "#fff", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", fontSize: 14 }}>
           <ArrowLeft size={18} /> 뒤로
