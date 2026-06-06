@@ -58,7 +58,7 @@ export default function PickerForm({
     setLoadingSt(true);
     setStudentId("");
     supabase
-      .rpc("list_link_students_masked", { p_center_id: centerId, p_school: school, p_grade: grade })
+      .rpc("list_link_students_masked_for_student", { p_center_id: centerId, p_school: school, p_grade: grade })
       .then(({ data, error }) => {
         if (!error && Array.isArray(data)) setStudents(data as MaskedStudent[]);
         setLoadingSt(false);

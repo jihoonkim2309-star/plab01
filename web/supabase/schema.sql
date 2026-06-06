@@ -2050,3 +2050,42 @@ create policy ssa_student_read on public.student_stop_assignments
         and sal.status = 'linked'
     )
   );
+
+-------------------------------------------------------------------------------
+--  33. 학생 본인 연결 신청 picker — 학생용 별도 RPC
+--     parent_student_links 와 무관 (학부모 linked 도 학생 본인 picker 에서 보여야 함)
+--     student_account_links 가 이미 linked 인 학생만 제외 (다른 본인 account 중복 매칭 방지)
+-------------------------------------------------------------------------------
+create or replace function public.list_link_students_masked_for_student(
+  p_center_id uuid, p_school text, p_grade text
+)
+returns table(id uuid, masked_name text, masked_birth text)
+language plpgsql security definer set search_path = public as $$
+begin
+  return query
+  select
+    s.id,
+    case
+      when char_length(s.name) <= 1 then s.name
+      when char_length(s.name) = 2 then substring(s.name from 1 for 1) || '*'
+      when char_length(s.name) = 3 then substring(s.name from 1 for 1) || '*' || substring(s.name from 3 for 1)
+      else substring(s.name from 1 for 1)
+           || repeat('*', char_length(s.name) - 2)
+           || substring(s.name from char_length(s.name) for 1)
+    end as masked_name,
+    case when s.birth is null then null
+         else to_char(s.birth, 'YYYY-MM') || '-**'
+    end as masked_birth
+  from public.students s
+  where s.center_id = p_center_id
+    and s.school = p_school
+    and s.grade = p_grade
+    and s.status in ('정상','상담중','휴원')
+    and not exists (
+      select 1 from public.student_account_links sal
+      where sal.student_id = s.id and sal.status = 'linked'
+    )
+  order by masked_name;
+end;
+$$;
+grant execute on function public.list_link_students_masked_for_student(uuid, text, text) to authenticated;
