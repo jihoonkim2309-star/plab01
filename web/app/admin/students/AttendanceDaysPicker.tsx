@@ -77,13 +77,9 @@ export default function AttendanceDaysPicker({
     setClassId(newId);
     const newClass = classes.find((c) => c.id === newId);
     const newOperating = parseDays(newClass?.days_of_week ?? null);
-    // 새 클래스의 운영 요일을 기본 출석 요일로 적용.
-    // 이전 days 중 새 클래스에도 운영하는 요일이 있으면 그 일부만 유지하고
-    // 그 외엔 운영 요일 전체를 default 로 (사용자가 일부 해제 가능).
-    setDays((prev) => {
-      const compat = prev.filter((d) => newOperating.includes(d));
-      return compat.length > 0 ? compat : newOperating;
-    });
+    // 사용자가 자녀의 실제 출석 요일을 명시적으로 선택해야 한다.
+    // 이전 days 중 새 클래스의 운영 요일에 포함된 것만 유지, 나머지는 제거.
+    setDays((prev) => prev.filter((d) => newOperating.includes(d)));
   }
 
   function toggleDay(d: string) {
@@ -132,7 +128,7 @@ export default function AttendanceDaysPicker({
           참여 요일{" "}
           {classId && operatingDays.length > 0 && (
             <span className="muted" style={{ fontWeight: 400 }}>
-              ({days.length}회/주) — 클래스 운영 요일 자동 적용, 참여 안 하는 요일은 클릭해 해제
+              ({days.length}회/주) — 자녀가 참여하는 요일을 클릭해 선택
             </span>
           )}
         </label>
