@@ -18,7 +18,7 @@ type AppKey = (typeof APPS)[number]["key"];
 type Device = "phone" | "tablet" | "desktop";
 
 const DEVICE_SIZE: Record<Device, { w: number; h: number }> = {
-  phone: { w: 390, h: 800 },
+  phone: { w: 430, h: 880 },
   tablet: { w: 820, h: 1180 },
   desktop: { w: 1536, h: 960 },
 };
@@ -134,7 +134,7 @@ export default function PreviewPage() {
                 cursor: "pointer",
               }}
             >
-              {d === "phone" ? "📱 폰 (390×800)" : d === "tablet" ? "📲 태블릿 (820×1180)" : "🖥️ 데스크톱 (1536×960)"}
+              {d === "phone" ? "📱 폰 (430×880)" : d === "tablet" ? "📲 태블릿 (820×1180)" : "🖥️ 데스크톱 (1536×960)"}
             </button>
           ))}
         </div>
