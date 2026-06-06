@@ -3,6 +3,47 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+// 학부모/학생 자기 inquiry 한정 — 본인 created_by 인지 확인 + center_id 반환
+async function getOwnedInquiry(
+  supabase: SupabaseClient,
+  inquiryId: string,
+  userId: string,
+): Promise<string | null> {
+  const { data: inq } = await supabase
+    .from("inquiries")
+    .select("center_id")
+    .eq("id", inquiryId)
+    .eq("created_by", userId)
+    .maybeSingle();
+  return (inq as { center_id?: string } | null)?.center_id ?? null;
+}
+
+// 메시지 INSERT 후 첨부 업로드 + attachment row insert (어드민 채팅과 동일 패턴)
+async function uploadAttachments(
+  supabase: SupabaseClient,
+  args: { messageId: string; centerId: string; files: File[] },
+) {
+  for (const file of args.files) {
+    if (!file || file.size === 0) continue;
+    if (file.size > 10 * 1024 * 1024) continue;
+    const safeName = file.name.replace(/[\\/]/g, "_");
+    const path = `${args.messageId}/${crypto.randomUUID()}-${safeName}`;
+    const { error: upErr } = await supabase.storage
+      .from("chat-attachments")
+      .upload(path, file, { contentType: file.type || undefined });
+    if (upErr) continue;
+    await supabase.from("support_message_attachments").insert({
+      message_id: args.messageId,
+      center_id: args.centerId,
+      storage_path: path,
+      file_name: file.name,
+      mime_type: file.type || null,
+      size_bytes: file.size,
+    });
+  }
+}
 
 // 학부모 게시글 문의 작성 (kind='post')
 export async function createParentPost(formData: FormData) {
@@ -40,11 +81,13 @@ export async function createParentPost(formData: FormData) {
   redirect("/parent/chat/post");
 }
 
-// 학부모 게시글 답변 스레드 메시지 전송 (sender='customer')
+// 학부모 게시글 답변 스레드 메시지 + 첨부 (sender='customer')
 export async function sendParentPostReply(formData: FormData) {
   const inquiryId = String(formData.get("inquiry_id") ?? "");
   const body = String(formData.get("body") ?? "").trim();
-  if (!inquiryId || !body) return;
+  const files = formData.getAll("files") as File[];
+  const realFiles = files.filter((f): f is File => f instanceof File && f.size > 0);
+  if (!inquiryId || (!body && realFiles.length === 0)) return;
 
   const supabase = await createClient();
   const {
@@ -52,53 +95,62 @@ export async function sendParentPostReply(formData: FormData) {
   } = await supabase.auth.getSession();
   if (!session) redirect("/user/login");
 
-  const { data: inq } = await supabase
-    .from("inquiries")
-    .select("center_id")
-    .eq("id", inquiryId)
-    .eq("created_by", session.user.id)
-    .single();
-  const centerId = (inq as { center_id?: string } | null)?.center_id;
+  const centerId = await getOwnedInquiry(supabase, inquiryId, session.user.id);
   if (!centerId) return;
 
-  await supabase.from("support_messages").insert({
-    center_id: centerId,
-    inquiry_id: inquiryId,
-    sender: "customer",
-    body,
-  });
+  const { data: msgIns, error } = await supabase
+    .from("support_messages")
+    .insert({
+      center_id: centerId,
+      inquiry_id: inquiryId,
+      sender: "customer",
+      body: body || "",
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error("전송 실패: " + error.message);
+  const messageId = (msgIns as { id: string }).id;
+
+  if (realFiles.length > 0) {
+    await uploadAttachments(supabase, { messageId, centerId, files: realFiles });
+  }
 
   revalidatePath(`/parent/chat/post/${inquiryId}`);
 }
 
-// 학부모 1:1 채팅 메시지 전송
+// 학부모 1:1 채팅 메시지 + 첨부. redirect 제거 (revalidatePath 만 — same-path navigate 깜박임 회피)
 export async function sendParentChat(formData: FormData) {
   const inquiryId = String(formData.get("inquiry_id") ?? "");
   const body = String(formData.get("body") ?? "").trim();
-  if (!inquiryId || !body) return;
+  const files = formData.getAll("files") as File[];
+  const realFiles = files.filter((f): f is File => f instanceof File && f.size > 0);
+  if (!inquiryId || (!body && realFiles.length === 0)) return;
 
   const supabase = await createClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (!session) redirect("/login");
+  if (!session) redirect("/user/login");
 
-  // RLS inquiries_parent_own_read 로 본인 created_by 만 select 가능
-  const { data: inq } = await supabase
-    .from("inquiries")
-    .select("center_id")
-    .eq("id", inquiryId)
-    .eq("created_by", session.user.id)
-    .single();
-  const centerId = (inq as { center_id?: string } | null)?.center_id;
+  const centerId = await getOwnedInquiry(supabase, inquiryId, session.user.id);
   if (!centerId) return;
 
-  await supabase.from("support_messages").insert({
-    center_id: centerId,
-    inquiry_id: inquiryId,
-    sender: "customer",
-    body,
-  });
+  const { data: msgIns, error } = await supabase
+    .from("support_messages")
+    .insert({
+      center_id: centerId,
+      inquiry_id: inquiryId,
+      sender: "customer",
+      body: body || "",
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error("전송 실패: " + error.message);
+  const messageId = (msgIns as { id: string }).id;
+
+  if (realFiles.length > 0) {
+    await uploadAttachments(supabase, { messageId, centerId, files: realFiles });
+  }
 
   await supabase
     .from("inquiries")
@@ -107,5 +159,5 @@ export async function sendParentChat(formData: FormData) {
     .eq("status", "접수");
 
   revalidatePath("/parent/chat/1on1");
-  redirect("/parent/chat/1on1");
+  revalidatePath("/admin/branch-chat");
 }

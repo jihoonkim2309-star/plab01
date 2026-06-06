@@ -1,7 +1,14 @@
 import { Bell, MessageSquare, FileText } from "lucide-react";
 import PortalTabbar from "../PortalTabbar";
+import { requirePortal } from "@/lib/portal-auth";
+import { fetchParentUnread } from "@/lib/parent-unread";
 
-export default function ParentChat() {
+export default async function ParentChat() {
+  const guard = await requirePortal("parent");
+  const unread = guard.isEmbed
+    ? { chat: 0, post: 0, total: 0 }
+    : await fetchParentUnread();
+
   return (
     <>
       <div className="portal-topbar">
@@ -17,6 +24,26 @@ export default function ParentChat() {
               정식 문의 — 제목·내용 작성 후 지점이 답변
             </div>
           </div>
+          {unread.post > 0 && (
+            <span
+              style={{
+                minWidth: 20,
+                height: 20,
+                padding: "0 6px",
+                borderRadius: 10,
+                background: "#b42318",
+                color: "#fff",
+                fontSize: 11,
+                fontWeight: 800,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxSizing: "border-box",
+              }}
+            >
+              {unread.post > 99 ? "99+" : unread.post}
+            </span>
+          )}
         </a>
 
         <a href="/parent/chat/1on1" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", color: "#111" }}>
@@ -27,6 +54,26 @@ export default function ParentChat() {
               빠른 질의 — 지점과 실시간 카톡 스타일 대화
             </div>
           </div>
+          {unread.chat > 0 && (
+            <span
+              style={{
+                minWidth: 20,
+                height: 20,
+                padding: "0 6px",
+                borderRadius: 10,
+                background: "#b42318",
+                color: "#fff",
+                fontSize: 11,
+                fontWeight: 800,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxSizing: "border-box",
+              }}
+            >
+              {unread.chat > 99 ? "99+" : unread.chat}
+            </span>
+          )}
         </a>
 
         <div className="card" style={{ background: "#fafafa" }}>

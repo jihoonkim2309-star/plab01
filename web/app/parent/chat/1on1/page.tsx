@@ -1,28 +1,44 @@
-import { ArrowLeft, Bell, Send } from "lucide-react";
+import { ArrowLeft, Bell } from "lucide-react";
 import { requirePortal } from "@/lib/portal-auth";
 import { sendParentChat } from "../actions";
+import ChatComposer from "@/app/admin/ChatComposer";
+import ChatScrollAnchor from "@/app/admin/ChatScrollAnchor";
+import ChatBubble, { formatChatTime } from "@/app/admin/ChatBubble";
+import RefreshOnce from "@/app/admin/RefreshOnce";
 
-type Msg = { id: string; sender: string; body: string; created_at: string };
+type RawAtt = {
+  id: string;
+  storage_path: string;
+  file_name: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+};
+type RawMsg = {
+  id: string;
+  sender: string;
+  body: string;
+  created_at: string;
+  support_message_attachments: RawAtt[] | null;
+};
 
-const MOCK_MSGS: Msg[] = [
-  { id: "m1", sender: "admin", body: "안녕하세요! 학부모님 무엇을 도와드릴까요?", created_at: "2026-06-03T14:20:00" },
-  { id: "m2", sender: "customer", body: "이번 주 보강 가능한지 문의드립니다", created_at: "2026-06-03T14:22:00" },
-  { id: "m3", sender: "admin", body: "네, 수요일 16시 보강 자리 있습니다. 진행해 드릴까요?", created_at: "2026-06-03T14:25:00" },
-];
-
-async function fetchOrCreateChat(): Promise<{ messages: Msg[]; inquiryId: string | null; debugError?: string }> {
+async function fetchOrCreateChat() {
   const guard = await requirePortal("parent");
-  if (guard.isEmbed) return { messages: MOCK_MSGS, inquiryId: "mock" };
+  if (guard.isEmbed) {
+    return {
+      messages: [
+        { id: "m1", sender: "admin" as const, body: "안녕하세요! 학부모님 무엇을 도와드릴까요?", created_at: "2026-06-03T14:20:00", attachments: [] },
+        { id: "m2", sender: "customer" as const, body: "이번 주 보강 가능한지 문의드립니다", created_at: "2026-06-03T14:22:00", attachments: [] },
+        { id: "m3", sender: "admin" as const, body: "네, 수요일 16시 보강 자리 있습니다. 진행해 드릴까요?", created_at: "2026-06-03T14:25:00", attachments: [] },
+      ],
+      inquiryId: "mock",
+      isEmbed: true as const,
+      debugError: undefined,
+    };
+  }
   const { supabase, userId, centerId } = guard;
-  if (!centerId) return { messages: [], inquiryId: null, debugError: "centerId 없음 — 사용자 가입 시 지점 선택 누락" };
-
-  // 기존 chat inquiry 찾기 — created_by = 본인. RLS inquiries_parent_own_read 도 동일 기준.
-  const { data: profile } = await supabase
-    .from("users")
-    .select("name")
-    .eq("id", userId)
-    .single();
-  const parentName = (profile as { name?: string } | null)?.name ?? null;
+  if (!centerId) {
+    return { messages: [], inquiryId: null, isEmbed: false as const, debugError: "지점 정보가 없습니다." };
+  }
 
   const { data: existing } = await supabase
     .from("inquiries")
@@ -36,6 +52,13 @@ async function fetchOrCreateChat(): Promise<{ messages: Msg[]; inquiryId: string
 
   let debugError: string | undefined;
   if (!inquiryId) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("name")
+      .eq("id", userId)
+      .single();
+    const parentName = (profile as { name?: string } | null)?.name ?? null;
+
     const { data: created, error: createErr } = await supabase
       .from("inquiries")
       .insert({
@@ -51,29 +74,69 @@ async function fetchOrCreateChat(): Promise<{ messages: Msg[]; inquiryId: string
       .select("id")
       .single();
     if (createErr) {
-      debugError = `inquiry insert 실패: ${createErr.message} (code: ${createErr.code ?? "?"})`;
-      console.error("학부모 1:1 inquiry 생성 실패:", createErr);
+      debugError = `inquiry 생성 실패: ${createErr.message} (code: ${createErr.code ?? "?"})`;
     }
     inquiryId = (created as { id: string } | null)?.id ?? null;
   }
 
-  if (!inquiryId) return { messages: [], inquiryId: null, debugError };
+  if (!inquiryId) {
+    return { messages: [], inquiryId: null, isEmbed: false as const, debugError };
+  }
+
+  // 진입 시 자동 mark_read (멱등 upsert)
+  await supabase
+    .from("inquiry_reads")
+    .upsert(
+      { inquiry_id: inquiryId, user_id: userId, last_read_at: new Date().toISOString() },
+      { onConflict: "inquiry_id,user_id" },
+    );
 
   const { data: msgs } = await supabase
     .from("support_messages")
-    .select("id, sender, body, created_at")
+    .select(
+      "id, sender, body, created_at, support_message_attachments(id, storage_path, file_name, mime_type, size_bytes)",
+    )
     .eq("inquiry_id", inquiryId)
     .order("created_at", { ascending: true })
     .limit(500);
+  const rawMessages = (msgs ?? []) as unknown as RawMsg[];
 
-  return { messages: (msgs ?? []) as Msg[], inquiryId, debugError };
+  const paths = rawMessages.flatMap((m) =>
+    (m.support_message_attachments ?? []).map((a) => a.storage_path),
+  );
+  const urlMap = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await supabase.storage
+      .from("chat-attachments")
+      .createSignedUrls(paths, 3600);
+    for (const s of (signed ?? []) as { path: string | null; signedUrl: string }[]) {
+      if (s.path && s.signedUrl) urlMap.set(s.path, s.signedUrl);
+    }
+  }
+
+  const messages = rawMessages.map((m) => ({
+    id: m.id,
+    sender: m.sender,
+    body: m.body,
+    created_at: m.created_at,
+    attachments: (m.support_message_attachments ?? []).map((a) => ({
+      id: a.id,
+      fileName: a.file_name,
+      mimeType: a.mime_type,
+      sizeBytes: a.size_bytes,
+      url: urlMap.get(a.storage_path) ?? "",
+    })),
+  }));
+
+  return { messages, inquiryId, isEmbed: false as const, debugError };
 }
 
 export default async function ParentChat1on1() {
-  const { messages, inquiryId, debugError } = await fetchOrCreateChat();
+  const { messages, inquiryId, isEmbed, debugError } = await fetchOrCreateChat();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#f6f7f9" }}>
+      {inquiryId && !isEmbed && <RefreshOnce k={inquiryId} />}
       <div className="portal-topbar">
         <a href="/parent/chat" style={{ color: "#fff", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", fontSize: 14 }}>
           <ArrowLeft size={18} /> 뒤로
@@ -82,47 +145,48 @@ export default async function ParentChat1on1() {
         <Bell size={20} />
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="chat-thread" style={{ flex: 1 }}>
         {debugError && (
           <div style={{ padding: 12, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, fontSize: 12, color: "#b42318", whiteSpace: "pre-wrap" }}>
             ⚠️ {debugError}
           </div>
         )}
         {messages.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#9ca3af", textAlign: "center", marginTop: 40 }}>
-            첫 메시지를 보내 보세요.
-          </p>
+          <div className="empty-state">
+            <strong>아직 메시지가 없습니다</strong>
+            <p>아래 입력창에 첫 메시지를 보내 보세요.</p>
+          </div>
         ) : (
           messages.map((m) => {
-            const me = m.sender === "customer" || m.sender === "parent";
+            const isCustomer = m.sender === "customer" || m.sender === "parent";
             return (
-              <div key={m.id} style={{ display: "flex", alignItems: "flex-end", gap: 6, alignSelf: me ? "flex-end" : "flex-start", flexDirection: me ? "row-reverse" : "row", maxWidth: "80%" }}>
-                <div style={{
-                  padding: "8px 12px", borderRadius: 12,
-                  background: me ? "var(--brand-soft, #d8ecdf)" : "#fff",
-                  border: `1px solid ${me ? "#b8dccb" : "#e5e7eb"}`,
-                  fontSize: 13, lineHeight: 1.4, color: "#111",
-                  borderBottomRightRadius: me ? 4 : 12,
-                  borderBottomLeftRadius: me ? 12 : 4,
-                  whiteSpace: "pre-wrap",
-                }}>
-                  {m.body}
-                </div>
-                <div style={{ fontSize: 10, color: "#9ca3af", whiteSpace: "nowrap", paddingBottom: 2 }}>
-                  {m.created_at.slice(11, 16)}
-                </div>
-              </div>
+              <ChatBubble
+                key={m.id}
+                side={isCustomer ? "me" : "them"}
+                label={isCustomer ? undefined : "지점"}
+                time={formatChatTime(m.created_at)}
+                body={m.body}
+                attachments={m.attachments}
+              />
             );
           })
         )}
+        {inquiryId && (
+          <ChatScrollAnchor k={`${messages.length}-${messages[messages.length - 1]?.id ?? ""}`} />
+        )}
       </div>
 
-      {inquiryId && inquiryId !== "mock" && (
-        <form action={sendParentChat} style={{ display: "flex", gap: 8, padding: 10, borderTop: "1px solid #e5e7eb", background: "#fff", alignItems: "flex-end" }}>
+      {inquiryId && !isEmbed && (
+        <form
+          action={sendParentChat}
+          data-no-loading="true"
+          className="chat-input-form"
+          encType="multipart/form-data"
+        >
           <input type="hidden" name="inquiry_id" value={inquiryId} />
-          <textarea name="body" placeholder="메시지 입력" rows={1} required style={{ flex: 1, padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 14, fontFamily: "inherit", resize: "none" }} />
-          <button type="submit" className="btn primary" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "8px 10px" }}>
-            <Send size={16} />
+          <ChatComposer placeholder="지점에 보낼 메시지 (Enter = 전송, Shift+Enter = 줄바꿈)" />
+          <button type="submit" className="btn primary" style={{ alignSelf: "flex-end" }}>
+            전송
           </button>
         </form>
       )}
