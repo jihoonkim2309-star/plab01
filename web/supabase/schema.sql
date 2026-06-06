@@ -2117,3 +2117,30 @@ create policy sal_student_own_read on public.student_account_links
       where u.id = auth.uid() and u.role = 'student'
     )
   );
+
+-------------------------------------------------------------------------------
+--  35. 본인이 신청한 students (pending) 도 read 가능하도록 RLS 확장
+--     기존 students_parent_read / students_student_read 가 linked 만 → pending 추가
+--     pending 학생은 본인이 picker 로 선택한 학생 = 이미 본인이 알고 있는 정보, 추가 노출 위험 없음
+-------------------------------------------------------------------------------
+drop policy if exists students_parent_read on public.students;
+create policy students_parent_read on public.students
+  for select using (
+    exists (
+      select 1 from public.parent_student_links psl
+      where psl.parent_id = auth.uid()
+        and psl.student_id = public.students.id
+        and psl.status in ('pending', 'linked')
+    )
+  );
+
+drop policy if exists students_student_read on public.students;
+create policy students_student_read on public.students
+  for select using (
+    exists (
+      select 1 from public.student_account_links sal
+      where sal.user_id = auth.uid()
+        and sal.student_id = public.students.id
+        and sal.status in ('pending', 'linked')
+    )
+  );
