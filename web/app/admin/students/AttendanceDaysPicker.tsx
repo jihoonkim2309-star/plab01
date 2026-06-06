@@ -63,15 +63,16 @@ export default function AttendanceDaysPicker({
     [products, days.length],
   );
 
-  // 사용자가 수동 선택 안 했으면 매칭 상품으로 자동 갱신
+  // 사용자가 수동 선택 안 했으면 매칭 상품으로 자동 갱신.
+  // 매칭 없음 + 이전 productId 가 남아 있으면 → 클리어 (mismatch 잔존 방지).
   useEffect(() => {
     if (touched) return;
     if (matchedProduct && productId !== matchedProduct.id) {
       setProductId(matchedProduct.id);
-    } else if (!matchedProduct && days.length === 0 && productId) {
+    } else if (!matchedProduct && productId) {
       setProductId("");
     }
-  }, [matchedProduct, touched, days.length, productId]);
+  }, [matchedProduct, touched, productId]);
 
   function onClassChange(newId: string) {
     setClassId(newId);
@@ -93,12 +94,18 @@ export default function AttendanceDaysPicker({
     .sort((a, b) => ALL_DAYS.indexOf(a) - ALL_DAYS.indexOf(b))
     .join(",");
 
-  // 추천 가능한 상품 (수동 선택과 다를 때 안내용)
+  // 현재 선택된 상품 정보 (mismatch 안내용)
+  const selectedProduct = useMemo(
+    () => products.find((p) => p.id === productId) ?? null,
+    [products, productId],
+  );
+  // 회수 mismatch — 선택된 상품의 sessions_per_week 와 현재 참여 요일 수가 안 맞으면 경고.
+  // touched 여부 무관 (자동 추천이 따라잡지 못한 케이스 = 해당 회수 상품 자체가 없는 경우도 cover).
   const productMismatch =
-    touched &&
-    productId &&
-    matchedProduct &&
-    productId !== matchedProduct.id;
+    !!productId &&
+    !!selectedProduct &&
+    selectedProduct.sessions_per_week != null &&
+    selectedProduct.sessions_per_week !== days.length;
 
   return (
     <>
@@ -214,7 +221,7 @@ export default function AttendanceDaysPicker({
         )}
         {productMismatch && (
           <span className="muted" style={{ fontSize: 12, color: "var(--orange)" }}>
-            ⚠ 참여 요일은 주 {days.length}회 인데 다른 회수 상품이 선택되어 있습니다.
+            ⚠ 참여 요일은 주 {days.length}회 인데 선택된 상품은 주 {selectedProduct?.sessions_per_week}회 입니다.
           </span>
         )}
       </div>
