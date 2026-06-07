@@ -403,7 +403,7 @@ export default function Sidebar({
                     onClick={(e) => {
                       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                       e.preventDefault();
-                      tabs.openTab(item.href, item.label);
+                      tabs.openTab(item.href, item.label, group.icon);
                     }}
                     className={[
                       "sub",

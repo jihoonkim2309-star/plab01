@@ -3009,13 +3009,13 @@ tr[data-bulk-hover] td {
 .sk-wrapper { animation: sk-wrapper-fade 500ms ease-out both; }
 
 /* ===== Admin Tab System — 키즈나 패턴 ===== */
-/* 탭바를 topbar 와 같은 좌우 정렬 (카드 폭 일치) */
+/* 탭바를 topbar / content 와 동일한 좌우 라인. workspace 버튼 좌측 끝과 첫 탭 좌측 끝이 일치 */
 .admin-tabbar {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 0 24px;
-  margin: 24px auto 0;
+  margin: 18px auto 0;
   width: calc(100% - 48px);
   max-width: 1392px;
   box-sizing: border-box;
@@ -3023,7 +3023,7 @@ tr[data-bulk-hover] td {
   top: calc(var(--topbar-height) + 24px);
   z-index: 4;
   border-bottom: 1px solid var(--line);
-  min-height: 38px;
+  min-height: 40px;
 }
 .admin-tabbar-scroll {
   display: flex;
@@ -3032,25 +3032,27 @@ tr[data-bulk-hover] td {
   overflow-x: auto;
   flex: 1;
   scrollbar-width: none;
+  padding-top: 4px;
 }
 .admin-tabbar-scroll::-webkit-scrollbar { display: none; }
 .admin-tab {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 12px 8px;
+  padding: 8px 14px 9px;
   border: 1px solid var(--line);
   border-bottom: none;
-  border-radius: 8px 8px 0 0;
+  border-radius: 10px 10px 0 0;
   background: #f5f7f7;
-  color: var(--muted);
-  font-size: 12px;
+  color: #6f7d78;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   margin-bottom: -1px;
   user-select: none;
-  transition: background 120ms, color 120ms;
+  transition: background 120ms, color 120ms, border-color 120ms;
+  position: relative;
 }
 .admin-tab:hover { background: #eef2f1; color: var(--text); }
 .admin-tab.active {
@@ -3059,17 +3061,23 @@ tr[data-bulk-hover] td {
   border-color: var(--line);
   border-bottom: 1px solid #fff;
   font-weight: 800;
-  position: relative;
   z-index: 1;
+  box-shadow: 0 -2px 0 var(--brand) inset;
 }
+.admin-tab-icon {
+  display: inline-flex;
+  align-items: center;
+  color: #9ca3af;
+}
+.admin-tab.active .admin-tab-icon { color: var(--brand); }
 .admin-tab-label { line-height: 1; }
 .admin-tab-close {
   background: transparent;
   border: 0;
-  padding: 2px;
-  margin-left: 2px;
+  padding: 3px;
+  margin-left: 4px;
   cursor: pointer;
-  color: #9ca3af;
+  color: #b5beba;
   display: inline-flex;
   align-items: center;
   border-radius: 4px;

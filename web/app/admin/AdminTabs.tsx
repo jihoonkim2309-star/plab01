@@ -1,7 +1,12 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { X } from "lucide-react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { X, Building2, Users, UserCog, BookOpen, CalendarDays, Wallet, FileText, Bus, Megaphone, MessageSquare, Bell, Settings, Tag, type LucideIcon } from "lucide-react";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  Building2, Users, UserCog, BookOpen, CalendarDays, Wallet,
+  FileText, Bus, Megaphone, MessageSquare, Bell, Settings, Tag,
+};
 
 function detectInFrame(): boolean {
   if (typeof window === "undefined") return false;
@@ -23,12 +28,13 @@ export type AdminTab = {
   id: string;
   href: string;
   label: string;
+  icon?: string; // ICON_MAP key
 };
 
 type Ctx = {
   tabs: AdminTab[];
   activeId: string | null;
-  openTab: (href: string, label: string) => void;
+  openTab: (href: string, label: string, icon?: string) => void;
   closeTab: (id: string) => void;
   closeAll: () => void;
   setActive: (id: string) => void;
@@ -73,19 +79,36 @@ export function AdminTabsProvider({ children, initialLabel: _initialLabel, cente
   const [activeId, setActiveId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [inFrame, setInFrame] = useState(false);
+  const lastCenterRef = useRef<string | null>(centerId);
 
   useEffect(() => {
     const f = detectInFrame();
     setInFrame(f);
+    if (!f) {
+      const r = restore(centerId);
+      setTabs(r.tabs);
+      setActiveId(r.activeId);
+    }
     setMounted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // centerId 변경 시 그 center 의 tabs 로 swap (지점 변경 → 탭 초기화/복원)
+  // centerId 변경 = 무조건 초기화 (이전 지점 탭 전부 제거, 새 지점은 빈 상태로 시작)
   useEffect(() => {
     if (!mounted || inFrame) return;
-    const r = restore(centerId);
-    setTabs(r.tabs);
-    setActiveId(r.activeId);
+    if (lastCenterRef.current !== centerId) {
+      // 이전 지점 storage 도 지움 — 무조건 초기화 의도
+      try {
+        if (lastCenterRef.current !== null) {
+          localStorage.removeItem(storageKey(lastCenterRef.current));
+        }
+      } catch {
+        /* ignore */
+      }
+      setTabs([]);
+      setActiveId(null);
+      lastCenterRef.current = centerId;
+    }
   }, [centerId, mounted, inFrame]);
 
   useEffect(() => {
@@ -93,7 +116,7 @@ export function AdminTabsProvider({ children, initialLabel: _initialLabel, cente
     if (mounted) persist(centerId, tabs, activeId);
   }, [tabs, activeId, mounted, inFrame, centerId]);
 
-  const openTab = useCallback((href: string, label: string) => {
+  const openTab = useCallback((href: string, label: string, icon?: string) => {
     if (inFrame) return;
     const id = idFromHref(href);
     setTabs((prev) => {
@@ -104,13 +127,13 @@ export function AdminTabsProvider({ children, initialLabel: _initialLabel, cente
         if (idx === -1) return prev;
         const next = [...prev];
         next.splice(idx, 1);
-        next.push({ id, href, label });
+        next.push({ id, href, label, icon });
         return next;
       }
-      return [...prev, { id, href, label }];
+      return [...prev, { id, href, label, icon }];
     });
     setActiveId(id);
-  }, [activeId]);
+  }, [activeId, inFrame]);
 
   const closeTab = useCallback((id: string) => {
     setTabs((prev) => {
@@ -154,8 +177,14 @@ export function AdminTabBar() {
       <div className="admin-tabbar-scroll">
         {tabs.map((t) => {
           const on = t.id === activeId;
+          const Icon = t.icon ? ICON_MAP[t.icon] : null;
           return (
             <div key={t.id} className={`admin-tab${on ? " active" : ""}`} onClick={() => setActive(t.id)}>
+              {Icon && (
+                <span className="admin-tab-icon" aria-hidden>
+                  <Icon size={13} />
+                </span>
+              )}
               <span className="admin-tab-label">{t.label}</span>
               <button
                 type="button"
