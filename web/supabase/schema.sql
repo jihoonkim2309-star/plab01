@@ -2316,3 +2316,85 @@ create policy class_notes_student_read on public.class_notes
       where s.class_id = public.class_notes.class_id
     )
   );
+
+-------------------------------------------------------------------------------
+--  40. 셔틀 QR 스캔 — 학생/학부모 본인 boarding_logs insert + read
+--     scan endpoint 가 자기 자신의 student_id 만 마킹하므로 with check 로 가드
+-------------------------------------------------------------------------------
+drop policy if exists boarding_logs_student_insert on public.boarding_logs;
+create policy boarding_logs_student_insert on public.boarding_logs
+  for insert with check (
+    exists (
+      select 1 from public.student_account_links sal
+      where sal.user_id = auth.uid()
+        and sal.student_id = public.boarding_logs.student_id
+        and sal.status = 'linked'
+    )
+  );
+
+drop policy if exists boarding_logs_parent_insert on public.boarding_logs;
+create policy boarding_logs_parent_insert on public.boarding_logs
+  for insert with check (
+    exists (
+      select 1 from public.parent_student_links psl
+      where psl.parent_id = auth.uid()
+        and psl.student_id = public.boarding_logs.student_id
+        and psl.status = 'linked'
+    )
+  );
+
+drop policy if exists boarding_logs_student_read on public.boarding_logs;
+create policy boarding_logs_student_read on public.boarding_logs
+  for select using (
+    exists (
+      select 1 from public.student_account_links sal
+      where sal.user_id = auth.uid()
+        and sal.student_id = public.boarding_logs.student_id
+        and sal.status = 'linked'
+    )
+  );
+
+drop policy if exists boarding_logs_parent_read on public.boarding_logs;
+create policy boarding_logs_parent_read on public.boarding_logs
+  for select using (
+    exists (
+      select 1 from public.parent_student_links psl
+      where psl.parent_id = auth.uid()
+        and psl.student_id = public.boarding_logs.student_id
+        and psl.status = 'linked'
+    )
+  );
+
+-- 셔틀 vehicles/routes/stops/runs 도 학부모/학생 read (QR 정보 표시용)
+drop policy if exists shuttle_vehicles_member_read on public.shuttle_vehicles;
+create policy shuttle_vehicles_member_read on public.shuttle_vehicles
+  for select using (
+    exists (
+      select 1 from public.users u
+      where u.id = auth.uid()
+        and u.role in ('parent','student')
+        and u.center_id = public.shuttle_vehicles.center_id
+    )
+  );
+
+drop policy if exists shuttle_runs_member_read on public.shuttle_runs;
+create policy shuttle_runs_member_read on public.shuttle_runs
+  for select using (
+    exists (
+      select 1 from public.users u
+      where u.id = auth.uid()
+        and u.role in ('parent','student','driver')
+        and u.center_id = public.shuttle_runs.center_id
+    )
+  );
+
+drop policy if exists ssa_parent_read on public.student_stop_assignments;
+create policy ssa_parent_read on public.student_stop_assignments
+  for select using (
+    exists (
+      select 1 from public.parent_student_links psl
+      where psl.parent_id = auth.uid()
+        and psl.student_id = public.student_stop_assignments.student_id
+        and psl.status = 'linked'
+    )
+  );
