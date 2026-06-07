@@ -2506,3 +2506,17 @@ create policy students_coach_read on public.students
         and c.coach_id = auth.uid()
     )
   );
+
+-------------------------------------------------------------------------------
+--  44. 기사 — 셔틀 배정 학생 이름 read (운행 상세·승하차 기록 표시용)
+--     기사는 student_stop_assignments 가 있는 본인 지점 학생의 이름만 읽는다.
+-------------------------------------------------------------------------------
+drop policy if exists students_driver_read on public.students;
+create policy students_driver_read on public.students
+  for select using (
+    public.is_center_driver(center_id)
+    and exists (
+      select 1 from public.student_stop_assignments ssa
+      where ssa.student_id = public.students.id
+    )
+  );
