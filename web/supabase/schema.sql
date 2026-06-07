@@ -2171,3 +2171,28 @@ create policy classes_student_read on public.classes
         and u.center_id = public.classes.center_id
     )
   );
+
+-------------------------------------------------------------------------------
+--  37. 학부모/학생 — holidays/makeups 같은 center 모두 read (캘린더 휴강·보강 표시)
+-------------------------------------------------------------------------------
+drop policy if exists holidays_member_read on public.holidays;
+create policy holidays_member_read on public.holidays
+  for select using (
+    exists (
+      select 1 from public.users u
+      where u.id = auth.uid()
+        and u.role in ('parent','student')
+        and u.center_id = public.holidays.center_id
+    )
+  );
+
+drop policy if exists makeups_member_read on public.makeups;
+create policy makeups_member_read on public.makeups
+  for select using (
+    exists (
+      select 1 from public.users u
+      where u.id = auth.uid()
+        and u.role in ('parent','student')
+        and u.center_id = public.makeups.center_id
+    )
+  );
