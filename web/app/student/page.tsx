@@ -2,7 +2,7 @@ import { Bell, Calendar, Clock, FileText, QrCode, ChevronRight } from "lucide-re
 import StudentTabbar from "./Tabbar";
 import { requirePortal } from "@/lib/portal-auth";
 
-type TodayClass = { name: string; time: string; coach: string | null; color: string | null };
+type TodayClass = { name: string; time: string; coach: string | null; color: string | null; attendance: string | null };
 type Notice = { id: string; title: string; time: string };
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -21,7 +21,7 @@ function relativeTime(iso: string | null): string {
   return d.toISOString().slice(0, 10);
 }
 
-const MOCK_TODAY: TodayClass | null = { name: "정규반 A", time: "16:00 - 17:00", coach: "박코치", color: "green" };
+const MOCK_TODAY: TodayClass | null = { name: "정규반 A", time: "16:00 - 17:00", coach: "박코치", color: "green", attendance: "출석" };
 const MOCK_NOTICES: Notice[] = [{ id: "n1", title: "코치 메모: 폼이 많이 좋아졌어요", time: "오늘 14:20" }];
 
 async function fetchHome(): Promise<{ studentName: string | null; today: TodayClass | null; notices: Notice[]; linked: boolean; pendingCount: number }> {
@@ -66,11 +66,20 @@ async function fetchHome(): Promise<{ studentName: string | null; today: TodayCl
       const todayLabel = DAYS[new Date().getDay()];
       if (dows.includes(todayLabel) && c.start_time) {
         const f = (t: string | null) => (t ? t.slice(0, 5) : "");
+        const todayYmd = new Date().toISOString().slice(0, 10);
+        const { data: attRow } = await supabase
+          .from("attendance")
+          .select("status")
+          .eq("student_id", student.id)
+          .eq("class_id", student.class_id)
+          .eq("attendance_date", todayYmd)
+          .maybeSingle();
         today = {
           name: c.name,
           time: `${f(c.start_time)} - ${f(c.end_time)}`,
           coach: c.coach,
           color: c.color,
+          attendance: (attRow as { status?: string } | null)?.status ?? null,
         };
       }
     }
@@ -138,15 +147,34 @@ export default async function StudentHome() {
               </div>
             )
           ) : today ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, padding: 10, background: "var(--brand-soft, #d8ecdf)", borderRadius: 8 }}>
-              <Clock size={18} color={today.color ? COLOR_MAP[today.color] ?? "#1e794e" : "#1e794e"} />
-              <div style={{ flex: 1 }}>
-                <strong style={{ fontSize: 14 }}>{today.name}</strong>
-                <div style={{ fontSize: 11, color: "#6f7d78", marginTop: 2 }}>
-                  {today.time}{today.coach && ` · ${today.coach}`}
+            (() => {
+              const ATT: Record<string, { bg: string; color: string }> = {
+                출석: { bg: "#dcfce7", color: "#1e794e" },
+                지각: { bg: "#fef3c7", color: "#d97706" },
+                결석: { bg: "#fee2e2", color: "#b42318" },
+                보강: { bg: "#dbeafe", color: "#2563eb" },
+                기타: { bg: "#f3f4f6", color: "#6b7280" },
+              };
+              const a = today.attendance ? ATT[today.attendance] : null;
+              return (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, padding: 10, background: "var(--brand-soft, #d8ecdf)", borderRadius: 8 }}>
+                  <Clock size={18} color={today.color ? COLOR_MAP[today.color] ?? "#1e794e" : "#1e794e"} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                      <strong style={{ fontSize: 14 }}>{today.name}</strong>
+                      {a && (
+                        <span style={{ fontSize: 10, color: a.color, fontWeight: 800, background: a.bg, padding: "1px 6px", borderRadius: 4 }}>
+                          {today.attendance}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#6f7d78", marginTop: 2 }}>
+                      {today.time}{today.coach && ` · ${today.coach}`}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })()
           ) : (
             <p style={{ fontSize: 12, color: "#6f7d78", marginTop: 8 }}>오늘 수업이 없습니다.</p>
           )}

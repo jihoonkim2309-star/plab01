@@ -11,6 +11,7 @@ export type ClassDef = {
   color: string | null;
   isMine: boolean;
   studentName?: string | null;
+  studentId?: string | null; // 본인/자녀 student_id (출결 매칭용)
 };
 
 export type Holiday = {
@@ -27,6 +28,13 @@ export type Makeup = {
   status: string;
 };
 
+export type AttendanceRow = {
+  class_id: string;
+  student_id: string;
+  attendance_date: string;
+  status: string; // 출석|지각|결석|보강|기타
+};
+
 export type EventItem = {
   date: string; // YYYY-MM-DD
   type: "class" | "holiday" | "makeup";
@@ -37,7 +45,9 @@ export type EventItem = {
   color: string | null;
   isMine: boolean;
   studentName?: string | null;
+  studentId?: string | null; // 출결 매칭용
   note?: string | null; // 휴강 사유 / 보강 사유
+  attendanceStatus?: string | null; // 출결 (학생 본인 또는 자녀)
 };
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -60,10 +70,15 @@ export function buildEvents(args: {
   classes: ClassDef[];
   holidays: Holiday[];
   makeups: Makeup[];
+  attendance?: AttendanceRow[];
   from: Date;
   to: Date;
 }): EventItem[] {
-  const { classes, holidays, makeups, from, to } = args;
+  const { classes, holidays, makeups, attendance, from, to } = args;
+  const attMap = new Map<string, string>();
+  for (const a of attendance ?? []) {
+    attMap.set(`${a.class_id}|${a.student_id}|${a.attendance_date}`, a.status);
+  }
 
   const classMap = new Map(classes.map((c) => [c.id, c]));
   const holidayByDate = new Map<string, Holiday[]>();
@@ -109,6 +124,7 @@ export function buildEvents(args: {
         continue;
       }
 
+      const attStatus = c.studentId ? attMap.get(`${c.id}|${c.studentId}|${date}`) ?? null : null;
       events.push({
         date,
         type: "class",
@@ -119,6 +135,8 @@ export function buildEvents(args: {
         color: c.color,
         isMine: c.isMine,
         studentName: c.studentName ?? null,
+        studentId: c.studentId ?? null,
+        attendanceStatus: attStatus,
       });
     }
 
@@ -132,6 +150,7 @@ export function buildEvents(args: {
     if (m.makeup_date < ymd(from) || m.makeup_date > ymd(to)) continue;
     const c = classMap.get(m.class_id);
     if (!c) continue;
+    const attStatus = c.studentId ? attMap.get(`${c.id}|${c.studentId}|${m.makeup_date}`) ?? null : null;
     events.push({
       date: m.makeup_date,
       type: "makeup",
@@ -142,7 +161,9 @@ export function buildEvents(args: {
       color: c.color,
       isMine: c.isMine,
       studentName: c.studentName ?? null,
+      studentId: c.studentId ?? null,
       note: m.reason ?? "보강",
+      attendanceStatus: attStatus,
     });
   }
 

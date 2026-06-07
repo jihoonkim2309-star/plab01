@@ -2,7 +2,7 @@ import { ArrowLeft, Bell } from "lucide-react";
 import StudentTabbar from "../Tabbar";
 import { requirePortal } from "@/lib/portal-auth";
 import CalendarView from "../../portal/CalendarView";
-import { buildEvents, monthGridRange, type ClassDef, type Holiday, type Makeup } from "@/lib/calendar";
+import { buildEvents, monthGridRange, type ClassDef, type Holiday, type Makeup, type AttendanceRow } from "@/lib/calendar";
 
 type Tab = "mine" | "center";
 
@@ -25,6 +25,7 @@ async function fetchData(tab: Tab) {
   type LR = { students: { id: string; class_id: string | null } | null };
   const linkRow = link as unknown as LR | null;
   const myClassId = linkRow?.students?.class_id ?? null;
+  const myStudentId = linkRow?.students?.id ?? null;
 
   type ClassRow = { id: string; name: string; days_of_week: string | null; start_time: string | null; end_time: string | null; coach: string | null; color: string | null };
   let classes: ClassRow[] = [];
@@ -52,6 +53,7 @@ async function fetchData(tab: Tab) {
     coach: c.coach,
     color: c.color,
     isMine: c.id === myClassId,
+    studentId: c.id === myClassId ? myStudentId : null,
   }));
 
   const now = new Date();
@@ -62,8 +64,9 @@ async function fetchData(tab: Tab) {
   const classIds = classDefs.map((c) => c.id);
   let holidays: Holiday[] = [];
   let makeups: Makeup[] = [];
+  let attendance: AttendanceRow[] = [];
   if (classIds.length > 0 && centerId) {
-    const [holidaysRes, makeupsRes] = await Promise.all([
+    const [holidaysRes, makeupsRes, attRes] = await Promise.all([
       supabase
         .from("holidays")
         .select("holiday_date, class_id, reason")
@@ -77,12 +80,21 @@ async function fetchData(tab: Tab) {
         .in("class_id", classIds)
         .gte("makeup_date", fromYmd)
         .lte("makeup_date", toYmd),
+      myStudentId
+        ? supabase
+            .from("attendance")
+            .select("class_id, student_id, attendance_date, status")
+            .eq("student_id", myStudentId)
+            .gte("attendance_date", fromYmd)
+            .lte("attendance_date", toYmd)
+        : Promise.resolve({ data: [] as AttendanceRow[] }),
     ]);
     holidays = (holidaysRes.data ?? []) as Holiday[];
     makeups = (makeupsRes.data ?? []) as Makeup[];
+    attendance = (attRes.data ?? []) as AttendanceRow[];
   }
 
-  const events = buildEvents({ classes: classDefs, holidays, makeups, from, to });
+  const events = buildEvents({ classes: classDefs, holidays, makeups, attendance, from, to });
   return { events, from, to };
 }
 

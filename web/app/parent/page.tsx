@@ -8,6 +8,7 @@ type HomeChild = {
   school: string | null;
   grade: string | null;
   nextClass: string | null;
+  todayAttendance: string | null;
 };
 
 type HomeNotice = {
@@ -24,7 +25,7 @@ type HomeBilling = {
 };
 
 const MOCK_CHILDREN: HomeChild[] = [
-  { id: "1", name: "박도윤", school: "한빛초", grade: "3학년", nextClass: "오늘 16:00 정규반 A" },
+  { id: "1", name: "박도윤", school: "한빛초", grade: "3학년", nextClass: "오늘 16:00 정규반 A", todayAttendance: "출석" },
 ];
 
 const MOCK_NOTICES: HomeNotice[] = [
@@ -125,6 +126,21 @@ async function fetchHome(): Promise<{
     for (const c of (cl ?? []) as ClassRow[]) classMap.set(c.id, c);
   }
   const todayLabel = DAYS[new Date().getDay()];
+  const todayYmd = new Date().toISOString().slice(0, 10);
+
+  // 오늘 출결 (자녀 list 의 attendance, 오늘 날짜)
+  const attMap = new Map<string, string>(); // student_id → status
+  if (childStudents.length > 0) {
+    const { data: attRows } = await supabase
+      .from("attendance")
+      .select("student_id, status")
+      .in("student_id", childStudents.map((s) => s.id))
+      .eq("attendance_date", todayYmd);
+    for (const a of (attRows ?? []) as { student_id: string; status: string }[]) {
+      attMap.set(a.student_id, a.status);
+    }
+  }
+
   const children: HomeChild[] = childStudents.slice(0, 3).map((s) => {
     let nextClass: string | null = null;
     if (s.class_id) {
@@ -151,6 +167,7 @@ async function fetchHome(): Promise<{
       school: s.school,
       grade: s.grade,
       nextClass,
+      todayAttendance: attMap.get(s.id) ?? null,
     };
   });
 
@@ -241,21 +258,36 @@ export default async function ParentHome() {
               )}
             </div>
           ) : (
-            children.map((c) => (
-              <a key={c.id} href={`/parent/child/${c.id}`} className="child-row">
-                <div className="avatar">{c.name.slice(0, 1)}</div>
-                <div style={{ flex: 1 }}>
-                  <div className="child-name">
-                    {c.name}
-                    {(c.school || c.grade) && (
-                      <span className="child-meta">{c.school ?? ""}{c.school && c.grade ? " · " : ""}{c.grade ?? ""}</span>
-                    )}
+            children.map((c) => {
+              const ATT: Record<string, { bg: string; color: string }> = {
+                출석: { bg: "#dcfce7", color: "#1e794e" },
+                지각: { bg: "#fef3c7", color: "#d97706" },
+                결석: { bg: "#fee2e2", color: "#b42318" },
+                보강: { bg: "#dbeafe", color: "#2563eb" },
+                기타: { bg: "#f3f4f6", color: "#6b7280" },
+              };
+              const a = c.todayAttendance ? ATT[c.todayAttendance] : null;
+              return (
+                <a key={c.id} href={`/parent/child/${c.id}`} className="child-row">
+                  <div className="avatar">{c.name.slice(0, 1)}</div>
+                  <div style={{ flex: 1 }}>
+                    <div className="child-name">
+                      {c.name}
+                      {(c.school || c.grade) && (
+                        <span className="child-meta">{c.school ?? ""}{c.school && c.grade ? " · " : ""}{c.grade ?? ""}</span>
+                      )}
+                      {a && (
+                        <span style={{ fontSize: 10, color: a.color, fontWeight: 800, background: a.bg, padding: "1px 6px", borderRadius: 4, marginLeft: 6 }}>
+                          오늘 {c.todayAttendance}
+                        </span>
+                      )}
+                    </div>
+                    {c.nextClass && <div className="child-next">{c.nextClass}</div>}
                   </div>
-                  {c.nextClass && <div className="child-next">{c.nextClass}</div>}
-                </div>
-                <ChevronRight size={16} color="#9ca3af" />
-              </a>
-            ))
+                  <ChevronRight size={16} color="#9ca3af" />
+                </a>
+              );
+            })
           )}
         </section>
 

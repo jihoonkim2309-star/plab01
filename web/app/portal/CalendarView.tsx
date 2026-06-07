@@ -322,8 +322,17 @@ export default function CalendarView({ events, initialYear, initialMonth0, initi
   );
 }
 
+const ATT_COLOR: Record<string, { bg: string; color: string }> = {
+  출석: { bg: "#dcfce7", color: "#1e794e" },
+  지각: { bg: "#fef3c7", color: "#d97706" },
+  결석: { bg: "#fee2e2", color: "#b42318" },
+  보강: { bg: "#dbeafe", color: "#2563eb" },
+  기타: { bg: "#f3f4f6", color: "#6b7280" },
+};
+
 function EventRow({ ev, selfLabel }: { ev: EventItem; selfLabel: "내 자녀" | "내 수업" }) {
   const dot = ev.color ? COLOR_MAP[ev.color] ?? "#1e794e" : "#1e794e";
+  const att = ev.attendanceStatus ? ATT_COLOR[ev.attendanceStatus] : null;
   return (
     <div style={{ marginTop: 6, opacity: !ev.isMine ? 0.7 : 1 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -347,6 +356,11 @@ function EventRow({ ev, selfLabel }: { ev: EventItem; selfLabel: "내 자녀" | 
         {ev.isMine && !ev.studentName && (
           <span style={{ fontSize: 10, color: "var(--brand)", fontWeight: 800, background: "var(--brand-soft, #d8ecdf)", padding: "1px 6px", borderRadius: 4 }}>
             {selfLabel}
+          </span>
+        )}
+        {att && (
+          <span style={{ fontSize: 10, color: att.color, fontWeight: 800, background: att.bg, padding: "1px 6px", borderRadius: 4 }}>
+            {ev.attendanceStatus}
           </span>
         )}
       </div>

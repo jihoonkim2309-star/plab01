@@ -2,7 +2,7 @@ import { ArrowLeft, Bell } from "lucide-react";
 import PortalTabbar from "../PortalTabbar";
 import { requirePortal } from "@/lib/portal-auth";
 import CalendarView from "../../portal/CalendarView";
-import { buildEvents, monthGridRange, type ClassDef, type Holiday, type Makeup } from "@/lib/calendar";
+import { buildEvents, monthGridRange, type ClassDef, type Holiday, type Makeup, type AttendanceRow } from "@/lib/calendar";
 
 type Tab = "mine" | "center";
 
@@ -28,7 +28,7 @@ async function fetchData(tab: Tab) {
   type LR = { student_id: string; students: { id: string; name: string; class_id: string | null } | null };
   const studentList = ((links ?? []) as unknown as LR[])
     .filter((r) => !!r.students && !!r.students.class_id)
-    .map((r) => ({ name: r.students!.name, classId: r.students!.class_id! }));
+    .map((r) => ({ studentId: r.students!.id, name: r.students!.name, classId: r.students!.class_id! }));
   const myClassIds = new Set(studentList.map((s) => s.classId));
 
   type ClassRow = { id: string; name: string; days_of_week: string | null; start_time: string | null; end_time: string | null; coach: string | null; color: string | null };
@@ -48,17 +48,21 @@ async function fetchData(tab: Tab) {
     classes = (data ?? []) as ClassRow[];
   }
 
-  const classDefs: ClassDef[] = classes.map((c) => ({
-    id: c.id,
-    name: c.name,
-    days_of_week: c.days_of_week,
-    start_time: c.start_time,
-    end_time: c.end_time,
-    coach: c.coach,
-    color: c.color,
-    isMine: myClassIds.has(c.id),
-    studentName: studentList.find((s) => s.classId === c.id)?.name ?? null,
-  }));
+  const classDefs: ClassDef[] = classes.map((c) => {
+    const matchedStudent = studentList.find((s) => s.classId === c.id);
+    return {
+      id: c.id,
+      name: c.name,
+      days_of_week: c.days_of_week,
+      start_time: c.start_time,
+      end_time: c.end_time,
+      coach: c.coach,
+      color: c.color,
+      isMine: myClassIds.has(c.id),
+      studentName: matchedStudent?.name ?? null,
+      studentId: matchedStudent?.studentId ?? null,
+    };
+  });
 
   const now = new Date();
   const { from, to } = monthGridRange(now.getFullYear(), now.getMonth());
@@ -68,8 +72,10 @@ async function fetchData(tab: Tab) {
   const classIds = classDefs.map((c) => c.id);
   let holidays: Holiday[] = [];
   let makeups: Makeup[] = [];
+  let attendance: AttendanceRow[] = [];
   if (classIds.length > 0 && centerId) {
-    const [holidaysRes, makeupsRes] = await Promise.all([
+    const studentIds = studentList.map((s) => s.studentId);
+    const [holidaysRes, makeupsRes, attRes] = await Promise.all([
       supabase
         .from("holidays")
         .select("holiday_date, class_id, reason")
@@ -83,12 +89,21 @@ async function fetchData(tab: Tab) {
         .in("class_id", classIds)
         .gte("makeup_date", fromYmd)
         .lte("makeup_date", toYmd),
+      studentIds.length > 0
+        ? supabase
+            .from("attendance")
+            .select("class_id, student_id, attendance_date, status")
+            .in("student_id", studentIds)
+            .gte("attendance_date", fromYmd)
+            .lte("attendance_date", toYmd)
+        : Promise.resolve({ data: [] as AttendanceRow[] }),
     ]);
     holidays = (holidaysRes.data ?? []) as Holiday[];
     makeups = (makeupsRes.data ?? []) as Makeup[];
+    attendance = (attRes.data ?? []) as AttendanceRow[];
   }
 
-  const events = buildEvents({ classes: classDefs, holidays, makeups, from, to });
+  const events = buildEvents({ classes: classDefs, holidays, makeups, attendance, from, to });
   return { events, from, to };
 }
 
