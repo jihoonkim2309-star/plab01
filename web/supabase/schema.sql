@@ -2441,8 +2441,10 @@ create policy ssa_driver_read on public.student_stop_assignments
 --     students.class_id → classes.coach_id = 코치 본인.
 --     코치 답장은 sender='admin' (지점측). 멱등.
 -------------------------------------------------------------------------------
+-- security definer — 내부에서 parent_student_links 등을 RLS 무관하게 순회해
+-- "이 학부모가 내 담당 클래스 학생의 보호자인가" 만 판정 (코치는 psl read 권한 없음).
 create or replace function public.coach_sees_parent(p_parent uuid)
-returns boolean language sql stable as $$
+returns boolean language sql stable security definer set search_path = public as $$
   select exists (
     select 1
     from public.parent_student_links psl

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireCenter } from "@/lib/center";
+import { requireStaff } from "@/lib/center";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const VALID_STATUSES = ["출석", "지각", "결석", "보강", "기타"] as const;
@@ -86,7 +86,7 @@ async function queueAttendanceNotifications(
 
 // 단일 학생 출결 마킹 (upsert) — class_id + student_id + attendance_date 유니크.
 export async function markAttendance(formData: FormData) {
-  const { supabase, centerId, userId } = await requireCenter();
+  const { supabase, centerId, userId } = await requireStaff();
   const classId = String(formData.get("class_id") ?? "");
   const studentId = String(formData.get("student_id") ?? "");
   const date = String(formData.get("attendance_date") ?? "");
@@ -132,7 +132,7 @@ export async function markAttendance(formData: FormData) {
 
 // 일괄 마킹 — 같은 클래스/날짜 + 학생 list 모두 동일 status 로
 export async function bulkMarkAttendance(formData: FormData) {
-  const { supabase, centerId, userId } = await requireCenter();
+  const { supabase, centerId, userId } = await requireStaff();
   const classId = String(formData.get("class_id") ?? "");
   const date = String(formData.get("attendance_date") ?? "");
   const status = String(formData.get("status") ?? "출석");

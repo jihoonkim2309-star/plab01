@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireCenter } from "@/lib/center";
+import { requireStaff } from "@/lib/center";
 
-// 수업일지 upsert — class_id+note_date unique
+// 수업일지 upsert — class_id+note_date unique (어드민·코치 공용)
 export async function upsertClassNote(formData: FormData) {
-  const { supabase, centerId, userId } = await requireCenter();
+  const { supabase, centerId, userId } = await requireStaff();
   const classId = String(formData.get("class_id") ?? "");
   const noteDate = String(formData.get("note_date") ?? "");
   const content = String(formData.get("content") ?? "").trim();
