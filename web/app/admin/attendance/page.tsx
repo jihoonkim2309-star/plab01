@@ -1,22 +1,14 @@
 import Link from "next/link";
 import { requireCenter } from "@/lib/center";
+import { todayYmd, shiftYmd, weekdayOf } from "@/lib/ymd";
 import AttendanceGrid from "./AttendanceGrid";
 import DateNav from "./DateNav";
 import NoteEditor from "../class-notes/NoteEditor";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-function todayYmd(): string {
-  const d = new Date();
-  const yy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yy}-${mm}-${dd}`;
-}
-
 function dayLabelForDate(ymd: string): string {
-  const d = new Date(ymd + "T00:00:00");
-  return DAYS[d.getDay()];
+  return DAYS[weekdayOf(ymd)];
 }
 
 export default async function AttendancePage({
@@ -94,17 +86,9 @@ export default async function AttendancePage({
     existingNote = noteRow as { content: string; public_to_parent: boolean } | null;
   }
 
-  // 날짜 nav
-  const prevDate = ((): string => {
-    const d = new Date(date + "T00:00:00");
-    d.setDate(d.getDate() - 1);
-    return d.toISOString().slice(0, 10);
-  })();
-  const nextDate = ((): string => {
-    const d = new Date(date + "T00:00:00");
-    d.setDate(d.getDate() + 1);
-    return d.toISOString().slice(0, 10);
-  })();
+  // 날짜 nav (타임존 안전)
+  const prevDate = shiftYmd(date, -1);
+  const nextDate = shiftYmd(date, 1);
 
   return (
     <>

@@ -1,18 +1,14 @@
 import { ArrowLeft, Bell } from "lucide-react";
 import CoachTabbar from "../Tabbar";
 import { requirePortal } from "@/lib/portal-auth";
+import { todayYmd, shiftYmd, weekdayOf } from "@/lib/ymd";
 import AttendanceMobile from "./AttendanceMobile";
 import NoteEditor from "@/app/admin/class-notes/NoteEditor";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-function todayYmd(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
 function dayLabel(ymd: string): string {
-  return DAYS[new Date(ymd + "T00:00:00").getDay()];
+  return DAYS[weekdayOf(ymd)];
 }
 
 export default async function CoachAttendance({
@@ -95,12 +91,8 @@ export default async function CoachAttendance({
     existingNote = noteRow as { content: string; public_to_parent: boolean } | null;
   }
 
-  // 날짜 nav
-  const shiftDate = (delta: number): string => {
-    const d = new Date(date + "T00:00:00");
-    d.setDate(d.getDate() + delta);
-    return d.toISOString().slice(0, 10);
-  };
+  // 날짜 nav (타임존 안전)
+  const shiftDate = (delta: number): string => shiftYmd(date, delta);
 
   return (
     <>
