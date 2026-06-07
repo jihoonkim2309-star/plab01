@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { chargeWithBillingKey } from "@/lib/portone";
-import { getAdminMessaging, adminConfigured } from "@/lib/firebase/admin";
+import { dispatchPendingPushes } from "@/lib/notifications";
 
 // Vercel Cron 매일 호출:
 // 1) generate_due_invoices — 지점 결제일(billing_day) 일치 → 학생 수강료 청구
@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
   // 4) 자동 청구
   const billing = await chargeUnpaidInvoices(supabase);
 
-  // 5) notifications 큐 발송 (현재는 mock — 실 FCM/Solapi 연동 시 교체)
-  const notify = await processNotifications(supabase);
+  // 5) notifications 큐 발송 (FCM)
+  const notify = await dispatchPendingPushes(supabase);
 
   if (studentDue.error || hqDue.error || renewalDue.error) {
     return NextResponse.json(
@@ -58,86 +58,6 @@ export async function GET(request: NextRequest) {
     notify,
     at: new Date().toISOString(),
   });
-}
-
-// notifications 큐 발송 — kind='push', status='대기' 를 FCM 으로 전송.
-// pending_push_targets RPC(security definer)로 대상 토큰을 받아 멀티캐스트.
-// Firebase 미설정이면 skip (큐는 그대로 유지 → 키 설정 후 자동 발송).
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function processNotifications(
-  supabase: any,
-): Promise<{ configured: boolean; notifications: number; sent: number; failed: number; pruned: number }> {
-  const messaging = getAdminMessaging();
-  if (!messaging || !adminConfigured()) {
-    return { configured: false, notifications: 0, sent: 0, failed: 0, pruned: 0 };
-  }
-
-  const { data: targets } = await supabase.rpc("pending_push_targets", { p_limit: 300 });
-  const rows = (targets ?? []) as {
-    notification_id: string;
-    template: string | null;
-    payload: Record<string, unknown> | null;
-    token: string;
-  }[];
-  if (rows.length === 0) {
-    return { configured: true, notifications: 0, sent: 0, failed: 0, pruned: 0 };
-  }
-
-  // notification 별로 토큰 묶기
-  const byNotif = new Map<string, { template: string; payload: Record<string, unknown>; tokens: string[] }>();
-  for (const r of rows) {
-    let g = byNotif.get(r.notification_id);
-    if (!g) {
-      g = { template: r.template ?? "", payload: r.payload ?? {}, tokens: [] };
-      byNotif.set(r.notification_id, g);
-    }
-    g.tokens.push(r.token);
-  }
-
-  let sent = 0;
-  let failed = 0;
-  let pruned = 0;
-  const nowIso = new Date().toISOString();
-
-  for (const [nid, g] of byNotif) {
-    // data payload 는 문자열만 허용 → 문자열화
-    const data: Record<string, string> = {};
-    for (const [k, v] of Object.entries(g.payload)) {
-      data[k] = typeof v === "string" ? v : JSON.stringify(v ?? "");
-    }
-    data.template = g.template;
-
-    try {
-      const res = await messaging.sendEachForMulticast({
-        tokens: g.tokens,
-        notification: { title: "플랜비", body: g.template || "새 알림" },
-        data,
-        webpush: { fcmOptions: { link: "/" } },
-      });
-      // 무효 토큰 정리
-      res.responses.forEach((resp, i) => {
-        if (!resp.success && resp.error?.code === "messaging/registration-token-not-registered") {
-          supabase.rpc("prune_device_token", { p_token: g.tokens[i] });
-          pruned++;
-        }
-      });
-      const ok = res.successCount > 0;
-      await supabase
-        .from("notifications")
-        .update({ status: ok ? "성공" : "실패", provider: "fcm", sent_at: nowIso, error: ok ? null : "all_failed" })
-        .eq("id", nid);
-      if (ok) sent++;
-      else failed++;
-    } catch (e) {
-      await supabase
-        .from("notifications")
-        .update({ status: "실패", provider: "fcm", error: String(e).slice(0, 300) })
-        .eq("id", nid);
-      failed++;
-    }
-  }
-
-  return { configured: true, notifications: byNotif.size, sent, failed, pruned };
 }
 
 // 미납 invoices 에 대해 학부모 기본 빌링키로 결제 시도.
