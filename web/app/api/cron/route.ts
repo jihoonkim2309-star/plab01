@@ -31,6 +31,9 @@ export async function GET(request: NextRequest) {
   // 4) 자동 청구
   const billing = await chargeUnpaidInvoices(supabase);
 
+  // 5) notifications 큐 발송 (현재는 mock — 실 FCM/Solapi 연동 시 교체)
+  const notify = await processNotifications(supabase);
+
   if (studentDue.error || hqDue.error || renewalDue.error) {
     return NextResponse.json(
       {
@@ -40,6 +43,7 @@ export async function GET(request: NextRequest) {
           renewal: renewalDue.error?.message ?? null,
         },
         billing,
+        notify,
       },
       { status: 500 },
     );
@@ -50,8 +54,32 @@ export async function GET(request: NextRequest) {
     hq_invoices: hqDue.data ?? 0,
     renewal_notifications: renewalDue.data ?? 0,
     billing,
+    notify,
     at: new Date().toISOString(),
   });
+}
+
+// notifications 큐 발송 — 'status'='대기' 인 행을 처리.
+// 현재: 실 발송 (FCM/Solapi) 미구현, mock 으로 sent 마킹만.
+// 실 발송 시: payload.target_user_id 의 사용자에게 push/알림톡 발송 후 sent.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function processNotifications(supabase: any): Promise<{ pending: number; sent: number }> {
+  const { data: pending } = await supabase
+    .from("notifications")
+    .select("id")
+    .eq("status", "대기")
+    .limit(500);
+  const list = (pending ?? []) as { id: string }[];
+  if (list.length === 0) return { pending: 0, sent: 0 };
+
+  const ids = list.map((r) => r.id);
+  const nowIso = new Date().toISOString();
+  await supabase
+    .from("notifications")
+    .update({ status: "sent", sent_at: nowIso })
+    .in("id", ids);
+
+  return { pending: list.length, sent: list.length };
 }
 
 // 미납 invoices 에 대해 학부모 기본 빌링키로 결제 시도.

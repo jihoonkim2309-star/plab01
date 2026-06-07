@@ -44,6 +44,7 @@ export const NAV: NavGroup[] = [
     items: [
       { label: "월간 시간표", slug: "schedule", href: "/admin/schedule", ready: true },
       { label: "출석 관리", slug: "attendance", href: "/admin/attendance", ready: true },
+      { label: "출석 통계", slug: "attendance-stats", href: "/admin/attendance/stats", ready: true },
       { label: "수업일지", slug: "class-notes", href: "/admin/class-notes", ready: true },
       { label: "클래스 관리", slug: "class-manage", href: "/admin/classes", ready: true },
       { label: "클래스 생성", slug: "class-create", href: "/admin/classes/new", ready: true },

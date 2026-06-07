@@ -1,9 +1,8 @@
 import { ArrowLeft, Bell, Bus, Clock } from "lucide-react";
-import StudentTabbar from "../Tabbar";
+import PortalTabbar from "../PortalTabbar";
 import { requirePortal } from "@/lib/portal-auth";
-import ScanForm from "./ScanForm";
 
-type Log = { id: string; action: string; scanned_at: string; vehicleName: string | null };
+type Log = { id: string; action: string; scanned_at: string; vehicleName: string | null; studentName: string };
 
 function fmtDateTime(iso: string) {
   const d = new Date(iso);
@@ -15,29 +14,33 @@ function fmtDateTime(iso: string) {
   return `${mm}.${dd} ${hh}:${mi}`;
 }
 
-async function fetchRecentLogs(): Promise<Log[]> {
-  const guard = await requirePortal("student");
+async function fetchLogs(): Promise<Log[]> {
+  const guard = await requirePortal("parent");
   if (guard.isEmbed) return [];
   const { supabase, userId } = guard;
 
-  const { data: link } = await supabase
-    .from("student_account_links")
-    .select("student_id")
-    .eq("user_id", userId)
+  const { data: links } = await supabase
+    .from("parent_student_links")
+    .select("student_id, students(name)")
+    .eq("parent_id", userId)
     .eq("status", "linked")
-    .limit(1)
-    .maybeSingle();
-  const studentId = (link as { student_id?: string } | null)?.student_id;
-  if (!studentId) return [];
+    .not("student_id", "is", null);
+  type LR = { student_id: string; students: { name: string } | null };
+  const studentMap = new Map<string, string>();
+  for (const r of ((links ?? []) as unknown as LR[])) {
+    if (r.students) studentMap.set(r.student_id, r.students.name);
+  }
+  const ids = Array.from(studentMap.keys());
+  if (ids.length === 0) return [];
 
   const { data: logs } = await supabase
     .from("boarding_logs")
-    .select("id, action, scanned_at, vehicle_id")
-    .eq("student_id", studentId)
+    .select("id, action, scanned_at, student_id, vehicle_id")
+    .in("student_id", ids)
     .order("scanned_at", { ascending: false })
-    .limit(10);
-  type LR = { id: string; action: string; scanned_at: string; vehicle_id: string | null };
-  const rows = (logs ?? []) as LR[];
+    .limit(30);
+  type LR2 = { id: string; action: string; scanned_at: string; student_id: string; vehicle_id: string | null };
+  const rows = (logs ?? []) as LR2[];
 
   const vehicleIds = Array.from(new Set(rows.map((l) => l.vehicle_id).filter((x): x is string => !!x)));
   const vehicleMap = new Map<string, string>();
@@ -53,25 +56,24 @@ async function fetchRecentLogs(): Promise<Log[]> {
     action: r.action,
     scanned_at: r.scanned_at,
     vehicleName: r.vehicle_id ? vehicleMap.get(r.vehicle_id) ?? null : null,
+    studentName: studentMap.get(r.student_id) ?? "",
   }));
 }
 
-export default async function StudentShuttle() {
-  const logs = await fetchRecentLogs();
+export default async function ParentShuttle() {
+  const logs = await fetchLogs();
   return (
     <>
       <div className="portal-topbar">
-        <a href="/student" style={{ color: "#fff", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", fontSize: 14 }}>
+        <a href="/parent" style={{ color: "#fff", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", fontSize: 14 }}>
           <ArrowLeft size={18} /> 뒤로
         </a>
-        <h1 style={{ flex: 1, textAlign: "center" }}>셔틀</h1>
+        <h1 style={{ flex: 1, textAlign: "center" }}>셔틀 기록</h1>
         <Bell size={20} />
       </div>
       <div className="portal-content">
-        <ScanForm />
-
         <section className="card">
-          <strong>최근 승하차 기록</strong>
+          <strong>자녀 승하차 기록</strong>
           {logs.length === 0 ? (
             <p style={{ fontSize: 12, color: "#6f7d78", padding: "8px 0" }}>아직 기록이 없습니다.</p>
           ) : (
@@ -82,7 +84,9 @@ export default async function StudentShuttle() {
                     <Bus size={14} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div className="list-row-title">{l.action} {l.vehicleName && `· ${l.vehicleName}`}</div>
+                    <div className="list-row-title">
+                      {l.studentName} · {l.action}{l.vehicleName && ` · ${l.vehicleName}`}
+                    </div>
                     <div className="list-row-sub" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
                       <Clock size={11} /> {fmtDateTime(l.scanned_at)}
                     </div>
@@ -93,7 +97,7 @@ export default async function StudentShuttle() {
           )}
         </section>
       </div>
-      <StudentTabbar />
+      <PortalTabbar />
     </>
   );
 }
