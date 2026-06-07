@@ -3,6 +3,18 @@
 import { useState, useTransition } from "react";
 import { ScanLine } from "lucide-react";
 
+// API 에러 코드 → 사용자 안내 문구
+const SCAN_ERR: Record<string, string> = {
+  unauthenticated: "로그인이 필요합니다.",
+  bad_json: "요청 형식이 올바르지 않습니다.",
+  bad_params: "토큰 또는 동작이 누락되었습니다.",
+  vehicle_not_found: "등록되지 않은 차량 QR 입니다.",
+  student_id_required_for_parent: "어느 자녀인지 선택해 주세요.",
+  unsupported_role: "이 계정으로는 승하차를 기록할 수 없습니다.",
+  student_not_linked: "연결된 학생이 아닙니다.",
+  insert_failed: "기록 저장에 실패했습니다. 다시 시도해 주세요.",
+};
+
 export default function ScanForm() {
   const [token, setToken] = useState("");
   const [action, setAction] = useState<"승차" | "하차">("승차");
@@ -24,7 +36,8 @@ export default function ScanForm() {
         });
         const data = await res.json();
         if (!res.ok) {
-          setResult({ ok: false, msg: data.error ?? "스캔 실패" });
+          const code = String(data.error ?? "");
+          setResult({ ok: false, msg: SCAN_ERR[code] ?? "스캔에 실패했습니다." });
           return;
         }
         setResult({ ok: true, msg: `${action} 기록됨` });
