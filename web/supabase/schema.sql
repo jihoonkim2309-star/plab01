@@ -2485,29 +2485,60 @@ create policy smsg_coach_insert on public.support_messages
     )
   );
 
--- 코치 채팅 첨부 메타 read/insert (storage 버킷은 chat_att_staff_* 가 이미 코치 허용).
--- 메시지 → inquiry → coach_sees_parent 체인으로 본인 담당 학부모 채팅 첨부만.
+-- 채팅 첨부 — 첨부 기능이 admin/super 외(코치·학부모·학생) 전부 RLS 로
+-- 막혀 있던 선재 버그 보강. storage 객체 + 메타(support_message_attachments) 둘 다.
+
+-- (1) 코치 — 본인 지점 staff 로 첨부 메타 read/insert (메시지 자체가 이미
+--     smsg_coach_* 로 스코프되므로 center 단위면 충분, 체인 subquery 불안정 회피)
 drop policy if exists smatt_coach_read on public.support_message_attachments;
 create policy smatt_coach_read on public.support_message_attachments
+  for select using (center_id is not null and public.is_center_staff(center_id));
+
+drop policy if exists smatt_coach_insert on public.support_message_attachments;
+create policy smatt_coach_insert on public.support_message_attachments
+  for insert with check (center_id is not null and public.is_center_staff(center_id));
+
+-- (2) 학부모/학생 — 본인 inquiry 의 메시지 첨부만 read/insert
+drop policy if exists smatt_member_read on public.support_message_attachments;
+create policy smatt_member_read on public.support_message_attachments
   for select using (
     exists (
       select 1 from public.support_messages m
       join public.inquiries i on i.id = m.inquiry_id
       where m.id = public.support_message_attachments.message_id
-        and i.kind = 'chat'
-        and public.coach_sees_parent(i.created_by)
+        and i.created_by = auth.uid()
     )
   );
 
-drop policy if exists smatt_coach_insert on public.support_message_attachments;
-create policy smatt_coach_insert on public.support_message_attachments
+drop policy if exists smatt_member_insert on public.support_message_attachments;
+create policy smatt_member_insert on public.support_message_attachments
   for insert with check (
     exists (
       select 1 from public.support_messages m
       join public.inquiries i on i.id = m.inquiry_id
       where m.id = public.support_message_attachments.message_id
-        and i.kind = 'chat'
-        and public.coach_sees_parent(i.created_by)
+        and i.created_by = auth.uid()
+    )
+  );
+
+-- (3) storage 버킷 chat-attachments — 학부모/학생 select/insert (staff 는 chat_att_staff_*)
+drop policy if exists chat_att_member_select on storage.objects;
+create policy chat_att_member_select on storage.objects for select
+  using (
+    bucket_id = 'chat-attachments'
+    and exists (
+      select 1 from public.users u
+      where u.id = auth.uid() and u.role in ('parent', 'student')
+    )
+  );
+
+drop policy if exists chat_att_member_insert on storage.objects;
+create policy chat_att_member_insert on storage.objects for insert
+  with check (
+    bucket_id = 'chat-attachments'
+    and exists (
+      select 1 from public.users u
+      where u.id = auth.uid() and u.role in ('parent', 'student')
     )
   );
 
