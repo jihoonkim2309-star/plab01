@@ -2398,3 +2398,39 @@ create policy ssa_parent_read on public.student_stop_assignments
         and psl.status = 'linked'
     )
   );
+
+-------------------------------------------------------------------------------
+--  41. 기사 포털 read RLS — 본인 지점의 셔틀 노선/정류장/차량/승하차/배정 조회
+--     기사(driver)는 운행 일정·차량 QR·승하차 기록을 봐야 하나, 기존엔 routes/
+--     stops/vehicles/boarding_logs/ssa 에 driver read 정책이 없어 차단됐다.
+--     모두 같은 지점(center_id) + role='driver' 조건으로 read 허용 (멱등).
+-------------------------------------------------------------------------------
+create or replace function public.is_center_driver(cid uuid)
+returns boolean language sql stable as $$
+  select exists (
+    select 1 from public.users u
+    where u.id = auth.uid()
+      and u.role = 'driver'
+      and u.center_id = cid
+  )
+$$;
+
+drop policy if exists shuttle_routes_driver_read on public.shuttle_routes;
+create policy shuttle_routes_driver_read on public.shuttle_routes
+  for select using (public.is_center_driver(center_id));
+
+drop policy if exists shuttle_stops_driver_read on public.shuttle_stops;
+create policy shuttle_stops_driver_read on public.shuttle_stops
+  for select using (public.is_center_driver(center_id));
+
+drop policy if exists shuttle_vehicles_driver_read on public.shuttle_vehicles;
+create policy shuttle_vehicles_driver_read on public.shuttle_vehicles
+  for select using (public.is_center_driver(center_id));
+
+drop policy if exists boarding_logs_driver_read on public.boarding_logs;
+create policy boarding_logs_driver_read on public.boarding_logs
+  for select using (public.is_center_driver(center_id));
+
+drop policy if exists ssa_driver_read on public.student_stop_assignments;
+create policy ssa_driver_read on public.student_stop_assignments
+  for select using (public.is_center_driver(center_id));

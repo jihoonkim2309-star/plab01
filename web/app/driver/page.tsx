@@ -1,8 +1,7 @@
 import { Bell, Bus, Clock, ChevronRight } from "lucide-react";
 import DriverTabbar from "./Tabbar";
 import { requirePortal } from "@/lib/portal-auth";
-
-const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
+import { todayYmd, weekdayOf } from "@/lib/ymd";
 
 type Run = { id: string; routeName: string; time: string; direction: string; vehicleName: string | null; stops: number };
 
@@ -21,7 +20,7 @@ async function fetchHome(): Promise<{ runs: Run[]; driverName: string | null }> 
   const driverName = (user as { name?: string } | null)?.name ?? null;
 
   if (!centerId) return { runs: [], driverName };
-  const todayWeekday = new Date().getDay();
+  const todayWeekday = weekdayOf(todayYmd());
 
   const { data: runRows } = await supabase
     .from("shuttle_runs")
@@ -41,14 +40,14 @@ async function fetchHome(): Promise<{ runs: Run[]; driverName: string | null }> 
       ? supabase.from("shuttle_routes").select("id, name").in("id", routeIds)
       : Promise.resolve({ data: [] as { id: string; name: string }[] }),
     vehicleIds.length > 0
-      ? supabase.from("shuttle_vehicles").select("id, name, plate_number").in("id", vehicleIds)
-      : Promise.resolve({ data: [] as { id: string; name: string | null; plate_number: string | null }[] }),
+      ? supabase.from("shuttle_vehicles").select("id, name, plate").in("id", vehicleIds)
+      : Promise.resolve({ data: [] as { id: string; name: string | null; plate: string | null }[] }),
     routeIds.length > 0
       ? supabase.from("shuttle_stops").select("route_id").in("route_id", routeIds)
       : Promise.resolve({ data: [] as { route_id: string }[] }),
   ]);
   const routeMap = new Map(((routesRes.data ?? []) as { id: string; name: string }[]).map((r) => [r.id, r.name]));
-  const vehicleMap = new Map(((vehiclesRes.data ?? []) as { id: string; name: string | null; plate_number: string | null }[]).map((v) => [v.id, `${v.name ?? ""} ${v.plate_number ?? ""}`.trim() || "차량"]));
+  const vehicleMap = new Map(((vehiclesRes.data ?? []) as { id: string; name: string | null; plate: string | null }[]).map((v) => [v.id, `${v.name ?? ""} ${v.plate ?? ""}`.trim() || "차량"]));
   const stopCount = new Map<string, number>();
   for (const s of ((stopsRes.data ?? []) as { route_id: string }[])) {
     stopCount.set(s.route_id, (stopCount.get(s.route_id) ?? 0) + 1);
