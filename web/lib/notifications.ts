@@ -45,7 +45,6 @@ export async function dispatchPendingPushes(supabase: any): Promise<DispatchResu
   let sent = 0;
   let failed = 0;
   let pruned = 0;
-  const nowIso = new Date().toISOString();
 
   for (const [nid, g] of byNotif) {
     const data: Record<string, string> = {};
@@ -65,29 +64,28 @@ export async function dispatchPendingPushes(supabase: any): Promise<DispatchResu
         if (
           !resp.success &&
           (resp.error?.code === "messaging/registration-token-not-registered" ||
-            resp.error?.code === "messaging/invalid-registration-token")
+            resp.error?.code === "messaging/invalid-registration-token" ||
+            resp.error?.code === "messaging/invalid-argument")
         ) {
           supabase.rpc("prune_device_token", { p_token: g.tokens[i] });
           pruned++;
         }
       });
       const ok = res.successCount > 0;
-      await supabase
-        .from("notifications")
-        .update({
-          status: ok ? "성공" : "실패",
-          provider: "fcm",
-          sent_at: nowIso,
-          error: ok ? null : "all_failed",
-        })
-        .eq("id", nid);
+      // 마킹은 definer RPC (notifications 가 RLS 로 anon update 차단되므로)
+      await supabase.rpc("mark_notification", {
+        p_id: nid,
+        p_status: ok ? "성공" : "실패",
+        p_error: ok ? null : "all_failed",
+      });
       if (ok) sent++;
       else failed++;
     } catch (e) {
-      await supabase
-        .from("notifications")
-        .update({ status: "실패", provider: "fcm", error: String(e).slice(0, 300) })
-        .eq("id", nid);
+      await supabase.rpc("mark_notification", {
+        p_id: nid,
+        p_status: "실패",
+        p_error: String(e).slice(0, 300),
+      });
       failed++;
     }
   }

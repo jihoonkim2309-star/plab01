@@ -2655,3 +2655,65 @@ begin
   get diagnostics v_count = row_count;
   return v_count;
 end $$;
+
+-- 발송 워커가 notification 상태를 마킹 (notifications 는 RLS 로 anon update
+-- 차단되므로 definer 로 우회).
+create or replace function public.mark_notification(
+  p_id uuid, p_status text, p_error text
+) returns void
+language sql security definer set search_path = public as $$
+  update public.notifications
+  set status = p_status,
+      provider = 'fcm',
+      error = p_error,
+      sent_at = case when p_status = '성공' then now() else sent_at end
+  where id = p_id
+$$;
+
+-- 출결 마킹 → 학부모/학생 푸시 큐잉 (어드민·코치 공용).
+-- 코치는 parent_student_links/student_account_links read 권한이 없어
+-- 클라이언트에서 수신자를 못 찾으므로 definer 로 처리한다.
+create or replace function public.queue_attendance_notification(
+  p_class_id    uuid,
+  p_date        text,
+  p_status      text,
+  p_student_ids uuid[],
+  p_center_id   uuid
+) returns integer
+language plpgsql security definer set search_path = public as $$
+declare
+  v_class text;
+  v_count integer := 0;
+begin
+  if p_status not in ('출석', '지각', '결석') then return 0; end if;
+  select name into v_class from public.classes where id = p_class_id;
+
+  -- 학부모
+  insert into public.notifications (center_id, kind, recipient, template, payload, status)
+  select
+    p_center_id, 'push', psl.parent_id,
+    '[출결] ' || s.name || ' 자녀의 ' || coalesce(v_class, '수업') || ' ' || p_status || ' 처리됨',
+    jsonb_build_object('type', 'attendance', 'class_id', p_class_id, 'student_id', s.id,
+      'status', p_status, 'date', p_date, 'target_role', 'parent', 'target_user_id', psl.parent_id),
+    '대기'
+  from public.students s
+  join public.parent_student_links psl on psl.student_id = s.id and psl.status = 'linked'
+  join public.users u on u.id = psl.parent_id and coalesce(u.notify_attendance, true) = true
+  where s.id = any(p_student_ids);
+  get diagnostics v_count = row_count;
+
+  -- 학생 본인
+  insert into public.notifications (center_id, kind, recipient, template, payload, status)
+  select
+    p_center_id, 'push', sal.user_id,
+    '[출결] ' || coalesce(v_class, '수업') || ' ' || p_status || ' 처리됨',
+    jsonb_build_object('type', 'attendance', 'class_id', p_class_id, 'student_id', s.id,
+      'status', p_status, 'date', p_date, 'target_role', 'student', 'target_user_id', sal.user_id),
+    '대기'
+  from public.students s
+  join public.student_account_links sal on sal.student_id = s.id and sal.status = 'linked'
+  join public.users u on u.id = sal.user_id and coalesce(u.notify_attendance, true) = true
+  where s.id = any(p_student_ids);
+
+  return v_count;
+end $$;
