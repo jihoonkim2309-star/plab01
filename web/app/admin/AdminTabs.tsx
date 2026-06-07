@@ -174,20 +174,19 @@ export function AdminTabBar() {
 
   return (
     <div className="admin-tabbar">
-      <div className="admin-tabbar-scroll">
+      <div className="admin-tabbar-inner">
         {tabs.map((t) => {
           const on = t.id === activeId;
           const Icon = t.icon ? ICON_MAP[t.icon] : null;
           return (
-            <div key={t.id} className={`admin-tab${on ? " active" : ""}`} onClick={() => setActive(t.id)}>
+            <div key={t.id} className={`admin-tab${on ? " active" : ""}`} onClick={() => setActive(t.id)} title={t.label}>
               {Icon && (
                 <span className="admin-tab-icon" aria-hidden>
                   <Icon size={13} />
                 </span>
               )}
               <span className="admin-tab-label">{t.label}</span>
-              <button
-                type="button"
+              <span
                 className="admin-tab-close"
                 aria-label="닫기"
                 onClick={(e) => {
@@ -195,13 +194,15 @@ export function AdminTabBar() {
                   closeTab(t.id);
                 }}
               >
-                <X size={12} />
-              </button>
+                <X size={13} />
+              </span>
             </div>
           );
         })}
+        {tabs.length > 1 && (
+          <button type="button" className="admin-tabbar-clear" onClick={closeAll}>전체 닫기</button>
+        )}
       </div>
-      <button type="button" className="admin-tabbar-clear" onClick={closeAll}>전체 닫기</button>
     </div>
   );
 }
