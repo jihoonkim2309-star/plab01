@@ -2577,3 +2577,81 @@ create policy students_driver_read on public.students
       where ssa.student_id = public.students.id
     )
   );
+
+-------------------------------------------------------------------------------
+--  45. FCM 푸시 — 기기 토큰 저장 + 발송 워커용 RPC
+--     클라이언트(브라우저/PWA)가 FCM 토큰을 등록 → device_tokens.
+--     cron 발송 워커는 anon 키만 쓰므로(service_role 미사용), 남의 토큰을
+--     읽으려면 security definer RPC 가 필요하다.
+-------------------------------------------------------------------------------
+create table if not exists public.device_tokens (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null references public.users(id) on delete cascade,
+  token        text not null unique,
+  platform     text,                 -- web|ios|android
+  user_agent   text,
+  created_at   timestamptz not null default now(),
+  last_seen_at timestamptz not null default now()
+);
+create index if not exists device_tokens_user_idx on public.device_tokens (user_id);
+
+alter table public.device_tokens enable row level security;
+-- 본인 토큰만 등록·조회·삭제
+drop policy if exists device_tokens_own_all on public.device_tokens;
+create policy device_tokens_own_all on public.device_tokens
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- 발송 워커용 — 대기 중 push 알림 × 수신자 기기토큰 (notify_push=true 만).
+-- security definer: anon cron 이 RLS 우회해 대상 토큰을 읽는다.
+create or replace function public.pending_push_targets(p_limit int default 300)
+returns table(notification_id uuid, template text, payload jsonb, token text)
+language sql security definer set search_path = public as $$
+  select n.id, n.template, n.payload, dt.token
+  from public.notifications n
+  join public.users u
+    on u.id = nullif(n.payload->>'target_user_id', '')::uuid
+  join public.device_tokens dt on dt.user_id = u.id
+  where n.status = '대기'
+    and n.kind = 'push'
+    and u.notify_push = true
+  order by n.created_at
+  limit p_limit
+$$;
+
+-- 무효 토큰 정리 (FCM unregistered) — 워커가 호출.
+create or replace function public.prune_device_token(p_token text)
+returns void language sql security definer set search_path = public as $$
+  delete from public.device_tokens where token = p_token
+$$;
+
+-- 셔틀 승하차 → 학부모 푸시 알림 큐잉. 스캔은 학생/학부모 세션이라
+-- parent_student_links 를 직접 못 읽을 수 있어 definer 로 처리.
+create or replace function public.queue_shuttle_notification(
+  p_student_id uuid,
+  p_action     text,
+  p_center_id  uuid,
+  p_vehicle_id uuid,
+  p_run_id     uuid
+) returns integer
+language plpgsql security definer set search_path = public as $$
+declare
+  v_name  text;
+  v_time  text := to_char(now() at time zone 'Asia/Seoul', 'HH24:MI');
+  v_count integer := 0;
+begin
+  select name into v_name from public.students where id = p_student_id;
+  insert into public.notifications (center_id, kind, recipient, template, payload, status)
+  select
+    p_center_id, 'push', psl.parent_id,
+    coalesce(v_name, '자녀') || ' ' || p_action || ' · ' || v_time,
+    jsonb_build_object(
+      'type', 'shuttle', 'student_id', p_student_id, 'action', p_action,
+      'vehicle_id', p_vehicle_id, 'run_id', p_run_id,
+      'target_role', 'parent', 'target_user_id', psl.parent_id
+    ),
+    '대기'
+  from public.parent_student_links psl
+  where psl.student_id = p_student_id and psl.status = 'linked';
+  get diagnostics v_count = row_count;
+  return v_count;
+end $$;

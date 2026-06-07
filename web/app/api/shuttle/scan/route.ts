@@ -114,6 +114,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "insert_failed", detail: error.message }, { status: 500 });
   }
 
+  // 학부모 푸시 알림 큐잉 (실 발송은 cron 워커). 실패해도 스캔 성공엔 영향 X.
+  await supabase.rpc("queue_shuttle_notification", {
+    p_student_id: studentId,
+    p_action: action,
+    p_center_id: v.center_id,
+    p_vehicle_id: v.id,
+    p_run_id: runId,
+  });
+
   return NextResponse.json({
     ok: true,
     id: (ins as { id: string }).id,
