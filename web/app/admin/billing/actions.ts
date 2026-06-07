@@ -179,8 +179,23 @@ export async function refundInvoice(formData: FormData) {
 // 학부모 포털 결제 요청 — 알림 큐잉만 (Phase 2 실 전송)
 export async function requestParentPayment(formData: FormData) {
   const { supabase, centerId } = await requireCenter();
-  const ids = formData.getAll("ids").map(String).filter(Boolean);
   const back = String(formData.get("back") ?? "/admin/billing");
+
+  // 행별 삭제 — 외곽 일괄 form 을 공유한다 (중첩 <form> 회피).
+  // 삭제 ConfirmButton 이 __delete_id 를 hidden 으로 주입해 같은 form 으로 제출.
+  const deleteId = String(formData.get("__delete_id") ?? "");
+  if (deleteId) {
+    const { error } = await supabase
+      .from("invoices")
+      .delete()
+      .eq("id", deleteId)
+      .eq("center_id", centerId);
+    if (error) throw new Error("삭제 실패: " + error.message);
+    revalidatePath("/admin/billing");
+    redirect(back);
+  }
+
+  const ids = formData.getAll("ids").map(String).filter(Boolean);
   if (ids.length === 0) throw new Error("선택된 청구서가 없습니다.");
 
   const { data: invs, error: invErr } = await supabase

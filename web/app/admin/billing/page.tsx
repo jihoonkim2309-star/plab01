@@ -14,7 +14,7 @@ import MonthNav from "../MonthNav";
 import ExportLink from "../ExportLink";
 import PayInvoiceModal from "./PayInvoiceModal";
 import RefundModal from "./RefundModal";
-import { deleteInvoice, requestParentPayment } from "./actions";
+import { requestParentPayment } from "./actions";
 
 const CHANNEL_LABELS: Record<string, string> = {
   parent_portal: "학부모앱 결제",
@@ -308,16 +308,16 @@ export default async function BillingPage({
                           backUrl={`/admin/billing?ym=${period}`}
                         />
                       )}
-                      <form action={deleteInvoice.bind(null, i.id, period)}>
-                        <ConfirmButton
-                          message={`'${i.students?.name ?? "학생"}'의 청구서를 삭제할까요?`}
-                          className="btn danger"
-                          style={{ minHeight: 30, padding: "4px 10px" }}
-                          type="submit"
-                        >
-                          삭제
-                        </ConfirmButton>
-                      </form>
+                      {/* 외곽 일괄 form 공유 — __delete_id 주입으로 삭제 (중첩 form 회피) */}
+                      <ConfirmButton
+                        message={`'${i.students?.name ?? "학생"}'의 청구서를 삭제할까요?`}
+                        className="btn danger"
+                        style={{ minHeight: 30, padding: "4px 10px" }}
+                        name="__delete_id"
+                        value={i.id}
+                      >
+                        삭제
+                      </ConfirmButton>
                     </div>
                   </td>
                 </tr>
