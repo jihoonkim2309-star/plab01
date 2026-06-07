@@ -3007,3 +3007,116 @@ tr[data-bulk-hover] td {
   100% { opacity: 1; }
 }
 .sk-wrapper { animation: sk-wrapper-fade 500ms ease-out both; }
+
+/* ===== Admin Tab System ===== */
+.admin-tabbar {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+  padding: 6px 12px 0;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.admin-tabbar-scroll {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  overflow-x: auto;
+  flex: 1;
+  scrollbar-width: thin;
+}
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: #f8fafb;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-bottom: -1px;
+  user-select: none;
+}
+.admin-tab:hover { background: #f1f5f4; color: var(--text); }
+.admin-tab.active {
+  background: #fff;
+  color: var(--brand);
+  border-color: var(--line);
+  border-bottom: 1px solid #fff;
+  font-weight: 800;
+}
+.admin-tab-label { line-height: 1; }
+.admin-tab-close {
+  background: transparent;
+  border: 0;
+  padding: 2px;
+  margin-left: 2px;
+  cursor: pointer;
+  color: #9ca3af;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+}
+.admin-tab-close:hover { background: #e5e7eb; color: #b42318; }
+.admin-tabbar-clear {
+  flex-shrink: 0;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 8px 10px;
+}
+.admin-tabbar-clear:hover { color: #b42318; }
+
+.admin-tab-content {
+  position: relative;
+  height: calc(100vh - var(--topbar-h, 56px) - 42px);
+  overflow: hidden;
+}
+.admin-tab-panel {
+  height: 100%;
+  overflow: auto;
+}
+.admin-tab-panel.admin-tab-frame {
+  overflow: hidden;
+}
+.admin-tab-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+/* ===== Frame mode (iframe 안) ===== */
+body.admin-in-frame .admin-shell > aside,
+body.admin-in-frame .admin-shell > .drawer-backdrop,
+body.admin-in-frame .topbar,
+body.admin-in-frame .admin-tabbar {
+  display: none !important;
+}
+body.admin-in-frame .admin-shell { display: block; }
+body.admin-in-frame .main {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+body.admin-in-frame .content {
+  padding: 16px;
+}
+body.admin-in-frame .admin-tab-content {
+  height: auto;
+  overflow: visible;
+}
+body.admin-in-frame .admin-tab-panel {
+  height: auto;
+  overflow: visible;
+}

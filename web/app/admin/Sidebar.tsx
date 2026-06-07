@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { NAV, type NavGroup } from "./nav";
+import { useAdminTabs } from "./AdminTabs";
 import { playChatDing } from "./chat-sound";
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -149,6 +150,7 @@ export default function Sidebar({
   const router = useRouter();
   const searchParamsHook = useSearchParams();
   const searchParams = searchParamsHook ?? new URLSearchParams();
+  const tabs = useAdminTabs();
 
   // 사이드바 자체 fetch — layout 에서 빼서 RSC 응답이 빨라짐.
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -398,6 +400,11 @@ export default function Sidebar({
                     key={item.slug}
                     href={item.href}
                     data-no-loading="true"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                      e.preventDefault();
+                      tabs.openTab(item.href, item.label);
+                    }}
                     className={[
                       "sub",
                       isActive(pathname, item.href, searchParams) ? "active" : "",

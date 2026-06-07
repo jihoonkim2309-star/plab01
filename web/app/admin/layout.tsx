@@ -10,6 +10,9 @@ import SuppressAutofill from "./SuppressAutofill";
 import ProfileMenu from "./ProfileMenu";
 import SidebarWorkspace from "./SidebarWorkspace";
 import DrawerToggle from "./DrawerToggle";
+import { AdminTabsProvider, AdminTabBar, AdminTabContent } from "./AdminTabs";
+import FrameDetector from "./FrameDetector";
+import { labelForPath } from "./labelFor";
 import { ACTIVE_CENTER_COOKIE } from "@/lib/center";
 import { SESSION_COOKIE, isActiveSession } from "@/lib/session";
 import PendingApproval from "./PendingApproval";
@@ -133,10 +136,16 @@ export default async function AdminLayout({
           ? "코치"
           : (role ?? "사용자");
 
+  const initialLabel = labelForPath(pathname);
+
   return (
+    <AdminTabsProvider initialLabel={initialLabel}>
     <div className="admin-shell app">
       <Suspense fallback={null}>
         <GlobalLoading />
+      </Suspense>
+      <Suspense fallback={null}>
+        <FrameDetector />
       </Suspense>
       <SuppressInvalidTooltip />
       <SuppressAutofill />
@@ -168,6 +177,8 @@ export default async function AdminLayout({
           </div>
         </header>
 
+        <AdminTabBar />
+
         <section className="content">
           {(() => {
             // super_admin 활성 지점 미선택 ('프랜차이즈 관리' 모드) 시 통과할 경로:
@@ -192,7 +203,7 @@ export default async function AdminLayout({
               );
             const isBlocked =
               isStaff && !activeCenterId && isSuper && !isSuperOkPath;
-            if (!isBlocked) return children;
+            if (!isBlocked) return <AdminTabContent>{children}</AdminTabContent>;
             return (
               <div
                 className="panel"
@@ -211,5 +222,6 @@ export default async function AdminLayout({
         </section>
       </main>
     </div>
+    </AdminTabsProvider>
   );
 }
