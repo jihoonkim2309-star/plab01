@@ -2434,3 +2434,51 @@ create policy boarding_logs_driver_read on public.boarding_logs
 drop policy if exists ssa_driver_read on public.student_stop_assignments;
 create policy ssa_driver_read on public.student_stop_assignments
   for select using (public.is_center_driver(center_id));
+
+-------------------------------------------------------------------------------
+--  42. 코치 채팅 — 본인 담당 클래스 학생의 학부모가 보낸 1:1 채팅만 열람·답장
+--     scope 체인: inquiry.created_by(학부모) → parent_student_links →
+--     students.class_id → classes.coach_id = 코치 본인.
+--     코치 답장은 sender='admin' (지점측). 멱등.
+-------------------------------------------------------------------------------
+create or replace function public.coach_sees_parent(p_parent uuid)
+returns boolean language sql stable as $$
+  select exists (
+    select 1
+    from public.parent_student_links psl
+    join public.students s on s.id = psl.student_id
+    join public.classes c on c.id = s.class_id
+    where psl.parent_id = p_parent
+      and psl.status = 'linked'
+      and c.coach_id = auth.uid()
+  )
+$$;
+
+drop policy if exists inquiries_coach_read on public.inquiries;
+create policy inquiries_coach_read on public.inquiries
+  for select using (
+    kind = 'chat' and public.coach_sees_parent(created_by)
+  );
+
+drop policy if exists smsg_coach_read on public.support_messages;
+create policy smsg_coach_read on public.support_messages
+  for select using (
+    exists (
+      select 1 from public.inquiries i
+      where i.id = public.support_messages.inquiry_id
+        and i.kind = 'chat'
+        and public.coach_sees_parent(i.created_by)
+    )
+  );
+
+drop policy if exists smsg_coach_insert on public.support_messages;
+create policy smsg_coach_insert on public.support_messages
+  for insert with check (
+    sender = 'admin'
+    and exists (
+      select 1 from public.inquiries i
+      where i.id = public.support_messages.inquiry_id
+        and i.kind = 'chat'
+        and public.coach_sees_parent(i.created_by)
+    )
+  );
