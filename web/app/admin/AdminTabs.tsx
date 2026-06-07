@@ -19,6 +19,7 @@ function detectInFrame(): boolean {
 }
 
 const STORAGE_PREFIX = "plab01.admin.tabs.v2.";
+const LAST_CENTER_KEY = "plab01.admin.tabs.lastCenter";
 const MAX_TABS = 10;
 function storageKey(centerId: string | null) {
   return `${STORAGE_PREFIX}${centerId ?? "none"}`;
@@ -85,15 +86,35 @@ export function AdminTabsProvider({ children, initialLabel: _initialLabel, cente
     const f = detectInFrame();
     setInFrame(f);
     if (!f) {
-      const r = restore(centerId);
-      setTabs(r.tabs);
-      setActiveId(r.activeId);
+      const cur = centerId ?? "none";
+      let last: string | null = null;
+      try {
+        last = localStorage.getItem(LAST_CENTER_KEY);
+      } catch {
+        /* ignore */
+      }
+      if (last === cur) {
+        // 같은 지점 재진입(새로고침) → 탭 복원
+        const r = restore(centerId);
+        setTabs(r.tabs);
+        setActiveId(r.activeId);
+      } else {
+        // 지점 변경(또는 최초 진입) → 무조건 빈 탭으로 시작
+        try {
+          localStorage.removeItem(storageKey(centerId));
+          localStorage.setItem(LAST_CENTER_KEY, cur);
+        } catch {
+          /* ignore */
+        }
+        setTabs([]);
+        setActiveId(null);
+      }
     }
     setMounted(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // centerId 변경 = 무조건 초기화 (이전 지점 탭 전부 제거, 새 지점은 빈 상태로 시작)
+  // centerId 변경(재마운트 없이 prop 만 바뀌는 경우) = 무조건 초기화
   useEffect(() => {
     if (!mounted || inFrame) return;
     if (lastCenterRef.current !== centerId) {
@@ -102,6 +123,7 @@ export function AdminTabsProvider({ children, initialLabel: _initialLabel, cente
         if (lastCenterRef.current !== null) {
           localStorage.removeItem(storageKey(lastCenterRef.current));
         }
+        localStorage.setItem(LAST_CENTER_KEY, centerId ?? "none");
       } catch {
         /* ignore */
       }
