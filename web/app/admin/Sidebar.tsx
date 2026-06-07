@@ -146,11 +146,14 @@ export default function Sidebar({
   role: "super_admin" | "admin" | "coach" | "parent" | "student" | "driver" | null;
   hasActiveCenter?: boolean;
 }) {
-  const pathname = usePathname();
+  const pathnameRaw = usePathname();
   const router = useRouter();
   const searchParamsHook = useSearchParams();
   const searchParams = searchParamsHook ?? new URLSearchParams();
   const tabs = useAdminTabs();
+  // 활성 탭이 있으면 그 탭의 href 를 active 기준으로 사용. 없으면 URL pathname.
+  const activeTab = tabs.tabs.find((t) => t.id === tabs.activeId) ?? null;
+  const pathname = activeTab ? activeTab.href.replace(/[?#].*$/, "") : (pathnameRaw ?? "");
 
   // 사이드바 자체 fetch — layout 에서 빼서 RSC 응답이 빨라짐.
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
