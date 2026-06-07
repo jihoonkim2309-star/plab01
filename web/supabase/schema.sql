@@ -2196,3 +2196,64 @@ create policy makeups_member_read on public.makeups
         and u.center_id = public.makeups.center_id
     )
   );
+
+-------------------------------------------------------------------------------
+--  38. 출석 (attendance) — 어드민/코치 마킹, 학부모/학생 본인 read
+--     (class_id, student_id, attendance_date) unique = 같은 날 같은 학생 한 번만
+-------------------------------------------------------------------------------
+create table if not exists public.attendance (
+  id               uuid primary key default gen_random_uuid(),
+  center_id        uuid not null references public.centers(id) on delete cascade,
+  class_id         uuid not null references public.classes(id) on delete cascade,
+  student_id       uuid not null references public.students(id) on delete cascade,
+  attendance_date  date not null,
+  status           text not null default '출석',  -- 출석|지각|결석|보강|기타
+  note             text,
+  marked_by        uuid references public.users(id) on delete set null,
+  marked_at        timestamptz,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now(),
+  unique (class_id, student_id, attendance_date)
+);
+
+do $$ begin
+  alter table public.attendance add constraint attendance_status_check
+    check (status in ('출석','지각','결석','보강','기타'));
+exception when duplicate_object then null; end $$;
+
+create index if not exists idx_attendance_class_date on public.attendance (class_id, attendance_date desc);
+create index if not exists idx_attendance_student_date on public.attendance (student_id, attendance_date desc);
+
+drop trigger if exists attendance_touch on public.attendance;
+create trigger attendance_touch before update on public.attendance
+  for each row execute function public.touch_updated_at();
+
+alter table public.attendance enable row level security;
+
+drop policy if exists attendance_staff_all on public.attendance;
+create policy attendance_staff_all on public.attendance
+  for all
+  using  (public.is_center_staff(center_id))
+  with check (public.is_center_staff(center_id));
+
+drop policy if exists attendance_parent_read on public.attendance;
+create policy attendance_parent_read on public.attendance
+  for select using (
+    exists (
+      select 1 from public.parent_student_links psl
+      where psl.parent_id = auth.uid()
+        and psl.student_id = public.attendance.student_id
+        and psl.status = 'linked'
+    )
+  );
+
+drop policy if exists attendance_student_read on public.attendance;
+create policy attendance_student_read on public.attendance
+  for select using (
+    exists (
+      select 1 from public.student_account_links sal
+      where sal.user_id = auth.uid()
+        and sal.student_id = public.attendance.student_id
+        and sal.status = 'linked'
+    )
+  );

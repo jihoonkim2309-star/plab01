@@ -43,6 +43,7 @@ export const NAV: NavGroup[] = [
     icon: "BookOpen",
     items: [
       { label: "월간 시간표", slug: "schedule", href: "/admin/schedule", ready: true },
+      { label: "출석 관리", slug: "attendance", href: "/admin/attendance", ready: true },
       { label: "클래스 관리", slug: "class-manage", href: "/admin/classes", ready: true },
       { label: "클래스 생성", slug: "class-create", href: "/admin/classes/new", ready: true },
       { label: "수강료 상품", slug: "product-manage", href: "/admin/products", ready: true },
