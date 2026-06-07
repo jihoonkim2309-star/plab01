@@ -2,6 +2,7 @@ import { ArrowLeft, Bell } from "lucide-react";
 import CoachTabbar from "../Tabbar";
 import { requirePortal } from "@/lib/portal-auth";
 import AttendanceMobile from "./AttendanceMobile";
+import NoteEditor from "@/app/admin/class-notes/NoteEditor";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -67,6 +68,7 @@ export default async function CoachAttendance({
   let students: { id: string; name: string }[] = [];
   let attendance: { student_id: string; status: string }[] = [];
 
+  let existingNote: { content: string; public_to_parent: boolean } | null = null;
   if (selected) {
     const { data: stRows } = await supabase
       .from("students")
@@ -84,6 +86,13 @@ export default async function CoachAttendance({
         .eq("attendance_date", date);
       attendance = (attRows ?? []) as { student_id: string; status: string }[];
     }
+    const { data: noteRow } = await supabase
+      .from("class_notes")
+      .select("content, public_to_parent")
+      .eq("class_id", selected.id)
+      .eq("note_date", date)
+      .maybeSingle();
+    existingNote = noteRow as { content: string; public_to_parent: boolean } | null;
   }
 
   // 날짜 nav
@@ -152,6 +161,20 @@ export default async function CoachAttendance({
             classId={selected.id}
             date={date}
           />
+        )}
+
+        {selected && (
+          <section className="card">
+            <div className="card-head">
+              <strong>수업일지</strong>
+            </div>
+            <NoteEditor
+              classId={selected.id}
+              noteDate={date}
+              initialContent={existingNote?.content ?? ""}
+              initialPublic={existingNote?.public_to_parent ?? true}
+            />
+          </section>
         )}
       </div>
       <CoachTabbar />

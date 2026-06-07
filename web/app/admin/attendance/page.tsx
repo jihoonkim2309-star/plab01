@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireCenter } from "@/lib/center";
 import AttendanceGrid from "./AttendanceGrid";
 import DateNav from "./DateNav";
+import NoteEditor from "../class-notes/NoteEditor";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -80,6 +81,18 @@ export default async function AttendancePage({
     보강: attendance.filter((a) => a.status === "보강").length,
     안찍힘: students.length - attendance.length,
   };
+
+  // 수업일지 (선택된 클래스 + 날짜)
+  let existingNote: { content: string; public_to_parent: boolean } | null = null;
+  if (selectedClass) {
+    const { data: noteRow } = await supabase
+      .from("class_notes")
+      .select("content, public_to_parent")
+      .eq("class_id", selectedClass.id)
+      .eq("note_date", date)
+      .maybeSingle();
+    existingNote = noteRow as { content: string; public_to_parent: boolean } | null;
+  }
 
   // 날짜 nav
   const prevDate = ((): string => {
@@ -165,6 +178,24 @@ export default async function AttendancePage({
           )}
         </div>
       </div>
+
+      {selectedClass && (
+        <div className="panel elevated" style={{ marginTop: 14 }}>
+          <div className="panel-head">
+            <p className="panel-title">
+              수업일지 — {selectedClass.name} · {date}
+            </p>
+          </div>
+          <div className="panel-body">
+            <NoteEditor
+              classId={selectedClass.id}
+              noteDate={date}
+              initialContent={existingNote?.content ?? ""}
+              initialPublic={existingNote?.public_to_parent ?? true}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }

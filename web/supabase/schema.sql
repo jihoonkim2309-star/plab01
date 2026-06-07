@@ -2257,3 +2257,62 @@ create policy attendance_student_read on public.attendance
         and sal.status = 'linked'
     )
   );
+
+-------------------------------------------------------------------------------
+--  39. 수업일지 (class_notes) — 코치/어드민 작성, 학부모/학생 read (public 옵션)
+-------------------------------------------------------------------------------
+create table if not exists public.class_notes (
+  id               uuid primary key default gen_random_uuid(),
+  center_id        uuid not null references public.centers(id) on delete cascade,
+  class_id         uuid not null references public.classes(id) on delete cascade,
+  note_date        date not null,
+  content          text not null,
+  coach_id         uuid references public.users(id) on delete set null,
+  public_to_parent boolean not null default true,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now(),
+  unique (class_id, note_date)
+);
+
+create index if not exists idx_class_notes_class_date on public.class_notes (class_id, note_date desc);
+create index if not exists idx_class_notes_center_date on public.class_notes (center_id, note_date desc);
+
+drop trigger if exists class_notes_touch on public.class_notes;
+create trigger class_notes_touch before update on public.class_notes
+  for each row execute function public.touch_updated_at();
+
+alter table public.class_notes enable row level security;
+
+drop policy if exists class_notes_staff_all on public.class_notes;
+create policy class_notes_staff_all on public.class_notes
+  for all
+  using  (public.is_center_staff(center_id))
+  with check (public.is_center_staff(center_id));
+
+drop policy if exists class_notes_parent_read on public.class_notes;
+create policy class_notes_parent_read on public.class_notes
+  for select using (
+    public_to_parent = true
+    and exists (
+      select 1 from public.students s
+      join public.parent_student_links psl
+        on psl.student_id = s.id
+       and psl.parent_id = auth.uid()
+       and psl.status = 'linked'
+      where s.class_id = public.class_notes.class_id
+    )
+  );
+
+drop policy if exists class_notes_student_read on public.class_notes;
+create policy class_notes_student_read on public.class_notes
+  for select using (
+    public_to_parent = true
+    and exists (
+      select 1 from public.students s
+      join public.student_account_links sal
+        on sal.student_id = s.id
+       and sal.user_id = auth.uid()
+       and sal.status = 'linked'
+      where s.class_id = public.class_notes.class_id
+    )
+  );
