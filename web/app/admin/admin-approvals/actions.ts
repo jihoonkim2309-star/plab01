@@ -31,11 +31,7 @@ export async function approveAdmin(formData: FormData) {
     throw new Error("허용되지 않은 역할");
   }
 
-  // 슈퍼어드민 은 지점장(admin) 승인만 수행. 코치/기사는 지점장이 처리.
-  if (me.role === "super_admin" && role !== "admin") {
-    throw new Error("코치·기사 승인은 해당 지점의 지점장이 처리해야 합니다.");
-  }
-
+  // 슈퍼어드민 은 모든 역할(admin/coach/driver) 을 임의 지점에 승인 가능 (전권).
   // 일반 admin 은 자기 센터만 승인 가능 (admin/coach/driver 모두).
   if (me.role === "admin" && centerId !== me.center_id) {
     throw new Error("자기 지점의 신청만 승인할 수 있습니다.");

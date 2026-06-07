@@ -34,16 +34,14 @@ export default async function AdminApprovalsPage() {
   const isSuper = me.role === "super_admin";
 
   // pending = role 미부여.
-  // - super_admin: applying_role='admin' 신청만 (지점장 신청)
+  // - super_admin: 전체 지점의 모든 직원 신청 (admin/coach/driver) — 전권 승인
   // - admin: 자기 지점 + applying_role in ('coach','driver','admin') (직원 신청)
   let pendingQuery = supabase
     .from("users")
     .select("id, name, email, phone, applying_center_id, applying_role, created_at")
     .is("role", null)
     .order("created_at", { ascending: false });
-  if (isSuper) {
-    pendingQuery = pendingQuery.eq("applying_role", "admin");
-  } else if (me.center_id) {
+  if (!isSuper && me.center_id) {
     pendingQuery = pendingQuery
       .eq("applying_center_id", me.center_id)
       .in("applying_role", ["admin", "coach", "driver"]);
@@ -71,14 +69,14 @@ export default async function AdminApprovalsPage() {
 
   // 지점장 화면에선 역할별 직원만 노출되도록 안내 (super 와 admin 의 화면 헤더 분기)
   const subtitle = isSuper
-    ? "각 지점의 지점장(admin) 가입 신청만 노출됩니다 · 코치·기사 신청은 해당 지점장이 처리"
+    ? "전체 지점의 지점장·코치·기사 가입 신청 · 지점과 역할 확인 후 승인"
     : "내 지점의 코치·기사·추가 관리자 신청 · 승인 시 신청 역할 그대로 부여";
 
   return (
     <>
       <div className="page-head">
         <div>
-          <h1>{isSuper ? "지점장 가입 승인" : "지점 직원 가입 승인"}</h1>
+          <h1>{isSuper ? "직원 가입 승인" : "지점 직원 가입 승인"}</h1>
           <p className="subtext">{subtitle}</p>
         </div>
       </div>
@@ -125,7 +123,7 @@ export default async function AdminApprovalsPage() {
               // 일반 admin: 자기 지점 강제. 슈퍼: 지점은 신청대로 지점장만 부여.
               const defaultCenter =
                 u.applying_center_id ?? (isSuper ? "" : (me.center_id ?? ""));
-              const defaultRole = isSuper ? "admin" : (u.applying_role ?? "coach");
+              const defaultRole = u.applying_role ?? "admin";
 
               return (
                 <tr key={u.id}>
@@ -175,18 +173,11 @@ export default async function AdminApprovalsPage() {
                       <select
                         name="role"
                         defaultValue={defaultRole}
-                        disabled={isSuper}
                         style={{ minHeight: 32, padding: "4px 8px" }}
                       >
-                        {isSuper ? (
-                          <option value="admin">지점장 (admin)</option>
-                        ) : (
-                          <>
-                            <option value="admin">지점장 (admin)</option>
-                            <option value="coach">코치</option>
-                            <option value="driver">기사</option>
-                          </>
-                        )}
+                        <option value="admin">지점장 (admin)</option>
+                        <option value="coach">코치</option>
+                        <option value="driver">기사</option>
                       </select>
                       <button
                         className="btn primary"

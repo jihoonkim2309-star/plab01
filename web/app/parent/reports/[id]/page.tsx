@@ -184,9 +184,17 @@ export default async function ParentReportDetail({
               </section>
             )}
 
-            {snap.sections.map((sec) => (
+            {(snap.sections ?? []).map((sec) => (
               <SectionCard key={sec.category} section={sec} months={snap.months} />
             ))}
+
+            {!snap.balance && (snap.sections ?? []).length === 0 && (
+              <section className="card">
+                <p style={{ fontSize: 13, color: "#6f7d78", textAlign: "center", padding: "20px 0" }}>
+                  측정 데이터가 아직 없습니다.
+                </p>
+              </section>
+            )}
 
             {(r.coach_comment || r.admin_comment) && (
               <section className="card">
