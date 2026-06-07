@@ -3,6 +3,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 
+function detectInFrame(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get("frame") === "1";
+  } catch {
+    return false;
+  }
+}
+
 const STORAGE_KEY = "plab01.admin.tabs.v1";
 const MAX_TABS = 10;
 
@@ -55,19 +65,30 @@ function restore(): { tabs: AdminTab[]; activeId: string | null } {
 }
 
 export function AdminTabsProvider({ children, initialLabel: _initialLabel }: { children: ReactNode; initialLabel: string }) {
-  const [tabs, setTabs] = useState<AdminTab[]>(() => restore().tabs);
-  const [activeId, setActiveId] = useState<string | null>(() => restore().activeId);
+  // SSR-safe — 초기 빈 상태, mount 후 detect + restore
+  const [tabs, setTabs] = useState<AdminTab[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [inFrame, setInFrame] = useState(false);
 
   useEffect(() => {
+    const f = detectInFrame();
+    setInFrame(f);
+    if (!f) {
+      const r = restore();
+      setTabs(r.tabs);
+      setActiveId(r.activeId);
+    }
     setMounted(true);
   }, []);
 
   useEffect(() => {
+    if (inFrame) return;
     if (mounted) persist(tabs, activeId);
-  }, [tabs, activeId, mounted]);
+  }, [tabs, activeId, mounted, inFrame]);
 
   const openTab = useCallback((href: string, label: string) => {
+    if (inFrame) return;
     const id = idFromHref(href);
     setTabs((prev) => {
       if (prev.some((t) => t.id === id)) return prev;
@@ -115,8 +136,11 @@ export function AdminTabsProvider({ children, initialLabel: _initialLabel }: { c
 }
 
 export function AdminTabBar() {
+  const [inFrame, setInFrame] = useState(false);
+  useEffect(() => { setInFrame(detectInFrame()); }, []);
   const { tabs, activeId, closeTab, closeAll, setActive } = useAdminTabs();
 
+  if (inFrame) return null;
   if (tabs.length === 0) return null;
 
   return (
@@ -148,10 +172,17 @@ export function AdminTabBar() {
 }
 
 // activeId 가 null 이면 children (대시보드 홈) 표시. 활성 탭이 있으면 그 iframe 만 visible.
+// frame 모드 (iframe 안) 에서는 children 만 — 탭/iframe 중첩 방지.
 export function AdminTabContent({ children }: { children: ReactNode }) {
+  const [inFrame, setInFrame] = useState(false);
+  useEffect(() => { setInFrame(detectInFrame()); }, []);
   const { tabs, activeId } = useAdminTabs();
-  const showHome = activeId === null;
 
+  if (inFrame) {
+    return <div className="admin-tab-content"><div className="admin-tab-panel">{children}</div></div>;
+  }
+
+  const showHome = activeId === null;
   return (
     <div className="admin-tab-content">
       <div className="admin-tab-panel" style={{ display: showHome ? "block" : "none" }}>
