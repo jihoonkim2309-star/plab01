@@ -2144,3 +2144,30 @@ create policy students_student_read on public.students
         and sal.status in ('pending', 'linked')
     )
   );
+
+-------------------------------------------------------------------------------
+--  36. 학부모/학생 — 같은 center 의 classes 전체 read (학원 전체 시간표 표시용)
+--     기존 classes_parent_read / classes_student_read 가 본인 자녀/본인 class 만 →
+--     같은 center 의 모든 classes read 로 확장 (시간표 비교용, 민감 데이터 X)
+-------------------------------------------------------------------------------
+drop policy if exists classes_parent_read on public.classes;
+create policy classes_parent_read on public.classes
+  for select using (
+    exists (
+      select 1 from public.users u
+      where u.id = auth.uid()
+        and u.role = 'parent'
+        and u.center_id = public.classes.center_id
+    )
+  );
+
+drop policy if exists classes_student_read on public.classes;
+create policy classes_student_read on public.classes
+  for select using (
+    exists (
+      select 1 from public.users u
+      where u.id = auth.uid()
+        and u.role = 'student'
+        and u.center_id = public.classes.center_id
+    )
+  );
