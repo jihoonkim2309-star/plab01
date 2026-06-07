@@ -2482,3 +2482,25 @@ create policy smsg_coach_insert on public.support_messages
         and public.coach_sees_parent(i.created_by)
     )
   );
+
+-------------------------------------------------------------------------------
+--  43. 코치 출석/측정 — classes·students read RLS (선재 누락 보강)
+--     attendance/class_notes/measurements 는 is_center_staff(coach 포함) 로
+--     코치 접근 가능했으나, 그 전제인 classes·students 는 is_center_admin
+--     (admin 전용) 이라 코치가 담당 클래스·학생을 못 읽어 화면이 비어 있었다.
+--       - classes: 본인 지점 전체 read (시간표·출석·측정 클래스 선택용)
+--       - students: 본인 담당 클래스(coach_id) 소속 학생만 read (프라이버시 스코프)
+-------------------------------------------------------------------------------
+drop policy if exists classes_coach_read on public.classes;
+create policy classes_coach_read on public.classes
+  for select using (public.is_center_staff(center_id));
+
+drop policy if exists students_coach_read on public.students;
+create policy students_coach_read on public.students
+  for select using (
+    exists (
+      select 1 from public.classes c
+      where c.id = public.students.class_id
+        and c.coach_id = auth.uid()
+    )
+  );
