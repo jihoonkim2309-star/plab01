@@ -26,7 +26,7 @@ export default async function StudentConnectNew() {
       </div>
       <div className="portal-content">
         <p style={{ fontSize: 12, color: "#6f7d78", marginBottom: 12, lineHeight: 1.5 }}>
-          본인 정보를 선택하면 지점 어드민이 확인 후 승인합니다. 학생 이름은 개인정보 보호를 위해 일부 마스킹됩니다.
+          본인 정보를 선택하면 지점에서 확인 후 연결해 드립니다. 학생 이름은 개인정보 보호를 위해 일부 마스킹됩니다.
         </p>
         {centerId && centerName ? (
           <PickerForm centerId={centerId} centerName={centerName} />

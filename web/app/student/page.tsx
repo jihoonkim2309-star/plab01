@@ -121,7 +121,7 @@ export default async function StudentHome() {
             pendingCount > 0 ? (
               <>
                 <div style={{ padding: "12px 14px", background: "#fef3c7", color: "#d97706", borderRadius: 10, fontSize: 13, fontWeight: 600, marginBottom: 10, lineHeight: 1.5 }}>
-                  ⏳ 본인 연결 신청 {pendingCount}건이 어드민 승인 대기 중입니다.
+                  ⏳ 본인 연결 신청 {pendingCount}건이 지점 확인 대기 중입니다.
                 </div>
                 <a href="/student/connect" className="btn" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
                   신청 상태 보기

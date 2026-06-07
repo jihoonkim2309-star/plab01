@@ -47,7 +47,7 @@ export default async function StudentConnectList({
   const list = await fetchLinks();
   const { msg } = await searchParams;
   const toastMap: Record<string, { text: string; bg: string; color: string }> = {
-    submitted: { text: "✓ 연결 신청이 접수되었습니다. 지점 어드민 승인 후 활성화됩니다.", bg: "#dcfce7", color: "#1e794e" },
+    submitted: { text: "✓ 연결 신청이 접수되었습니다. 지점 확인 후 활성화됩니다.", bg: "#dcfce7", color: "#1e794e" },
     "already-applied": { text: "⚠ 이미 같은 본인으로 신청한 기록이 있습니다.", bg: "#fef3c7", color: "#d97706" },
   };
   const toast = msg ? toastMap[msg] : null;
@@ -101,7 +101,7 @@ export default async function StudentConnectList({
                   <strong style={{ fontSize: 12, color: sb.color }}>{sb.text}</strong>
                   {c.status === "pending" && (
                     <span style={{ fontSize: 11, color: sb.color, opacity: 0.85, marginLeft: 4 }}>
-                      지점 어드민이 검토 중입니다
+                      지점에서 확인 중입니다
                     </span>
                   )}
                 </div>
