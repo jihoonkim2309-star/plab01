@@ -1,24 +1,30 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 
 // ?frame=1 시 body 에 'admin-in-frame' class 토글.
-// CSS 가 sidebar/topbar 숨김 + content padding 제거.
+// window.location 직접 검사 — useSearchParams 의 Suspense 의존성 회피.
 export default function FrameDetector() {
-  const sp = useSearchParams();
-  const inFrame = sp.get("frame") === "1";
-
   useEffect(() => {
-    if (inFrame) {
-      document.body.classList.add("admin-in-frame");
-    } else {
-      document.body.classList.remove("admin-in-frame");
-    }
+    const check = () => {
+      try {
+        const sp = new URLSearchParams(window.location.search);
+        if (sp.get("frame") === "1") {
+          document.body.classList.add("admin-in-frame");
+        } else {
+          document.body.classList.remove("admin-in-frame");
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    check();
+    window.addEventListener("popstate", check);
     return () => {
+      window.removeEventListener("popstate", check);
       document.body.classList.remove("admin-in-frame");
     };
-  }, [inFrame]);
+  }, []);
 
   return null;
 }

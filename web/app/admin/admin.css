@@ -3014,7 +3014,7 @@ tr[data-bulk-hover] td {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 24px;
+  padding: 0 24px 0 24px;
   margin: 18px auto 0;
   width: calc(100% - 48px);
   max-width: 1392px;
@@ -3025,6 +3025,11 @@ tr[data-bulk-hover] td {
   border-bottom: 1px solid var(--line);
   min-height: 40px;
 }
+/* 첫 탭은 padding-left 0 으로 — workspace 버튼 좌측 끝과 동일 라인 */
+.admin-tab:first-child {
+  padding-left: 0;
+}
+.admin-tab:first-child .admin-tab-icon { margin-left: 0; }
 .admin-tabbar-scroll {
   display: flex;
   align-items: stretch;
@@ -3129,14 +3134,20 @@ body.admin-in-frame .topbar,
 body.admin-in-frame .admin-tabbar {
   display: none !important;
 }
-body.admin-in-frame .admin-shell { display: block; }
+body.admin-in-frame .admin-shell,
+body.admin-in-frame .app {
+  display: block !important;
+  grid-template-columns: none !important;
+}
 body.admin-in-frame .main {
   margin: 0;
   padding: 0;
   width: 100%;
+  max-width: none;
 }
 body.admin-in-frame .content {
-  padding: 16px;
+  padding: 24px;
+  max-width: none;
 }
 body.admin-in-frame .admin-tab-content {
   height: auto;
