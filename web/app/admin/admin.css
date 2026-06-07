@@ -3100,13 +3100,13 @@ tr[data-bulk-hover] td {
   display: block;
 }
 .admin-tab-panel.admin-tab-frame {
-  /* topbar(64+12) + tabbar(~40) + content padding(32+24) + 약간 여유 = 약 180px */
-  height: calc(100vh - 180px);
+  height: calc(100vh - 148px);
   min-height: 640px;
-  /* 키즈나처럼 박스 없이 flush — 외곽 .content 좌우 패딩(24)을 음수 margin 으로
-     상쇄해 iframe 을 끝까지 펴고, iframe 안 임베드 content 의 24 패딩이
-     상단바·탭바와 같은 선에 정렬되게 한다. */
-  margin: -8px -24px 0;
+  /* 탭 컨텐츠를 홈과 100% 동일하게 — 외곽 .content 패딩(32/24/24)을 음수
+     margin 으로 완전히 상쇄해 iframe 이 .content 박스(max-width 1440 컬럼)에
+     꽉 차게 하고, iframe 안 임베드 .content 가 홈과 똑같은 패딩·max-width 로
+     단일 레이아웃을 제공. 박스 테두리 없음. */
+  margin: -32px -24px -24px;
 }
 .admin-tab-frame iframe {
   width: 100%;
@@ -3136,9 +3136,13 @@ body.admin-in-frame .main {
   width: 100%;
   max-width: none;
 }
+/* 임베드(iframe 안) .content 를 홈 .content 와 동일하게 — 페이지가 홈으로
+   보이든 탭으로 보이든 폭·여백이 같도록. (외곽 프레임 패널이 음수 margin 으로
+   .content 패딩을 상쇄하므로 여기 패딩이 유일한 거터가 된다.) */
 body.admin-in-frame .content {
-  padding: 24px;
-  max-width: none;
+  padding: 32px 24px 24px;
+  max-width: 1440px;
+  margin: 0 auto;
 }
 body.admin-in-frame .admin-tab-content {
   height: auto;
