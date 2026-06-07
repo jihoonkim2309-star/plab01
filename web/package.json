@@ -15,6 +15,8 @@
     "@types/qrcode": "^1.5.6",
     "apexcharts": "^5.12.0",
     "date-fns": "^4.4.0",
+    "firebase": "^12.14.0",
+    "firebase-admin": "^13.10.0",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "qrcode": "^1.5.4",

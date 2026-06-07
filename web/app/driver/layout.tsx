@@ -2,12 +2,16 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import PortalShell from "../portal/PortalShell";
 import { requirePortal } from "@/lib/portal-auth";
+import PushRegister from "../PushRegister";
 
 export default async function DriverLayout({ children }: { children: ReactNode }) {
-  await requirePortal("driver");
+  const guard = await requirePortal("driver");
   return (
     <Suspense fallback={null}>
-      <PortalShell device="phone">{children}</PortalShell>
+      <PortalShell device="phone">
+        {!guard.isEmbed && <PushRegister />}
+        {children}
+      </PortalShell>
     </Suspense>
   );
 }
