@@ -3008,17 +3008,22 @@ tr[data-bulk-hover] td {
 }
 .sk-wrapper { animation: sk-wrapper-fade 500ms ease-out both; }
 
-/* ===== Admin Tab System ===== */
+/* ===== Admin Tab System — 키즈나 패턴 ===== */
+/* 탭바를 topbar 와 같은 좌우 정렬 (카드 폭 일치) */
 .admin-tabbar {
   display: flex;
-  align-items: stretch;
-  gap: 4px;
-  border-bottom: 1px solid var(--line);
-  background: #fff;
-  padding: 6px 12px 0;
+  align-items: center;
+  gap: 6px;
+  padding: 0 18px;
+  margin: 6px auto 0;
+  width: calc(100% - 48px);
+  max-width: 1392px;
+  box-sizing: border-box;
   position: sticky;
-  top: 0;
-  z-index: 5;
+  top: calc(var(--topbar-height) + 18px);
+  z-index: 4;
+  border-bottom: 1px solid var(--line);
+  min-height: 38px;
 }
 .admin-tabbar-scroll {
   display: flex;
@@ -3026,17 +3031,18 @@ tr[data-bulk-hover] td {
   gap: 4px;
   overflow-x: auto;
   flex: 1;
-  scrollbar-width: thin;
+  scrollbar-width: none;
 }
+.admin-tabbar-scroll::-webkit-scrollbar { display: none; }
 .admin-tab {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 7px 12px 8px;
   border: 1px solid var(--line);
   border-bottom: none;
   border-radius: 8px 8px 0 0;
-  background: #f8fafb;
+  background: #f5f7f7;
   color: var(--muted);
   font-size: 12px;
   font-weight: 600;
@@ -3044,14 +3050,17 @@ tr[data-bulk-hover] td {
   white-space: nowrap;
   margin-bottom: -1px;
   user-select: none;
+  transition: background 120ms, color 120ms;
 }
-.admin-tab:hover { background: #f1f5f4; color: var(--text); }
+.admin-tab:hover { background: #eef2f1; color: var(--text); }
 .admin-tab.active {
   background: #fff;
   color: var(--brand);
   border-color: var(--line);
   border-bottom: 1px solid #fff;
   font-weight: 800;
+  position: relative;
+  z-index: 1;
 }
 .admin-tab-label { line-height: 1; }
 .admin-tab-close {
@@ -3073,13 +3082,14 @@ tr[data-bulk-hover] td {
   color: var(--muted);
   font-size: 12px;
   cursor: pointer;
-  padding: 8px 10px;
+  padding: 6px 6px 6px 12px;
+  white-space: nowrap;
 }
 .admin-tabbar-clear:hover { color: #b42318; }
 
 .admin-tab-content {
   position: relative;
-  height: calc(100vh - var(--topbar-h, 56px) - 42px);
+  height: calc(100vh - var(--topbar-height) - 60px);
   overflow: hidden;
 }
 .admin-tab-panel {

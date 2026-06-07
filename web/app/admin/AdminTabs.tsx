@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 
 const STORAGE_KEY = "plab01.admin.tabs.v1";
@@ -55,22 +54,9 @@ function restore(): { tabs: AdminTab[]; activeId: string | null } {
   }
 }
 
-export function AdminTabsProvider({ children, initialLabel }: { children: ReactNode; initialLabel: string }) {
-  const pathname = usePathname() ?? "/admin";
-  const initialId = idFromHref(pathname);
-
-  const [tabs, setTabs] = useState<AdminTab[]>(() => {
-    const r = restore();
-    if (r.tabs.length === 0) return [{ id: initialId, href: pathname, label: initialLabel }];
-    if (!r.tabs.some((t) => t.id === initialId)) {
-      return [{ id: initialId, href: pathname, label: initialLabel }, ...r.tabs].slice(0, MAX_TABS);
-    }
-    return r.tabs;
-  });
-  const [activeId, setActiveId] = useState<string | null>(() => {
-    const r = restore();
-    return r.activeId ?? initialId;
-  });
+export function AdminTabsProvider({ children, initialLabel: _initialLabel }: { children: ReactNode; initialLabel: string }) {
+  const [tabs, setTabs] = useState<AdminTab[]>(() => restore().tabs);
+  const [activeId, setActiveId] = useState<string | null>(() => restore().activeId);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -80,19 +66,6 @@ export function AdminTabsProvider({ children, initialLabel }: { children: ReactN
   useEffect(() => {
     if (mounted) persist(tabs, activeId);
   }, [tabs, activeId, mounted]);
-
-  // 현재 URL 이 바뀌면 그 탭을 활성으로 (sidebar Link 가 직접 navigation 한 경우)
-  useEffect(() => {
-    if (!mounted) return;
-    const id = idFromHref(pathname);
-    setTabs((prev) => {
-      if (prev.some((t) => t.id === id)) return prev;
-      const next = [...prev, { id, href: pathname, label: initialLabel }];
-      return next.slice(-MAX_TABS);
-    });
-    setActiveId(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, mounted]);
 
   const openTab = useCallback((href: string, label: string) => {
     const id = idFromHref(href);
@@ -128,11 +101,9 @@ export function AdminTabsProvider({ children, initialLabel }: { children: ReactN
   }, [activeId]);
 
   const closeAll = useCallback(() => {
-    // 첫 탭 (URL 페이지) 만 남기고 다 닫기 — 깔끔한 reset
-    const initial = idFromHref(pathname);
-    setTabs([{ id: initial, href: pathname, label: initialLabel }]);
-    setActiveId(initial);
-  }, [pathname, initialLabel]);
+    setTabs([]);
+    setActiveId(null);
+  }, []);
 
   const setActive = useCallback((id: string) => {
     setActiveId(id);
@@ -145,8 +116,6 @@ export function AdminTabsProvider({ children, initialLabel }: { children: ReactN
 
 export function AdminTabBar() {
   const { tabs, activeId, closeTab, closeAll, setActive } = useAdminTabs();
-  const pathname = usePathname() ?? "/admin";
-  const initialId = idFromHref(pathname);
 
   if (tabs.length === 0) return null;
 
@@ -155,23 +124,20 @@ export function AdminTabBar() {
       <div className="admin-tabbar-scroll">
         {tabs.map((t) => {
           const on = t.id === activeId;
-          const isInitial = t.id === initialId;
           return (
             <div key={t.id} className={`admin-tab${on ? " active" : ""}`} onClick={() => setActive(t.id)}>
               <span className="admin-tab-label">{t.label}</span>
-              {!isInitial && (
-                <button
-                  type="button"
-                  className="admin-tab-close"
-                  aria-label="닫기"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    closeTab(t.id);
-                  }}
-                >
-                  <X size={12} />
-                </button>
-              )}
+              <button
+                type="button"
+                className="admin-tab-close"
+                aria-label="닫기"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeTab(t.id);
+                }}
+              >
+                <X size={12} />
+              </button>
             </div>
           );
         })}
@@ -181,19 +147,17 @@ export function AdminTabBar() {
   );
 }
 
-// children = URL 의 server-rendered 페이지. 다른 탭은 iframe.
+// activeId 가 null 이면 children (대시보드 홈) 표시. 활성 탭이 있으면 그 iframe 만 visible.
 export function AdminTabContent({ children }: { children: ReactNode }) {
   const { tabs, activeId } = useAdminTabs();
-  const pathname = usePathname() ?? "/admin";
-  const initialId = idFromHref(pathname);
-  const showInitial = activeId === initialId || tabs.length === 0;
+  const showHome = activeId === null;
 
   return (
     <div className="admin-tab-content">
-      <div className="admin-tab-panel" style={{ display: showInitial ? "block" : "none" }}>
+      <div className="admin-tab-panel" style={{ display: showHome ? "block" : "none" }}>
         {children}
       </div>
-      {tabs.filter((t) => t.id !== initialId).map((t) => {
+      {tabs.map((t) => {
         const sep = t.href.includes("?") ? "&" : "?";
         const src = `${t.href}${sep}frame=1`;
         return (
