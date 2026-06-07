@@ -3097,14 +3097,12 @@ tr[data-bulk-hover] td {
   min-height: 0;
 }
 .admin-tab-panel {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  display: block;
 }
 .admin-tab-panel.admin-tab-frame {
-  height: calc(100vh - var(--topbar-height) - 70px);
-  min-height: 480px;
+  /* topbar(64+12) + tabbar(~40) + content padding(32+24) + 약간 여유 = 약 180px */
+  height: calc(100vh - 180px);
+  min-height: 640px;
 }
 .admin-tab-frame iframe {
   width: 100%;
