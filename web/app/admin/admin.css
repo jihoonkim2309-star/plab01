@@ -3015,12 +3015,12 @@ tr[data-bulk-hover] td {
   align-items: center;
   gap: 6px;
   padding: 0 24px;
-  margin: 6px auto 0;
+  margin: 24px auto 0;
   width: calc(100% - 48px);
   max-width: 1392px;
   box-sizing: border-box;
   position: sticky;
-  top: calc(var(--topbar-height) + 18px);
+  top: calc(var(--topbar-height) + 24px);
   z-index: 4;
   border-bottom: 1px solid var(--line);
   min-height: 38px;

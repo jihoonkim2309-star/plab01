@@ -139,7 +139,7 @@ export default async function AdminLayout({
   const initialLabel = labelForPath(pathname);
 
   return (
-    <AdminTabsProvider initialLabel={initialLabel}>
+    <AdminTabsProvider initialLabel={initialLabel} centerId={activeCenterId}>
     <div className="admin-shell app">
       <Suspense fallback={null}>
         <GlobalLoading />

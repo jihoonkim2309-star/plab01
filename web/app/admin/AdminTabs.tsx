@@ -13,8 +13,11 @@ function detectInFrame(): boolean {
   }
 }
 
-const STORAGE_KEY = "plab01.admin.tabs.v1";
+const STORAGE_PREFIX = "plab01.admin.tabs.v2.";
 const MAX_TABS = 10;
+function storageKey(centerId: string | null) {
+  return `${STORAGE_PREFIX}${centerId ?? "none"}`;
+}
 
 export type AdminTab = {
   id: string;
@@ -43,18 +46,18 @@ function idFromHref(href: string) {
   return href.replace(/[?#].*$/, "");
 }
 
-function persist(tabs: AdminTab[], activeId: string | null) {
+function persist(centerId: string | null, tabs: AdminTab[], activeId: string | null) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ tabs, activeId }));
+    localStorage.setItem(storageKey(centerId), JSON.stringify({ tabs, activeId }));
   } catch {
     /* ignore */
   }
 }
 
-function restore(): { tabs: AdminTab[]; activeId: string | null } {
+function restore(centerId: string | null): { tabs: AdminTab[]; activeId: string | null } {
   if (typeof window === "undefined") return { tabs: [], activeId: null };
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey(centerId));
     if (!raw) return { tabs: [], activeId: null };
     const parsed = JSON.parse(raw) as { tabs?: AdminTab[]; activeId?: string | null };
     if (!Array.isArray(parsed.tabs)) return { tabs: [], activeId: null };
@@ -64,7 +67,7 @@ function restore(): { tabs: AdminTab[]; activeId: string | null } {
   }
 }
 
-export function AdminTabsProvider({ children, initialLabel: _initialLabel }: { children: ReactNode; initialLabel: string }) {
+export function AdminTabsProvider({ children, initialLabel: _initialLabel, centerId = null }: { children: ReactNode; initialLabel: string; centerId?: string | null }) {
   // SSR-safe — 초기 빈 상태, mount 후 detect + restore
   const [tabs, setTabs] = useState<AdminTab[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -74,18 +77,21 @@ export function AdminTabsProvider({ children, initialLabel: _initialLabel }: { c
   useEffect(() => {
     const f = detectInFrame();
     setInFrame(f);
-    if (!f) {
-      const r = restore();
-      setTabs(r.tabs);
-      setActiveId(r.activeId);
-    }
     setMounted(true);
   }, []);
 
+  // centerId 변경 시 그 center 의 tabs 로 swap (지점 변경 → 탭 초기화/복원)
+  useEffect(() => {
+    if (!mounted || inFrame) return;
+    const r = restore(centerId);
+    setTabs(r.tabs);
+    setActiveId(r.activeId);
+  }, [centerId, mounted, inFrame]);
+
   useEffect(() => {
     if (inFrame) return;
-    if (mounted) persist(tabs, activeId);
-  }, [tabs, activeId, mounted, inFrame]);
+    if (mounted) persist(centerId, tabs, activeId);
+  }, [tabs, activeId, mounted, inFrame, centerId]);
 
   const openTab = useCallback((href: string, label: string) => {
     if (inFrame) return;
