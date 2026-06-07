@@ -501,55 +501,21 @@
   overflow-x: clip; /* topbar::before/::after 가 viewport 밖 확장 → 가로 overflow 방지. sticky 호환 */
 }
 
-/* Vuexy 스타일: 둥근 카드로 떠 있는 느낌 + 본문 영역과 분리.
-   탑바 카드와 본문 영역의 좌우 외곽선이 정확히 일치하도록
-   동일한 max-width + padding 사용. */
+/* 키즈나 스타일: 떠있는 카드 X. 상단바는 풀폭 flat 바 + 하단 보더,
+   컨텐츠는 상단바와 같은 좌측에서 박스 없이 시작. */
 .topbar {
   height: var(--topbar-height);
   background: var(--panel);
-  border-radius: var(--radius);
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 0 24px;
-  margin: 12px auto 6px;
-  width: calc(100% - 48px); /* 좌우 24px 여백 = content padding 과 일치 */
+  width: 100%;
   box-sizing: border-box;
-  max-width: 1392px; /* content max-width(1440) - 좌우 padding(24*2) */
   position: sticky;
-  top: 12px;
+  top: 0;
   z-index: 5;
-  box-shadow: 0 2px 6px rgba(20, 40, 30, 0.06), 0 0 0 1px rgba(20, 40, 30, 0.04);
-}
-/* outer glow — 탑바 아래로 본문 페이드. brand::after 와 동일 패턴 */
-.topbar::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: 24px;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.75) 0%,
-    rgba(255, 255, 255, 0.3) 45%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  pointer-events: none;
-  z-index: 2;
-}
-/* 탑바 위쪽(12px gap) 가림 — 스크롤 시 컨텐츠가 탑바 위로 보이지 않게.
-   topbar 가 sticky 라 ::before 도 같이 따라움직임. 좌우 -50vw 로 카드 너비 밖까지 확장. */
-.topbar::before {
-  content: "";
-  position: absolute;
-  left: -50vw;
-  right: -50vw;
-  bottom: 100%;
-  height: 14px;
-  background: #f6f7f9; /* .main 배경색과 동일 */
-  pointer-events: none;
-  z-index: 2;
+  border-bottom: 1px solid var(--line);
 }
 
 /* 탑바 좌측 breadcrumb */
@@ -882,13 +848,11 @@
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 .content {
-  padding: 32px 24px 24px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 18px;
   width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
 }
 
 .page-head {
@@ -3008,18 +2972,17 @@ tr[data-bulk-hover] td {
 }
 .sk-wrapper { animation: sk-wrapper-fade 500ms ease-out both; }
 
-/* ===== Admin Tab System — 키즈나 허브 스타일 정확 복사 ===== */
-/* wrapper: content 와 동일한 max-width + padding. topbar 와 같은 라인 */
+/* ===== Admin Tab System — 키즈나 허브 스타일 ===== */
+/* flat 상단바 바로 아래, 풀폭 flush. content 와 같은 좌측 padding(24px). */
 .admin-tabbar {
   width: 100%;
-  max-width: 1440px;
-  margin: 10px auto 2px;
-  padding: 0 24px;
+  margin: 0;
+  padding: 10px 24px 0;
   box-sizing: border-box;
   position: sticky;
-  top: calc(var(--topbar-height) + 24px);
+  top: var(--topbar-height);
   z-index: 4;
-  background: transparent;
+  background: #f6f7f9;
 }
 .admin-tabbar-inner {
   display: flex;
@@ -3100,8 +3063,8 @@ tr[data-bulk-hover] td {
   display: block;
 }
 .admin-tab-panel.admin-tab-frame {
-  /* topbar(64+12) + tabbar(~40) + content padding(32+24) + 약간 여유 = 약 180px */
-  height: calc(100vh - 180px);
+  /* flat: topbar(64) + tabbar(~48) + content padding(48) + 여유 = 약 165px */
+  height: calc(100vh - 165px);
   min-height: 640px;
 }
 .admin-tab-frame iframe {
