@@ -2485,6 +2485,32 @@ create policy smsg_coach_insert on public.support_messages
     )
   );
 
+-- 코치 채팅 첨부 메타 read/insert (storage 버킷은 chat_att_staff_* 가 이미 코치 허용).
+-- 메시지 → inquiry → coach_sees_parent 체인으로 본인 담당 학부모 채팅 첨부만.
+drop policy if exists smatt_coach_read on public.support_message_attachments;
+create policy smatt_coach_read on public.support_message_attachments
+  for select using (
+    exists (
+      select 1 from public.support_messages m
+      join public.inquiries i on i.id = m.inquiry_id
+      where m.id = public.support_message_attachments.message_id
+        and i.kind = 'chat'
+        and public.coach_sees_parent(i.created_by)
+    )
+  );
+
+drop policy if exists smatt_coach_insert on public.support_message_attachments;
+create policy smatt_coach_insert on public.support_message_attachments
+  for insert with check (
+    exists (
+      select 1 from public.support_messages m
+      join public.inquiries i on i.id = m.inquiry_id
+      where m.id = public.support_message_attachments.message_id
+        and i.kind = 'chat'
+        and public.coach_sees_parent(i.created_by)
+    )
+  );
+
 -------------------------------------------------------------------------------
 --  43. 코치 출석/측정 — classes·students read RLS (선재 누락 보강)
 --     attendance/class_notes/measurements 는 is_center_staff(coach 포함) 로
