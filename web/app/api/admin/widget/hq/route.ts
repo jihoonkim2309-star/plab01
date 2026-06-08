@@ -66,8 +66,9 @@ export async function GET() {
         unread,
       };
     })
-    // 완료된 지점 채팅 숨김 (새 미열람 있으면 유지)
-    .filter((c) => c.status !== "완료" || c.unread);
+    // 진행 중(대화 있는) 지점만 — 대화 없음·완료 제외 (새 미열람은 유지).
+    // 새 지점 채팅 시작은 전체 페이지(디렉토리)에서.
+    .filter((c) => c.lastAt !== null && (c.status !== "완료" || c.unread));
 
   // 활동순 정렬 (최근 메시지 먼저, 없으면 이름순)
   conversations.sort((a, b) => {
