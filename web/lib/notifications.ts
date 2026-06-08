@@ -60,6 +60,9 @@ export async function dispatchPendingPushes(supabase: any): Promise<DispatchResu
         data,
         webpush: { fcmOptions: { link: "/" } },
       });
+      // 무효 토큰 정리 — ⚠️ await 필수: Vercel 서버리스는 함수 리턴 후
+      // 미완료 promise 를 죽이므로 await 안 하면 prune 이 실제로 실행 안 됨.
+      const prunePromises: Promise<unknown>[] = [];
       res.responses.forEach((resp, i) => {
         if (
           !resp.success &&
@@ -67,10 +70,11 @@ export async function dispatchPendingPushes(supabase: any): Promise<DispatchResu
             resp.error?.code === "messaging/invalid-registration-token" ||
             resp.error?.code === "messaging/invalid-argument")
         ) {
-          supabase.rpc("prune_device_token", { p_token: g.tokens[i] });
+          prunePromises.push(supabase.rpc("prune_device_token", { p_token: g.tokens[i] }));
           pruned++;
         }
       });
+      await Promise.all(prunePromises);
       const ok = res.successCount > 0;
       // 마킹은 definer RPC (notifications 가 RLS 로 anon update 차단되므로)
       await supabase.rpc("mark_notification", {

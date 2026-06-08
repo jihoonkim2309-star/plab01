@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getToken, onMessage } from "firebase/messaging";
 import {
   firebaseConfigured,
@@ -10,37 +10,60 @@ import {
 } from "@/lib/firebase/client";
 
 // 로그인된 포털 사용자의 FCM 토큰을 등록한다.
-// - 알림 권한 granted 면 토큰 발급 → /api/push/register 저장
-// - default 면 한 번 권한 요청 (브라우저 정책상 거부돼도 조용히 무시)
-// - 화면에는 아무것도 렌더하지 않음
+// ⚠️ 진단용: 각 단계를 화면 배너로 노출 (모바일에서 콘솔 없이 원인 확인).
 export default function PushRegister() {
+  const [status, setStatus] = useState("시작…");
+
   useEffect(() => {
-    if (!firebaseConfigured()) return;
-    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (!firebaseConfigured()) {
+      setStatus("Firebase 미설정 (env 누락)");
+      return;
+    }
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      setStatus("Notification 미지원 브라우저");
+      return;
+    }
 
     let cancelled = false;
 
     (async () => {
       try {
+        setStatus("① 권한 확인");
         let perm = Notification.permission;
         if (perm === "default") {
+          setStatus("① 권한 요청 중…");
           perm = await Notification.requestPermission();
         }
-        if (perm !== "granted") return;
+        if (perm !== "granted") {
+          setStatus(`권한 ${perm} (허용 필요)`);
+          return;
+        }
 
+        setStatus("② 메시징 지원 확인");
         const messaging = await getMessagingIfSupported();
-        if (!messaging || cancelled) return;
+        if (!messaging) {
+          setStatus("메시징 미지원 (isSupported=false)");
+          return;
+        }
+        if (cancelled) return;
 
-        // FCM 전용 service worker 등록 (공개 config 쿼리 전달)
+        setStatus("③ SW 등록 중");
         const reg = await navigator.serviceWorker.register(swUrlWithConfig());
+        await navigator.serviceWorker.ready;
 
+        setStatus("④ 토큰 발급 중");
         const token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
           serviceWorkerRegistration: reg,
         });
-        if (!token || cancelled) return;
+        if (!token) {
+          setStatus("토큰 발급 실패 (빈 토큰)");
+          return;
+        }
+        if (cancelled) return;
 
-        await fetch("/api/push/register", {
+        setStatus("⑤ 서버 등록 중");
+        const res = await fetch("/api/push/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -49,8 +72,8 @@ export default function PushRegister() {
             userAgent: navigator.userAgent,
           }),
         });
+        setStatus(res.ok ? "✅ 등록 완료" : `서버 등록 실패 (${res.status})`);
 
-        // 포그라운드 메시지 → 브라우저 알림 표시
         onMessage(messaging, (payload) => {
           const n = payload.notification;
           const body = n?.body || (payload.data?.template as string) || "";
@@ -58,8 +81,8 @@ export default function PushRegister() {
             new Notification(n?.title || "플랜비", { body, icon: "/planb-logo.svg" });
           }
         });
-      } catch {
-        // 권한 거부·미지원 등 — 무시
+      } catch (e) {
+        setStatus("에러: " + String((e as Error)?.message ?? e).slice(0, 160));
       }
     })();
 
@@ -68,5 +91,25 @@ export default function PushRegister() {
     };
   }, []);
 
-  return null;
+  // ⚠️ 진단용 배너 — 원인 파악 후 제거 예정
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 8,
+        left: 8,
+        right: 8,
+        zIndex: 99999,
+        background: status.startsWith("✅") ? "#0f6e56" : "#b91c1c",
+        color: "#fff",
+        fontSize: 12,
+        padding: "6px 10px",
+        borderRadius: 8,
+        textAlign: "center",
+        boxShadow: "0 2px 8px rgba(0,0,0,.2)",
+      }}
+    >
+      푸시: {status}
+    </div>
+  );
 }
