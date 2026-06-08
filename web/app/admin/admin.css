@@ -3096,6 +3096,14 @@ tr[data-bulk-hover] td {
 .admin-tab-panel {
   display: block;
 }
+/* 홈 패널(=실제 페이지 컨텐츠) — 페이지 요소(page-head·요약카드·패널 등) 사이
+   간격. 탭 시스템 wrapper(admin-tab-panel) 때문에 .content 의 gap 이 페이지
+   요소까지 안 닿던 것 복원. 이게 없으면 제목/subtext 가 아래 컨텐츠에 붙어 답답. */
+.admin-tab-panel:not(.admin-tab-frame) {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 .admin-tab-panel.admin-tab-frame {
   position: relative;
   height: calc(100vh - 148px);
