@@ -83,6 +83,8 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
 
   // ===== center 모드 =====
   const [tab, setTab] = useState<"chat" | "branch">("chat");
+  // 채팅 목록 이름 검색 (사용자/지점 많아질 때 대상자 빠르게 찾기). 클라 필터.
+  const [search, setSearch] = useState("");
   const [convs, setConvs] = useState<Conv[]>([]);
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -217,6 +219,7 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
   const switchTab = useCallback(
     (t: "chat" | "branch") => {
       setTab(t);
+      setSearch("");
       if (t === "branch") {
         setLoadingBranch(true);
         loadBranch().finally(() => setLoadingBranch(false));
@@ -279,6 +282,9 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
   const chatMsgs = thread?.messages ?? [];
   const branchMsgs = branch?.messages ?? [];
   const hqMsgs = hqThread?.messages ?? [];
+  const q = search.trim().toLowerCase();
+  const filteredConvs = q ? convs.filter((c) => c.name.toLowerCase().includes(q)) : convs;
+  const filteredHqConvs = q ? hqConvs.filter((c) => c.name.toLowerCase().includes(q)) : hqConvs;
   const inChatThread = mode === "center" && tab === "chat" && !!activeId;
 
   if (hidden) return null;
@@ -379,9 +385,21 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
                   <strong>지점 채팅</strong>
                   <span className="admin-cw-sub">본사 ↔ 지점</span>
                 </div>
+                <div className="admin-cw-search">
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="지점명으로 검색"
+                  />
+                </div>
                 <div className="admin-cw-list">
-                  {hqConvs.length === 0 && <div className="admin-cw-empty">지점이 없습니다.</div>}
-                  {hqConvs.map((c) => (
+                  {filteredHqConvs.length === 0 && (
+                    <div className="admin-cw-empty">
+                      {search ? "검색 결과가 없습니다." : "지점이 없습니다."}
+                    </div>
+                  )}
+                  {filteredHqConvs.map((c) => (
                     <button
                       key={c.centerId}
                       type="button"
@@ -473,9 +491,22 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
               )}
 
               {tab === "chat" && !activeId && (
-                <div className="admin-cw-list">
-                  {convs.length === 0 && <div className="admin-cw-empty">아직 대화가 없습니다.</div>}
-                  {convs.map((c) => (
+                <>
+                  <div className="admin-cw-search">
+                    <input
+                      type="search"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="이름으로 검색"
+                    />
+                  </div>
+                  <div className="admin-cw-list">
+                  {filteredConvs.length === 0 && (
+                    <div className="admin-cw-empty">
+                      {search ? "검색 결과가 없습니다." : "아직 대화가 없습니다."}
+                    </div>
+                  )}
+                  {filteredConvs.map((c) => (
                     <button
                       key={c.id}
                       type="button"
@@ -499,7 +530,8 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
                       {c.unread && <span className="admin-cw-dot" />}
                     </button>
                   ))}
-                </div>
+                  </div>
+                </>
               )}
 
               {inChatThread && (
