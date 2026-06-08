@@ -251,10 +251,31 @@ export function AdminTabContent({ children }: { children: ReactNode }) {
         const src = `${t.href}${sep}frame=1`;
         return (
           <div key={t.id} className="admin-tab-panel admin-tab-frame" style={{ display: activeId === t.id ? "block" : "none" }}>
-            <iframe src={src} title={t.label} />
+            <TabFrame src={src} title={t.label} />
           </div>
         );
       })}
     </div>
+  );
+}
+
+// 탭 iframe + 로딩 스피너. onLoad 전까지 스피너, 로드되면 iframe fade-in.
+// 빈 화면 대신 즉시 피드백 → "반응 없는 느낌" 제거.
+function TabFrame({ src, title }: { src: string; title: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <>
+      {!loaded && (
+        <div className="admin-tab-loading" aria-hidden>
+          <div className="page-loading__spinner" />
+        </div>
+      )}
+      <iframe
+        src={src}
+        title={title}
+        onLoad={() => setLoaded(true)}
+        style={{ opacity: loaded ? 1 : 0 }}
+      />
+    </>
   );
 }

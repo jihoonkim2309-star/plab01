@@ -3100,6 +3100,7 @@ tr[data-bulk-hover] td {
   display: block;
 }
 .admin-tab-panel.admin-tab-frame {
+  position: relative;
   height: calc(100vh - 148px);
   min-height: 640px;
   /* 탭 컨텐츠를 홈과 100% 동일하게 — 외곽 .content 패딩(32/24/24)을 음수
@@ -3116,6 +3117,17 @@ tr[data-bulk-hover] td {
   background: var(--bg);
   border-radius: 0;
   box-shadow: none;
+  transition: opacity 120ms ease;
+}
+/* iframe 로딩 중 스피너 — iframe 영역 위에 가운데 */
+.admin-tab-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  z-index: 1;
 }
 
 /* ===== Frame mode (iframe 안) ===== */
