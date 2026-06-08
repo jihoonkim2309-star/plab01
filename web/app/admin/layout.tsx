@@ -240,9 +240,13 @@ export default async function AdminLayout({
           })()}
         </section>
       </main>
-      {/* 플로팅 상담 채팅 위젯 — 지점 컨텍스트(admin/coach 또는 super 지점선택)에서만.
-          프랜차이즈 모드(센터 미선택)·iframe 탭에선 미표시. */}
-      {!isFrame && activeCenterId && (isAdmin || isSuper || role === "coach") && <AdminChatWidget />}
+      {/* 플로팅 상담 채팅 위젯 (iframe 탭 제외).
+          지점 컨텍스트: 이용자 1:1 + 본사 채팅. 프랜차이즈 모드(super 지점 미선택):
+          지점 채팅(본사↔지점). */}
+      {!isFrame && activeCenterId && (isAdmin || isSuper || role === "coach") && (
+        <AdminChatWidget mode="center" />
+      )}
+      {!isFrame && !activeCenterId && isSuper && <AdminChatWidget mode="hq" />}
     </div>
     </AdminTabsProvider>
   );
