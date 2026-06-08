@@ -9,9 +9,10 @@ import { sendBranchChatAsHq } from "../branch-chat/actions";
 export default async function HqChatPage({
   searchParams,
 }: {
-  searchParams: Promise<{ center?: string }>;
+  searchParams: Promise<{ center?: string; view?: string }>;
 }) {
-  const { center } = await searchParams;
+  const { center, view } = await searchParams;
+  const activeView = view !== "done"; // 기본 '활성' — 완료 숨김. view=done 시 완료만.
   const { supabase, userId } = await requireSuperAdmin();
 
   // 모든 지점 + 각 지점의 branch_chat inquiry (있으면) + 마지막 메시지 시각
@@ -19,7 +20,7 @@ export default async function HqChatPage({
     supabase.from("centers").select("id, name").order("name"),
     supabase
       .from("inquiries")
-      .select("id, center_id, updated_at")
+      .select("id, center_id, updated_at, status")
       .eq("kind", "branch_chat"),
     supabase
       .from("inquiry_reads")
@@ -37,16 +38,25 @@ export default async function HqChatPage({
     id: string;
     center_id: string;
     updated_at: string;
+    status: string;
   }[];
   const chatByCenter = new Map(chats.map((c) => [c.center_id, c]));
 
-  // 지점 리스트 — 모든 지점 표시 (채팅 없는 곳도 새로 시작 가능). 최근 활동순 정렬.
+  // 지점 리스트 — 채팅 없는 곳도 표시. 활성 뷰는 완료 숨김(새 활동 있으면 유지),
+  // 완료 뷰는 완료만. 최근 활동순 정렬.
   const centerList = centers
-    .map((c) => ({
-      ...c,
-      lastAt: chatByCenter.get(c.id)?.updated_at ?? null,
-      inquiryId: chatByCenter.get(c.id)?.id ?? null,
-    }))
+    .map((c) => {
+      const chat = chatByCenter.get(c.id);
+      const lastAt = chat?.updated_at ?? null;
+      const inquiryId = chat?.id ?? null;
+      const status = chat?.status ?? null;
+      const lastRead = inquiryId ? readMap.get(inquiryId) : null;
+      const isUnread = !!lastAt && (!lastRead || lastRead < lastAt);
+      return { ...c, lastAt, inquiryId, status, isUnread };
+    })
+    .filter((c) =>
+      activeView ? c.status !== "완료" || c.isUnread : c.status === "완료",
+    )
     .sort((a, b) => {
       if (a.lastAt && b.lastAt) return b.lastAt.localeCompare(a.lastAt);
       if (a.lastAt) return -1;
@@ -145,6 +155,14 @@ export default async function HqChatPage({
               </span>
             </p>
           </div>
+          <div className="filter-chips" style={{ padding: "10px 14px 0" }}>
+            <Link className={`btn${activeView ? " toggle-active" : ""}`} href="/admin/hq-chat">
+              활성
+            </Link>
+            <Link className={`btn${!activeView ? " toggle-active" : ""}`} href="/admin/hq-chat?view=done">
+              완료
+            </Link>
+          </div>
           <div>
             <table>
               <thead>
@@ -165,7 +183,7 @@ export default async function HqChatPage({
                     >
                       <td>
                         <Link
-                          href={`/admin/hq-chat?center=${c.id}`}
+                          href={`/admin/hq-chat?center=${c.id}${activeView ? "" : "&view=done"}`}
                           className="row-link-stretch"
                           style={{
                             fontWeight: isUnread ? 800 : 600,
