@@ -44,6 +44,13 @@ type Message = {
   }[];
 };
 
+// 낙관적 말풍선 — 전송 즉시 표시. realtime 재조회 시 실제 메시지로 교체됨.
+let optimSeq = 0;
+function optimisticMsg(sender: string, body: string): Message {
+  optimSeq += 1;
+  return { id: `tmp-${Date.now()}-${optimSeq}`, sender, body, created_at: new Date().toISOString() };
+}
+
 export default function ChatDetailPanel() {
   const { chatId } = useChatDrawer();
   const router = useRouter();
@@ -176,7 +183,14 @@ export default function ChatDetailPanel() {
                 style={{ marginTop: 10, border: "1px solid var(--line)", borderRadius: 8 }}
               >
                 <input type="hidden" name="back" value={back} />
-                <ChatComposer placeholder="메시지 입력 (Enter = 전송, Shift+Enter = 줄바꿈)" />
+                <ChatComposer
+                  placeholder="메시지 입력 (Enter = 전송, Shift+Enter = 줄바꿈)"
+                  onSend={(b) =>
+                    setData((d) =>
+                      d ? { ...d, messages: [...d.messages, optimisticMsg("admin", b)] } : d,
+                    )
+                  }
+                />
                 <button className="btn primary" type="submit">전송</button>
               </form>
             </div>
