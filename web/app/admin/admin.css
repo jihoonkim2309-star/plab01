@@ -3329,6 +3329,32 @@ body.admin-in-frame .admin-tab-panel {
 }
 .admin-cw-row.unread .admin-cw-row-last { color: var(--text); font-weight: 500; }
 .admin-cw-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+.admin-cw-statusbar {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+  background: #fafbfa;
+}
+.admin-cw-status-btn {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 6px;
+  padding: 5px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+.admin-cw-status-btn:hover:not(:disabled) { border-color: var(--brand); color: var(--brand); }
+.admin-cw-status-btn.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  cursor: default;
+}
 .admin-cw-thread {
   flex: 1;
   overflow-y: auto;

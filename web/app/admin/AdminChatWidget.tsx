@@ -45,7 +45,12 @@ type ChatThread = {
   messages: Message[];
 };
 type BranchThread = { inquiry: { id: string; status: string }; messages: Message[] };
-type HqThread = { inquiry: { id: string; centerId: string; name: string }; messages: Message[] };
+type HqThread = {
+  inquiry: { id: string; centerId: string; name: string; status: string };
+  messages: Message[];
+};
+
+const STATUSES = ["접수", "처리중", "완료"];
 
 const SB: Record<string, string> = { 접수: "orange", 처리중: "blue", 완료: "green" };
 
@@ -181,6 +186,45 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
     },
     [loadBranch, loadList],
   );
+  // 상태 변경 (접수/처리중/완료). 완료 시 목록에서 숨겨지므로 스레드 닫고 목록으로.
+  const changeStatus = useCallback(
+    async (inquiryId: string, status: string, isHq: boolean) => {
+      try {
+        await fetch("/api/admin/widget/status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ inquiryId, status }),
+        });
+      } catch {
+        /* ignore */
+      }
+      if (isHq) {
+        if (status === "완료") {
+          setHqActive(null);
+          setHqThread(null);
+        } else {
+          setHqActive((cur) => {
+            if (cur) loadHqThread(cur.centerId);
+            return cur;
+          });
+        }
+        loadHqList();
+      } else {
+        if (status === "완료") {
+          setActiveId(null);
+          setThread(null);
+        } else {
+          setActiveId((cur) => {
+            if (cur) loadThread(cur);
+            return cur;
+          });
+        }
+        loadList();
+      }
+    },
+    [loadHqThread, loadHqList, loadThread, loadList],
+  );
+
   const openHq = useCallback(
     (c: HqConv) => {
       setHqActive({ centerId: c.centerId, name: c.name });
@@ -236,7 +280,27 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
                   </button>
                   <strong>{hqActive.name}</strong>
                   <span className="admin-cw-role">지점</span>
+                  {hqThread && (
+                    <span className={`badge ${SB[hqThread.inquiry.status] ?? "gray"}`}>
+                      {hqThread.inquiry.status}
+                    </span>
+                  )}
                 </div>
+                {hqThread && (
+                  <div className="admin-cw-statusbar">
+                    {STATUSES.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        className={`admin-cw-status-btn${hqThread.inquiry.status === s ? " active" : ""}`}
+                        disabled={hqThread.inquiry.status === s}
+                        onClick={() => changeStatus(hqThread.inquiry.id, s, true)}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="admin-cw-thread chat-thread">
                   {loadingHq && hqMsgs.length === 0 && <div className="admin-cw-empty">불러오는 중...</div>}
                   {!loadingHq && hqMsgs.length === 0 && (
@@ -317,7 +381,23 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
                     </span>
                   )}
                 </div>
-              ) : (
+              ) : null}
+              {inChatThread && thread && (
+                <div className="admin-cw-statusbar">
+                  {STATUSES.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      className={`admin-cw-status-btn${thread.inquiry.status === s ? " active" : ""}`}
+                      disabled={thread.inquiry.status === s}
+                      onClick={() => changeStatus(thread.inquiry.id, s, false)}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {!inChatThread && (
                 <>
                   <div className="admin-cw-head">
                     <strong>대화</strong>

@@ -104,8 +104,9 @@ export default async function AdminLayout({
     );
   }
 
-  // 어드민 탭 iframe — 사이드바·탑바 미렌더 + 센터 조회 생략 (성능)
-  const isFrame = h.get("x-admin-frame") === "1";
+  // 어드민 탭 iframe — 사이드바·탑바 미렌더 + 센터 조회 생략 (성능) + 위젯 중복 방지.
+  // x-search-params(proxy 가 항상 set)로 감지 — proxy 재시작 의존 없음.
+  const isFrame = (h.get("x-search-params") ?? "").includes("frame=1");
 
   // 활성 지점 (super_admin 만 의미. 일반 admin/coach 는 본인 center_id).
   const jar = await cookies();

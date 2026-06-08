@@ -70,6 +70,7 @@ export async function GET(
         id: inquiryId,
         centerId,
         name: (center as { name: string } | null)?.name ?? "지점",
+        status: (inq as { status: string }).status,
       },
       messages,
     },

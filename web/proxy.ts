@@ -7,12 +7,6 @@ export async function proxy(request: NextRequest) {
   requestHeaders.set("x-pathname", request.nextUrl.pathname);
   requestHeaders.set("x-search-params", request.nextUrl.search);
 
-  // 어드민 탭 iframe(?frame=1) — 레이아웃이 사이드바·탑바·센터조회를 서버에서
-  // 생략하도록 신호. (검색 query 를 layout 은 못 읽으므로 헤더로 전달)
-  if (request.nextUrl.searchParams.get("frame") === "1") {
-    requestHeaders.set("x-admin-frame", "1");
-  }
-
   const isEmbed =
     request.nextUrl.searchParams.get("embed") === "1" ||
     request.cookies.get("portal_embed")?.value === "1";

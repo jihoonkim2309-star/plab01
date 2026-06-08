@@ -106,7 +106,7 @@ export async function GET() {
   }
 
   let unreadTotal = 0;
-  const conversations = list.map((i) => {
+  const conversationsAll = list.map((i) => {
     const lm = lastByInquiry[i.id] ?? null;
     const lastRead = readMap.get(i.id);
     const unread = !!lm && lm.sender === "customer" && (!lastRead || lastRead < lm.created_at);
@@ -122,6 +122,9 @@ export async function GET() {
       unread,
     };
   });
+
+  // 완료된 채팅은 숨김 (단, 새 미열람 메시지가 있으면 유지)
+  const conversations = conversationsAll.filter((c) => c.status !== "완료" || c.unread);
 
   return NextResponse.json(
     { conversations, unreadTotal, branchUnread },

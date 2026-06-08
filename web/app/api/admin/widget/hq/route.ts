@@ -8,13 +8,14 @@ export async function GET() {
 
   const [centersRes, chatsRes, readsRes] = await Promise.all([
     supabase.from("centers").select("id, name").order("name"),
-    supabase.from("inquiries").select("id, center_id").eq("kind", "branch_chat"),
+    supabase.from("inquiries").select("id, center_id, status").eq("kind", "branch_chat"),
     supabase.from("inquiry_reads").select("inquiry_id, last_read_at").eq("user_id", userId),
   ]);
 
   const centers = (centersRes.data ?? []) as { id: string; name: string }[];
-  const chats = (chatsRes.data ?? []) as { id: string; center_id: string }[];
+  const chats = (chatsRes.data ?? []) as { id: string; center_id: string; status: string }[];
   const chatByCenter = new Map(chats.map((c) => [c.center_id, c.id]));
+  const statusByInquiry = new Map(chats.map((c) => [c.id, c.status]));
   const readMap = new Map(
     ((readsRes.data ?? []) as { inquiry_id: string; last_read_at: string }[]).map(
       (r) => [r.inquiry_id, r.last_read_at],
@@ -48,20 +49,25 @@ export async function GET() {
   }
 
   let unreadTotal = 0;
-  const conversations = centers.map((c) => {
-    const inquiryId = chatByCenter.get(c.id) ?? null;
-    const lm = inquiryId ? lastByInquiry[inquiryId] ?? null : null;
-    const unread = inquiryId ? (unreadByInquiry[inquiryId] ?? 0) > 0 : false;
-    if (unread) unreadTotal++;
-    return {
-      centerId: c.id,
-      name: c.name,
-      lastBody: lm?.body ?? "",
-      lastSender: lm?.sender ?? null,
-      lastAt: lm?.created_at ?? null,
-      unread,
-    };
-  });
+  const conversations = centers
+    .map((c) => {
+      const inquiryId = chatByCenter.get(c.id) ?? null;
+      const lm = inquiryId ? lastByInquiry[inquiryId] ?? null : null;
+      const unread = inquiryId ? (unreadByInquiry[inquiryId] ?? 0) > 0 : false;
+      const status = inquiryId ? statusByInquiry.get(inquiryId) ?? "접수" : "접수";
+      if (unread) unreadTotal++;
+      return {
+        centerId: c.id,
+        name: c.name,
+        status,
+        lastBody: lm?.body ?? "",
+        lastSender: lm?.sender ?? null,
+        lastAt: lm?.created_at ?? null,
+        unread,
+      };
+    })
+    // 완료된 지점 채팅 숨김 (새 미열람 있으면 유지)
+    .filter((c) => c.status !== "완료" || c.unread);
 
   // 활동순 정렬 (최근 메시지 먼저, 없으면 이름순)
   conversations.sort((a, b) => {
