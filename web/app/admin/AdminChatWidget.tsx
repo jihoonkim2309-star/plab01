@@ -167,16 +167,31 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
 
   useEffect(() => {
     const sb = createClient();
-    const ch = sb
-      .channel(`admin-chat-widget-${crypto.randomUUID()}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "support_messages" },
-        () => refreshAll(),
-      )
-      .subscribe();
+    let ch: ReturnType<typeof sb.channel> | null = null;
+    let cancelled = false;
+    (async () => {
+      // ⚠️ realtime 은 JWT 없이 연결하면 anon 으로 RLS 평가돼 어드민에게 이벤트가
+      // 안 옴. 구독 전 세션 토큰을 setAuth 로 주입 (Sidebar/ParentRealtime 와 동일).
+      const {
+        data: { session },
+      } = await sb.auth.getSession();
+      if (cancelled) return;
+      if (session?.access_token) {
+        await sb.realtime.setAuth(session.access_token);
+      }
+      if (cancelled) return;
+      ch = sb
+        .channel(`admin-chat-widget-${crypto.randomUUID()}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "support_messages" },
+          () => refreshAll(),
+        )
+        .subscribe();
+    })();
     return () => {
-      sb.removeChannel(ch);
+      cancelled = true;
+      if (ch) sb.removeChannel(ch);
     };
   }, [refreshAll]);
 
