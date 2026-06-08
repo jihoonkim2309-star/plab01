@@ -59,6 +59,36 @@ export async function GET() {
     }
   }
 
+  // 본사 채팅(branch_chat) 미열람 — 뱃지용 (열람 표시 안 함)
+  let branchUnread = 0;
+  const { data: branchInq } = await supabase
+    .from("inquiries")
+    .select("id")
+    .eq("center_id", cid)
+    .eq("kind", "branch_chat")
+    .maybeSingle();
+  if (branchInq) {
+    const branchId = (branchInq as { id: string }).id;
+    const [{ data: branchMsgs }, { data: branchRead }] = await Promise.all([
+      supabase
+        .from("support_messages")
+        .select("created_at")
+        .eq("center_id", cid)
+        .eq("inquiry_id", branchId)
+        .eq("sender", "hq"),
+      supabase
+        .from("inquiry_reads")
+        .select("last_read_at")
+        .eq("inquiry_id", branchId)
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
+    const lastRead = (branchRead as { last_read_at: string } | null)?.last_read_at ?? null;
+    branchUnread = ((branchMsgs ?? []) as { created_at: string }[]).filter(
+      (m) => !lastRead || lastRead < m.created_at,
+    ).length;
+  }
+
   let unreadTotal = 0;
   const conversations = list.map((i) => {
     const lm = lastByInquiry[i.id] ?? null;
@@ -77,7 +107,7 @@ export async function GET() {
   });
 
   return NextResponse.json(
-    { conversations, unreadTotal },
+    { conversations, unreadTotal, branchUnread },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

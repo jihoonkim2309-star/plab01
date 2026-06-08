@@ -3247,6 +3247,35 @@ body.admin-in-frame .admin-tab-panel {
   border-radius: 6px;
 }
 .admin-cw-back:hover { background: #f1f0ee; }
+.admin-cw-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.admin-cw-tab {
+  flex: 1;
+  border: none;
+  background: #fff;
+  padding: 10px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.admin-cw-tab:hover { color: var(--text); }
+.admin-cw-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+.admin-cw-tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e5484d;
+}
 .admin-cw-list { flex: 1; overflow-y: auto; }
 .admin-cw-empty { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px; }
 .admin-cw-row {
