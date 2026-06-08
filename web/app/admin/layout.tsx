@@ -13,6 +13,7 @@ import DrawerToggle from "./DrawerToggle";
 import { AdminTabsProvider, AdminTabBar, AdminTabContent } from "./AdminTabs";
 import FrameDetector from "./FrameDetector";
 import AdminChatWidget from "./AdminChatWidget";
+import NotificationBell from "./NotificationBell";
 import { labelForPath } from "./labelFor";
 import { ACTIVE_CENTER_COOKIE } from "@/lib/center";
 import { SESSION_COOKIE, isActiveSession } from "@/lib/session";
@@ -182,10 +183,7 @@ export default async function AdminLayout({
           />
 
           <div className="topbar-actions">
-            <button type="button" className="icon-button" aria-label="알림">
-              🔔
-              <span className="dot" aria-hidden />
-            </button>
+            <NotificationBell />
 
             <ProfileMenu
               initial={initial}
