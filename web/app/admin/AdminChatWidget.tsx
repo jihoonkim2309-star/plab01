@@ -57,6 +57,22 @@ const SB: Record<string, string> = { 접수: "orange", 처리중: "blue", 완료
 export default function AdminChatWidget({ mode = "center" }: { mode?: "center" | "hq" }) {
   const [open, setOpen] = useState(false);
 
+  // iframe(?frame=1 또는 중첩 window) 안에선 절대 렌더 X — 위젯 중복(double-FAB) 방지.
+  // 서버 isFrame 가드가 실패해도(예: proxy 미반영) 클라이언트에서 확실히 차단.
+  // 기본 hidden=true(SSR null) → mount 후 top window 일 때만 표시 (hydration 안전).
+  const [hidden, setHidden] = useState(true);
+  useEffect(() => {
+    let inFrame = false;
+    try {
+      inFrame =
+        window.self !== window.top ||
+        new URLSearchParams(window.location.search).get("frame") === "1";
+    } catch {
+      inFrame = true; // 접근 불가(크로스오리진 등) = iframe 으로 간주
+    }
+    setHidden(inFrame);
+  }, []);
+
   // ===== center 모드 =====
   const [tab, setTab] = useState<"chat" | "branch">("chat");
   const [convs, setConvs] = useState<Conv[]>([]);
@@ -241,6 +257,8 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
   const branchMsgs = branch?.messages ?? [];
   const hqMsgs = hqThread?.messages ?? [];
   const inChatThread = mode === "center" && tab === "chat" && !!activeId;
+
+  if (hidden) return null;
 
   return (
     <>
