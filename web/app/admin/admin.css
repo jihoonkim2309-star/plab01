@@ -1671,13 +1671,17 @@
 
 .member-layout {
   display: grid;
-  grid-template-columns: minmax(620px, 1.25fr) minmax(360px, 0.75fr);
-  gap: 14px;
+  /* 위 요약카드(5칸 grid, gap 10)와 정확히 정렬 — 좌측 패널 span 3(카드 1~3),
+     우측 패널 span 2(카드 4~5). 카드 수가 3·4·6 이어도 패널은 5칸 grid 에 맞음. */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
   align-items: stretch;
   /* 좌측 리스트 + 우측 상세를 동일 높이로 고정, 페이지 전체 스크롤 X */
   height: calc(100vh - 240px);
   min-height: 520px;
 }
+.member-layout > :first-child { grid-column: span 3; }
+.member-layout > :nth-child(2) { grid-column: span 2; }
 
 /* 두 패널 모두 column flex — head 고정 + content 영역만 내부 스크롤 */
 .member-layout > .panel,
@@ -1961,10 +1965,13 @@
 
 .account-layout {
   display: grid;
-  grid-template-columns: minmax(680px, 1.25fr) minmax(360px, 0.75fr);
-  gap: 14px;
+  /* 요약카드(5칸 grid, gap 10)와 정렬 — 좌측 span 3, 우측 span 2 */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
   align-items: start;
 }
+.account-layout > :first-child { grid-column: span 3; }
+.account-layout > :nth-child(2) { grid-column: span 2; }
 
 /* 채팅 마스터-디테일 — 좌우 패널 높이 정렬 (목록 패널이 채팅 패널 높이 따라가도록) */
 .chats-layout {
