@@ -141,6 +141,15 @@ export default async function AdminLayout({
   return (
     <AdminTabsProvider initialLabel={initialLabel} centerId={activeCenterId}>
     <div className="admin-shell app">
+      {/* paint 전 동기 실행 — iframe(?frame=1)이면 즉시 admin-in-frame 적용해
+          사이드바·탑바가 한 번 그려졌다 사라지는 깜박임 방지. FrameDetector(useEffect)
+          는 paint 후라 늦어서 깜박임. 이 스크립트가 첫 페인트 전에 body 에 클래스를 붙인다. */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html:
+            "try{if(new URLSearchParams(location.search).get('frame')==='1')document.body.classList.add('admin-in-frame')}catch(e){}",
+        }}
+      />
       <Suspense fallback={null}>
         <GlobalLoading />
       </Suspense>
