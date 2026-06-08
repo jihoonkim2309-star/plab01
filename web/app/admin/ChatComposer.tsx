@@ -7,8 +7,15 @@ import { Paperclip, X } from "lucide-react";
 // form 안에서 사용. file input 은 name='files' multiple — server action 의
 // formData.getAll('files') 로 수신.
 //
-// 한 번에 multiple 선택. 미리보기 chip 의 × 클릭 시 전체 초기화 (단순화).
-// Enter 전송 / Shift+Enter 줄바꿈 / IME 조합 중 무시.
+// 첨부 제한(클라 가드 = 즉시 피드백): 개당 10MB · 이미지/PDF/오피스 · 최대 5개.
+// 초과/미지원 시 안내 모달. 서버(actions) + Supabase 버킷에도 동일 제한(다중 방어).
+
+const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILES = 5;
+const ACCEPT = "image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.hwp,.hwpx";
+const ALLOWED_EXT =
+  /\.(jpe?g|png|gif|webp|heic|heif|bmp|svg|pdf|docx?|xlsx?|pptx?|hwpx?)$/i;
+
 export default function ChatComposer({
   placeholder = "메시지 입력",
   rows = 2,
@@ -18,18 +25,17 @@ export default function ChatComposer({
 }) {
   const [body, setBody] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [modal, setModal] = useState<string[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // 첫 mount + server action 후 remount 시 자동 focus (사용자가 매번 클릭 안 해도 입력 가능).
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
 
   // form 의 submit 이벤트 listen — Enter 와 [전송] 버튼 둘 다 cover.
-  // 전송 직후 입력값/첨부 초기화 + focus 회복.
-  // ⚠️ setBody("") 등 state 변경을 setTimeout(0) 으로 미루지 않으면
-  // React 가 server action 의 formData 추출 전에 textarea 값을 비워 메시지가 빈 값으로 전송됨.
+  // ⚠️ setBody("") 등을 setTimeout(0) 으로 미루지 않으면 React 가 server action 의
+  // formData 추출 전에 값을 비워 빈 메시지가 전송됨.
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
@@ -51,16 +57,38 @@ export default function ChatComposer({
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       const form = e.currentTarget.form;
-      // 본문 비어도 첨부만 있으면 전송 허용
       if (form && (body.trim() || files.length > 0)) {
-        // submit 이벤트 listener 가 input/files clear + focus 회복까지 처리.
         form.requestSubmit();
       }
     }
   }
 
+  // 클라 가드 — 미지원 형식/10MB 초과/5개 초과 거르고 안내 모달. 통과분만 input 에 남김.
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setFiles(Array.from(e.target.files ?? []));
+    const picked = Array.from(e.target.files ?? []);
+    const errors: string[] = [];
+    const valid: File[] = [];
+    for (const f of picked) {
+      if (!ALLOWED_EXT.test(f.name)) {
+        errors.push(`${f.name} — 지원하지 않는 형식`);
+        continue;
+      }
+      if (f.size > MAX_SIZE) {
+        errors.push(`${f.name} — 10MB 초과 (${fmtSize(f.size)})`);
+        continue;
+      }
+      valid.push(f);
+    }
+    if (valid.length > MAX_FILES) {
+      errors.push(`최대 ${MAX_FILES}개까지 첨부할 수 있어요 (선택 ${valid.length}개)`);
+      valid.splice(MAX_FILES);
+    }
+    // 통과한 파일만 input.files 에 재설정 (form 은 input.files 를 전송하므로 state 만으론 부족)
+    const dt = new DataTransfer();
+    valid.forEach((f) => dt.items.add(f));
+    if (fileInputRef.current) fileInputRef.current.files = dt.files;
+    setFiles(valid);
+    if (errors.length) setModal(errors);
   }
 
   function clearFiles() {
@@ -108,6 +136,7 @@ export default function ChatComposer({
           type="file"
           name="files"
           multiple
+          accept={ACCEPT}
           style={{ display: "none" }}
           onChange={onFileChange}
         />
@@ -122,6 +151,32 @@ export default function ChatComposer({
           style={{ flex: 1, resize: "none" }}
         />
       </div>
+
+      {modal && (
+        <div className="cc-modal-backdrop" onClick={() => setModal(null)}>
+          <div
+            className="cc-modal"
+            role="dialog"
+            aria-label="첨부 제한 안내"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <strong className="cc-modal-title">첨부할 수 없는 파일이 있어요</strong>
+            <p className="cc-modal-rule">개당 10MB · 이미지·PDF·오피스 문서 · 최대 5개</p>
+            <ul className="cc-modal-list">
+              {modal.map((m, i) => (
+                <li key={i}>{m}</li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className="btn primary cc-modal-ok"
+              onClick={() => setModal(null)}
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

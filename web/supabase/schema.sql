@@ -1700,6 +1700,25 @@ insert into storage.buckets (id, name, public, file_size_limit)
 values ('chat-attachments', 'chat-attachments', false, 10485760)
 on conflict (id) do nothing;
 
+-- 첨부 형식·크기 제한 (B: 버킷 백스톱). on conflict do nothing 이라 기존 버킷엔
+-- 명시 update 로 적용. 이미지·PDF·오피스(modern+legacy)·HWP 만 허용, 개당 10MB.
+-- ⚠️ 클라 가드(A, ChatComposer)가 확장자로 1차 차단하므로 정상 파일만 도달.
+update storage.buckets
+set file_size_limit = 10485760,
+    allowed_mime_types = array[
+      'image/*',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/haansofthwp', 'application/x-hwp',
+      'application/vnd.hancom.hwp', 'application/vnd.hancom.hwpx'
+    ]
+where id = 'chat-attachments';
+
 -- Storage 객체 RLS — staff (super_admin / admin / coach) 만 read·write·delete
 drop policy if exists chat_att_staff_select on storage.objects;
 create policy chat_att_staff_select on storage.objects for select
