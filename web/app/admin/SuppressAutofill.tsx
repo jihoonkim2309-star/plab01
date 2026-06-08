@@ -16,10 +16,15 @@ export default function SuppressAutofill() {
         }
       });
     };
-    apply();
-    // 페이지 안 동적 추가 (drawer/modal 열림 등) 도 잡기 위해 짧은 지연 한 번 더
-    const t = setTimeout(apply, 100);
-    return () => clearTimeout(t);
+    // ⚠️ 즉시 실행하면 layout 이 page 폼보다 먼저 hydrate 되어, 아직 hydrate 전인
+    // 폼 input 의 DOM 속성을 mutate → React 가 hydration mismatch 경고.
+    // hydration 이 끝난 뒤(지연)에만 적용한다.
+    const t1 = setTimeout(apply, 200);
+    const t2 = setTimeout(apply, 600); // drawer/modal 등 늦게 뜨는 폼도 커버
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [pathname]);
   return null;
 }

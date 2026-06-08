@@ -21,6 +21,7 @@ export default function MembersDonutChart({
       height={260}
       series={[active, consulting, leave, withdrawn]}
       options={{
+        chart: { animations: { enabled: false } },
         labels: ["정상", "상담중", "휴원", "탈퇴"],
         colors: ["#28c76f", "#1f6feb", "#ff9f43", "#a5b0ab"],
         stroke: { width: 2, colors: ["#ffffff"] },

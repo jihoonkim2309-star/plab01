@@ -18,6 +18,7 @@ export default function RevenueAreaChart({
           toolbar: { show: false },
           zoom: { enabled: false },
           parentHeightOffset: 0,
+          animations: { enabled: false },
         },
         colors: ["#1e794e"],
         stroke: { curve: "smooth", width: 3 },

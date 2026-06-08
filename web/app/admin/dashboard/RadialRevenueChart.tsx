@@ -20,7 +20,7 @@ export default function RadialRevenueChart({
         height={220}
         series={[Math.min(100, Math.round(percent))]}
         options={{
-          chart: { sparkline: { enabled: true } },
+          chart: { sparkline: { enabled: true }, animations: { enabled: false } },
           plotOptions: {
             radialBar: {
               startAngle: -120,
