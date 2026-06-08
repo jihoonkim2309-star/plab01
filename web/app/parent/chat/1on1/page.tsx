@@ -1,11 +1,10 @@
 import { ArrowLeft, Bell } from "lucide-react";
 import { requirePortal } from "@/lib/portal-auth";
 import { sendParentChat } from "../actions";
-import ChatComposer from "@/app/admin/ChatComposer";
-import ChatScrollAnchor from "@/app/admin/ChatScrollAnchor";
 import ChatBubble, { formatChatTime } from "@/app/admin/ChatBubble";
 import RefreshOnce from "@/app/admin/RefreshOnce";
 import ChatLive from "../ChatLive";
+import LiveChatThread from "@/app/LiveChatThread";
 
 type RawAtt = {
   id: string;
@@ -147,49 +146,43 @@ export default async function ParentChat1on1() {
         <Bell size={20} />
       </div>
 
-      <div className="chat-thread" style={{ flex: 1 }}>
-        {debugError && (
-          <div style={{ padding: 12, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, fontSize: 12, color: "#b42318", whiteSpace: "pre-wrap" }}>
-            ⚠️ {debugError}
-          </div>
-        )}
-        {messages.length === 0 ? (
-          <div className="empty-state">
-            <strong>아직 메시지가 없습니다</strong>
-            <p>아래 입력창에 첫 메시지를 보내 보세요.</p>
-          </div>
-        ) : (
-          messages.map((m) => {
-            const isCustomer = m.sender === "customer" || m.sender === "parent";
-            return (
-              <ChatBubble
-                key={m.id}
-                side={isCustomer ? "me" : "them"}
-                label={isCustomer ? undefined : "지점"}
-                time={formatChatTime(m.created_at)}
-                body={m.body}
-                attachments={m.attachments}
-              />
-            );
-          })
-        )}
-        {inquiryId && (
-          <ChatScrollAnchor k={`${messages.length}-${messages[messages.length - 1]?.id ?? ""}`} />
-        )}
-      </div>
-
-      {inquiryId && !isEmbed && (
-        <form
+      {debugError && (
+        <div style={{ padding: 12, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, fontSize: 12, color: "#b42318", whiteSpace: "pre-wrap" }}>
+          ⚠️ {debugError}
+        </div>
+      )}
+      {inquiryId && !isEmbed ? (
+        <LiveChatThread
+          messages={messages}
           action={sendParentChat}
-          data-no-loading="true"
-          className="chat-input-form"
-        >
-          <input type="hidden" name="inquiry_id" value={inquiryId} />
-          <ChatComposer placeholder="지점에 보낼 메시지 (Enter = 전송, Shift+Enter = 줄바꿈)" />
-          <button type="submit" className="btn primary" style={{ alignSelf: "flex-end" }}>
-            전송
-          </button>
-        </form>
+          meSenders={["customer", "parent"]}
+          themLabel="지점"
+          placeholder="지점에 보낼 메시지 (Enter = 전송, Shift+Enter = 줄바꿈)"
+          hiddenFields={{ inquiry_id: inquiryId }}
+        />
+      ) : (
+        <div className="chat-thread" style={{ flex: 1 }}>
+          {messages.length === 0 ? (
+            <div className="empty-state">
+              <strong>아직 메시지가 없습니다</strong>
+              <p>아래 입력창에 첫 메시지를 보내 보세요.</p>
+            </div>
+          ) : (
+            messages.map((m) => {
+              const isCustomer = m.sender === "customer" || m.sender === "parent";
+              return (
+                <ChatBubble
+                  key={m.id}
+                  side={isCustomer ? "me" : "them"}
+                  label={isCustomer ? undefined : "지점"}
+                  time={formatChatTime(m.created_at)}
+                  body={m.body}
+                  attachments={m.attachments}
+                />
+              );
+            })
+          )}
+        </div>
       )}
     </div>
   );
