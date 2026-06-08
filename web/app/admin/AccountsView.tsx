@@ -1,5 +1,4 @@
 import Link from "next/link";
-import FilterBar from "./FilterBar";
 import SearchInput from "./SearchInput";
 
 export type AccountRow = {
@@ -67,10 +66,7 @@ export default function AccountsView({
                 : `${rows.length}건`}
             </span>
           </p>
-        </div>
-        <div className="panel-body" style={{ paddingBottom: 0 }}>
-          <FilterBar>
-            <div style={{ flex: 1 }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <SearchInput
               param="q"
               current={q}
@@ -83,7 +79,7 @@ export default function AccountsView({
                 초기화
               </Link>
             )}
-          </FilterBar>
+          </div>
         </div>
         <div className="list-scroll">
         <table>
