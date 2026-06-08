@@ -896,6 +896,8 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
+  /* 제목/subtext 와 아래 컨텐츠 분리 — 패널 간 gap(18) 에 더해 헤딩은 더 띄움 */
+  margin-bottom: 10px;
 }
 
 .admin-shell h1 {
