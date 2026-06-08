@@ -2485,6 +2485,29 @@ create policy smsg_coach_insert on public.support_messages
     )
   );
 
+-- 어드민/슈퍼 SELECT — ⚠️ 어드민 위젯 채팅 라이브용 필수.
+-- 어드민은 평소 definer RPC 로 메시지를 읽어 RLS SELECT 정책이 없었는데,
+-- Supabase realtime(postgres_changes)은 구독자의 RLS 를 그대로 적용하므로
+-- 이 정책이 없으면 INSERT 이벤트가 어드민 브라우저로 전달되지 않아 라이브/뱃지 X.
+drop policy if exists inquiries_admin_read on public.inquiries;
+create policy inquiries_admin_read on public.inquiries
+  for select using (
+    public.is_super_admin()
+    or (public.current_role() = 'admin' and center_id = public.current_center_id())
+  );
+
+drop policy if exists smsg_admin_read on public.support_messages;
+create policy smsg_admin_read on public.support_messages
+  for select using (
+    public.is_super_admin()
+    or exists (
+      select 1 from public.inquiries i
+      where i.id = public.support_messages.inquiry_id
+        and public.current_role() = 'admin'
+        and i.center_id = public.current_center_id()
+    )
+  );
+
 -- 채팅 첨부 — 첨부 기능이 admin/super 외(코치·학부모·학생) 전부 RLS 로
 -- 막혀 있던 선재 버그 보강. storage 객체 + 메타(support_message_attachments) 둘 다.
 
