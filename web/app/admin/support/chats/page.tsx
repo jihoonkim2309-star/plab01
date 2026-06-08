@@ -87,7 +87,18 @@ export default async function SupportChatsPage({
     }
   }
 
-  // 선택된 inquiry
+  // 기본 목록은 완료 숨김 (위젯과 동일) — 단 새 미열람 메시지 있으면 유지.
+  // 완료 칩(s='완료') 선택 시엔 완료만 표시.
+  const visibleList = s
+    ? list
+    : list.filter((i) => {
+        if (i.status !== "완료") return true;
+        const lm = lastMessageByInquiry[i.id];
+        const lastRead = readMap.get(i.id);
+        return !!lm && lm.sender === "customer" && (!lastRead || lastRead < lm.created_at);
+      });
+
+  // 선택된 inquiry (선택은 전체 list 에서 — 완료 채팅도 상세는 열림)
   const selectedId = sel ?? null;
   const selected = selectedId ? list.find((i) => i.id === selectedId) ?? null : null;
 
@@ -171,7 +182,7 @@ export default async function SupportChatsPage({
             <p className="panel-title">
               채팅 목록{" "}
               <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-                {hasFilter ? `검색결과 ${list.length}건 / 전체 ${all.length}` : `${list.length}건`}
+                {hasFilter ? `검색결과 ${visibleList.length}건 / 전체 ${all.length}` : `${visibleList.length}건`}
               </span>
             </p>
           </div>
@@ -205,7 +216,7 @@ export default async function SupportChatsPage({
                 </tr>
               </thead>
               <tbody>
-                {list.map((i) => {
+                {visibleList.map((i) => {
                   const lm = lastMessageByInquiry[i.id];
                   const preview = lm?.body ?? "(아직 메시지 없음)";
                   const tstamp = lm?.created_at ?? i.created_at;
@@ -240,7 +251,7 @@ export default async function SupportChatsPage({
                     </tr>
                   );
                 })}
-                {list.length === 0 && (
+                {visibleList.length === 0 && (
                   <tr>
                     <td colSpan={3}>
                       <div className="empty-state">
