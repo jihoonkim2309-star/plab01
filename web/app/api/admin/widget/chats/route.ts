@@ -9,7 +9,7 @@ export async function GET() {
   const [listRes, readsRes] = await Promise.all([
     supabase
       .from("inquiries")
-      .select("id, requester_name, status, created_at")
+      .select("id, requester_name, status, created_at, created_by")
       .eq("center_id", cid)
       .eq("kind", "chat")
       .order("created_at", { ascending: false }),
@@ -24,7 +24,23 @@ export async function GET() {
     requester_name: string | null;
     status: string;
     created_at: string;
+    created_by: string | null;
   }[];
+
+  // 작성자(학부모/학생) 역할 — created_by → users.role
+  const creatorIds = [...new Set(list.map((i) => i.created_by).filter(Boolean))] as string[];
+  const roleMap = new Map<string, string>();
+  if (creatorIds.length > 0) {
+    const { data: us } = await supabase
+      .from("users")
+      .select("id, role")
+      .in("id", creatorIds);
+    for (const u of (us ?? []) as { id: string; role: string | null }[]) {
+      if (u.role) roleMap.set(u.id, u.role);
+    }
+  }
+  const roleLabel = (r: string | null) =>
+    r === "parent" ? "학부모" : r === "student" ? "학생" : null;
   const readMap = new Map(
     ((readsRes.data ?? []) as { inquiry_id: string; last_read_at: string }[]).map(
       (r) => [r.inquiry_id, r.last_read_at],
@@ -98,6 +114,7 @@ export async function GET() {
     return {
       id: i.id,
       name: i.requester_name ?? "고객",
+      role: roleLabel(i.created_by ? roleMap.get(i.created_by) ?? null : null),
       status: i.status,
       lastBody: lm?.body ?? "",
       lastSender: lm?.sender ?? null,

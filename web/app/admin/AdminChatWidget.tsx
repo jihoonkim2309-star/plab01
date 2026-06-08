@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 type Conv = {
   id: string;
   name: string;
+  role: string | null;
   status: string;
   lastBody: string;
   lastSender: string | null;
@@ -46,6 +47,7 @@ export default function AdminChatWidget() {
   const [convs, setConvs] = useState<Conv[]>([]);
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeRole, setActiveRole] = useState<string | null>(null);
   const [thread, setThread] = useState<ChatThread | null>(null);
   const [loadingThread, setLoadingThread] = useState(false);
   // 본사 채팅
@@ -115,11 +117,12 @@ export default function AdminChatWidget() {
   }, [loadList, loadThread, loadBranch]);
 
   const openConv = useCallback(
-    (id: string) => {
-      setActiveId(id);
+    (c: Conv) => {
+      setActiveId(c.id);
+      setActiveRole(c.role);
       setThread(null);
       setLoadingThread(true);
-      loadThread(id).finally(() => setLoadingThread(false));
+      loadThread(c.id).finally(() => setLoadingThread(false));
       setTimeout(loadList, 400);
     },
     [loadThread, loadList],
@@ -176,6 +179,7 @@ export default function AdminChatWidget() {
                 <ChevronLeft size={18} />
               </button>
               <strong>{thread?.inquiry.requester_name ?? "고객"}</strong>
+              {activeRole && <span className="admin-cw-role">{activeRole}</span>}
               {thread && (
                 <span className={`badge ${SB[thread.inquiry.status] ?? "gray"}`}>
                   {thread.inquiry.status}
@@ -217,12 +221,15 @@ export default function AdminChatWidget() {
                   key={c.id}
                   type="button"
                   className={`admin-cw-row${c.unread ? " unread" : ""}`}
-                  onClick={() => openConv(c.id)}
+                  onClick={() => openConv(c)}
                 >
-                  <div className="admin-cw-avatar">{c.name.charAt(0)}</div>
+                  <div className={`admin-cw-avatar${c.role === "학생" ? " student" : ""}`}>
+                    {c.name.charAt(0)}
+                  </div>
                   <div className="admin-cw-row-main">
                     <div className="admin-cw-row-top">
                       <span className="admin-cw-row-name">{c.name}</span>
+                      {c.role && <span className="admin-cw-role">{c.role}</span>}
                       <span className="admin-cw-row-time">{formatChatTime(c.lastAt)}</span>
                     </div>
                     <div className="admin-cw-row-last">
@@ -261,11 +268,11 @@ export default function AdminChatWidget() {
               <form
                 action={replyMessage.bind(null, activeId)}
                 data-no-loading="true"
-                className="admin-cw-form chat-input-form"
+                className="admin-cw-form"
               >
                 <input type="hidden" name="back" value="/admin" />
                 <ChatComposer placeholder="메시지 입력" rows={1} />
-                <button className="btn primary" type="submit">전송</button>
+                <button className="btn primary admin-cw-send" type="submit">전송</button>
               </form>
             </>
           )}
@@ -295,10 +302,10 @@ export default function AdminChatWidget() {
               <form
                 action={sendBranchChatAsAdmin}
                 data-no-loading="true"
-                className="admin-cw-form chat-input-form"
+                className="admin-cw-form"
               >
                 <ChatComposer placeholder="본사에 메시지" rows={1} />
-                <button className="btn primary" type="submit">전송</button>
+                <button className="btn primary admin-cw-send" type="submit">전송</button>
               </form>
             </>
           )}
