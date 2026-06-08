@@ -12,6 +12,7 @@ import SidebarWorkspace from "./SidebarWorkspace";
 import DrawerToggle from "./DrawerToggle";
 import { AdminTabsProvider, AdminTabBar, AdminTabContent } from "./AdminTabs";
 import FrameDetector from "./FrameDetector";
+import AdminChatWidget from "./AdminChatWidget";
 import { labelForPath } from "./labelFor";
 import { ACTIVE_CENTER_COOKIE } from "@/lib/center";
 import { SESSION_COOKIE, isActiveSession } from "@/lib/session";
@@ -239,6 +240,9 @@ export default async function AdminLayout({
           })()}
         </section>
       </main>
+      {/* 플로팅 상담 채팅 위젯 — 지점 컨텍스트(admin/coach 또는 super 지점선택)에서만.
+          프랜차이즈 모드(센터 미선택)·iframe 탭에선 미표시. */}
+      {!isFrame && activeCenterId && (isAdmin || isSuper || role === "coach") && <AdminChatWidget />}
     </div>
     </AdminTabsProvider>
   );

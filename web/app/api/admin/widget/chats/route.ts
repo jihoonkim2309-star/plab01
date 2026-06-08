@@ -1,0 +1,83 @@
+import { NextResponse } from "next/server";
+import { requireCenter } from "@/lib/center";
+
+// 플로팅 채팅 위젯 — 이용자(학부모/학생) 1:1 채팅 대화 목록.
+// inquiries.kind='chat' + 마지막 메시지 + 미열람 여부.
+export async function GET() {
+  const { supabase, centerId: cid, userId } = await requireCenter();
+
+  const [listRes, readsRes] = await Promise.all([
+    supabase
+      .from("inquiries")
+      .select("id, requester_name, status, created_at")
+      .eq("center_id", cid)
+      .eq("kind", "chat")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("inquiry_reads")
+      .select("inquiry_id, last_read_at")
+      .eq("user_id", userId),
+  ]);
+
+  const list = (listRes.data ?? []) as {
+    id: string;
+    requester_name: string | null;
+    status: string;
+    created_at: string;
+  }[];
+  const readMap = new Map(
+    ((readsRes.data ?? []) as { inquiry_id: string; last_read_at: string }[]).map(
+      (r) => [r.inquiry_id, r.last_read_at],
+    ),
+  );
+
+  // 마지막 메시지 (inquiry 별 최신 1건)
+  const lastByInquiry: Record<
+    string,
+    { sender: string; body: string; created_at: string }
+  > = {};
+  if (list.length > 0) {
+    const ids = list.map((i) => i.id);
+    const { data: msgs } = await supabase
+      .from("support_messages")
+      .select("inquiry_id, sender, body, created_at")
+      .eq("center_id", cid)
+      .in("inquiry_id", ids)
+      .order("created_at", { ascending: false });
+    for (const m of (msgs ?? []) as {
+      inquiry_id: string;
+      sender: string;
+      body: string;
+      created_at: string;
+    }[]) {
+      if (!lastByInquiry[m.inquiry_id])
+        lastByInquiry[m.inquiry_id] = {
+          sender: m.sender,
+          body: m.body,
+          created_at: m.created_at,
+        };
+    }
+  }
+
+  let unreadTotal = 0;
+  const conversations = list.map((i) => {
+    const lm = lastByInquiry[i.id] ?? null;
+    const lastRead = readMap.get(i.id);
+    const unread = !!lm && lm.sender === "customer" && (!lastRead || lastRead < lm.created_at);
+    if (unread) unreadTotal++;
+    return {
+      id: i.id,
+      name: i.requester_name ?? "고객",
+      status: i.status,
+      lastBody: lm?.body ?? "",
+      lastSender: lm?.sender ?? null,
+      lastAt: lm?.created_at ?? i.created_at,
+      unread,
+    };
+  });
+
+  return NextResponse.json(
+    { conversations, unreadTotal },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}
