@@ -1740,13 +1740,10 @@
 .filter-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  padding: 10px 12px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  margin-bottom: 10px;
+  padding: 0 0 14px;
+  margin-bottom: 0;
 }
 .filter-bar .filter-chips { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .filter-search {
