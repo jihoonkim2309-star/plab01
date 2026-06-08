@@ -103,6 +103,9 @@ export default async function AdminLayout({
     );
   }
 
+  // 어드민 탭 iframe — 사이드바·탑바 미렌더 + 센터 조회 생략 (성능)
+  const isFrame = h.get("x-admin-frame") === "1";
+
   // 활성 지점 (super_admin 만 의미. 일반 admin/coach 는 본인 center_id).
   const jar = await cookies();
   const activeCenterId =
@@ -110,19 +113,23 @@ export default async function AdminLayout({
     profile?.center_id ??
     null;
 
-  // 사이드바 워크스페이스 셀렉터 + 활성 지점명
-  const [activeCenterRes, allCentersRes] = await Promise.all([
-    activeCenterId
-      ? supabase.from("centers").select("name").eq("id", activeCenterId).single()
-      : Promise.resolve({ data: null }),
-    isSuper
-      ? supabase.from("centers").select("id, name").order("name", { ascending: true })
-      : Promise.resolve({ data: [] }),
-  ]);
-  const activeCenterName =
-    (activeCenterRes.data as { name: string } | null)?.name ?? "프랜차이즈 관리";
-  const centersForSwitcher =
-    (allCentersRes.data as { id: string; name: string }[] | null) ?? [];
+  // 사이드바 워크스페이스 셀렉터 + 활성 지점명 — frame 모드(탑바 없음)에선 불필요
+  let activeCenterName = "프랜차이즈 관리";
+  let centersForSwitcher: { id: string; name: string }[] = [];
+  if (!isFrame) {
+    const [activeCenterRes, allCentersRes] = await Promise.all([
+      activeCenterId
+        ? supabase.from("centers").select("name").eq("id", activeCenterId).single()
+        : Promise.resolve({ data: null }),
+      isSuper
+        ? supabase.from("centers").select("id, name").order("name", { ascending: true })
+        : Promise.resolve({ data: [] }),
+    ]);
+    activeCenterName =
+      (activeCenterRes.data as { name: string } | null)?.name ?? "프랜차이즈 관리";
+    centersForSwitcher =
+      (allCentersRes.data as { id: string; name: string }[] | null) ?? [];
+  }
 
 
   const initial = (profile?.name ?? userEmail ?? "A").charAt(0).toUpperCase();
@@ -158,10 +165,11 @@ export default async function AdminLayout({
       </Suspense>
       <SuppressInvalidTooltip />
       <SuppressAutofill />
-      <Sidebar role={role} hasActiveCenter={!!activeCenterId} />
-      <div className="drawer-backdrop" />
+      {!isFrame && <Sidebar role={role} hasActiveCenter={!!activeCenterId} />}
+      {!isFrame && <div className="drawer-backdrop" />}
 
       <main className="main">
+        {!isFrame && (
         <header className="topbar">
           <DrawerToggle />
           <SidebarWorkspace
@@ -185,8 +193,9 @@ export default async function AdminLayout({
             />
           </div>
         </header>
+        )}
 
-        <AdminTabBar />
+        {!isFrame && <AdminTabBar />}
 
         <section className="content">
           {(() => {
