@@ -19,15 +19,21 @@ const ALLOWED_EXT =
 export default function ChatComposer({
   placeholder = "메시지 입력",
   rows = 2,
+  onSend,
 }: {
   placeholder?: string;
   rows?: number;
+  // 전송 직후(서버 응답 전) 본문을 부모에 알려 낙관적 말풍선을 즉시 그리게 함.
+  onSend?: (body: string) => void;
 }) {
   const [body, setBody] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [modal, setModal] = useState<string[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // submit 리스너는 mount 시 1회 등록되므로 최신 onSend 를 ref 로 참조.
+  const onSendRef = useRef(onSend);
+  onSendRef.current = onSend;
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -42,6 +48,8 @@ export default function ChatComposer({
     const form = ta.form;
     if (!form) return;
     function onSubmit() {
+      const sent = textareaRef.current?.value.trim() ?? "";
+      if (sent) onSendRef.current?.(sent); // 낙관적 즉시 표시 (text 한정)
       setTimeout(() => {
         setBody("");
         setFiles([]);

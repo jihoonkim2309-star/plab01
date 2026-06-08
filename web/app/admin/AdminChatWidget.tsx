@@ -54,6 +54,14 @@ const STATUSES = ["접수", "처리중", "완료"];
 
 const SB: Record<string, string> = { 접수: "orange", 처리중: "blue", 완료: "green" };
 
+// 낙관적 말풍선 — 전송 즉시 표시용 임시 메시지. 서버 동기화(realtime/refetch) 시
+// 실제 메시지로 교체됨(thread 통째 replace). tmp- id 로 구분.
+let optimSeq = 0;
+function optimisticMsg(sender: string, body: string): Message {
+  optimSeq += 1;
+  return { id: `tmp-${Date.now()}-${optimSeq}`, sender, body, created_at: new Date().toISOString() };
+}
+
 export default function AdminChatWidget({ mode = "center" }: { mode?: "center" | "hq" }) {
   const [open, setOpen] = useState(false);
 
@@ -353,7 +361,15 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
                 </div>
                 <form action={sendBranchChatAsHq} data-no-loading="true" className="admin-cw-form">
                   <input type="hidden" name="center_id" value={hqActive.centerId} />
-                  <ChatComposer placeholder={`${hqActive.name} 에 메시지`} rows={1} />
+                  <ChatComposer
+                    placeholder={`${hqActive.name} 에 메시지`}
+                    rows={1}
+                    onSend={(b) =>
+                      setHqThread((t) =>
+                        t ? { ...t, messages: [...t.messages, optimisticMsg("hq", b)] } : t,
+                      )
+                    }
+                  />
                   <button className="btn primary admin-cw-send" type="submit">전송</button>
                 </form>
               </>
@@ -513,7 +529,15 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
                     className="admin-cw-form"
                   >
                     <input type="hidden" name="back" value="/admin" />
-                    <ChatComposer placeholder="메시지 입력" rows={1} />
+                    <ChatComposer
+                      placeholder="메시지 입력"
+                      rows={1}
+                      onSend={(b) =>
+                        setThread((t) =>
+                          t ? { ...t, messages: [...t.messages, optimisticMsg("admin", b)] } : t,
+                        )
+                      }
+                    />
                     <button className="btn primary admin-cw-send" type="submit">전송</button>
                   </form>
                 </>
@@ -541,7 +565,15 @@ export default function AdminChatWidget({ mode = "center" }: { mode?: "center" |
                     <ChatScrollAnchor k={`b-${branchMsgs.length}-${branchMsgs[branchMsgs.length - 1]?.id ?? ""}`} />
                   </div>
                   <form action={sendBranchChatAsAdmin} data-no-loading="true" className="admin-cw-form">
-                    <ChatComposer placeholder="본사에 메시지" rows={1} />
+                    <ChatComposer
+                      placeholder="본사에 메시지"
+                      rows={1}
+                      onSend={(b) =>
+                        setBranch((t) =>
+                          t ? { ...t, messages: [...t.messages, optimisticMsg("admin", b)] } : t,
+                        )
+                      }
+                    />
                     <button className="btn primary admin-cw-send" type="submit">전송</button>
                   </form>
                 </>
