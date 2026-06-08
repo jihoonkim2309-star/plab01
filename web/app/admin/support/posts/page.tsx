@@ -79,6 +79,16 @@ export default async function SupportPostsPage({
     }
   }
 
+  // 기본 목록은 완료 숨김 (위젯·1:1 채팅과 동일) — 단 새 미열람 있으면 유지.
+  const visibleList = s
+    ? list
+    : list.filter((i) => {
+        if (i.status !== "완료") return true;
+        const lm = lastMessageByInquiry[i.id];
+        const lastRead = readMap.get(i.id);
+        return !!lm && lm.sender === "customer" && (!lastRead || lastRead < lm.created_at);
+      });
+
   const selectedId = sel ?? null;
   const selected = selectedId ? list.find((i) => i.id === selectedId) ?? null : null;
 
@@ -163,7 +173,7 @@ export default async function SupportPostsPage({
             <p className="panel-title">
               게시글 목록{" "}
               <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-                {hasFilter ? `검색결과 ${list.length}건 / 전체 ${all.length}` : `${list.length}건`}
+                {hasFilter ? `검색결과 ${visibleList.length}건 / 전체 ${all.length}` : `${visibleList.length}건`}
               </span>
             </p>
           </div>
@@ -208,7 +218,7 @@ export default async function SupportPostsPage({
                 </tr>
               </thead>
               <tbody>
-                {list.map((i) => {
+                {visibleList.map((i) => {
                   const lm = lastMessageByInquiry[i.id];
                   const lastRead = readMap.get(i.id);
                   const isUnread = !!lm && lm.sender === "customer" && (!lastRead || lastRead < lm.created_at);
@@ -236,7 +246,7 @@ export default async function SupportPostsPage({
                     </tr>
                   );
                 })}
-                {list.length === 0 && (
+                {visibleList.length === 0 && (
                   <tr>
                     <td colSpan={4}>
                       <div className="empty-state">
