@@ -47,7 +47,13 @@ export default function CalendarView({ events, initialYear, initialMonth0, initi
   const [year, setYear] = useState(initialYear);
   const [month0, setMonth0] = useState(initialMonth0);
   const [weekFrom, setWeekFrom] = useState(() => new Date(initialWeekFrom));
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  // 진입 시 초기 월이 현재 월이면 오늘을 기본 선택 → 오늘 일정 바로 표시(휑함 방지)
+  const [selectedDate, setSelectedDate] = useState<string | null>(() => {
+    const now = new Date();
+    return now.getFullYear() === initialYear && now.getMonth() === initialMonth0
+      ? ymd(now)
+      : null;
+  });
 
   const eventsByDate = useMemo(() => {
     const m = new Map<string, EventItem[]>();

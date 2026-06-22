@@ -1,4 +1,4 @@
-import { Bell, ChevronRight, LogOut, Phone, Settings, User } from "lucide-react";
+import { Bell, Building2, ChevronRight, LogOut, Settings, User } from "lucide-react";
 import { redirect } from "next/navigation";
 import PortalTabbar from "../PortalTabbar";
 import { requirePortal } from "@/lib/portal-auth";
@@ -85,7 +85,7 @@ export default async function ParentMe() {
                 color: "#374151",
               }}
             >
-              <Phone size={12} style={{ display: "inline", marginRight: 6, verticalAlign: "middle", color: "#6f7d78" }} />
+              <Building2 size={12} style={{ display: "inline", marginRight: 6, verticalAlign: "middle", color: "#6f7d78" }} />
               {profile.centerName}
             </div>
           )}
