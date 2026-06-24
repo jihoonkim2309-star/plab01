@@ -3281,19 +3281,19 @@ tr[data-bulk-hover] td {
   z-index: 1;
 }
 
-/* ===== Frame mode (iframe 안) ===== */
-body.admin-in-frame .admin-shell > aside,
-body.admin-in-frame .admin-shell > .drawer-backdrop,
-body.admin-in-frame .topbar,
-body.admin-in-frame .admin-tabbar {
+/* ===== Frame mode (iframe 안) — .admin-shell 에 admin-in-frame 클래스(서버사이드).
+   isFrame 을 layout 에서 서버 판정해 SSR HTML 부터 적용 → 인라인 script 불필요. ===== */
+.admin-shell.admin-in-frame > aside,
+.admin-shell.admin-in-frame > .drawer-backdrop,
+.admin-shell.admin-in-frame .topbar,
+.admin-shell.admin-in-frame .admin-tabbar {
   display: none !important;
 }
-body.admin-in-frame .admin-shell,
-body.admin-in-frame .app {
+.admin-shell.admin-in-frame {
   display: block !important;
   grid-template-columns: none !important;
 }
-body.admin-in-frame .main {
+.admin-shell.admin-in-frame .main {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -3302,16 +3302,16 @@ body.admin-in-frame .main {
 /* 임베드(iframe 안) .content 를 홈 .content 와 동일하게 — 페이지가 홈으로
    보이든 탭으로 보이든 폭·여백이 같도록. (외곽 프레임 패널이 음수 margin 으로
    .content 패딩을 상쇄하므로 여기 패딩이 유일한 거터가 된다.) */
-body.admin-in-frame .content {
+.admin-shell.admin-in-frame .content {
   padding: 32px 24px 24px;
   max-width: 1440px;
   margin: 0 auto;
 }
-body.admin-in-frame .admin-tab-content {
+.admin-shell.admin-in-frame .admin-tab-content {
   height: auto;
   overflow: visible;
 }
-body.admin-in-frame .admin-tab-panel {
+.admin-shell.admin-in-frame .admin-tab-panel {
   height: auto;
   overflow: visible;
 }

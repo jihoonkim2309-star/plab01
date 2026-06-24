@@ -11,7 +11,6 @@ import ProfileMenu from "./ProfileMenu";
 import SidebarWorkspace from "./SidebarWorkspace";
 import DrawerToggle from "./DrawerToggle";
 import { AdminTabsProvider, AdminTabBar, AdminTabContent } from "./AdminTabs";
-import FrameDetector from "./FrameDetector";
 import AdminChatWidget from "./AdminChatWidget";
 import NotificationBell from "./NotificationBell";
 import { labelForPath } from "./labelFor";
@@ -150,21 +149,11 @@ export default async function AdminLayout({
 
   return (
     <AdminTabsProvider initialLabel={initialLabel} centerId={activeCenterId}>
-    <div className="admin-shell app">
-      {/* paint 전 동기 실행 — iframe(?frame=1)이면 즉시 admin-in-frame 적용해
-          사이드바·탑바가 한 번 그려졌다 사라지는 깜박임 방지. FrameDetector(useEffect)
-          는 paint 후라 늦어서 깜박임. 이 스크립트가 첫 페인트 전에 body 에 클래스를 붙인다. */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html:
-            "try{if(new URLSearchParams(location.search).get('frame')==='1')document.body.classList.add('admin-in-frame')}catch(e){}",
-        }}
-      />
+    {/* isFrame(서버 판정) 이면 .admin-shell 에 admin-in-frame — SSR HTML 부터 적용돼
+        사이드바·탑바 미렌더 + 임베드 레이아웃이 깜박임 없이 즉시 반영. 인라인 script 불필요. */}
+    <div className={`admin-shell app${isFrame ? " admin-in-frame" : ""}`}>
       <Suspense fallback={null}>
         <GlobalLoading />
-      </Suspense>
-      <Suspense fallback={null}>
-        <FrameDetector />
       </Suspense>
       <SuppressInvalidTooltip />
       <SuppressAutofill />
