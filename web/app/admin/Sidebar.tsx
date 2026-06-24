@@ -142,9 +142,11 @@ function groupContainsActive(
 export default function Sidebar({
   role,
   hasActiveCenter,
+  activeCenterId,
 }: {
   role: "super_admin" | "admin" | "coach" | "parent" | "student" | "driver" | null;
   hasActiveCenter?: boolean;
+  activeCenterId?: string | null;
 }) {
   const pathnameRaw = usePathname();
   const router = useRouter();
@@ -169,10 +171,12 @@ export default function Sidebar({
     }
   }, []);
 
-  // 페이지 navigation 시 마다 unread 다시 fetch (페이지가 mark_read 했을 수도)
+  // 페이지 navigation + 센터 컨텍스트 변경 시 unread 다시 fetch.
+  // ⚠️ activeCenterId 필수: 본점 진입(서버액션 redirect)은 soft nav 라 pathname(/admin)
+  //    이 안 바뀌어 재fetch 가 안 일어나면 프랜차이즈 카운트가 그대로 남아 뱃지 미표시.
   useEffect(() => {
     loadUnread();
-  }, [pathname, loadUnread]);
+  }, [pathname, activeCenterId, loadUnread]);
 
   // Realtime 구독 — mount 시 1회만. 채널 이름 unique 로 race 회피.
   useEffect(() => {
