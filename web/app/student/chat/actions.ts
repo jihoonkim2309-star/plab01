@@ -152,11 +152,12 @@ export async function sendStudentChat(formData: FormData) {
     await uploadAttachments(supabase, { messageId, centerId, files: realFiles });
   }
 
+  // 고객 메시지 → 접수/완료 inquiry 를 처리중으로 (완료 채팅에 답하면 재오픈).
   await supabase
     .from("inquiries")
     .update({ status: "처리중" })
     .eq("id", inquiryId)
-    .eq("status", "접수");
+    .in("status", ["접수", "완료"]);
 
   revalidatePath("/student/chat/1on1");
   revalidatePath("/admin/branch-chat");

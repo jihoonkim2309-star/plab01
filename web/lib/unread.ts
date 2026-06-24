@@ -162,11 +162,15 @@ async function countSupportInquiryUnread(
   supabase: SupabaseClient,
   args: { userId: string; centerId: string; kind: "chat" | "post" },
 ): Promise<number> {
+  // ⚠️ 완료(handled) inquiry 는 뱃지에서 제외 — 완료 후 도착한 고객 메시지까지
+  //    미열람으로 잡혀 "완료인데 뱃지가 안 사라지는" 문제 방지. 고객이 다시
+  //    메시지를 보내면 send 액션이 status 를 처리중으로 되돌려 다시 잡힌다.
   const { data: inqs } = await supabase
     .from("inquiries")
     .select("id")
     .eq("center_id", args.centerId)
-    .eq("kind", args.kind);
+    .eq("kind", args.kind)
+    .neq("status", "완료");
   const list = (inqs ?? []) as { id: string }[];
   if (list.length === 0) return 0;
   const ids = list.map((i) => i.id);

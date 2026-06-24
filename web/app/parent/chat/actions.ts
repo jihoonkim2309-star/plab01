@@ -152,11 +152,13 @@ export async function sendParentChat(formData: FormData) {
     await uploadAttachments(supabase, { messageId, centerId, files: realFiles });
   }
 
+  // 고객 메시지 → 접수/완료 inquiry 를 처리중으로 (완료 채팅에 답하면 재오픈 →
+  //  어드민 뱃지에 다시 잡힘. 완료는 미열람 뱃지서 제외되므로 이 재오픈이 필수).
   await supabase
     .from("inquiries")
     .update({ status: "처리중" })
     .eq("id", inquiryId)
-    .eq("status", "접수");
+    .in("status", ["접수", "완료"]);
 
   revalidatePath("/parent/chat/1on1");
   revalidatePath("/admin/branch-chat");

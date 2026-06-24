@@ -1465,6 +1465,15 @@ create policy hq_notice_reads_admin_write on public.hq_notice_reads
     and public.current_role() = 'admin'
   );
 
+-- super_admin: 활성 지점 컨텍스트에서 본인 읽음 기록 write.
+-- (admin_write 가 current_role()='admin' 만 허용해 super 는 읽음 upsert 가 RLS 에
+--  막혀 본사 공지 뱃지가 안 사라지던 버그 보강.)
+drop policy if exists hq_notice_reads_super_write on public.hq_notice_reads;
+create policy hq_notice_reads_super_write on public.hq_notice_reads
+  for all
+  using (user_id = auth.uid() and public.is_super_admin())
+  with check (user_id = auth.uid() and public.is_super_admin());
+
 -- =====================================================================
 --  18. 지점 ↔ 본사 문의 — inquiries.kind 확장
 --  - kind='branch_to_hq': 지점 admin 작성, super_admin 답변
